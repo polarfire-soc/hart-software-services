@@ -138,8 +138,8 @@ void exit_simulation(void) {
     uint64_t hartid = read_csr(mhartid);
     volatile uint32_t * exit_simulation_p = (uint32_t *)0x60000000U;
 
-
     *exit_simulation_p = 1U;
+    (void)hartid; /* use hartid to avoid compiler warning */
 }
 
 __attribute__((aligned(16))) uint64_t get_program_counter(void)

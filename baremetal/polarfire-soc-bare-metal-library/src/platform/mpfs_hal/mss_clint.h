@@ -69,6 +69,7 @@ static inline void clear_soft_interrupt(void)
     CLINT->MSIP[hart_id] = 0x00U;   /*clear soft interrupt for hart0*/
     reg = CLINT->MSIP[hart_id];     /* we read back to make sure it has been written before moving on */
                                     /* todo: verify line above guaranteed and best way to achieve result */
+    (void)reg;                      /* use reg to avoid compiler warning */
 }
 
 #ifdef __cplusplus

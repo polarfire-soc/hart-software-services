@@ -152,7 +152,6 @@ __attribute__((weak)) int main_other_hart(void)
 
     switch(hartid)
     {
-
     case 0U:
         e51();
         break;

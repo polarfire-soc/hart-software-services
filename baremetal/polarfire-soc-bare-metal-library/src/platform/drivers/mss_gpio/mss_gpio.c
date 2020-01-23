@@ -21,8 +21,8 @@ extern "C" {
 /*-------------------------------------------------------------------------*//**
  * Defines.
  */
-#define GPIO_INT_ENABLE_MASK                ((uint32_t)0x00000008)
-#define OUTPUT_BUFFER_ENABLE_MASK           ((uint32_t)0x00000004)
+#define GPIO_INT_ENABLE_MASK                ((uint32_t)0x00000008u)
+#define OUTPUT_BUFFER_ENABLE_MASK           ((uint32_t)0x00000004u)
 
 /*These constants define the number of GPIO bits available on each GPIO
  * hardware block*/

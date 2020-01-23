@@ -34,7 +34,7 @@ void Software_h1_IRQHandler(void);
 void Software_h2_IRQHandler(void);
 void Software_h3_IRQHandler(void);
 void Software_h4_IRQHandler(void);
-void SysTick_Handler(uint32_t hard_id);
+void SysTick_Handler(uint32_t hart_id);
 
 /*
  *

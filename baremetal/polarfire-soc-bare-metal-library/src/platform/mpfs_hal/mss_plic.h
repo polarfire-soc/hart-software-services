@@ -160,8 +160,6 @@ uint8_t  wdog4_tout_plic_IRQHandler(void);
 uint8_t  g5c_mss_spi_plic_IRQHandler(void);
 uint8_t  volt_temp_alarm_plic_IRQHandler(void);
 
-uint8_t  g5c_mss_spi_plic_IRQHandler(void);
-uint8_t  volt_temp_alarm_plic_IRQHandler(void);
 uint8_t  athena_complete_plic_IRQHandler(void);
 uint8_t  athena_alarm_plic_IRQHandler(void);
 uint8_t  athena_bus_error_plic_IRQHandler(void);
@@ -939,8 +937,6 @@ static inline void PLIC_ClearPendingIRQ(void)
 
     while ( int_num != INVALID_IRQn)
     {
-        uint8_t disable = EXT_IRQ_KEEP_ENABLED;
-
         PLIC_CompleteIRQ(int_num);
         int_num  = PLIC_ClaimIRQ(); /* clear the interrupt */
         volatile int32_t wait_possible_int = 0xFU;

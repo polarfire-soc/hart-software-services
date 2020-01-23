@@ -140,7 +140,7 @@ extern "C" {
 /*---------------------------Public Data Structure----------------------------*/
 /*----------------------------------PDMA--------------------------------------*/
 
-/*----------------------------------------------------------------------------/*
+/*----------------------------------------------------------------------------*//*
   The mss_pdma_channel_id_t enumeration is used to identify peripheral DMA channels.
   It is used as function parameter to specify the PDMA channel used.
  */
@@ -316,11 +316,11 @@ MSS_PDMA_setup_transfer
   Example:
   The following call will configure channel 0
   @code
-                /*Setup the PDMA channel for transfer
+                // Setup the PDMA channel for transfer
                 g_pdma_error_code = MSS_PDMA_setup_transfer(PDMA_CHANNEL_0,
                                                           &pdma_config_ch0);
 
-                /*Initiate the transfer for channel 0.
+                // Initiate the transfer for channel 0.
                 MSS_PDMA_start_transfer(PDMA_CHANNEL_0);
   @endcode
  */

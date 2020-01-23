@@ -283,8 +283,6 @@ void MSS_QSPI_set_status_handler
 static void qspi_isr(void)
 {
     uint32_t idx;
-    static uint32_t empty = 0u;
-    static uint32_t tx_fifo_full = 0u;
     uint32_t status;
 
     status = QSPI->STATUS;
@@ -333,6 +331,7 @@ static void qspi_isr(void)
                   have been received.*/
                 skips = (uint32_t)((QSPI->STATUS & STTS_FLAGSX4_MASK) ?
                                             QSPI->RXDATAX4 : QSPI->RXDATAX1);
+                (void) skips; /* use skips to avoid compiler warning */
             }
         }
     }

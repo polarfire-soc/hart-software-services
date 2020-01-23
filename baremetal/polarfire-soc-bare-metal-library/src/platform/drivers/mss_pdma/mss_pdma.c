@@ -144,8 +144,6 @@ MSS_PDMA_set_transction_size
     uint8_t read_size
 )
 {
-    uint8_t value;
-
     if (channel_id > MSS_PDMA_CHANNEL_3)
     {
         return MSS_PDMA_ERROR_INVALID_CHANNEL_ID;

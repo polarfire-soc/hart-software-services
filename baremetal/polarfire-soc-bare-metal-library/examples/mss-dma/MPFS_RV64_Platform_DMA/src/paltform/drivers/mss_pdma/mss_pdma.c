@@ -79,7 +79,7 @@ MSS_PDMA_setup_transfer
     /* Set or clear the interrupts for the transfer. */
     if (channel_config->enable_done_int)
     {
-        pdmareg->control_reg |= ((uint32_t)MASK_PDMA_ENABLE_DONE_INT);
+        pdmareg->]control_reg |= ((uint32_t)MASK_PDMA_ENABLE_DONE_INT);
     }
     else
     {
@@ -282,7 +282,7 @@ MSS_PDMA_get_transfer_complete_status
 {
     if (channel_id > MSS_PDMA_CHANNEL_3)
     {
-        return 0u;
+        return 1u; // invalid channel should always return done immediately? or assert() ?
     }
 
     /* Set the register structure pointer for the PDMA channel. */

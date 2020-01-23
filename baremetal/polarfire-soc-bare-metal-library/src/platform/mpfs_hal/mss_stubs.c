@@ -60,7 +60,7 @@ __attribute__((weak)) void Software_h4_IRQHandler(void)
 
 }
 
-__attribute__((weak)) void SysTick_Handler(uint32_t hard_id)
+__attribute__((weak)) void SysTick_Handler(uint32_t hart_id)
 {
 
 }
