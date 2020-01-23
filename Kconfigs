@@ -1,0 +1,6 @@
+./compression/Kconfig
+./Kconfig
+./debug/Kconfig
+./Kconfig.build
+./services/Kconfig
+./Kconfig.general

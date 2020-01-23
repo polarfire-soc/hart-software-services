@@ -1,0 +1,72 @@
+menu "General Configuration Options"
+config OPENSBI
+	bool "OpenSBI support"
+	default y
+	help
+		This feature enables support for the RISC-V OpenSBI.
+
+		If you don't know what to do here, say Y.
+
+config TINYCLI
+	bool "TinyCLI support"
+	default n
+	help
+		This feature enables a simple command-line interpreter prompt.
+          
+		If you don't know what to do here, say N.
+
+config TINYCLI_TIMEOUT
+        depends on TINYCLI
+	int "MSS AXI Switch Clock"
+	default 5
+        help
+		The timeout for entering the TinyCLI (in seconds). When CONFIG_TINYCLI is enabled,
+                the HSS will wait for a keypress for this timeout before continuing with its boot
+                process.
+
+                If a key press (other than ESC) is detected, the HSS will enter the TINYCLI mode,
+                which allows interactive running of a small number of commands. Typing `HELP` at
+                the TINYCLI prompt lists the supported commands.
+
+config SUPERLOOP_IN_U_MODE
+	bool "Run Superloop in U-Mode"
+	default n
+	help
+		Experimental: This feature runs the HSS superloop in U-Mode.
+
+		If you don't know what to do here, say N for now.
+
+config MEMTEST
+	bool "DDR Memory Tester"
+	default n
+	help
+		This feature enables a simple walking 1's style memory tester for the DDR.
+          
+		If you don't know what to do here, say N.
+
+config IPI_MAX_NUM_QUEUE_MESSAGES
+	int "Maximum number of outstanding IPI queue messages"
+	default 128
+	help
+		This feature determines the maximum number of queue messages
+		supported for IPIs from different harts.
+
+config IPI_FIXED_BASE
+	bool "Fix IPI Base address"
+	default y
+        help
+		Use a fixed base address for the IPI-based Secure Signalling Message Bus.
+
+config IPI_BASE_ADDR
+	hex "Base address for IPI Queueus"
+	default 0xC0000000
+	depends on IPI_FIXED_BASE
+        help
+		Specify the fixed base address for the IPI-based Secure Signalling Message Bus.
+
+config USE_PDMA
+	bool "Use PDMA for memory-to-memory transfers"
+	default y
+        help
+		Use the PDMA for memory to memory transfers.
+endmenu

@@ -1,0 +1,7 @@
+mainmenu "Hart Software Services (HSS) Configuration"
+
+source "services/Kconfig"
+source "compression/Kconfig"
+source "Kconfig.general"
+source "Kconfig.build"
+source "debug/Kconfig"

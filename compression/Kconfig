@@ -1,0 +1,18 @@
+config COMPRESSION
+	bool "Compression support"
+        depends on SERVICE_BOOT
+	default y
+	help
+		This feature enables support for compression of boot images
+
+		If you don't know what to do here, say Y.
+
+menu "Compression"
+
+config COMPRESSION_FASTLZ
+	def_bool y
+	depends on COMPRESSION 
+	help
+		This feature enables support for FastLZ compression, a fast lossless compression 
+                library.
+endmenu

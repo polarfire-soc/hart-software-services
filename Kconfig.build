@@ -1,0 +1,48 @@
+mainmenu "Build Options"
+
+menu "Build Options"
+
+config COLOR_OUTPUT
+        bool "Color log output"
+        default y
+        help
+		This feature enables color for HSS output
+
+		If you do not know what to do here, say Y.
+
+config USE_LOGO
+        bool "Display Logo"
+        default y
+        help
+		This feature enables output for the Microchip logo.
+
+		If you do not know what to do here, say Y.
+
+
+config CC_STACKPROTECTOR_STRONG
+	bool "Enable strong stack protection"
+	default y
+	help
+		This feature enables strong stack checking on all function calls.
+
+		If you don't know what to do here, say Y.
+
+config USE_MAKEDEP
+	bool "Enable make dependencies in build system"
+	default y
+	help
+		This feature enables automatic dependencies in the Makefile. This will create *.d
+                files - one for each source file - which contain the analysed dependencies for the
+                source.  This improves source dependency checking during builds.
+
+		If you don't know what to do here, say Y.
+
+config HAS_INTTYPES
+	bool "Use inttypes.h"
+	default y
+	help
+		This features uses the inttypes.h header file from the toolchain. 
+
+		If the toolchain does not provide inttypes.h, say N here.
+
+endmenu
