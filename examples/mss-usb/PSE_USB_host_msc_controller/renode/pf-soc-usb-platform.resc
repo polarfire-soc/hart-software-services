@@ -1,0 +1,7 @@
+include $CSD/scripts/polarfire-soc-multiple-servers-base.resc
+
+machine LoadPlatformDescriptionFromString "pendrive: USB.USBPendrive @ usb 1 {imageFile: \"c:/temp/usb1M.img\"; size: 4294967296; blockSize: 512}"
+
+showAnalyzer mmuart0
+
+runMacro $ReadyForGdb

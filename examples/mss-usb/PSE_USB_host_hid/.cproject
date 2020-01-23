@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.settings">
+        		
+        <cconfiguration id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug.610310420">
+            			
+            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug.610310420" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+                				
+                <externalSettings/>
+                				
+                <extensions>
+                    					
+                    <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    				
+                </extensions>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+                				
+                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug.610310420" name="Debug" parent="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug">
+                    					
+                    <folderInfo id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug.610310420." name="/" resourcePath="">
+                        						
+                        <toolChain id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.elf.debug.1615319458" name="RISC-V Cross GCC" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.elf.debug">
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createflash.2070342953" name="Create flash image" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createflash" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createlisting.470845230" name="Create extended listing" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createlisting" useByScannerDiscovery="false"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.printsize.666252276" name="Print size" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.printsize" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.level.1057389996" name="Optimization Level" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.level" useByScannerDiscovery="true" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.level.none" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.messagelength.1943366652" name="Message length (-fmessage-length=0)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.messagelength" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.signedchar.1911678887" name="'char' is signed (-fsigned-char)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.signedchar" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.functionsections.1065491963" name="Function sections (-ffunction-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.functionsections" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.datasections.472810962" name="Data sections (-fdata-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.datasections" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.level.2045185687" name="Debug level" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.level" useByScannerDiscovery="true" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.level.max" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.format.1622699451" name="Debug format" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.format" useByScannerDiscovery="true"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.name.1046149609" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.name" useByScannerDiscovery="false" value="RISC-V GCC/Newlib" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.prefix.389670526" name="Prefix" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.prefix" useByScannerDiscovery="false" value="riscv64-unknown-elf-" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.c.1042423485" name="C compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.c" useByScannerDiscovery="false" value="gcc" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.cpp.197514791" name="C++ compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.cpp" useByScannerDiscovery="false" value="g++" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.ar.1171455737" name="Archiver" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.ar" useByScannerDiscovery="false" value="ar" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objcopy.1138816133" name="Hex/Bin converter" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objcopy" useByScannerDiscovery="false" value="objcopy" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objdump.33628861" name="Listing generator" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objdump" useByScannerDiscovery="false" value="objdump" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.size.1172027222" name="Size command" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.size" useByScannerDiscovery="false" value="size" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.make.2087001086" name="Build command" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.make" useByScannerDiscovery="false" value="make" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.rm.1101789908" name="Remove command" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.rm" useByScannerDiscovery="false" value="rm" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.base.1174178839" name="Architecture" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.base" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.arch.rv64g" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.compressed.1108663468" name="Compressed extension (RVC)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.compressed" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.integer.1666034751" name="Integer ABI" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.integer" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.abi.integer.lp64" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.fp.580661350" name="Floating point ABI" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.fp" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.abi.fp.double" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.codemodel.1743206808" name="Code model" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.codemodel" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.codemodel.low" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.id.1235635813" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.id" useByScannerDiscovery="false" value="-2032619395" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.warnings.nowarn.791053046" name="Inhibit all warnings (-w)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.warnings.nowarn" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnumcueclipse.managedbuild.cross.riscv.targetPlatform.253818530" isAbstract="false" osList="all" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.targetPlatform"/>
+                            							
+                            <builder buildPath="${workspace_loc:/pse-mss-usb-host-hid}/Debug" id="ilg.gnumcueclipse.managedbuild.cross.riscv.builder.1259397225" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.builder"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.1625702553" name="GNU RISC-V Cross Assembler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.usepreprocessor.1838304587" name="Use preprocessor" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.usepreprocessor" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.include.paths.848195754" name="Include paths (-I)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.include.paths" useByScannerDiscovery="true" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/modules}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/platform}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.input.953017091" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.input"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.1729918383" name="GNU RISC-V Cross C Compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler">
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.defs.1758808029" name="Defined symbols (-D)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
+                                    									
+                                    <listOptionValue builtIn="false" value="PSE=1"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="SI_FIVE_UNLEASED=0"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="TEST_H2F_CONTROLLER=0"/>
+                                    								
+                                </option>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.include.paths.1722595044" name="Include paths (-I)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/modules}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/platform}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.warning.missingprototypes.1908588677" name="Warn if a global function has no prototype (-Wmissing-prototypes)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.warning.missingprototypes" useByScannerDiscovery="true" value="false" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.warning.badfunctioncast.1682741131" name="Warn if wrong cast  (-Wbad-function-cast)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.warning.badfunctioncast" useByScannerDiscovery="true" value="false" valueType="boolean"/>
+                                								
+                                <inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.input.1562077366" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.input"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler.46984379" name="GNU RISC-V Cross C++ Compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.651848633" name="GNU RISC-V Cross C Linker" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.gcsections.268846661" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.gcsections" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.scriptfile.1566751975" name="Script files (-T)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.scriptfile" useByScannerDiscovery="false" valueType="stringList">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/platform/config/linker/mpfs-lim.ld}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.nostart.501965928" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.nostart" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.printmap.2002871557" name="Print link map (-Xlinker --print-map)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.printmap" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnano.38182580" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnano" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnosys.1942789977" name="Do not use syscalls (--specs=nosys.specs)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnosys" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.input.1054532232" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.input">
+                                    									
+                                    <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+                                    									
+                                    <additionalInput kind="additionalinput" paths="$(LIBS)"/>
+                                    								
+                                </inputType>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.linker.718640151" name="GNU RISC-V Cross C++ Linker" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.linker">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.linker.gcsections.2047499708" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.archiver.1708720996" name="GNU RISC-V Cross Archiver" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.archiver"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createflash.1126722545" name="GNU RISC-V Cross Create Flash Image" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createflash"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createlisting.665529380" name="GNU RISC-V Cross Create Listing" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createlisting">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.source.183952893" name="Display source (--source|-S)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.source" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.allheaders.2108977777" name="Display all headers (--all-headers|-x)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.allheaders" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.demangle.952144014" name="Demangle names (--demangle|-C)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.demangle" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.linenumbers.1706391498" name="Display line numbers (--line-numbers|-l)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.linenumbers" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.wide.379253483" name="Wide lines (--wide|-w)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.wide" value="true" valueType="boolean"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.printsize.875530441" name="GNU RISC-V Cross Print Size" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.printsize">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.printsize.format.1725760337" name="Size format" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.printsize.format" useByScannerDiscovery="false"/>
+                                							
+                            </tool>
+                            						
+                        </toolChain>
+                        					
+                    </folderInfo>
+                    				
+                </configuration>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+            		
+        </cconfiguration>
+        		
+        <cconfiguration id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release.256923934">
+            			
+            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release.256923934" moduleId="org.eclipse.cdt.core.settings" name="Release">
+                				
+                <externalSettings/>
+                				
+                <extensions>
+                    					
+                    <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    				
+                </extensions>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+                				
+                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release.256923934" name="Release" parent="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release">
+                    					
+                    <folderInfo id="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release.256923934." name="/" resourcePath="">
+                        						
+                        <toolChain id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.elf.release.2137868103" name="RISC-V Cross GCC" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.elf.release">
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createflash.372816601" name="Create flash image" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createflash" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createlisting.345690103" name="Create extended listing" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.createlisting" useByScannerDiscovery="false"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.printsize.1095061304" name="Print size" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.addtools.printsize" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.level.466578282" name="Optimization Level" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.level" useByScannerDiscovery="true" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.level.more" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.messagelength.2129945575" name="Message length (-fmessage-length=0)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.messagelength" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.signedchar.845483595" name="'char' is signed (-fsigned-char)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.signedchar" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.functionsections.768893966" name="Function sections (-ffunction-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.functionsections" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.datasections.312087003" name="Data sections (-fdata-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.optimization.datasections" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.level.761809089" name="Debug level" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.level" useByScannerDiscovery="true"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.format.2132144815" name="Debug format" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.debugging.format" useByScannerDiscovery="true"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.name.1450933959" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.name" useByScannerDiscovery="false" value="RISC-V GCC/Newlib" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.prefix.1449214706" name="Prefix" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.prefix" useByScannerDiscovery="false" value="riscv64-unknown-elf-" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.c.1738983864" name="C compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.c" useByScannerDiscovery="false" value="gcc" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.cpp.694187893" name="C++ compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.cpp" useByScannerDiscovery="false" value="g++" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.ar.1612431263" name="Archiver" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.ar" useByScannerDiscovery="false" value="ar" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objcopy.2069011380" name="Hex/Bin converter" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objcopy" useByScannerDiscovery="false" value="objcopy" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objdump.954869636" name="Listing generator" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.objdump" useByScannerDiscovery="false" value="objdump" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.size.896689443" name="Size command" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.size" useByScannerDiscovery="false" value="size" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.make.95237756" name="Build command" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.make" useByScannerDiscovery="false" value="make" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.rm.59390037" name="Remove command" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.command.rm" useByScannerDiscovery="false" value="rm" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.base.57274461" name="Architecture" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.base" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.arch.rv64g" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.compressed.2022900518" name="Compressed extension (RVC)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.isa.compressed" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.integer.737345723" name="Integer ABI" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.integer" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.abi.integer.lp64" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.id.1756734592" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.toolchain.id" useByScannerDiscovery="false" value="-2032619395" valueType="string"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.fp.1436374584" name="Floating point ABI" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.abi.fp" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.abi.fp.double" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.codemodel.1395406686" name="Code model" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.codemodel" useByScannerDiscovery="false" value="ilg.gnumcueclipse.managedbuild.cross.riscv.option.target.codemodel.low" valueType="enumerated"/>
+                            							
+                            <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.warnings.nowarn.266315118" name="Inhibit all warnings (-w)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.warnings.nowarn" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+                            							
+                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnumcueclipse.managedbuild.cross.riscv.targetPlatform.359375269" isAbstract="false" osList="all" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.targetPlatform"/>
+                            							
+                            <builder buildPath="${workspace_loc:/pse-mss-usb-host-hid}/Release" id="ilg.gnumcueclipse.managedbuild.cross.riscv.builder.1756382847" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.builder"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.993596702" name="GNU RISC-V Cross Assembler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.usepreprocessor.327433306" name="Use preprocessor" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.usepreprocessor" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.include.paths.1809744684" name="Include paths (-I)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.assembler.include.paths" useByScannerDiscovery="true" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/modules}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/platform}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.input.1701209020" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.input"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.627990295" name="GNU RISC-V Cross C Compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler">
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.defs.413937517" name="Defined symbols (-D)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.defs" useByScannerDiscovery="true" valueType="definedSymbols">
+                                    									
+                                    <listOptionValue builtIn="false" value="PSE=1"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="SI_FIVE_UNLEASED=0"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="TEST_H2F_CONTROLLER=0"/>
+                                    								
+                                </option>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.include.paths.856376986" name="Include paths (-I)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/modules}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/platform}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.input.1155241434" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.input"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler.1743844460" name="GNU RISC-V Cross C++ Compiler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.compiler"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.289297414" name="GNU RISC-V Cross C Linker" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.gcsections.731074764" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.gcsections" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.scriptfile.1826348532" name="Script files (-T)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.scriptfile" useByScannerDiscovery="false" valueType="stringList">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/platform/config/linker/mpfs-lim.ld}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.nostart.608399689" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.nostart" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.printmap.1304759914" name="Print link map (-Xlinker --print-map)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.printmap" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnano.1695166765" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnano" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnosys.1230120538" name="Do not use syscalls (--specs=nosys.specs)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.c.linker.usenewlibnosys" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                								
+                                <inputType id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.input.1214014328" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.linker.input">
+                                    									
+                                    <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+                                    									
+                                    <additionalInput kind="additionalinput" paths="$(LIBS)"/>
+                                    								
+                                </inputType>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.linker.159060855" name="GNU RISC-V Cross C++ Linker" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.cpp.linker">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.linker.gcsections.146056605" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.archiver.442813049" name="GNU RISC-V Cross Archiver" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.archiver"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createflash.159521610" name="GNU RISC-V Cross Create Flash Image" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createflash"/>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createlisting.1297574284" name="GNU RISC-V Cross Create Listing" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.createlisting">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.source.444055371" name="Display source (--source|-S)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.source" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.allheaders.2064185570" name="Display all headers (--all-headers|-x)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.allheaders" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.demangle.57669172" name="Demangle names (--demangle|-C)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.demangle" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.linenumbers.1960890508" name="Display line numbers (--line-numbers|-l)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.linenumbers" value="true" valueType="boolean"/>
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.wide.534553466" name="Wide lines (--wide|-w)" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.createlisting.wide" value="true" valueType="boolean"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.printsize.272205547" name="GNU RISC-V Cross Print Size" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.printsize">
+                                								
+                                <option id="ilg.gnumcueclipse.managedbuild.cross.riscv.option.printsize.format.1374514839" name="Size format" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.option.printsize.format" useByScannerDiscovery="false"/>
+                                							
+                            </tool>
+                            						
+                        </toolChain>
+                        					
+                    </folderInfo>
+                    				
+                </configuration>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+            		
+        </cconfiguration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+        		
+        <project id="pse-mss-usb-host-hid.ilg.gnumcueclipse.managedbuild.cross.riscv.target.elf.1668613013" name="Executable" projectType="ilg.gnumcueclipse.managedbuild.cross.riscv.target.elf"/>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="scannerConfiguration">
+        		
+        <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+        		
+        <scannerConfigBuildInfo instanceId="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug.610310420;ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.debug.610310420.;ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.1729918383;ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.input.1562077366">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release.256923934;ilg.gnumcueclipse.managedbuild.cross.riscv.config.elf.release.256923934.;ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.627990295;ilg.gnumcueclipse.managedbuild.cross.riscv.tool.c.compiler.input.1155241434">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+    	
+    <storageModule moduleId="refreshScope" versionNumber="2">
+        		
+        <configuration configurationName="Debug">
+            			
+            <resource resourceType="PROJECT" workspacePath="/pse-mss-usb-host-hid"/>
+            		
+        </configuration>
+        		
+        <configuration configurationName="Release">
+            			
+            <resource resourceType="PROJECT" workspacePath="/pse-mss-usb-host-hid"/>
+            		
+        </configuration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+    
+</cproject>
