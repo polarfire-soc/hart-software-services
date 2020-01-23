@@ -1,0 +1,7 @@
+include $CSD/scripts/polarfire-soc-multiple-servers-base.resc
+
+machine LoadPlatformDescriptionFromString "mouse: USB.USBMouse @ usb 0"
+
+showAnalyzer mmuart0
+
+runMacro $ReadyForGdb

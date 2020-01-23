@@ -1,0 +1,131 @@
+body	{ margin: 0 }
+
+.footer {
+	color:#FFFFFF; 
+	font-family:Arial, Helvetica, sans-serif; 
+	font-size:11px;
+	font-weight:bold;
+}
+
+.footer a:link, .footer a:hover, .footer a:visited {
+	color:#FFFFFF; 
+	font-family:Arial, Helvetica, sans-serif; 
+	font-size:11px;
+	font-weight:bold;
+}
+
+.bodyText {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #333333;
+}
+.headline1 {
+	font-family: "Trebuchet MS";
+	font-size: 14px;
+	font-weight: bold;
+	color: #666666;
+}
+.smallText {
+	font-family: Verdana, Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	color: #666666;
+}
+
+.headline {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	color: #666666;
+	padding-top: 5px;
+
+}
+
+/* Beg new styles added 5-22-2006 - Nicole James [ www.Pint.com ] */
+.ctAppName
+{
+	font-family: Arial;
+	font-size: xx-small;     
+}
+
+.ctData
+{
+	font-family: Arial;
+	font-size: xx-small;     
+}
+
+#contentROHS
+{
+	font-family: Verdana;
+	font-size: x-small;   	
+}
+
+.contentROHS
+{
+	font-family: Verdana;
+	font-size: x-small; 	
+}
+
+.contentROHSHeadline
+{
+	font-family: Verdana;
+	font-size: 1.1em;
+	font-weight: bold;  
+}
+
+.contentROHSTable
+{
+	font-family: Verdana;
+	font-size: x-small; 	
+}
+
+/* End new styles added 5-22-2006 - Nicole James [ www.Pint.com ] */
+
+
+/* New Styles */
+
+#PBnav		{
+				border-bottom: 1px solid #666; padding: 0 0 4px;
+				font-family: Arial, Helvetica, sans-serif; font-size: 9px;
+				}
+#PBnav div		{ background: #fff; display: inline; padding: 4px 3px; }
+#PBnav div.on	{ background: #E2E2E2; }
+
+
+#PBnav a:link, a:visited { color: #234270; text-decoration: underline; }
+#PBnav a:hover	{ color: #d3a21e; }
+
+/* Beg add 6-12-2006 - Nicole James */
+#PBnavPPG							{ font-family: Arial, Helvetica, sans-serif; font-size: 10px; padding: 0px 0px 0px 0px; }
+#PBnavPPG td						{ font-family: Arial, Helvetica, sans-serif; font-size: 10px; padding: 5px; }
+#PBnavPPG a:link, #PBnav2 a:visited { color: #234270; text-decoration: underline; height: 16px; line-height: 16px; }
+#PBnavPPG div						{ height: 16px; line-height: 16px; display: inline; }
+#PBnavPPG a:hover					{ color: #d3a21e; }
+#PBnavPPG div.on					{ background: #E2E2E2; }
+
+
+
+
+/* End add 6-12-2006 - Nicole James */
+
+#PBnav2		{ font-family: Arial, Helvetica, sans-serif; font-size: 9px; padding: 0px 0px 0px 0px; }
+
+#PBnav2 td		{ font-family: Arial, Helvetica, sans-serif; font-size: 9px; padding: 5px; }
+
+#PBnav2 a:link, #PBnav2 a:visited { color: #234270; text-decoration: underline; height: 16px; line-height: 16px; background: url(../images/tertnav_arrow2.gif) no-repeat; padding-left: 8px; }
+#PBnav2 div	{ height: 16px; line-height: 16px; padding-left: 8px; display: inline; }
+#PBnav2 a:hover	{ color: #d3a21e; background: url(../images/tertnav_arrow2_roll.gif) no-repeat; }
+
+
+#PBnavBar		{ height: 10px; background: #234270 url(../images/tertnav_tile.gif); line-height: 0px; font-size: 0px; padding: 0px; margin-bottom: 20px; }
+
+
+#bread 			{ margin: 0 0 7px 0; }
+#rightimage  	{ float: right; width: 300px; padding-top: 20px; }
+#contentholder	 	{ padding: 15px 0 0 20px; }
+#copywrite	 	{ position: relative; width: 100%; padding: 1px 0px 3px 0px; border-top: 3px solid #101010; margin-top: 7px; }
+#grayboxout	 	{ float: right; width: 235px; padding-right: 5px; }
+#grayboxin	 	{ position: relative; float: right; background-color: #EAE8E2; width: 215px; padding: 8px; }
+
+#hr_partbrowse td	{ padding: 10px; }
+#hr_partbrowse form	{ margin-top: 0; }
+#hr_partbrowse form option	{ font-size: 10px; }
+#hr_partbrowse .on	{ background: #efefef; border-right: 5px solid #ffffff; }
