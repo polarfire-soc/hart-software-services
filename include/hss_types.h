@@ -42,6 +42,7 @@ extern "C" {
 #  include <stddef.h>  // for size_t
 #  include <stdbool.h> // for bool, true, false
 #  include <stdint.h>
+typedef long			ssize_t;
 #else
 #  ifdef __packed
 #    undef __packed

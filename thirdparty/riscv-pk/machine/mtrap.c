@@ -252,6 +252,7 @@ void misaligned_load_trap(uintptr_t *regs, uintptr_t mcause, uintptr_t mepc)
 
 void misaligned_store_trap(uintptr_t *regs, uintptr_t mcause, uintptr_t mepc)
 {
-    mHSS_DEBUG_PRINTF("mepc is %p, mcause is %p, badaddr is %p\n", mepc, mcause, read_csr(mtval));
+    mHSS_DEBUG_PRINTF("mepc is %p, mcause is %p\n", mepc, mcause);
+    //mHSS_DEBUG_PRINTF("mepc is %p, mcause is %p, badaddr is %p\n", mepc, mcause, read_csr(mtval));
     while (1) { asm volatile ("#noop\n"); } 
 }

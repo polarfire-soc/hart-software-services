@@ -27,6 +27,38 @@
 # Toplevel HSS Makefile
 #
 
+SHELL=/bin/bash
+
+#
+# To build the HSS under SoftConsole on Windows, we need to spawn the build out to
+# MSYS2. If MSYS2, we need to ensure that the path is correctly setup to find
+# genconfig.exe
+# 
+# Therefore, we need to determine whether we are on Linux, or a Unix-ish environment
+# such as MSYS2 or Cygwin.  
+#
+SYSTEM:=$(shell uname -s)
+ifneq (, $(findstring Linux, $(SYSTEM)))
+# Linux-specific mods
+#
+# Nothing special needed
+else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))
+# MSYS2-specific mods
+#
+# Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
+PATH+=:/usr/bin:/bin
+$(info MSYS2 detected, PATH is "$(PATH)")
+else ifneq (, $(findstring CYGWIN, $(SYSTEM)))
+# Any Cygwin-specific paths
+#
+# Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
+#
+ifdef CONFIG_OPENSBI
+$(warning OPENSBI build may fail on Cygwin due to issues with file paths)
+endif
+else
+endif
+
 RISCV_TARGET=hss.elf
 
 SRCS-y= \
@@ -36,7 +68,7 @@ SRCS-y= \
 
 INCLUDES=\
     -I./include \
-    -I./thirdparty/riscv-pk/machine \
+    -I./thirdparty/riscv-pk \
     -I.
 
 ASM_SRCS= \
@@ -84,7 +116,7 @@ EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
 ifdef CONFIG_OPENSBI
 OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
 $(OPENSBI_LIBS):
-	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -C thirdparty/opensbi V=$(V)
+	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
 else
 OPENSBI_LIBS =
 endif
@@ -117,7 +149,7 @@ endif
 
 $(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT)
 	@$(ECHO) " LD        $@";
-	+$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT)  $(CFLAGS_GCCEXT) $(OPT-y) -fuse-linker-plugin -static -nostdlib -nostartfiles -nodefaultlibs -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	+$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT)  $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"

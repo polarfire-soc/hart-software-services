@@ -49,12 +49,12 @@ extern "C" {
 #  include "sbi/sbi_hart.h"
 #  include "sbi/sbi_init.h"
 #  include "sbi/sbi_scratch.h"
-#  define mCSR_READ csr_read
+#  define mHSS_CSR_READ csr_read
 #  define mCSR_WRITE csr_write
 #else
 #  include "machine/encoding.h"
 #  include "machine/bits.h"
-#  define mCSR_READ read_csr
+#  define mHSS_CSR_READ read_csr
 #  define mCSR_WRITE write_csr
 #endif
 

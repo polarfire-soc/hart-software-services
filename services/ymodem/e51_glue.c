@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include <sys/types.h>
 
 #include "hw_platform.h"
 #include "mss_hal.h"
@@ -87,33 +88,29 @@ void print_page_program_verify_failure(uint8_t * address, const char *msg, uint8
     mHSS_DEBUG_PRINTF_EX(buffer);
 }
 
+static void l_e51_envm_init(void)
+{
+    static bool initialized = false;
+
+    if (!initialized) {
+        volatile uint8_t resultTemp = envm_init();
+        print_result(resultTemp, "envm_init()");
+
+        envm_set_clock(MSS_COREPLEX_CPU_CLK);
+        print_result(0, "envm_set_clock()");
+
+        MSS_QSPI_init();
+        MSS_QSPI_enable();
+        Flash_init(MSS_QSPI_NORMAL);
+        print_result(0, "Flash_init()");
+        initialized = true;
+    }
+}
+
 void e51_ymodem_loop(void)
 {
-    volatile uint8_t resultTemp;
     uint8_t rx_byte;
     bool done = false;
-
-    SYSREG->SUBBLK_CLOCK_CR = 0xffffffff;  // all clocks on
-    SYSREG->SOFT_RESET_CR &= 
-        ~((1u << 0u) | (1u << 4u) | (1u << 5u) | (1u << 19u) | (1u << 23u) | (1u << 28u)); // MMUART0
-
-    SYSREG->IOMUX0_CR = 0xfffffe7f;        // connect MMUART0 to GPIO, QSPI to pads
-    SYSREG->IOMUX1_CR = 0x05500000;        // pad5,6 = mux 5 (mmuart 0)
-
-    // IOMUX configurations to allow QSPI pins to the pads
-    SYSREG->IOMUX2_CR = 0;
-    SYSREG->IOMUX3_CR = 0;
-    SYSREG->IOMUX4_CR = 0;
-    SYSREG->IOMUX5_CR = 0;
-
-    resultTemp = envm_init();
-    print_result(resultTemp, "envm_init()");
-
-    envm_set_clock(MSS_COREPLEX_CPU_CLK);
-    print_result(0, "envm_set_clock()");
-
-    //Flash_init(MSS_QSPI_NORMAL);
-    print_result(0, "Flash_init()");
 
     uint32_t received = 0u;
     extern uint64_t __ddr_start;
@@ -134,6 +131,7 @@ void e51_ymodem_loop(void)
             switch (rx_byte) {
             case '1':
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
+                l_e51_envm_init();
                 Flash_die_erase();
                 print_result(0, CRLF " QSPI FLASH_chip_erase()" CRLF);
                 break;
@@ -149,6 +147,7 @@ void e51_ymodem_loop(void)
 
             case '3':
                 mHSS_PUTS(CRLF "Attempting to flash received data" CRLF);
+                l_e51_envm_init();
                 Flash_program((uint8_t *)pBuffer, 0, received);
                 break;
 

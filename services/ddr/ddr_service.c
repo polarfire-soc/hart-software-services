@@ -21,7 +21,7 @@
 
 
 /* Timeouts */
-#define DDR_IDLE_PERIODIC_TIMEOUT (ONE_SEC * 60u * 10u)
+#define DDR_IDLE_PERIODIC_TIMEOUT (ONE_SEC * 60llu * 60llu * 10llu)
 
 /* Module Prototypes (states) */
 static void ddr_init_handler(struct StateMachine * const pMyMachine);

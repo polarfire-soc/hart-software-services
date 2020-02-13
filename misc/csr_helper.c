@@ -34,10 +34,10 @@ static struct {
 
 void CSR_Init(void)
 {
-    csrHelperPrivateData.hartID = csr_read(mhartid);
-    csrHelperPrivateData.vendorID = csr_read(mvendorid);
-    csrHelperPrivateData.archID = csr_read(marchid);
-    csrHelperPrivateData.misa = csr_read(misa);
+    csrHelperPrivateData.hartID = mHSS_CSR_READ(mhartid);
+    csrHelperPrivateData.vendorID = mHSS_CSR_READ(mvendorid);
+    csrHelperPrivateData.archID = mHSS_CSR_READ(marchid);
+    csrHelperPrivateData.misa = mHSS_CSR_READ(misa);
 }
 #endif
 
@@ -49,7 +49,7 @@ __attribute__((weak)) enum HSSHartId CSR_GetHartId(void)
 #  ifdef CONFIG_SUPERLOOP_IN_U_MODE
     result = csrHelperPrivateData.hartID;
 #  else
-    result = csr_read(mhartid);
+    result = mHSS_CSR_READ(mhartid);
 #  endif
 #else
     result = 0;
@@ -66,7 +66,7 @@ unsigned long CSR_GetVendorID(void)
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
     result = csrHelperPrivateData.vendorID;
 #else
-    result = csr_read(mvendorid);
+    result = mHSS_CSR_READ(mvendorid);
 #endif
 
     return result;
@@ -79,7 +79,7 @@ unsigned long CSR_GetArchID(void)
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
     result = csrHelperPrivateData.archID;
 #else
-    result = csr_read(marchid);
+    result = mHSS_CSR_READ(marchid);
 #endif
 
     return result;
@@ -92,7 +92,7 @@ unsigned long CSR_GetMISA(void)
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
     result = csrHelperPrivateData.misa;
 #else
-    result = csr_read(misa);
+    result = mHSS_CSR_READ(misa);
 #endif
 
     return result;
@@ -103,9 +103,9 @@ HSSTicks_t CSR_GetTickCount(void)
     HSSTicks_t tickCount;
 
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
-    tickCount = csr_read(cycle);
+    tickCount = mHSS_CSR_READ(cycle);
 #else
-    tickCount = csr_read(mcycle);
+    tickCount = mHSS_CSR_READ(mcycle);
 #endif
 
     return tickCount;
@@ -116,7 +116,7 @@ HSSTicks_t CSR_GetTime(void)
     HSSTicks_t time;
 
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
-    time = csr_read(time);
+    time = mHSS_CSR_READ(time);
 #else
     time = mHSS_ReadRegU64(CLINT, MTIME);
 #endif

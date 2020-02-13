@@ -163,7 +163,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             sbi_hart_switch_mode(0u, 0u, *(unsigned long *)p_extended_buffer, next_mode);
 #else
             // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1
-            uint32_t mstatus_val = mCSR_READ(mstatus);
+            uint32_t mstatus_val = mHSS_CSR_READ(mstatus);
 
             // next_mode stores the desired privilege mode to return to..
             // typically PRV_S

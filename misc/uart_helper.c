@@ -68,16 +68,16 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
         switch (c) {
         case '\r':
-            mHSS_PUTC(c);
+            MSS_UART_polled_tx(&g_mss_uart0_lo, &c, 1u);
             finished = true;
             break;
 
         case '\n':
-            mHSS_PUTC(c);
+            MSS_UART_polled_tx(&g_mss_uart0_lo, &c, 1u);
             finished = true;
             break;
 
-        case 0x7f: // delete
+        case 0x7Fu: // delete
             if (result) {
                 result--;
                 mHSS_PUTS("\033[D \033[D");
@@ -85,7 +85,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
             }
             break;
 
-        case 8: // backspace - ^H
+        case 0x08u: // backspace - ^H
             if (result) {
                 result--;
                 mHSS_PUTS(" \033[D");
@@ -93,19 +93,19 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
             }
             break;
 
-        case 3: // intr - ^C
+        case 0x03u: // intr - ^C
             result = -1;
             myBuffer[0] = 0;
             finished = true;
             break;
 
-        case 27: // ESC
+        case 0x1Bu: // ESC
             result = -1;
             myBuffer[0] = 0;
             finished = true;
             break;
 
-        case 4: // ^D
+        case 0x04u: // ^D
             if (result == 0) {
                 finished = true;
             }
@@ -113,14 +113,16 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
         default:
             if (result < bufferLen) {
-                mHSS_PUTC(c);
+                MSS_UART_polled_tx(&g_mss_uart0_lo, &c, 1u);
                 myBuffer[result] = c;
                 result++;
             }
             break;
         }
     }
-    mHSS_PUTS(CRLF);
+
+    const char crlf[] = CRLF;
+    MSS_UART_polled_tx_string(&g_mss_uart0_lo, (const uint8_t *)crlf);
 
     if (result > 0) {
         *pBuffer = myBuffer;
@@ -161,7 +163,8 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
         }
 
         if (do_sec_tick && HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
-            mHSS_PUTC('.');
+            const uint8_t dot='.';
+            MSS_UART_polled_tx(&g_mss_uart0_lo, &dot, 1);
             last_sec_time = HSS_GetTime();
         }
 

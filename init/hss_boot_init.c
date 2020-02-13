@@ -71,10 +71,6 @@ bool HSS_BootInit(void)
     HSS_Setup_MPU();
     HSS_PMP_Init();
 
-    mHSS_DEBUG_PRINTF("\tInitializing Clocks and IO..." CRLF);
-    HSS_Setup_Clocks();
-    HSS_Setup_PAD_IO();
-
     mHSS_DEBUG_PRINTF("\tInitializing Boot Image.." CRLF);
 
 #ifdef CONFIG_SERVICE_BOOT

@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - HSS Debugging support
  *
  */
@@ -57,10 +57,11 @@ extern "C" {
 #    define mHSS_DEBUG_ERROR_TEXT            mHSS_DEBUG_PRINTF_EX("\033[37;41m")
 #    define mHSS_DEBUG_WARN_TEXT             mHSS_DEBUG_PRINTF_EX("\033[1;33m")
 #    define mHSS_DEBUG_STATUS_TEXT           mHSS_DEBUG_PRINTF_EX("\033[1;32m")
-#    define mHSS_DEBUG_NORMAL_TEXT           mHSS_DEBUG_PRINTF_EX("\033[0m"); 
-#    define mHSS_DEBUG_STATE_TRANSITION_TEXT mHSS_DEBUG_PRINTF_EX("\033[37;44m"); 
+#    define mHSS_DEBUG_NORMAL_TEXT           mHSS_DEBUG_PRINTF_EX("\033[0m");
+#    define mHSS_DEBUG_STATE_TRANSITION_TEXT mHSS_DEBUG_PRINTF_EX("\033[37;44m");
 #else
-#  define mHSS_DEBUG_ERROR_TEXT 
+#  define mHSS_DEBUG_ERROR_TEXT
+#  define mHSS_DEBUG_WARN_TEXT
 #  define mHSS_DEBUG_STATUS_TEXT
 #  define mHSS_DEBUG_NORMAL_TEXT
 #  define mHSS_DEBUG_STATE_TRANSITION_TEXT
@@ -96,7 +97,7 @@ extern int my_printf(char const * const fmt, ...);
 #      define mHSS_DEBUG_PUTS my_printf
 #    endif
 #  else
-#    define mHSS_DEBUG_PRINTF (void) 
+#    define mHSS_DEBUG_PRINTF (void)
 #    define mHSS_DEBUG_PRINTF_EX (void)
 #    define mHSS_DEBUG_PUTS (void)
 #  endif

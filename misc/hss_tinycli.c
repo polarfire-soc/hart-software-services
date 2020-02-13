@@ -181,16 +181,19 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
 
 static bool HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen)
 {
-    ssize_t result = 0;
+    bool result = false;
+    ssize_t status = 0;
 
-    result = uart_getline(pBuffer, pBufLen);
+    status = uart_getline(pBuffer, pBufLen);
 
-    if (result < 0) {
+    if (status < 0) {
         mHSS_DEBUG_PRINTF("Problem reading input" CRLF);
-        return false;
+        // result = false;
     } else {
-        return true;
+        result = true;
     }
+
+    return result;
 }
 
 static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer)
@@ -218,7 +221,7 @@ static void HSS_TinyCLI_Execute(void)
     if (matchFoundFlag) {
         commands[i].handler(i);
     } else {
-        mHSS_DEBUG_PRINTF("Unknown command." CRLF CRLF);
+        mHSS_DEBUG_PRINTF("Unknown command >>%s<<." CRLF CRLF, tokenArray[0]);
     }
 }
 
@@ -231,7 +234,7 @@ void HSS_TinyCLI_Parser(void)
     mHSS_FANCY_PRINTF("Timeout in %d seconds" CRLF, CONFIG_TINYCLI_TIMEOUT);
     mHSS_PUTC('.');
 
-    if (uart_getchar(&rcv_buf, 5, true)) {
+    if (uart_getchar(&rcv_buf, CONFIG_TINYCLI_TIMEOUT, true)) {
         mHSS_DEBUG_PRINTF("Character %d pressed " CRLF, rcv_buf);
 
         if (rcv_buf != 27) { // ESC => done

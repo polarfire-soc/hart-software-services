@@ -35,10 +35,7 @@
 
 #include "mpfs_reg_map.h"
 
-#ifdef CONFIG_OPENSBI
-#else
-#  include "machine/encoding.h"
-#endif
+#include "csr_helper.h"
 
 #include "mss_sysreg.h"
 #include "hss_memcpy_via_pdma.h"
@@ -122,7 +119,7 @@ void HSS_Setup_PAD_IO(void)
     };
 
     /* Configure MSS IO banks */
-    memcpy_via_pdma((void *)(&(SYSREG->MSSIO_BANK4_CFG_CR)), 
+    memcpy((void *)(&(SYSREG->MSSIO_BANK4_CFG_CR)), 
         &(hss_MSSIO_Bank_Config.MSSIO_BANK4_CFG_CR), sizeof(hss_MSSIO_Bank_Config));
 
     /**
@@ -147,7 +144,7 @@ void HSS_Setup_PAD_IO(void)
     };
 
     /* Configure IO muxes */
-    memcpy_via_pdma((void *)(&(SYSREG->IOMUX0_CR)), &(hss_IOMUX_Config.IOMUX0_CR), 
+    memcpy((void *)(&(SYSREG->IOMUX0_CR)), &(hss_IOMUX_Config.IOMUX0_CR), 
         sizeof(hss_IOMUX_Config));
 }
 
@@ -372,7 +369,7 @@ void HSS_Setup_PMP(void)
           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, }, // pmpaddr*
     };
 
-    const enum HSSHartID myHartId = CSR_GetHartId();
+    const enum HSSHartId myHartId = CSR_GetHartId();
     assert(myHartId < mSPAN_OF(hss_PMP_Config));
 
     const struct HSS_PMP_Config *pConfig = &hss_PMP_Config[myHartId]; 
@@ -438,7 +435,17 @@ void HSS_Setup_L2Cache(void)
 void HSS_Setup_Clocks(void)
 {
     const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
-    const uint32_t hss_soft_reset_Config = 0x00000000u;
+    const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
+        ~( (1u << 0u) | /* Release ENVM from Reset */ 
+           (1u << 4u) | /* Release TIMER from Reset */  
+           (1u << 5u) | /* Release MMUART0 from Reset */ 
+           (1u << 6u) | /* Release MMUART1 from Reset */ 
+           (1u << 7u) | /* Release MMUART2 from Reset */ 
+           (1u << 8u) | /* Release MMUART3 from Reset */ 
+           (1u << 9u) | /* Release MMUART4 from Reset */ 
+           (1u << 19u) | /* Release QSPI from Reset */ 
+           (1u << 23u) | /* Release DDRC from Reset */ 
+           (1u << 28u) ); /* Release ATHENA from Reset */
 
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;

@@ -205,9 +205,9 @@ bool HSS_MemTestDDRFast(void)
 
 bool HSS_MemTestDDRFull(void)
 {
-    bool result = true;
+    bool result = HSS_MemTestDDRFast();
 
-    if (HSS_MemTestDDRFast()) {
+    if (result) {
         if (HSS_MemTestDevice(&__ddr_start, __ddr_size) != NULL) {
             mHSS_FANCY_PRINTF("FAILED!" CRLF);
             result = false;

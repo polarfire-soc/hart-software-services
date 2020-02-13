@@ -38,6 +38,7 @@
 #  include "sbi/riscv_asm.h"
 #endif
 
+#include "hss_sys_setup.h"
 #include "mpfs_reg_map.h"
 
 bool HSS_UARTInit(void);
@@ -81,6 +82,15 @@ bool HSS_LogoInit(void);
 
 #define L2LIM_START      0x08000000u
 #define L2LIM_END        0x09FFFFFFu
+
+#include "mss_sysreg.h"
+void HSS_LowlevelInit(void)
+{
+    //  Initializing Clocks and IO
+    HSS_Setup_Clocks();
+    HSS_Setup_PAD_IO();
+}
+
 
 /* Init memories.. */
 void HSS_Init_TIMs(void)
@@ -149,6 +159,7 @@ void HSS_Init_Setup_RWDATA_And_BSS(void)
 
 void HSS_Init(void)
 {
+    HSS_LowlevelInit();
     HSS_UARTInit(); // initialize this manually to enable debug output
     //HSS_Init_TIMs();
 #ifdef CONFIG_USE_LOGO

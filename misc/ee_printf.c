@@ -614,12 +614,14 @@ int ee_printf(const char *fmt, ...)
   int hartid;
   int result=0;
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
   if (!g_initialized) {
     g5soc_init_mutex(&g_uart_mutex);
     g_initialized = true;
   }
 
   g5soc_take_mutex(&g_uart_mutex);
+#endif
 
   {
       char buf[MAX_TEXT_LENGTH];	//,*p;
@@ -633,7 +635,9 @@ int ee_printf(const char *fmt, ...)
       result = uart_putstring(hartid, buf);
   }
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
   g5soc_release_mutex(&g_uart_mutex );
+#endif
 
   return result;
 }
@@ -643,19 +647,23 @@ int ee_puts(const char *buf)
   int hartid;
   int result=0;
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
   if (!g_initialized) {
     g5soc_init_mutex(&g_uart_mutex);
     g_initialized = true;
   }
 
   g5soc_take_mutex(&g_uart_mutex);
+#endif
 
   {
       hartid = CSR_GetHartId();
       result = uart_putstring(hartid, (char *)buf);
   }
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
   g5soc_release_mutex(&g_uart_mutex );
+#endif
 
   return result;
 }
@@ -665,12 +673,14 @@ int ee_putc(const char c)
   int hartid;
   int result=0;
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
   if (!g_initialized) {
     g5soc_init_mutex(&g_uart_mutex);
     g_initialized = true;
   }
 
   g5soc_take_mutex(&g_uart_mutex);
+#endif
 
   {
       const char buf[2] = { (char)c, 0 };
@@ -678,7 +688,9 @@ int ee_putc(const char c)
       result = uart_putstring(hartid, (char *)buf);
   }
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
   g5soc_release_mutex(&g_uart_mutex );
+#endif
 
   return result;
 }
