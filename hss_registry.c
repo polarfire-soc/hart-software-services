@@ -129,7 +129,9 @@ const struct IPI_Handler ipiRegistry[] = {
     { IPI_MSG_ACK_COMPLETE, 		IPI_ACK_IPIHandler },
     { IPI_MSG_HALT, 			HSS_Null_IPIHandler },
     { IPI_MSG_CONTINUE, 		HSS_Null_IPIHandler },
+#ifdef CONFIG_SERVICE_GOTO
     { IPI_MSG_GOTO, 			HSS_GOTO_IPIHandler },
+#endif
 #ifdef CONFIG_SERVICE_OPENSBI
     { IPI_MSG_OPENSBI_INIT, 	  	HSS_OpenSBI_IPIHandler },
 #else
@@ -182,7 +184,7 @@ extern struct StateMachine ddr_service;
 extern struct StateMachine opensbi_service;
 #endif
 
-struct StateMachine /*@null@*/ * const pStateMachines[] = {
+struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #ifdef CONFIG_SERVICE_IPI_POLL
     &ipi_poll_service,
 #endif
@@ -218,7 +220,7 @@ struct StateMachine /*@null@*/ * const pStateMachines[] = {
     &opensbi_service,
 #endif
 };
-const size_t spanOfPStateMachines = mSPAN_OF(pStateMachines);
+const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 
 /******************************************************************************************************/
 /*!
@@ -228,34 +230,47 @@ const size_t spanOfPStateMachines = mSPAN_OF(pStateMachines);
  *
  * \warning It must end with a 'NULL' sentinel to indicate end
  */
-bool HSS_DDRInit(void);
-bool HSS_QueuesInit(void);
-#ifdef CONFIG_SERVICE_QSPI
-bool HSS_QSPIInit(void);
-#endif
-#ifdef CONFIG_SERVICE_BOOT
-bool HSS_BootInit(void);
-#endif
-#ifdef CONFIG_OPENSBI
-bool HSS_OpenSBIInit(void);
-#endif
 
-const struct InitFunction /*@null@*/ initFunctions[] = {
-    //{ "HSS_UARTInit",   HSS_UARTInit,      false },
-    { "HSS_RegistryInit", HSS_RegistryInit,  false },
-    //{ "HSS_DDRInit",    HSS_DDRInit,       false },
-    { "IPI_QueuesInit",   IPI_QueuesInit,    false },
+// TODO/TBD: clean these up into headers
+
+#include "hss_init.h"
+#include "hss_tinycli.h"
+#include "hss_boot_pmp.h"
+#include "hss_sys_setup.h"
+
+const struct InitFunction /*@null@*/ globalInitFunctions[] = {
+    { "HSS_Init_Setup_RWDATA_And_BSS", HSS_Init_Setup_RWDATA_And_BSS, false },
+    { "HSS_Setup_Clocks",              HSS_Setup_Clocks,              false },
+    { "HSS_Setup_Clocks",              HSS_Setup_PAD_IO,              false },
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
+    { "HSS_InitTIMs",                  HSS_InitTIMs,                  false },
+    { "HSS_InitDDR",                   HSS_InitDDR,                   false },
+#endif
+    { "HSS_UARTInit",                  HSS_UARTInit,                  false },
+#ifdef CONFIG_OPENSBI
+    { "HSS_OpenSBIInit",               HSS_OpenSBIInit,               false },
+#endif
+#ifdef CONFIG_USE_LOGO
+    { "HSS_LogoInit",                  HSS_LogoInit,                  false },
+#endif
+    { "HSS_E51_Banner",                HSS_E51_Banner,                false },
+    { "HSS_DDRInit",                   HSS_DDRInit,                   false },
+#ifdef CONFIG_TINYCLI
+    { "HSS_TinCLI_Parser",             HSS_TinyCLI_Parser,            false },
+#endif
+    { "HSS_RegistryInit",              HSS_RegistryInit,              false },
+    { "IPI_QueuesInit",                IPI_QueuesInit,                false },
 #ifdef CONFIG_SERVICE_QSPI
-    { "HSS_QSPIInit",     HSS_QSPIInit,      false },
+    { "HSS_QSPIInit",                  HSS_QSPIInit,                  false },
 #endif
 #ifdef CONFIG_SERVICE_BOOT
-    { "HSS_BootInit",     HSS_BootInit,      false },
-#endif
-#ifdef CONFIG_OPENSBI
-    { "HSS_OpenSBIInit",  HSS_OpenSBIInit,   false },
+    { "HSS_Setup_PLIC",                HSS_Setup_PLIC,                false },
+    { "HSS_Setup_MPU",                 HSS_Setup_MPU,                 false },
+    { "HSS_PMP_Init",                  HSS_PMP_Init,                  false },
+    { "HSS_BootInit",                  HSS_BootInit,                  false },
 #endif
 };
-const size_t spanOfInitFunctions = mSPAN_OF(initFunctions);
+const size_t spanOfGlobalInitFunctions = mSPAN_OF(globalInitFunctions);
 
 
 /******************************************************************************************************/
@@ -270,7 +285,7 @@ const size_t spanOfInitFunctions = mSPAN_OF(initFunctions);
  */
 bool HSS_RegistryInit(void)
 {
-    mHSS_DEBUG_PRINTF(" Initializing Registry..." CRLF);
+    mHSS_DEBUG_PRINTF("Initializing Registry..." CRLF);
     //assert(ipiRegistry[mSPAN_OF(ipiRegistry)-1].handler == NULL);
     //assert(initFunctions[mSPAN_OF(initFunctions)-1].handler == NULL);
     //assert(pStateMachines[mSPAN_OF(pStateMachines)-1] == NULL);

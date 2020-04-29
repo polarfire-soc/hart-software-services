@@ -9,11 +9,11 @@
 
 /***********************************************************************************
  * @file mcall.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief mcall definitions
 
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11865 $
+ * SVN $Date: 2019-07-29 15:28:05 +0100 (Mon, 29 Jul 2019) $
  */
 #ifndef RISCV_SBI_H
 #define RISCV_SBI_H

@@ -42,12 +42,12 @@ extern "C" {
 bool HSS_RegistryInit(void);
 
 extern const struct IPI_Handler  /*@null@*/ ipiRegistry[];
-extern struct StateMachine /*@null@*/ * const pStateMachines[];
-extern const struct InitFunction /*@null@*/ initFunctions[];
+extern struct StateMachine /*@null@*/ * const pGlobalStateMachines[];
+extern const struct InitFunction /*@null@*/ globalInitFunctions[];
 
 extern const size_t spanOfIpiRegistry;
-extern const size_t spanOfPStateMachines;
-extern const size_t spanOfInitFunctions;
+extern const size_t spanOfPGlobalStateMachines;
+extern const size_t spanOfGlobalInitFunctions;
 
 #ifdef __cplusplus
 }

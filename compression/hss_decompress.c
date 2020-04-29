@@ -46,9 +46,9 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
     int result = 0;
     struct HSS_CompressedImage compressedImageHdr = *(struct HSS_CompressedImage *)pInputBuffer;
 
-    if (compressedImageHdr.magic != HSS_COMPRESSED_MAGIC) {
+    if (compressedImageHdr.magic != mHSS_COMPRESSED_MAGIC) {
         mHSS_DEBUG_PRINTF("Compressed Image is missing magic value (%08X vs %08X)" CRLF, 
-            compressedImageHdr.magic, HSS_COMPRESSED_MAGIC);
+            compressedImageHdr.magic, mHSS_COMPRESSED_MAGIC);
     } else {
         mHSS_DEBUG_PRINTF("Compressed Image Length is %lu" CRLF, compressedImageHdr.compressedImageLen);
 
@@ -64,7 +64,7 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
             const uint8_t *pByteOffset = pInputBuffer;
             pByteOffset += sizeof(struct HSS_CompressedImage);
 
-            mHSS_DEBUG_PRINTF("Decompressing from 0x%p to 0x%p" CRLF, pByteOffset, pOutputBuffer);
+            mHSS_DEBUG_PRINTF("Decompressing from %p to %p" CRLF, pByteOffset, pOutputBuffer);
 
             result = fastlz_decompress(
                 (const void *)pByteOffset, (int)compressedImageHdr.compressedImageLen, 

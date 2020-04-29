@@ -1510,7 +1510,7 @@ config_baud_divisors
     this_uart->baudrate = baudrate;
 
     /* Use the system clock value from hw_platform.h */
-    pclk_freq = MSS_AXI_SWITCH_CLK;
+    pclk_freq = LIBERO_SETTING_MSS_APB_AHB_CLK;
 
     /*
      * Compute baud value based on requested baud rate and PCLK frequency.

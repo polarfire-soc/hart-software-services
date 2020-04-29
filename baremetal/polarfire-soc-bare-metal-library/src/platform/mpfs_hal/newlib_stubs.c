@@ -9,11 +9,11 @@
 
 /*******************************************************************************
  * @file newlib_stubs.c
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Stubs for Newlib system calls.
  *  
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12296 $
+ * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #include <sys/times.h>
 #include <sys/stat.h>
@@ -25,35 +25,35 @@
  *------------------------------------------------------------------------------
  * A default implementation for the redirection of the output of printf() to a
  * UART is provided at the bottom of this file. This redirection is enabled by
- * adding the symbol/define MICROSEMI_STDIO_THRU_MMUART0 or
- * MICROSEMI_STDIO_THRU_MMUART0 to your project settings and specifying the baud
- * rate using the MICROSEMI_STDIO_BAUD_RATE define.
+ * adding the symbol/define MICROCHIP_STDIO_THRU_MMUART0 or
+ * MICROCHIP_STDIO_THRU_MMUART0 to your project settings and specifying the baud
+ * rate using the MICROCHIP_STDIO_BAUD_RATE define.
  */
-#ifdef MICROSEMI_STDIO_THRU_MMUART0
-#ifndef MICROSEMI_STDIO_THRU_UART
-#define MICROSEMI_STDIO_THRU_UART
+#ifdef MICROCHIP_STDIO_THRU_MMUART0
+#ifndef MICROCHIP_STDIO_THRU_UART
+#define MICROCHIP_STDIO_THRU_UART
 #endif
-#endif  /* MICROSEMI_STDIO_THRU_MMUART0 */
+#endif  /* MICROCHIP_STDIO_THRU_MMUART0 */
 
-#ifdef MICROSEMI_STDIO_THRU_MMUART1
-#ifndef MICROSEMI_STDIO_THRU_UART
-#define MICROSEMI_STDIO_THRU_UART
+#ifdef MICROCHIP_STDIO_THRU_MMUART1
+#ifndef MICROCHIP_STDIO_THRU_UART
+#define MICROCHIP_STDIO_THRU_UART
 #endif
-#endif  /* MICROSEMI_STDIO_THRU_MMUART1 */
+#endif  /* MICROCHIP_STDIO_THRU_MMUART1 */
 
 /*
  * Select which MMUART will be used for stdio and what baud rate will be used.
  * Default to 57600 baud if no baud rate is specified using the
- * MICROSEMI_STDIO_BAUD_RATE #define.
+ * MICROCHIP_STDIO_BAUD_RATE #define.
  */ 
-#ifdef MICROSEMI_STDIO_THRU_UART
+#ifdef MICROCHIP_STDIO_THRU_UART
 #include "drivers/mss_uart/mss_uart.h"
 
-#ifndef MICROSEMI_STDIO_BAUD_RATE
-#define MICROSEMI_STDIO_BAUD_RATE  MSS_UART_115200_BAUD
+#ifndef MICROCHIP_STDIO_BAUD_RATE
+#define MICROCHIP_STDIO_BAUD_RATE  MSS_UART_115200_BAUD
 #endif
 
-#ifdef MICROSEMI_STDIO_THRU_MMUART0
+#ifdef MICROCHIP_STDIO_THRU_MMUART0
 static mss_uart_instance_t * const gp_my_uart = &g_mss_uart0;
 #else
 static mss_uart_instance_t * const gp_my_uart = &g_mss_uart1;
@@ -64,7 +64,7 @@ static mss_uart_instance_t * const gp_my_uart = &g_mss_uart1;
  */
 static int g_stdio_uart_init_done = 0;
 
-#endif /* MICROSEMI_STDIO_THRU_UART */
+#endif /* MICROCHIP_STDIO_THRU_UART */
 
 /*==============================================================================
  * Environment variables.
@@ -187,7 +187,7 @@ int _read(int file, char *ptr, int len)
  */
 int _write_r( void * reent, int file, char * ptr, int len )
 {
-#ifdef MICROSEMI_STDIO_THRU_UART
+#ifdef MICROCHIP_STDIO_THRU_UART
     /*--------------------------------------------------------------------------
      * Initialize the UART driver if it is the first time this function is
      * called.
@@ -195,7 +195,7 @@ int _write_r( void * reent, int file, char * ptr, int len )
     if(!g_stdio_uart_init_done)
     {
         MSS_UART_init(gp_my_uart,
-                      MICROSEMI_STDIO_BAUD_RATE,
+                      MICROCHIP_STDIO_BAUD_RATE,
                       MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY);
                       
         g_stdio_uart_init_done = 1;
@@ -207,9 +207,9 @@ int _write_r( void * reent, int file, char * ptr, int len )
     MSS_UART_polled_tx(gp_my_uart, (uint8_t *)ptr, len);
     
     return len;
-#else   /* MICROSEMI_STDIO_THRU_UART */
+#else   /* MICROCHIP_STDIO_THRU_UART */
     return (0);
-#endif  /* MICROSEMI_STDIO_THRU_UART */
+#endif  /* MICROCHIP_STDIO_THRU_UART */
 }
 
 /*==============================================================================

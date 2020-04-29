@@ -34,7 +34,30 @@ extern "C" {
 #endif
 
 void HSS_Init(void);
-void HSS_Init_Setup_RWDATA_And_BSS(void);
+
+bool HSS_InitTIMs(void);
+bool HSS_InitDDR(void);
+bool HSS_Init_Setup_RWDATA_And_BSS(void);
+bool HSS_WakeSleepingHarts(void);
+bool HSS_E51_Banner(void);
+
+bool HSS_QueuesInit(void);
+#ifdef CONFIG_SERVICE_QSPI
+bool HSS_QSPIInit(void);
+#endif
+#ifdef CONFIG_SERVICE_BOOT
+bool HSS_BootInit(void);
+#endif
+#ifdef CONFIG_OPENSBI
+bool HSS_OpenSBIInit(void);
+#endif
+
+bool HSS_DDRInit(void);
+bool HSS_UARTInit(void);
+#ifdef CONFIG_USE_LOGO
+bool HSS_LogoInit(void);
+#endif
+
 
 #ifdef __cplusplus
 }

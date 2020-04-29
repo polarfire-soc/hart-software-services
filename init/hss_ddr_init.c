@@ -20,9 +20,7 @@
 #endif
 
 #include <assert.h>
-
-
-#include <mss_uart.h>
+#include "csr_helper.h"
 
 /*!
  * \brief DDR Training
@@ -37,10 +35,17 @@
  * TBD: is periodic re-calibration required during operation (e.g. temperature induced 
  * or other)
  */
-enum HSSHartId CSR_GetHartId(void);
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#  include "nwc/mss_nwc_init.h"
+#endif
+
 void HSS_DDR_Train(void)
 {
-    mHSS_DEBUG_PRINTF("\trunning DDR training on hart %u..." CRLF, CSR_GetHartId());
+    mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
+
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
+    MSS_NWC_init();    
+#endif
 }
 
 /*!
@@ -49,11 +54,11 @@ void HSS_DDR_Train(void)
 bool HSS_DDRInit(void)
 {
 #ifdef CONFIG_MEMTEST
-    mHSS_DEBUG_PRINTF("\tMemory Testing DDR..." CRLF);
+    mHSS_DEBUG_PRINTF("Memory Testing DDR..." CRLF);
     HSS_MemTestDDRFast();
 #endif
 
-    mHSS_DEBUG_PRINTF("\tInitializing DDR..." CRLF);
+    mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
     HSS_DDR_Train();
 
     return true;

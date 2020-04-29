@@ -9,17 +9,30 @@
 
 /*******************************************************************************
  * @file mss_hal.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS HAL include file. This is the file intended for application to
  * include so that all the other MPFS files are then accessible to it.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11867 $
+ * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 
 #ifndef MSS_HAL_H
 #define MSS_HAL_H
 
+#include "mpfs_hal/nwc/mss_ddr.h"
+#include "mpfs_hal/nwc/mss_ddr_SGMII_regs.h"
+#include "mpfs_hal/nwc/mss_io_config.h"
+#include "mpfs_hal/nwc/mss_pll.h"
+#include "mpfs_hal/nwc/mss_scb_nwc_regs.h"
+#include "mpfs_hal/nwc/mss_scb_nwc_regs.h"
+#include "config/software/mpfs_hal/mss_sw_config.h"
+/*
+ * The hw_platform.h is included here only. It must be included after
+ * mss_sw_config.h. This allows defines in hw_platform.h be overload from
+ * mss_sw_config.h if necessary.
+ * */
+#include "config/hardware/hw_platform.h"
 #include "atomic.h"
 #include "bits.h"
 #include "encoding.h"
@@ -36,6 +49,9 @@
 #include "mss_sysreg.h"
 #include "mss_util.h"
 #include "mtrap.h"
+#include "mss_l2_cache.h"
+#include "nwc/mss_ddr.h"
+#include "nwc/mss_sgmii.h"
 #include "system_startup.h"
 
 #ifdef __cplusplus

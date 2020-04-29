@@ -7,13 +7,13 @@
  *
 */
 
-/***********************************************************************************
+/******************************************************************************
  * @file system_startup.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Macros and APIs for the system_startup.c
 
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12118 $
+ * SVN $Date: 2019-08-15 10:28:14 +0100 (Thu, 15 Aug 2019) $
  */
 
 #ifndef SYSTEM_STARTUP_H
@@ -25,10 +25,11 @@ extern "C" {
 
 typedef enum WFI_SM_
 {
-    INIT_THREAD_PR                      = 0x00,         /*!< 0 init pointer                        */
-    CHECK_WFI                           = 0x01,         /*!< is hart in wfi?                        */
-    SEND_WFI                            = 0x02,         /*!< separate state to add a little delay   */
-    CHECK_WAKE                          = 0x03,         /*!< has hart left wfi                      */
+    INIT_THREAD_PR                      = 0x00,         /*!< 0 init pointer   */
+    CHECK_WFI                           = 0x01,         /*!< is hart in wfi?  */
+    SEND_WFI                            = 0x02,         /*!< separate state to
+                                                            add a little delay*/
+    CHECK_WAKE                          = 0x03,         /*!< has hart left wfi*/
 } WFI_SM;
 
 typedef struct HLS_DATA_
@@ -69,7 +70,12 @@ void u54_3(void);
 void u54_4(void);
 void init_memory( void);
 uint8_t init_mem_protection_unit(void);
+uint8_t init_pmp(uint8_t hart_id);
 uint8_t init_bus_error_unit( void);
+/*
+ * extern Functions Used
+ */
+extern uint8_t mss_nwc_init(void);
 
 #ifdef __cplusplus
 }

@@ -10,11 +10,11 @@
 /***************************************************************************
  *
  * @file mtrap.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief trap functions
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12296 $
+ * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #include "mss_hal.h"
 #include "config/hardware/hw_platform.h"
@@ -96,7 +96,6 @@ void pmp_trap(uintptr_t * regs, uintptr_t mcause, uintptr_t mepc)
 /*------------------------------------------------------------------------------
  * RISC-V interrupt handler for external interrupts.
  */
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 uint8_t (*ext_irq_handler_table[PLIC_NUM_SOURCES])(void) =
 {
   Invalid_IRQHandler,
@@ -628,66 +627,6 @@ local_int_p_t *local_int_mux[5] =
     local_irq_handler_u54_4_table
 };
 
-#else
-uint8_t (*ext_irq_handler_table[PLIC_NUM_SOURCES])(void) =
-{
-    Invalid_IRQHandler,
-    External_1_IRQHandler,
-    External_2_IRQHandler,
-    External_3_IRQHandler,
-    USART0_plic_4_IRQHandler,
-    External_5_IRQHandler,
-    External_6_IRQHandler,
-    External_7_IRQHandler,
-    External_8_IRQHandler,
-    External_9_IRQHandler,
-    External_10_IRQHandler,
-    External_11_IRQHandler,
-    External_12_IRQHandler,
-    External_13_IRQHandler,
-    External_14_IRQHandler,
-    External_15_IRQHandler,
-    External_16_IRQHandler,
-    External_17_IRQHandler,
-    External_18_IRQHandler,
-    External_19_IRQHandler,
-    External_20_IRQHandler,
-    External_21_IRQHandler,
-    External_22_IRQHandler,
-    dma_ch0_DONE_IRQHandler,
-    dma_ch0_ERR_IRQHandler,
-    dma_ch1_DONE_IRQHandler,
-    dma_ch1_ERR_IRQHandler,
-    dma_ch2_DONE_IRQHandler,
-    dma_ch2_ERR_IRQHandler,
-    dma_ch3_DONE_IRQHandler,
-    dma_ch3_ERR_IRQHandler,
-    External_31_IRQHandler,
-    External_32_IRQHandler,
-    External_33_IRQHandler,
-    External_34_IRQHandler,
-    External_35_IRQHandler,
-    External_36_IRQHandler,
-    External_37_IRQHandler,
-    External_38_IRQHandler,
-    External_39_IRQHandler,
-    External_40_IRQHandler,
-    External_41_IRQHandler,
-    External_42_IRQHandler,
-    External_43_IRQHandler,
-    External_44_IRQHandler,
-    External_45_IRQHandler,
-    External_46_IRQHandler,
-    External_47_IRQHandler,
-    External_48_IRQHandler,
-    External_49_IRQHandler,
-    External_50_IRQHandler,
-    External_51_IRQHandler,
-    External_52_IRQHandler,
-    MAC0_plic_53_IRQHandler
-
-};
-#endif
 /*------------------------------------------------------------------------------
  *
  */
@@ -702,11 +641,7 @@ void handle_m_ext_interrupt(void)
     }
 
     uint8_t disable = EXT_IRQ_KEEP_ENABLED;
-#ifndef SIFIVE_HIFIVE_UNLEASHED
     disable = ext_irq_handler_table[int_num /* + OFFSET_TO_MSS_GLOBAL_INTS Think this was required in early bitfile */]();
-#else
-    disable = ext_irq_handler_table[int_num]();
-#endif
 
     PLIC_CompleteIRQ(int_num);
 
@@ -723,14 +658,11 @@ void handle_m_ext_interrupt(void)
  */
 void handle_local_interrupt(uint8_t interrupt_no)
 {
-#ifndef SIFIVE_HIFIVE_UNLEASHED    /* no local interrupts on unleashed */
     uint32_t mhart_id = read_csr(mhartid);
     uint8_t local_interrupt_no = interrupt_no - 16U;
     local_int_p_t *local_int_table = local_int_mux[mhart_id];
 
     (*local_int_table[local_interrupt_no])();
-
-#endif
 }
 
 
@@ -740,7 +672,7 @@ void handle_local_interrupt(uint8_t interrupt_no)
  */
 void reset_mtime(void)
 {
-#if ROLLOVER_TEST
+#if defined(ROLLOVER_TEST) && (ROLLOVER_TEST)
     CLINT->MTIME = 0xFFFFFFFFFFFFF000ULL;
 #else
     CLINT->MTIME = 0ULL;
@@ -749,7 +681,7 @@ void reset_mtime(void)
 
 /**
  * Configure system tick
- * @return
+ * @return SUCCESS or FAIL
  */
 uint32_t SysTick_Config(void)
 {
@@ -758,7 +690,14 @@ uint32_t SysTick_Config(void)
 
     uint32_t mhart_id = read_csr(mhartid);
 
-    g_systick_increment[mhart_id] = ((MSS_RTC_TOGGLE_CLK/1000U)  * tick_rate[mhart_id]);
+    /*
+     * We are assuming the tick rate is in milli-seconds
+     *
+     * convert RTC frequency into milliseconds and multiple by the tick rate
+     *
+     */
+
+    g_systick_increment[mhart_id] = ((LIBERO_SETTING_MSS_RTC_TOGGLE_CLK/1000U)  * tick_rate[mhart_id]);
 
     if (g_systick_increment[mhart_id] > 0ULL)
     {
@@ -785,10 +724,34 @@ uint32_t SysTick_Config(void)
 void handle_m_timer_interrupt(void)
 {
 
-    uint32_t hart_id = read_csr(mhartid);
+    volatile uint32_t hart_id = read_csr(mhartid);
+    volatile uint32_t error_loop;
     clear_csr(mie, MIP_MTIP);
 
-    SysTick_Handler(hart_id);
+    switch(hart_id)
+    {
+        case 0U:
+            SysTick_Handler_h0_IRQHandler();
+            break;
+        case 1U:
+            SysTick_Handler_h1_IRQHandler();
+            break;
+        case 2U:
+            SysTick_Handler_h2_IRQHandler();
+            break;
+        case 3U:
+            SysTick_Handler_h3_IRQHandler();
+            break;
+        case 4U:
+            SysTick_Handler_h4_IRQHandler();
+            break;
+        default:
+            while (hart_id != 0U)
+             {
+                 error_loop++;
+             }
+            break;
+    }
 
     CLINT->MTIMECMP[read_csr(mhartid)] = CLINT->MTIME + g_systick_increment[hart_id];
 
@@ -833,6 +796,12 @@ void handle_m_soft_interrupt(void)
     /*Clear software interrupt*/
     clear_soft_interrupt();
 }
+
+void mcall_trap(uintptr_t* regs, uintptr_t mcause, uintptr_t mepc)
+{
+    trap_from_machine_mode(regs, mcause, mepc); 
+}
+
 
 void trap_from_machine_mode(uintptr_t * regs, uintptr_t dummy, uintptr_t mepc)
 {

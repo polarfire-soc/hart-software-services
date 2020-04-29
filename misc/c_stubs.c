@@ -19,6 +19,7 @@
 #include <stddef.h>
 //#include <ctype.h>  // including ctype.h breaks the build currently
 #include <string.h>
+#include <sbi_string.h>
 
 #include "csr_helper.h"
 
@@ -36,8 +37,9 @@ __attribute__((weak)) size_t strnlen(const char *s, size_t count)
     return result;
 }
 
-__attribute__((weak)) void *memcpy(void *dest, const void *src, size_t n) 
+__attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict src, size_t n) 
 {
+    // no overlaps allowed!!
     char *cDest = (char*)dest;
     char *cSrc = (char*)src;
 
@@ -50,16 +52,21 @@ __attribute__((weak)) void *memcpy(void *dest, const void *src, size_t n)
         }
     }
 
+#if !CONFIG_OPENSBI
     while (n--) {
         *cDest = *cSrc;
         cDest++; cSrc++;
     }
 
     return (dest);
+#else
+    return sbi_memcpy(dest, src, n);
+#endif
 }
 
 __attribute__((weak)) void *memset(void *dest, int c, size_t n)
 {
+#if !CONFIG_OPENSBI
     char *cDest = (char*)dest;
 
     while (n--) {
@@ -68,10 +75,14 @@ __attribute__((weak)) void *memset(void *dest, int c, size_t n)
     }
 
     return (dest);
+#else
+    return sbi_memset(dest, c, n);
+#endif
 }
 
 __attribute__((weak)) size_t strlen (const char *s)
 {
+#if !CONFIG_OPENSBI
     size_t result = 0;
 
     while (*s) {
@@ -80,6 +91,9 @@ __attribute__((weak)) size_t strlen (const char *s)
     }
 
     return result;
+#else
+    return sbi_strlen(s);
+#endif
 }
 //#endif
 

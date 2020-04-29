@@ -10,7 +10,7 @@
 /***************************************************************************
  *
  * @file mss_seg.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief segmentation block defines
  *
  * These blocks allow the DDR memory to be allocated to cached, non-cached
@@ -25,8 +25,8 @@
  * ranges as the MPU blocks. Each one has seven 32-segmentation registers, but
  * only two in SEG0 and five in SEG1 are actually implemented.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11867 $
+ * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 
 #ifndef MPFS_SEG_H
@@ -44,7 +44,7 @@ typedef struct {
         volatile int32_t    offset : 15;
         volatile int32_t    rsrvd  : 16;
         volatile int32_t    locked : 1;
-    } CFG[6];
+    } CFG[8]; //TODO: should this be 8? was 5...
 
     uint32_t fill[64-6];
 

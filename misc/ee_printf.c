@@ -602,12 +602,14 @@ repeat:
   return str - buf;
 }
 
+#ifdef EEPRINTF_USE_MUTEX_LOCKS
 void g5soc_init_mutex(volatile uint32_t * p_mutex);
 void g5soc_take_mutex(volatile uint32_t * p_mutex);
 void g5soc_release_mutex(volatile uint32_t * p_mutex);
 
 volatile uint32_t g_uart_mutex = 0;
 bool g_initialized = false;
+#endif
 
 int ee_printf(const char *fmt, ...)
 {
@@ -631,7 +633,7 @@ int ee_printf(const char *fmt, ...)
       ee_vsprintf(buf, fmt, args);
       va_end(args);
 
-      hartid = CSR_GetHartId();
+      hartid = current_hartid();
       result = uart_putstring(hartid, buf);
   }
 
@@ -657,7 +659,7 @@ int ee_puts(const char *buf)
 #endif
 
   {
-      hartid = CSR_GetHartId();
+      hartid = current_hartid();
       result = uart_putstring(hartid, (char *)buf);
   }
 
@@ -684,7 +686,7 @@ int ee_putc(const char c)
 
   {
       const char buf[2] = { (char)c, 0 };
-      hartid = CSR_GetHartId();
+      hartid = current_hartid();
       result = uart_putstring(hartid, (char *)buf);
   }
 

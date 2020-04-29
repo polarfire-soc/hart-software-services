@@ -10,13 +10,13 @@
 /*******************************************************************************
  *
  * @file mss_ints.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS interrupt prototypes
  *
  * Interrupt function prototypes
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12097 $
+ * SVN $Date: 2019-08-12 15:13:31 +0100 (Mon, 12 Aug 2019) $
  */
 
 #ifndef MSS_INTS_H
@@ -34,7 +34,11 @@ void Software_h1_IRQHandler(void);
 void Software_h2_IRQHandler(void);
 void Software_h3_IRQHandler(void);
 void Software_h4_IRQHandler(void);
-void SysTick_Handler(uint32_t hart_id);
+void SysTick_Handler_h0_IRQHandler(void);
+void SysTick_Handler_h1_IRQHandler(void);
+void SysTick_Handler_h2_IRQHandler(void);
+void SysTick_Handler_h3_IRQHandler(void);
+void SysTick_Handler_h4_IRQHandler(void);
 
 /*
  *

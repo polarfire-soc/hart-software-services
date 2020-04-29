@@ -9,11 +9,11 @@
 
 /***************************************************************************
  * @file mss_util.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MACROs defines and prototypes associated with utility functions
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12296 $
+ * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #ifndef G5SOC_UTIL_H
 #define G5SOC_UTIL_H

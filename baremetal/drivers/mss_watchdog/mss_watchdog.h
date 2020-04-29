@@ -122,7 +122,6 @@ extern "C" {
 #include <stdint.h>
 #include "mss_hart_ints.h"
 #include "mss_plic.h"
-//#include "../../config/hw_config/hw_platform.h"
 
 #define WDOG_ENABLE                 1u
 #define WDOG_DISABLE                0u

@@ -36,7 +36,7 @@ volatile uint32_t profiling_mutex = 0u;
 
 void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFunc, void *pCaller) 
 {
-    enum HSSHartId const myHartId = CSR_GetHartId();
+    enum HSSHartId const myHartId = current_hartid();
     (void) pCaller;
 
     if (myHartId != 0) { return; }
@@ -73,7 +73,7 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFu
 
 void __attribute__((no_instrument_function)) __cyg_profile_func_exit (void *pFunc, void *pCaller)
 {
-    enum HSSHartId const myHartId = CSR_GetHartId();
+    enum HSSHartId const myHartId = current_hartid();
     (void) pCaller;
 
     assert(pFunc != NULL);

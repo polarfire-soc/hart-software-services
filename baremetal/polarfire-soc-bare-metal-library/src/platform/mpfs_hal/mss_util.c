@@ -9,11 +9,11 @@
 
 /***************************************************************************
  * @file mss_util.c
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Utility functions
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12296 $
+ * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #include <stddef.h>
 #include <stdbool.h>

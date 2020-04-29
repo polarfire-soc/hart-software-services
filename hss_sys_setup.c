@@ -15,12 +15,12 @@
  * auto-generated code from an external tool, e.g. Libero.
  *
  * What needs to be implemented are the following functions:
- *     void HSS_Setup_PAD_IO(void);
- *     void HSS_Setup_PLIC(void);
- *     void HSS_Setup_MPU(void);
- *     void HSS_Setup_L2Cache(void);
- *     void HSS_Setup_Clocks(void);
- *     void HSS_Setup_PMP(void);
+ *     bool HSS_Setup_PAD_IO(void);
+ *     bool HSS_Setup_PLIC(void);
+ *     bool HSS_Setup_MPU(void);
+ *     bool HSS_Setup_L2Cache(void);
+ *     bool HSS_Setup_Clocks(void);
+ *     bool HSS_Setup_PMP(void);
  */
 
 #include "config.h"
@@ -70,8 +70,9 @@
  *
  * Per I/O configuration includes mux configuration.
  */
-void HSS_Setup_PAD_IO(void)
+bool HSS_Setup_PAD_IO(void)
 {
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
     const struct HSS_MSSIO_Bank_Config {
         uint32_t MSSIO_BANK4_CFG_CR;
         uint32_t MSSIO_BANK4_IO_CFG_0_CR;
@@ -146,27 +147,34 @@ void HSS_Setup_PAD_IO(void)
     /* Configure IO muxes */
     memcpy((void *)(&(SYSREG->IOMUX0_CR)), &(hss_IOMUX_Config.IOMUX0_CR), 
         sizeof(hss_IOMUX_Config));
+#endif
+
+    return true;
 }
 
 /*!
  * \brief PLIC Setup and Configuration
  *
- * The RISC-V Platform-Level Interrupt Controller (PLIC) allows broadcasting of interrupts to one
- * or more Harts within a Core Complex.
+ * The RISC-V Platform-Level Interrupt Controller (PLIC) allows 
+ * broadcasting of interrupts to one  or more Harts within a Core Complex.
  *
- * The operation of the PLIC is suited to SMP operation: An interrupt source occurs to PLIC and then
- * any available processor can conceivable claim it unless its configuration is locked down.
+ * The operation of the PLIC is suited to SMP operation: An interrupt 
+ * source occurs to PLIC and then any available processor can conceivable 
+ * claim it unless its configuration is locked down.
  *
- * This obviously doesn't work well if the processors are in AMP configuration and we are trying to
- * maintain hardware separation.  Therefore, PolarFireSOC can secure PLIC configuration through the
+ * This obviously doesn't work well if the processors are in AMP 
+ * configuration and we are trying to * maintain hardware separation.
+ * Therefore, PolarFire SoC can secure PLIC configuration through the
  * use of RISC-V PMP registers.
  *
- * Furthermore, MPRs allow assignment of each of 160 interrupts going to the PLIC to one of two
- * hardware contexts. This assignment can be configured by E51 at boot time and is then locked until
- * subsequent reset.
+ * Furthermore, MPRs allow assignment of each of 160 interrupts going to 
+ * the PLIC to one of two hardware contexts. This assignment can be 
+ * configured by E51 at boot time and is then locked until subsequent 
+ * reset.
  */
-void HSS_Setup_PLIC(void)
+bool HSS_Setup_PLIC(void)
 {
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
     const struct HSS_PLIC_Config {
         uint32_t source_priority[185];
         uint32_t pending_array[6];
@@ -250,6 +258,9 @@ void HSS_Setup_PLIC(void)
 
     memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2400), &(hss_PLIC_Config.u54_4_sEnables),
         sizeof(hss_PLIC_Config.u54_4_sEnables));
+#endif
+
+    return true;
 }
 
 /*!
@@ -263,8 +274,9 @@ void HSS_Setup_PLIC(void)
  * until subsequent system reboot. The MPRs allow assignment of peripheral resources to
  * one of two separate hardware contexts.
  */
-void HSS_Setup_MPU(void)
+bool HSS_Setup_MPU(void)
 {
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
     const struct HSS_MPU_Config {
         uint64_t fic0;
         uint64_t fic1;
@@ -302,6 +314,9 @@ void HSS_Setup_MPU(void)
     mHSS_WriteRegU64(MPU, SCB,		hss_MPU_Config.scb);
     mHSS_WriteRegU64(MPU, SEG0,		hss_MPU_Config.seg0);
     mHSS_WriteRegU64(MPU, SEG1,		hss_MPU_Config.seg1);
+#endif
+
+    return true;
 }
 
 /*!
@@ -320,12 +335,9 @@ void HSS_Setup_MPU(void)
  * cannot subsequently be changed without reboot to prevent accidental or malicious
  * modification through software defect.
  */
-void HSS_Setup_PMP(void)
+bool HSS_Setup_PMP(void)
 {
-#ifdef __riscv
-#  ifdef CONFIG_OPENSBI
-    // TODO...
-#  else
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
     const struct HSS_PMP_Config {
         uint64_t pmpcfg0;
         uint64_t pmpcfg2;
@@ -369,31 +381,33 @@ void HSS_Setup_PMP(void)
           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, }, // pmpaddr*
     };
 
-    const enum HSSHartId myHartId = CSR_GetHartId();
-    assert(myHartId < mSPAN_OF(hss_PMP_Config));
+    const enum HSSHartId myHartId = current_hartid();
+    //mHSS_DEBUG_PRINTF("myHartId is %d\n", myHartId);
+    assert(myHartId <= mSPAN_OF(hss_PMP_Config));
 
     const struct HSS_PMP_Config *pConfig = &hss_PMP_Config[myHartId]; 
 
-    write_csr(pmpcfg0,   pConfig->pmpcfg0);
-    write_csr(pmpcfg2,   pConfig->pmpcfg2);
-    write_csr(pmpaddr0,  pConfig->pmpaddr0);
-    write_csr(pmpaddr1,  pConfig->pmpaddr1);
-    write_csr(pmpaddr2,  pConfig->pmpaddr2);
-    write_csr(pmpaddr3,  pConfig->pmpaddr3);
-    write_csr(pmpaddr4,  pConfig->pmpaddr4);
-    write_csr(pmpaddr5,  pConfig->pmpaddr5);
-    write_csr(pmpaddr6,  pConfig->pmpaddr6);
-    write_csr(pmpaddr7,  pConfig->pmpaddr7);
-    write_csr(pmpaddr8,  pConfig->pmpaddr8);
-    write_csr(pmpaddr9,  pConfig->pmpaddr9);
-    write_csr(pmpaddr10, pConfig->pmpaddr10);
-    write_csr(pmpaddr11, pConfig->pmpaddr11);
-    write_csr(pmpaddr12, pConfig->pmpaddr12);
-    write_csr(pmpaddr13, pConfig->pmpaddr13);
-    write_csr(pmpaddr14, pConfig->pmpaddr14);
-    write_csr(pmpaddr15, pConfig->pmpaddr15);
-#  endif
+    mHSS_CSR_WRITE(CSR_PMPCFG0,   pConfig->pmpcfg0);
+    mHSS_CSR_WRITE(CSR_PMPCFG2,   pConfig->pmpcfg2);
+    mHSS_CSR_WRITE(CSR_PMPADDR0,  pConfig->pmpaddr0);
+    mHSS_CSR_WRITE(CSR_PMPADDR1,  pConfig->pmpaddr1);
+    mHSS_CSR_WRITE(CSR_PMPADDR2,  pConfig->pmpaddr2);
+    mHSS_CSR_WRITE(CSR_PMPADDR3,  pConfig->pmpaddr3);
+    mHSS_CSR_WRITE(CSR_PMPADDR4,  pConfig->pmpaddr4);
+    mHSS_CSR_WRITE(CSR_PMPADDR5,  pConfig->pmpaddr5);
+    mHSS_CSR_WRITE(CSR_PMPADDR6,  pConfig->pmpaddr6);
+    mHSS_CSR_WRITE(CSR_PMPADDR7,  pConfig->pmpaddr7);
+    mHSS_CSR_WRITE(CSR_PMPADDR8,  pConfig->pmpaddr8);
+    mHSS_CSR_WRITE(CSR_PMPADDR9,  pConfig->pmpaddr9);
+    mHSS_CSR_WRITE(CSR_PMPADDR10, pConfig->pmpaddr10);
+    mHSS_CSR_WRITE(CSR_PMPADDR11, pConfig->pmpaddr11);
+    mHSS_CSR_WRITE(CSR_PMPADDR12, pConfig->pmpaddr12);
+    mHSS_CSR_WRITE(CSR_PMPADDR13, pConfig->pmpaddr13);
+    mHSS_CSR_WRITE(CSR_PMPADDR14, pConfig->pmpaddr14);
+    mHSS_CSR_WRITE(CSR_PMPADDR15, pConfig->pmpaddr15);
 #endif
+
+    return true;
 }
 
 /*!
@@ -403,8 +417,9 @@ void HSS_Setup_PMP(void)
  * configuring between L2 Cache and Scratchpad for real-time AMP needs, based on configuration
  * information provided as a Libero output.
  */
-void HSS_Setup_L2Cache(void)
+bool HSS_Setup_L2Cache(void)
 {
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
     const struct HSS_L2Cache_Config {
         uint32_t Config;
         uint8_t  WayEnable;
@@ -424,6 +439,8 @@ void HSS_Setup_L2Cache(void)
     mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK2,  hss_L2Cache_Config.WayMask2);
     mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK3,  hss_L2Cache_Config.WayMask3);
     mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK4,  hss_L2Cache_Config.WayMask4);
+#endif
+    return true;
 }
 
 /*!
@@ -432,8 +449,9 @@ void HSS_Setup_L2Cache(void)
  * Setup clock enables and soft resets
  *
  */
-void HSS_Setup_Clocks(void)
+bool HSS_Setup_Clocks(void)
 {
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
     const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
     const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
         ~( (1u << 0u) | /* Release ENVM from Reset */ 
@@ -449,4 +467,6 @@ void HSS_Setup_Clocks(void)
 
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
+#endif
+    return true;
 }

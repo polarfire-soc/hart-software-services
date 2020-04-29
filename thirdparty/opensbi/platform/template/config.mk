@@ -27,23 +27,19 @@ platform-ldflags-y =
 # Some of these are guessed based on GCC compiler capabilities
 #
 # PLATFORM_RISCV_XLEN = 64
-PLATFORM_RISCV_ABI = lp64
-PLATFORM_RISCV_ISA = rv64imafdc
+# PLATFORM_RISCV_ABI = lp64
+# PLATFORM_RISCV_ISA = rv64imafdc
 # PLATFORM_RISCV_CODE_MODEL = medany
-
-#
-# OpenSBI implements generic drivers for some common generic hardware. The
-# drivers currently available are the RISC-V Platform Level Interrupt
-# Controller (PLIC), RISC-V Core Local Interrupt controller (CLINT) and a UART
-# 8250 compliant serial line driver (UART8250). The following definitions allow
-# enabling the use of these generic drivers for the platform.
-#
-# PLATFORM_IRQCHIP_PLIC=<y|n>
-# PLATFORM_SYS_CLINT=<y|n>
-# PLATFORM_SERIAL_UART8250=<y|n>
 
 # Firmware load address configuration. This is mandatory.
 FW_TEXT_START=0x80000000
+
+#
+# Dynamic firmware configuration.
+# Optional parameters are commented out. Uncomment and define these parameters
+# as needed.
+#
+FW_DYNAMIC=<y|n>
 
 #
 # Jump firmware configuration.
@@ -78,9 +74,3 @@ endif
 # FW_PAYLOAD_FDT_PATH="path to platform flattened device tree file"
 # FW_PAYLOAD_FDT="name of the platform defined flattened device tree file"
 # FW_PAYLOAD_FDT_ADDR=0x82200000
-
-#
-# Allow linking against static libc for standard functions (memset, memcpy, etc)
-#
-# PLATFORM_INCLUDE_LIBC=y
-

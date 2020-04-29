@@ -10,13 +10,13 @@
 /*******************************************************************************
  *
  * @file mss_h2f.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief H2F access data structures and functions.
  *
  * Definitions and functions associated with host to fabric interrupt controller.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12187 $
+ * SVN $Date: 2019-08-28 11:34:40 +0100 (Wed, 28 Aug 2019) $
  */
 
 #ifndef MSS_H2F_H

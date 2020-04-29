@@ -9,11 +9,11 @@
 
 /***************************************************************************
  * @file mss_coreplex.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Coreplex definitions
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11867 $
+ * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 #ifndef MSS_COREPLEX_H
 #define MSS_COREPLEX_H

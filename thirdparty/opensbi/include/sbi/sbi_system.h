@@ -18,10 +18,12 @@ int sbi_system_early_init(struct sbi_scratch *scratch, bool cold_boot);
 
 int sbi_system_final_init(struct sbi_scratch *scratch, bool cold_boot);
 
-void __attribute__((noreturn)) sbi_system_reboot(struct sbi_scratch *scratch,
-						 u32 type);
+void sbi_system_early_exit(struct sbi_scratch *scratch);
 
-void __attribute__((noreturn)) sbi_system_shutdown(struct sbi_scratch *scratch,
-						   u32 type);
+void sbi_system_final_exit(struct sbi_scratch *scratch);
+
+void __noreturn sbi_system_reboot(struct sbi_scratch *scratch, u32 type);
+
+void __noreturn sbi_system_shutdown(struct sbi_scratch *scratch, u32 type);
 
 #endif

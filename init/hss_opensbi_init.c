@@ -21,12 +21,14 @@
 #include "csr_helper.h"
 
 #include "hss_state_machine.h"
+#include "opensbi_service.h"
 #include "hss_debug.h"
 
 bool HSS_OpenSBIInit(void)
 {
-    bool result = false;
-    mHSS_DEBUG_PRINTF("\tInitializing OpenSBI" CRLF);
+    bool result = true;
+
+    HSS_OpenSBI_Setup(current_hartid());
 
     /*
      * Nothing to do on the E51...

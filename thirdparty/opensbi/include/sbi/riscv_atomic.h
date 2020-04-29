@@ -14,11 +14,12 @@ typedef struct {
 	volatile long counter;
 } atomic_t;
 
-#define ATOMIC_INIT(_lptr, val)		\
-	(_lptr)->counter = (val)
+#define ATOMIC_INIT(_lptr, val) (_lptr)->counter = (val)
 
-#define ATOMIC_INITIALIZER(val)		\
-	{ .counter = (val), }
+#define ATOMIC_INITIALIZER(val)   \
+	{                         \
+		.counter = (val), \
+	}
 
 long atomic_read(atomic_t *atom);
 
@@ -34,6 +35,9 @@ long arch_atomic_xchg(atomic_t *atom, long newval);
 
 unsigned int atomic_raw_xchg_uint(volatile unsigned int *ptr,
 				  unsigned int newval);
+
+unsigned long atomic_raw_xchg_ulong(volatile unsigned long *ptr,
+				    unsigned long newval);
 /**
  * Set a bit in an atomic variable and return the new value.
  * @nr : Bit to set.

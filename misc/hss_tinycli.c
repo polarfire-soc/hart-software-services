@@ -46,7 +46,9 @@ enum CmdIndex {
 static void   HSS_TinyCLI_CmdHandler(int cmdIndex);
 static bool   HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index);
 static void   HSS_TinyCLI_PrintVersion(void);
+#ifdef CONFIG_MEMTEST
 static void   HSS_TinyCLI_MemTest(void);
+#endif
 static void   HSS_TinyCLI_PrintHelp(void);
 static bool   HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen);
 static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer);
@@ -115,7 +117,7 @@ static void HSS_TinyCLI_PrintHelp(void)
 
         for (index = 1; index < numTokens; index++) {
             size_t i = 0u;
-            //mHSS_DEBUG_PRINTF("\tArgument: %s" CRLF, tokenArray[index]);
+            //mHSS_DEBUG_PRINTF("Argument: %s" CRLF, tokenArray[index]);
             if (HSS_TinyCLI_GetCmdIndex(tokenArray[index], &i)) {
                 mHSS_FANCY_PRINTF("%s: %s" CRLF, commands[i].name, commands[i].helpString);
             }
@@ -133,7 +135,9 @@ static void HSS_TinyCLI_PrintHelp(void)
 
 static void HSS_TinyCLI_CmdHandler(int cmdIndex)
 {
+#ifdef CONFIG_YMODEM
     void e51_ymodem_loop(void);
+#endif
     void _start(void);
 
     size_t index;
@@ -147,7 +151,9 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
         break;
 
     case CMD_YMODEM:
+#ifdef CONFIG_YMODEM
         e51_ymodem_loop();
+#endif
         break;
 
     case CMD_RESET:
@@ -171,7 +177,7 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
     default:
         mHSS_DEBUG_PRINTF("Unknown command %d (%lu tokens)" CRLF, cmdIndex, numTokens);
         for (index = 1; index < numTokens; index++) {
-            mHSS_DEBUG_PRINTF("\tArgument: %s" CRLF, tokenArray[index]);
+            mHSS_DEBUG_PRINTF("Argument: %s" CRLF, tokenArray[index]);
         }
         break;
     }
@@ -225,7 +231,7 @@ static void HSS_TinyCLI_Execute(void)
     }
 }
 
-void HSS_TinyCLI_Parser(void)
+bool HSS_TinyCLI_Parser(void)
 {
     bool keyPressedFlag = false;
     uint8_t rcv_buf;
@@ -263,4 +269,6 @@ void HSS_TinyCLI_Parser(void)
             }
         }
     }
+
+    return true;
 }

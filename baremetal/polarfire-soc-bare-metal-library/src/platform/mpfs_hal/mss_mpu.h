@@ -8,12 +8,12 @@
  */
 /*******************************************************************************
  * @file mss_mpu.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS MPU driver APIS for configuring access regions for
  * the external masters.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11867 $
+ * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 /*=========================================================================*//**
   
@@ -23,7 +23,6 @@
 
 #include <stdint.h>
 
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +39,7 @@ typedef enum {
     MSS_MPU_FIC0    = 0x00,
     MSS_MPU_FIC1,
     MSS_MPU_FIC2,
-    MSS_MPU_ATHENA,
+    MSS_MPU_CRYPTO,
     MSS_MPU_GEM0,
     MSS_MPU_GEM1,
     MSS_MPU_USB,
@@ -77,13 +76,21 @@ typedef enum {
 
 extern uint8_t num_pmp_lut[10];
 
+#ifndef __I
 #define __I  const volatile
+#endif
+#ifndef __IO
 #define __IO volatile
+#endif
+#ifndef __O
 #define __O volatile
+#endif
+
 
 
 typedef struct
-{    __IO uint64_t  pmp   : 38;
+{
+    __IO uint64_t  pmp   : 38;
     __IO uint64_t  rsrvd : 18;
     __IO uint64_t  mode  : 8;
 } MPUCFG_TypeDef;
@@ -103,7 +110,12 @@ typedef struct
 } MPU_TypeDef;
 
 
+
 #define MSS_MPU(master)                ( (MPU_TypeDef*) (0x20005000UL + ((master) << 8U)))
+
+
+uint8_t mpu_configure(void);
+uint8_t pmp_configure(uint8_t hart_id);
 
 
 uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
@@ -182,10 +194,9 @@ static inline MPU_FailStatus_TypeDef MSS_MPU_get_failstatus(mss_mpu_mport_t mast
     return (MSS_MPU(master_port)->STATUS);
 }
 
-
 #ifdef __cplusplus
 }
 #endif
 
+
 #endif /* MSS_MPU_H */
-#endif

@@ -41,11 +41,11 @@ static void pmp_decode(struct PmpEntry *pPmpEntry, struct PmpEntry *pPreviousPmp
 static inline uint8_t pmp_getConfigVal(size_t index);
 static inline uint64_t pmp_getAddrVal(size_t index);
 
-void HSS_PMP_Init(void)
+bool HSS_PMP_Init(void)
 {
+    bool result = true;
     enum HSSHartId target;
     unsigned int pmpIndex;
-
 
     for (target = HSS_HART_U54_1; target <HSS_HART_NUM_PEERS; target++) {
         for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {
@@ -62,6 +62,8 @@ void HSS_PMP_Init(void)
             pmp_decode(pCurrentEntry, pPreviousEntry, configVal, addrVal);
         }
     }
+
+    return result;
 }
 
 bool HSS_PMP_CheckWrite(enum HSSHartId target, void *addr, size_t length)

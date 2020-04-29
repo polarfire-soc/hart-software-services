@@ -42,15 +42,15 @@ MAKEDEP=makedepend
 #MAKEDEP=$(CROSS_COMPILE)gcc -MD $(CFLAGS_GCCEXT)
 
 PLATFORM_RISCV_ABI=lp64
-PLATFORM_RISCV_ISA=rv64gc
+PLATFORM_RISCV_ISA=rv64imac
 
-CORE_CFLAGS+=$(MCMODEL) -mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
-CORE_CFLAGS+=$(MCMODEL) -mstrict-align
+CORE_CFLAGS+=$(MCMODEL) -mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) -mstrict-align
 
 CORE_CFLAGS+=-g -Wall -Werror -Wshadow -DDEBUG -ffast-math -fno-builtin-printf -fomit-frame-pointer
 CORE_CFLAGS+=-Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing -fno-common \
   -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wformat-security -Wformat-y2k -Winit-self \
- -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition -Wtype-limits -Wstrict-prototypes
+ -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition -Wtype-limits -Wstrict-prototypes 
+#-ffreestanding
 
 # TODO - introduce the following prototype warnings...
 #CORE_CFLAGS+=-Wmissing-prototypes
@@ -59,15 +59,16 @@ CORE_CFLAGS+=-Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasin
 # TODO - introduce trapv for integer overflows etc... Currently missing primitives
 #CORE_CFLAGS+=-ftrapv
 
-CFLAGS=-std=c11 $(CORE_CFLAGS) -Wmissing-prototypes
+CFLAGS=-std=c11 $(CORE_CFLAGS) $(PLATFORM_CFLAGS) -Wmissing-prototypes
 
 # separate flags for C files that need GCC Extensions...
-CFLAGS_GCCEXT=$(CORE_CFLAGS)
+CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS) 
 #OPT-y=-O2
-OPT-y+=-Os  -fno-strict-aliasing
+#OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
+OPT-y+=-Os -fno-strict-aliasing
 
 
-LINKER_SCRIPT=hss.ld
+LINKER_SCRIPT=platform/${MACHINE}/hss.ld
 
 #
 # for some reason, -flto isn't playing nicely currently with -fstack-protector-strong...
@@ -75,10 +76,10 @@ LINKER_SCRIPT=hss.ld
 # 
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
 $(warning Not enabling -flto as stack protector enabled)
-CORE_CFLAGS+=-fstack-protector-strong 
+CORE_CFLAGS+=-fstack-protector-strong
 else
 $(warning NOTICE: enabling -flto (which means stack protection is disabled))
-OPT-y+=-flto=auto -ffat-lto-objects
+OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug
 endif
 
 all: config.h $(TARGET)

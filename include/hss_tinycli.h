@@ -38,7 +38,7 @@ extern "C" {
  * \brief Tiny CLI parser
  */
 
-void HSS_TinyCLI_Parser(void);
+bool HSS_TinyCLI_Parser(void);
 
 #ifdef __cplusplus
 }

@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "hss_memcpy_via_pdma.h"
 #include "sgdma_service.h"
 #include "sgdma_types.h"
 
@@ -87,7 +88,7 @@ static void sgdma_idle_handler(struct StateMachine * const pMyMachine)
 static size_t remaining_in_current_block = 0u;
 static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
 {
-    //mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    //mHSS_DEBUG_PRINTF("called" CRLF);
 
     assert(pBlockDesc != NULL);
 
@@ -112,7 +113,7 @@ static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
        // check PMPs - todo - check MPRs also
        if (HSS_PMP_CheckWrite(activeHart, pBlockDesc->dest_phys_addr, chunk_size)
            && HSS_PMP_CheckRead(activeHart, pBlockDesc->src_phys_addr, chunk_size)) {
-           memcpy(pBlockDesc->dest_phys_addr, pBlockDesc->src_phys_addr, chunk_size);
+           memcpy_via_pdma(pBlockDesc->dest_phys_addr, pBlockDesc->src_phys_addr, chunk_size);
        }
 
        assert(remaining_in_current_block >= chunk_size);
@@ -135,7 +136,7 @@ enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId so
     (void)immediate_arg;
    
     // scatter gather DMA IPI received from one of the U54s...
-    mHSS_DEBUG_PRINTF("\tcalled (sgdma_service.state is %u)" CRLF, sgdma_service.state);
+    mHSS_DEBUG_PRINTF("called (sgdma_service.state is %u)" CRLF, sgdma_service.state);
 
 
     // the following should always be true if we have consumed intents for SGDMA... 

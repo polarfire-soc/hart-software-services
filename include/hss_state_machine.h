@@ -81,7 +81,7 @@ struct StateMachine {
 
 #define SM_INVALID_STATE ((stateType_t)-1)
 
-void RunStateMachines(void); //struct StateMachine **ppStateMachines);
+void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine * const pStateMachines[]);
 
 /**
  * \brief Init Function Type
@@ -102,5 +102,6 @@ uint64_t GetStateMachinesExecutionCount(void);
 }
 #endif
 
+void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunction initFunctions[]);
 
 #endif

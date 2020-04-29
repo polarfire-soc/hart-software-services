@@ -14,16 +14,21 @@
 
 struct sbi_scratch;
 
-int sbi_hart_init(struct sbi_scratch *scratch, u32 hartid);
+int sbi_hart_init(struct sbi_scratch *scratch, u32 hartid, bool cold_boot);
 
+void *sbi_hart_get_trap_info(struct sbi_scratch *scratch);
+
+void sbi_hart_set_trap_info(struct sbi_scratch *scratch, void *data);
+
+void sbi_hart_delegation_dump(struct sbi_scratch *scratch);
 void sbi_hart_pmp_dump(struct sbi_scratch *scratch);
 
 void __attribute__((noreturn)) sbi_hart_hang(void);
 
-void __attribute__((noreturn)) sbi_hart_switch_mode(unsigned long arg0,
-						    unsigned long arg1,
-						    unsigned long next_addr,
-						    unsigned long next_mode);
+void __attribute__((noreturn))
+sbi_hart_switch_mode(unsigned long arg0, unsigned long arg1,
+		     unsigned long next_addr, unsigned long next_mode,
+		     bool next_virt);
 
 void sbi_hart_mark_available(u32 hartid);
 
@@ -39,5 +44,6 @@ void sbi_hart_wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid);
 void sbi_hart_wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid);
 
 u32 sbi_current_hartid(void);
+#define current_hartid sbi_current_hartid
 
 #endif

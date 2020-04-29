@@ -27,22 +27,30 @@
 # Baremetal Drivers and HAL Support
 
 EXTRA_SRCS-y += \
-    baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \
-    baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart/mss_uart.c \
     baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.c \
     baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
+    baremetal/sysreg.c
+
+EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart/mss_uart.c \
     baremetal/drivers/mss_watchdog/mss_watchdog.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.c \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c \
 
 INCLUDES += \
     -I./baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi \
     -I./baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart \
     -I./baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma \
     -I./baremetal/drivers/mss_watchdog \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/ \
     -I./baremetal/polarfire-soc-bare-metal-library/src/platform/hal \
     -I./baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/ \
     -I./baremetal/polarfire-soc-bare-metal-library/src/platform/config/software/mpfs_hal/ \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/config/hardware/
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c config.h
 	@$(ECHO) " CC        $@";
@@ -69,15 +77,43 @@ baremetal/stubs.o: baremetal/stubs.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
+baremetal/sysreg.o: baremetal/sysreg.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.c
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.c
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+################################################################################################
+
 #
 # Extra hardware dependency rules for YMODEM
 #
 INCLUDES += \
     -I./baremetal/drivers/mss_envm \
 
-SRCS-$(CONFIG_SERVICE_YMODEM) += \
+ifdef CONFIG_SERVICE_YMODEM
+SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
     baremetal/drivers/micron_mt25q/micron_mt25q.c \
-    baremetal/drivers/mss_envm/mss_envm.c \
+    baremetal/drivers/mss_envm/mss_envm.c 
+endif
 
 baremetal/drivers/micron_mt25q/micron_mt25q.o: baremetal/drivers/micron_mt25q/micron_mt25q.c config.h 
 	@$(ECHO) " CC        $@";
@@ -86,3 +122,7 @@ baremetal/drivers/micron_mt25q/micron_mt25q.o: baremetal/drivers/micron_mt25q/mi
 baremetal/drivers/mss_envm/mss_envm.o: baremetal/drivers/mss_envm/mss_envm.c config.h
 	@$(ECHO) " CC        $@";
 	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

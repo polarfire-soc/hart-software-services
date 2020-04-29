@@ -64,14 +64,9 @@ static bool validateCrc_(struct HSS_BootImage *pImage)
 bool HSS_BootInit(void)
 {
     bool result = false;
-    mHSS_DEBUG_PRINTF("\tChecking memory..." CRLF);
+    mHSS_DEBUG_PRINTF("Checking memory..." CRLF);
 
-    mHSS_DEBUG_PRINTF("\tInitializing Permissions..." CRLF);
-    HSS_Setup_PLIC();
-    HSS_Setup_MPU();
-    HSS_PMP_Init();
-
-    mHSS_DEBUG_PRINTF("\tInitializing Boot Image.." CRLF);
+    mHSS_DEBUG_PRINTF("Initializing Boot Image.." CRLF);
 
 #ifdef CONFIG_SERVICE_BOOT
 #  ifdef CONFIG_SERVICE_QSPI
@@ -82,25 +77,25 @@ bool HSS_BootInit(void)
     //
 #      if defined(CONFIG_COMPRESSION)
     extern const char _binary_bootImageBlob_bin_lz77_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_bootImageBlob_bin_lz77_start;
-    mHSS_DEBUG_PRINTF("\tpBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_lz77_start;
+    mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
 #      else
-    extern const char _binary_bootImageBlob_bin_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_bootImageBlob_bin_start;
+    extern const char _binary_payload_bin_start;
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_start;
 #      endif
 #  endif
 
     if (!pBootImage) {
-        mHSS_DEBUG_PRINTF("\tBoot Image NULL, ignoring" CRLF);
+        mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
         result = false;
     } else {
 #  if defined(CONFIG_COMPRESSION)
-        mHSS_DEBUG_PRINTF("\tPreparing to decompress to DDR..." CRLF);
+        mHSS_DEBUG_PRINTF("Preparing to decompress to DDR..." CRLF);
         void* const pInput = (void*)pBootImage;
         void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
         int outputSize = HSS_Decompress(pInput, pOutputInDDR);
-        mHSS_DEBUG_PRINTF("\tdecompressed %d bytes..." CRLF, outputSize);
+        mHSS_DEBUG_PRINTF("decompressed %d bytes..." CRLF, outputSize);
 
         if (outputSize) {
             pBootImage = (struct HSS_BootImage *)pOutputInDDR;
@@ -108,7 +103,7 @@ bool HSS_BootInit(void)
             pBootImage = NULL;
         }
 #  elif defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_QSPI_COPY_TO_DDR)
-        mHSS_DEBUG_PRINTF("\tPreparing to copy from QSPI to DDR..." CRLF);
+        mHSS_DEBUG_PRINTF("Preparing to copy from QSPI to DDR..." CRLF);
         // code to copy from QSPI base to DDR to go here...
 
         // set pDestImageInDDR to an appropriate location in DDR
@@ -118,7 +113,7 @@ bool HSS_BootInit(void)
         // before a needless copy is performed
         //if (pBootImage->magic != HSS_BOOT_MAGIC) { // causes problems w. RENODE
 
-        mHSS_DEBUG_PRINTF("\tCopying %lu bytes from 0x%X to 0x%X" CRLF, 
+        mHSS_DEBUG_PRINTF("Copying %lu bytes from 0x%X to 0x%X" CRLF, 
             pBootImage->bootImageLength, QSPI_BASE, pDestImageInDDR);
 
         const size_t maxChunkSize = 4096u * 256u;
@@ -145,21 +140,24 @@ bool HSS_BootInit(void)
         mHSS_DEBUG_PRINTF_EX("                                                                               \r");
         pBootImage = (struct HSS_BootImage *)pDestImageInDDR;
 #  endif
- 
+
         if (!pBootImage) {
-            mHSS_DEBUG_PRINTF("\tBoot Image NULL, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
             result = false;
         } else if (validateCrc_(pBootImage)) {
-            mHSS_DEBUG_PRINTF("\tdecompressed boot image passed CRC" CRLF);
+            mHSS_DEBUG_PRINTF("decompressed boot image passed CRC" CRLF);
 
             mHSS_DEBUG_PRINTF("Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
             HSS_Register_Boot_Image(pBootImage); 
-            mHSS_DEBUG_PRINTF("\tBoot Image registered..." CRLF);
+            mHSS_DEBUG_PRINTF("Boot Image registered..." CRLF);
 
-            HSS_Boot_RestartCore(HSS_HART_ALL);
-            result = true;
+            if (HSS_Boot_RestartCore(HSS_HART_ALL) == IPI_SUCCESS) {
+                result = true;
+	    } else {
+                result = false;
+	    }
         } else {
-            mHSS_DEBUG_PRINTF("\tdecompressed boot image failed CRC" CRLF);
+            mHSS_DEBUG_PRINTF("decompressed boot image failed CRC" CRLF);
         }
     }
 #endif

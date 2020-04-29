@@ -10,13 +10,13 @@
 /*******************************************************************************
  *
  * @file mss_plic.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS PLIC and PRCI access data structures and functions.
  *
  * Definitions and functions associated with PLIC interrupts.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12102 $
+ * SVN $Date: 2019-08-12 16:27:38 +0100 (Mon, 12 Aug 2019) $
  */
 #ifndef MSS_PLIC_H
 #define MSS_PLIC_H
@@ -31,8 +31,8 @@ extern "C" {
 #endif
 
 /*
- *Return value from External IRQ handler. This will be used to disable the External
- *interrupt.
+ *Return value from External IRQ handler. This will be used to disable the
+ * External interrupt.
  */
 #define EXT_IRQ_KEEP_ENABLED                                0U
 #define EXT_IRQ_DISABLE                                     1U
@@ -40,7 +40,6 @@ extern "C" {
 /*------------------------------------------------------------------------------
  *
  */
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 uint8_t  Invalid_IRQHandler(void);
 uint8_t  l2_metadata_corr_IRQHandler(void);
 uint8_t  l2_metadata_uncorr_IRQHandler(void);
@@ -247,71 +246,13 @@ uint8_t bus_error_unit_hart_3_plic_IRQHandler(void);
 uint8_t bus_error_unit_hart_4_plic_IRQHandler(void);
 
 
-#else
-uint8_t Invalid_IRQHandler(void);
-uint8_t External_1_IRQHandler(void);
-uint8_t External_2_IRQHandler(void);
-uint8_t External_3_IRQHandler(void);
-uint8_t USART0_plic_4_IRQHandler(void);
-uint8_t External_5_IRQHandler(void);
-uint8_t External_6_IRQHandler(void);
-uint8_t External_7_IRQHandler(void);
-uint8_t External_8_IRQHandler(void);
-uint8_t External_9_IRQHandler(void);
-uint8_t External_10_IRQHandler(void);
-uint8_t External_11_IRQHandler(void);
-uint8_t External_12_IRQHandler(void);
-uint8_t External_13_IRQHandler(void);
-uint8_t External_14_IRQHandler(void);
-uint8_t External_15_IRQHandler(void);
-uint8_t External_16_IRQHandler(void);
-uint8_t External_17_IRQHandler(void);
-uint8_t External_18_IRQHandler(void);
-uint8_t External_19_IRQHandler(void);
-uint8_t External_20_IRQHandler(void);
-uint8_t External_21_IRQHandler(void);
-uint8_t External_22_IRQHandler(void);
-uint8_t dma_ch0_DONE_IRQHandler(void);
-uint8_t dma_ch0_ERR_IRQHandler(void);
-uint8_t dma_ch1_DONE_IRQHandler(void);
-uint8_t dma_ch1_ERR_IRQHandler(void);
-uint8_t dma_ch2_DONE_IRQHandler(void);
-uint8_t dma_ch2_ERR_IRQHandler(void);
-uint8_t dma_ch3_DONE_IRQHandler(void);
-uint8_t dma_ch3_ERR_IRQHandler(void);
-uint8_t External_31_IRQHandler(void);
-uint8_t External_32_IRQHandler(void);
-uint8_t External_33_IRQHandler(void);
-uint8_t External_34_IRQHandler(void);
-uint8_t External_35_IRQHandler(void);
-uint8_t External_36_IRQHandler(void);
-uint8_t External_37_IRQHandler(void);
-uint8_t External_38_IRQHandler(void);
-uint8_t External_39_IRQHandler(void);
-uint8_t External_40_IRQHandler(void);
-uint8_t External_41_IRQHandler(void);
-uint8_t External_42_IRQHandler(void);
-uint8_t External_43_IRQHandler(void);
-uint8_t External_44_IRQHandler(void);
-uint8_t External_45_IRQHandler(void);
-uint8_t External_46_IRQHandler(void);
-uint8_t External_47_IRQHandler(void);
-uint8_t External_48_IRQHandler(void);
-uint8_t External_49_IRQHandler(void);
-uint8_t External_50_IRQHandler(void);
-uint8_t External_51_IRQHandler(void);
-uint8_t External_52_IRQHandler(void);
-uint8_t MAC0_plic_53_IRQHandler(void);
-
-#endif
-
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+/*-------------------------------------------------------------------------*//**
  * PLIC source Interrupt numbers:
  */
-#define OFFSET_TO_MSS_GLOBAL_INTS 13U  /* See G5SOC Corecomplex- v0p6.pdf, section 7.2 PLIC Interrupt Sources */
+#define OFFSET_TO_MSS_GLOBAL_INTS 13U  /* See G5SOC Corecomplex- v0p6.pdf,
+                                          section 7.2 PLIC Interrupt Sources */
 typedef enum
 {
-#ifndef SIFIVE_HIFIVE_UNLEASHED
     INVALID_IRQn                 = 0,
     L2_METADATA_CORR_IRQn        = 1,
     L2_METADAT_UNCORR_IRQn       = 2,
@@ -325,7 +266,8 @@ typedef enum
     DMA_CH2_ERR_IRQn             = 10,
     DMA_CH3_DONE_IRQn            = 11,
     DMA_CH3_ERR_IRQn             = 12,
-    GPIO0_BIT0_or_GPIO2_BIT0_PLIC_0         = 0 + OFFSET_TO_MSS_GLOBAL_INTS,    /* see -G5_MSS_TOP_MAS.doc- Table 68 GPIO Interrupt Multiplexing */
+    /* see -G5_MSS_TOP_MAS.doc- Table 68 GPIO Interrupt Multiplexing */
+    GPIO0_BIT0_or_GPIO2_BIT0_PLIC_0         = 0 + OFFSET_TO_MSS_GLOBAL_INTS,
     GPIO0_BIT1_or_GPIO2_BIT1_PLIC_1         = 1 + OFFSET_TO_MSS_GLOBAL_INTS,
     GPIO0_BIT2_or_GPIO2_BIT2_PLIC_2         = 2 + OFFSET_TO_MSS_GLOBAL_INTS,
     GPIO0_BIT3_or_GPIO2_BIT3_PLIC_3         = 3 + OFFSET_TO_MSS_GLOBAL_INTS,
@@ -417,7 +359,8 @@ typedef enum
     g5c_MESSAGE_PLIC             = 83 + OFFSET_TO_MSS_GLOBAL_INTS,
     USOC_VC_INTERRUPT_PLIC       = 84 + OFFSET_TO_MSS_GLOBAL_INTS,
     USOC_SMB_INTERRUPT_PLIC      = 85 + OFFSET_TO_MSS_GLOBAL_INTS,
-    E51_0_MAINTENACE_PLIC        = 86 + OFFSET_TO_MSS_GLOBAL_INTS,     /* contains multiple interrupts- */
+    /* contains multiple interrupts- */
+    E51_0_MAINTENACE_PLIC        = 86 + OFFSET_TO_MSS_GLOBAL_INTS,
 
     WDOG0_MRVP_PLIC              = 87 + OFFSET_TO_MSS_GLOBAL_INTS,
     WDOG1_MRVP_PLIC              = 88 + OFFSET_TO_MSS_GLOBAL_INTS,
@@ -515,79 +458,15 @@ typedef enum
     BUS_ERROR_UNIT_HART_3        = 185,
     BUS_ERROR_UNIT_HART_4        = 186
 
-#else
-    INVALID_IRQn                 = 0,
-    L2Cache_0_PLIC_1             = 1,
-    L2Cache_1_PLIC_2             = 2,
-    L2Cache_2__PLIC_3            = 3,
-    USART0_PLIC_4                = 4,
-    USART1_PLIC_5                = 5,
-    QSPI_12_PLIC_6               = 6,
-
-    gpio_PLIC_7                  = 7,
-    gpio_PLIC_8                  = 8,
-    gpio_PLIC_9                  = 9,
-    gpio_10                      = 10,
-    gpio_11                      = 11,
-    gpio_12                      = 12,
-    gpio_PLIC_13                 = 13,
-    gpio_PLIC_14                 = 14,
-    gpio_PLIC_15                 = 15,
-    gpio_PLIC_16                 = 16,
-    gpio_PLIC_17                 = 17,
-    gpio_PLIC_18                 = 18,
-    gpio_PLIC_19                 = 19,
-    gpio_PLIC_20                 = 20,
-    gpio_PLIC_21                 = 21,
-    gpio_PLIC_22                 = 22,
-
-    dma_PLIC_23                  = 23,
-    dma_PLIC_24                  = 24,
-    dma_PLIC_25                  = 25,
-    dma_PLIC_26                  = 26,
-    dma_PLIC_27                  = 27,
-    dma_PLIC_28                  = 28,
-    dma_PLIC_29                  = 29,
-    dma_PLIC_30                  = 30,
-
-    ddr_subsytem_PLIC_31         = 31,
-
-    chiplink_msi_PLIC_32         = 32,
-    chiplink_msi_PLIC_33         = 33,
-    chiplink_msi_PLIC_34         = 34,
-    chiplink_msi_PLIC_35         = 35,
-    chiplink_msi_PLIC_36         = 36,
-    chiplink_msi_PLIC_37         = 37,
-    chiplink_msi_PLIC_38         = 38,
-    chiplink_msi_PLIC_39         = 39,
-    chiplink_msi_PLIC_40         = 40,
-    chiplink_msi_PLIC_41         = 41,
-
-    pwm0_PLIC_42                 = 42,
-    pwm0_PLIC_43                 = 43,
-    pwm0_PLIC_44                 = 44,
-    pwm0_PLIC_45                 = 45,
-
-    pwm1_PLIC_46                 = 46,
-    pwm1_PLIC_47                 = 47,
-    pwm1_PLIC_48                 = 48,
-    pwm1_PLIC_49                 = 49,
-
-    i2c_PLIC_50                  = 50,
-    QSPI0_PLIC_51                = 51,
-    QSPI1_PLIC_52                = 52,
-    ethernet_PLIC_53             = 53
-
-#endif
-
 } PLIC_IRQn_Type;
 
 
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- * E51-0 is Maintenance Interrupt, CPU needs to read status register to determine exact cause:
- * This structure added here for clarity, need to replay with status register defines
- * for determining interrupt cause
+/*-------------------------------------------------------------------------*//**
+ * E51-0 is Maintenance Interrupt, CPU needs to read status register to
+ * determine exact cause:
+ * This structure added here for clarity, need to replay with status register
+ * defines for determining interrupt cause
  */
 typedef enum
 {
@@ -615,17 +494,9 @@ typedef struct
     volatile uint32_t ENABLES[32U];
 } Target_Enables_Type;
 
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 #define PLIC_SET_UP_REGISTERS 6
-#else
-#define PLIC_SET_UP_REGISTERS 2
-#endif
 
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 #define PLIC_NUM_SOURCES 187
-#else
-#define PLIC_NUM_SOURCES 54    /* 53 actual, source 0 is not used */
-#endif
 
 #define PLIC_NUM_PRIORITIES 7
 
@@ -672,7 +543,8 @@ typedef struct
     volatile uint32_t RESERVED8[(0x0C200000 - 0x0C002480)/4];
 
     /*--- Target Priority threshold and claim/complete---------*/
-    IRQ_Target_Type TARGET[9];   /* See PLIC Register Map or TARGET_OFFSET defines below for offset details */
+    IRQ_Target_Type TARGET[9];   /* See PLIC Register Map or TARGET_OFFSET
+                                    defines below for offset details */
 
 } PLIC_Type;
 
@@ -686,14 +558,15 @@ typedef struct
 #define TARGET_OFFSET_HART4_M 7U
 #define TARGET_OFFSET_HART4_S 8U
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+/*-------------------------------------------------------------------------*//**
  * PLIC: Platform Level Interrupt Controller
  */
-#define PLIC_BASE_ADDR 0x0C000000UL         /* FU540-C000/Emulation PLIC base address  = 0x0C00_0000:  */
+/* FU540-C000/Emulation PLIC base address  = 0x0C00_0000:  */
+#define PLIC_BASE_ADDR 0x0C000000UL
 
 #define PLIC    ((PLIC_Type *)PLIC_BASE_ADDR)
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+/*-------------------------------------------------------------------------*//**
  * The function PLIC_init() initializes the PLIC controller and enables the
  * global external interrupt bit.
  */
@@ -746,7 +619,12 @@ static inline void PLIC_init(void)
             break;
     }
 
-    /* Set the threshold to zero. */
+    /* Set the threshold to zero.
+     * PLIC provides context based threshold register for the settings of a
+     * interrupt priority threshold of each context. The threshold register
+     * is a WARL field. The PLIC will mask all PLIC interrupts of a priority
+     * less than or equal to threshold. For example, a threshold value of zero
+     * permits all interrupts with non-zero priority.*/
     PLIC->TARGET[hart_id].PRIORITY_THRESHOLD  = 0U;
 
     /* Enable machine external interrupts. */
@@ -755,9 +633,9 @@ static inline void PLIC_init(void)
 
 
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- * The function PLIC_EnableIRQ() enables the external interrupt for the interrupt
- * number indicated by the parameter IRQn.
+/*-------------------------------------------------------------------------*//**
+ * The function PLIC_EnableIRQ() enables the external interrupt for the
+ * interrupt number indicated by the parameter IRQn.
  */
 static inline void PLIC_EnableIRQ(PLIC_IRQn_Type IRQn)
 {
@@ -796,16 +674,17 @@ static inline void PLIC_EnableIRQ(PLIC_IRQn_Type IRQn)
     }
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- * The function PLIC_DisableIRQ() disables the external interrupt for the interrupt
- * number indicated by the parameter IRQn.
+/*-------------------------------------------------------------------------*//**
+ * The function PLIC_DisableIRQ() disables the external interrupt for the
+ * interrupt number indicated by the parameter IRQn.
 
  * NOTE:
  *     This function can be used to disable the external interrupt from outside
  *     external interrupt handler function.
  *     This function MUST NOT be used from within the External Interrupt handler.
  *     If you wish to disable the external interrupt while the interrupt handler
- *     for that external interrupt is executing then you must use the return value
+ *     for that external interrupt is executing then you must use the return
+ *     value
  *     EXT_IRQ_DISABLE to return from the extern interrupt handler.
  */
 static inline void PLIC_DisableIRQ(PLIC_IRQn_Type IRQn)
@@ -845,7 +724,7 @@ static inline void PLIC_DisableIRQ(PLIC_IRQn_Type IRQn)
     }
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+/*-------------------------------------------------------------------------*//**
  * The function PLIC_SetPriority() sets the priority for the external interrupt
  * for the interrupt number indicated by the parameter IRQn.
  */
@@ -857,9 +736,9 @@ static inline void PLIC_SetPriority(PLIC_IRQn_Type IRQn, uint32_t priority)
     }
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- * The function PLIC_GetPriority() returns the priority for the external interrupt
- * for the interrupt number indicated by the parameter IRQn.
+/*-------------------------------------------------------------------------*//**
+ * The function PLIC_GetPriority() returns the priority for the external
+ * interrupt for the interrupt number indicated by the parameter IRQn.
  */
 static inline uint32_t PLIC_GetPriority(PLIC_IRQn_Type IRQn)
 {
@@ -879,43 +758,44 @@ static inline uint32_t PLIC_pending(PLIC_IRQn_Type IRQn)
     return (PLIC->PENDING_ARRAY[IRQn/32U] & (0x01U<<(IRQn%32U)));
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+/*-------------------------------------------------------------------------*//**
  * The function PLIC_ClaimIRQ() claims the interrupt from the PLIC controller.
  */
 static inline uint32_t PLIC_ClaimIRQ(void)
 {
     uint64_t hart_id  = read_csr(mhartid);
 
-    const unsigned long lookup[5] = {0, 1, 3, 5, 7};
+    const unsigned long lookup[5U] = {0U, 1U, 3U, 5U, 7U};
 
     return (PLIC->TARGET[lookup[hart_id]].CLAIM_COMPLETE);
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- * The function PLIC_CompleteIRQ() indicates to the PLIC controller the interrupt
- * is processed and claim is complete.
+/*-------------------------------------------------------------------------*//**
+ * The function PLIC_CompleteIRQ() indicates to the PLIC controller the
+ * interrupt is processed and claim is complete.
  */
 static inline void PLIC_CompleteIRQ(uint32_t source)
 {
     uint64_t hart_id  = read_csr(mhartid);
 
-    const unsigned long lookup[5] = {0, 1, 3, 5, 7};
+    const unsigned long lookup[5U] = {0U, 1U, 3U, 5U, 7U};
 
     ASSERT(source < = BUS_ERROR_UNIT_HART_4);
 
     PLIC->TARGET[lookup[hart_id]].CLAIM_COMPLETE  = source;
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- * The function PLIC_SetPriority_Threshold() sets the threshold for a particular hart
+/*-------------------------------------------------------------------------*//**
+ * The function PLIC_SetPriority_Threshold() sets the threshold for a particular
+ * hart
  * The default threshold on reset is 0
  *
- * The G5SoC Core Complex supports setting of a interrupt priority threshold via the threshold
- * register. The threshold is a WARL field, where the G5SoC Core Complex supports a maximum
- * threshold of 7.
- * The G5SoC Core Complex will mask all PLIC interrupts of a priority less than or equal to
- * threshold. For example, a threshold value of zero permits all interrupts with non-zero priority,
- * whereas a value of 7 masks all interrupts.
+ * The G5SoC Core Complex supports setting of a interrupt priority threshold via
+ * the threshold * register. The threshold is a WARL field, where the G5SoC Core
+ * Complex supports a maximum threshold of 7.
+ * The MPFS Core Complex will mask all PLIC interrupts of a priority less than
+ * or equal to threshold. For example, a threshold value of zero permits all
+ * interrupts with non-zero priority, whereas a value of 7 masks all interrupts.
  */
 static inline void PLIC_SetPriority_Threshold(uint32_t threshold)
 {
@@ -926,7 +806,7 @@ static inline void PLIC_SetPriority_Threshold(uint32_t threshold)
     PLIC->TARGET[hart_id].PRIORITY_THRESHOLD  = threshold;
 }
 
-/*
+/*-------------------------------------------------------------------------*//**
  *  PLIC_ClearPendingIRQ(void)
  *  This is only called by the startup hart and only once
  *  Clears any pending interrupts as PLIC can be in unknown state on startup
@@ -947,7 +827,7 @@ static inline void PLIC_ClearPendingIRQ(void)
     }
 }
 
-/**
+/*-------------------------------------------------------------------------*//**
  * This function is only called from one hart on startup
  */
 static inline void PLIC_init_on_reset(void)
@@ -957,7 +837,9 @@ static inline void PLIC_init_on_reset(void)
     /* default all priorities so effectively disabled */
     for(inc = 0U; inc < PLIC_NUM_SOURCES; ++inc)
     {
-        PLIC->SOURCE_PRIORITY[inc]  = 7U; /* priority must be greater than threshold to be enabled, so setting to 7 disables */
+        /* priority must be greater than threshold to be enabled, so setting to
+         * 7 disables */
+        PLIC->SOURCE_PRIORITY[inc]  = 7U;
     }
     /* and clear all the enables */
     for(inc = 0UL; inc < PLIC_SET_UP_REGISTERS; inc++)
@@ -973,7 +855,8 @@ static inline void PLIC_init_on_reset(void)
         PLIC->HART4_SMODE_ENA[inc] = 0U;
     }
 
-    PLIC_ClearPendingIRQ(); /* clear any pending interrupts- in case already there */
+    /* clear any pending interrupts- in case already there */
+    PLIC_ClearPendingIRQ();
 }
 
 #ifdef __cplusplus

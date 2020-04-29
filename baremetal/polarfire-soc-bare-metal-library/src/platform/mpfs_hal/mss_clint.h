@@ -10,11 +10,11 @@
 /*******************************************************************************
  *
  * @file mss_clint.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief CLINT access data structures and functions.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12187 $
+ * SVN $Date: 2019-08-28 11:34:40 +0100 (Wed, 28 Aug 2019) $
  */
 #ifndef MSS_CLINT_H
 #define MSS_CLINT_H

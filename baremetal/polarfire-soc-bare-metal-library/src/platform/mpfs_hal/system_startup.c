@@ -1,4 +1,4 @@
-/******************************************************************************************
+/*                                                                                                                                  /******************************************************************************************
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
@@ -23,12 +23,12 @@
  */
 /***************************************************************************
  * @file system_startup.c
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief first C code called on startup. Will call user code created outside
  * the HAL.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12296 $
+ * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #include <stddef.h>
 #include <stdbool.h>
@@ -57,8 +57,22 @@ __attribute__((weak)) int main_first_hart(void)
     {
         uint8_t hard_idx;
         init_memory();
+
+#ifndef MPFS_HAL_BOOT2
         (void)init_bus_error_unit();
         (void)init_mem_protection_unit();
+        (void)init_pmp((uint8_t)MPFS_HAL_FIRST_HART);
+
+        /*
+         * Initialise NWC
+         *      Clocks
+         *      SGMII
+         *      DDR
+         *      IOMUX
+         */
+#ifndef MPFS_HAL_BOOT2
+        (void)mss_nwc_init();
+#endif
 
         /*
          * Start the other harts. They are put in wfi in entry.S
@@ -119,7 +133,7 @@ __attribute__((weak)) int main_first_hart(void)
                     break;
             }
         }
-
+#endif /* MPFS_HAL_BOOT2 */
         (void)main_other_hart();
     }
 
@@ -242,6 +256,9 @@ __attribute__((weak)) int main_other_hart(void)
       Note that any other interrupt can also be used to bring CPU out of WFI*/
      clear_soft_interrupt();
      set_csr(mie, MIP_MSIP);
+     (void)init_pmp(0U);
+     /* set the PMP's for this hart */
+     (void)init_pmp((uint8_t)1);
 
      /*put this hart into WFI.*/
      do
@@ -280,6 +297,8 @@ __attribute__((weak)) void u54_2(void)
      Note that any other interrupt can also be used to bring CPU out of WFI*/
     clear_soft_interrupt();
     set_csr(mie, MIP_MSIP);
+    /* set the PMP's for this hart */
+    (void)init_pmp((uint8_t)2);
 
     /*put this hart into WFI.*/
     do
@@ -311,12 +330,16 @@ __attribute__((weak)) void u54_2(void)
  */
  __attribute__((weak)) void u54_3(void)
  {
+     uint64_t hartid = read_csr(mhartid);
+
      /*Clear pending software interrupt in case there was any.
       Enable only the software interrupt so that other core can bring this core
       out of WFI by raising a software interrupt.
       Note that any other interrupt can also be used to bring CPU out of WFI*/
      clear_soft_interrupt();
      set_csr(mie, MIP_MSIP);
+     /* set the PMP's for this hart */
+     (void)init_pmp((uint8_t)3);
 
      /*put this hart into WFI.*/
      do
@@ -354,6 +377,8 @@ __attribute__((weak)) void u54_2(void)
       Note that any other interrupt can also be used to bring CPU out of WFI*/
      clear_soft_interrupt();
      set_csr(mie, MIP_MSIP);
+     /* set the PMP's for this hart */
+     (void)init_pmp((uint8_t)4);
 
      /*put this hart into WFI.*/
      do
@@ -411,7 +436,7 @@ static void copy_section(uint32_t * p_load, uint32_t * p_vma,
          ++p_zero;
     }
 }
- /*------------------------------------------------------------------------------
+ /*-----------------------------------------------------------------------------
   * _start() function called invoked
   * This function is called on power up and warm reset.
   */
@@ -435,7 +460,6 @@ static void copy_section(uint32_t * p_load, uint32_t * p_vma,
 
 __attribute__((weak)) uint8_t init_bus_error_unit(void)
 {
-#ifndef SIFIVE_HIFIVE_UNLEASHED
     uint8_t hard_idx;
     /* Init BEU in all harts - enable local interrupt */
     for(hard_idx = MPFS_HAL_FIRST_HART; hard_idx <= MPFS_HAL_LAST_HART; hard_idx++)
@@ -444,7 +468,6 @@ __attribute__((weak)) uint8_t init_bus_error_unit(void)
         BEU->regs[hard_idx].PLIC_INT    = (uint64_t)BEU_PLIC_INT;
         BEU->regs[hard_idx].LOCAL_INT   = (uint64_t)BEU_LOCAL_INT;
     }
-#endif
     return (0U);
 }
 
@@ -455,6 +478,18 @@ __attribute__((weak)) uint8_t init_bus_error_unit(void)
  */
 __attribute__((weak)) uint8_t init_mem_protection_unit(void)
 {
+    mpu_configure();
+    return (0U);
+}
+
+/**
+ * init_pmp(void)
+ * add this function to you code and configure as required
+ * @return
+ */
+__attribute__((weak)) uint8_t init_pmp(uint8_t hart_id)
+{
+    pmp_configure(hart_id);
     return (0U);
 }
 

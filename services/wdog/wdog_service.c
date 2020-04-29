@@ -77,7 +77,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
     (void) pMyMachine;
 
     if (hartBitmask.uint) {
-        mHSS_DEBUG_PRINTF("\twatchdog bitmask is 0x%x" CRLF, hartBitmask.uint);
+        mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%x" CRLF, hartBitmask.uint);
         wdog_service.state = WDOG_MONITORING; 
     }
 
@@ -102,7 +102,7 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
     if ((status & mask) != 0u) {
         // watchdog timer has triggered for a monitored hart..
-        mHSS_DEBUG_PRINTF("\tWatchdog has triggered" CRLF);
+        mHSS_DEBUG_PRINTF("Watchdog has triggered" CRLF);
 
         if (hartBitmask.s.u54_1) {
             HSS_Boot_RestartCore(HSS_HART_U54_1);

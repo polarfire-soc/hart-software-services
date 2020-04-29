@@ -19,6 +19,20 @@ config SERVICE_BOOT_SETS_SUPPORT
                 the primary.
 
                 This setting is is enabled by default.
+
+config SERVICE_BOOT_DDR_TARGET_ADDR
+	hex "Target Base address for QSPI/Decompressor"
+	default 0xB0000000
+	depends on SERVICE_BOOT 
+        help
+                This feature specifies a scratch address for QSPI decompression
+
+config SERVICE_BOOT_USE_PAYLOAD
+        bool "Use Payload file"
+        default  y
+        depends on SERVICE_BOOT 
+        help
+                This feature enables booting a directly contained payload.
 endmenu
 
 config SERVICE_GOTO

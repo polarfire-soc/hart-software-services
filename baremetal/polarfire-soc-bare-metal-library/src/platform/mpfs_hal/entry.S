@@ -9,11 +9,11 @@
 
 /***********************************************************************************
  * @file entry.S
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief entry functions.
 
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11865 $
+ * SVN $Date: 2019-07-29 15:28:05 +0100 (Mon, 29 Jul 2019) $
  */
 #include "bits.h"
 #include "encoding.h"
@@ -148,15 +148,43 @@ _start:
     csrr a0, mhartid
     li a1, MPFS_HAL_FIRST_HART
     bne a0, a1, .LOtherHartstoWFI
+    li a1, MPFS_HAL_CLEAR_MEMORY
+    beq a0, a1, .main_hart
+    #
+    # clear LIM - this is required to stop memory errors on initial access by
+    # cache
+    # Also, stops x propagation in simulation, when cache/stack reads unused
+    # area
+    #
+    li  a4, 0x08000000
+    li  a5, 0x08020000
+.init_lim:
+#    STORE x0, 0(a4)
+#    add a4, a4, __SIZEOF_POINTER__
+#    blt a4, a5, .init_lim
     # clear the common heap
     la  a4, __heap_start
-    la  a5, __bss_end
+    la  a5, __heap_end
 .init_heap:
     #csrw mepc, zero
     STORE x0, 0(a4)
     add a4, a4, __SIZEOF_POINTER__
     blt a4, a5, .init_heap
-    # core MPFS_HAL_FIRST_HART jumps to main_first_hart
+    #
+    # clear DTIM - this is required to stop memory errors on initial access by
+    # cache
+    # Also, stops x propagation in simulation, when cache/stack reads unused
+    # area
+    #
+    li  a4, 0x01000000
+    li  a5, 0x01002000
+.init_dtim:
+    #csrw mepc, zero
+    STORE x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, .init_dtim
+    # now core MPFS_HAL_FIRST_HART jumps to main_first_hart
+.main_hart:
     j main_first_hart
 .LoopForeverMain:
     #in case of return, loop forever. nop's added so can be seen in debugger

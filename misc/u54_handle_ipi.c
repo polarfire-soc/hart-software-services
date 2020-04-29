@@ -41,7 +41,7 @@
 // This routine gets executed when a U54 receives an IPI from E51 in machine mode...
 //
 
-bool U54_HandleIPI(void)
+bool HSS_U54_HandleIPI(void)
 {
     mHSS_DEBUG_PRINTF(">>" CRLF);
     volatile bool intentFound = false;
@@ -61,39 +61,30 @@ bool U54_HandleIPI(void)
     if (!intentFound) { intentFound =  IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_OPENSBI_INIT); }
 #endif
 
-     CLINT_Clear_MSIP(CSR_GetHartId());
+     CLINT_Clear_MSIP(current_hartid());
 
 #ifdef CONFIG_DEBUG_IPI_STATS
     {
-        enum HSSHartId myHartId = CSR_GetHartId();
+        enum HSSHartId myHartId = current_hartid();
         static size_t count[5]; count[myHartId]++; 
 
-        mHSS_DEBUG_STATUS_TEXT;
+        mHSS_FANCY_STATUS_TEXT;
         mHSS_DEBUG_PRINTF(" ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId], intentFound);
         IPI_DebugDumpStats();
-        mHSS_DEBUG_NORMAL_TEXT;
+        mHSS_FANCY_NORMAL_TEXT;
     }
 #endif
 
     //mb();
     // if not for me, pass to S-mode ...
+    //mHSS_DEBUG_PRINTF("MTVEC is now %p" CRLF, mHSS_CSR_READ(mtvec));
     mHSS_DEBUG_PRINTF("<<" CRLF);
 
     return intentFound; 
 }
 
-void u54_banner(void);
-
-void u54_banner(void)
+void HSS_U54_Banner(void)
 {
     // wait for E51 to setup BSS...
-    int msip = MIP_MSIP;
-    asm volatile("wfi\n\
-    	    csrc mip, %0" : : "r"(msip));
-
-    CLINT_Clear_MSIP(CSR_GetHartId());
-
-    asm volatile("csrw mstatus, %0" : : "r"(msip));
-
-    mHSS_DEBUG_PRINTF("u54_%d: Waiting for E51 instruction" CRLF, CSR_GetHartId());
+    mHSS_DEBUG_PRINTF("u54_%d: Waiting for E51 instruction" CRLF, current_hartid());
 }

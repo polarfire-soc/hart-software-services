@@ -10,13 +10,13 @@
 /*******************************************************************************
  *
  * @file mss_hart_ints.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS local interrupt definitions
  *
  * Definitions and functions associated with local interrupts for each hart.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12296 $
+ * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #ifndef MSS_HART_INT_H
 #define MSS_HART_INT_H

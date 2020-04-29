@@ -28,7 +28,6 @@
 
 EXTRA_SRCS-y += \
 	init/hss_ddr_init.c \
-	init/hss_uart_init.c \
 	init/hss_boot_init.c \
 
 EXTRA_SRCS-$(CONFIG_USE_PDMA) += \
@@ -48,10 +47,6 @@ init/hss_ddr_init.o: init/hss_ddr_init.c config.h
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
 init/hss_pdma_init.o: init/hss_pdma_init.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
-
-init/hss_uart_init.o: init/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 

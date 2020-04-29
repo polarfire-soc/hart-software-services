@@ -10,6 +10,8 @@
 #ifndef __SBI_TRAP_H__
 #define __SBI_TRAP_H__
 
+/* clang-format off */
+
 /** Index of zero member in sbi_trap_regs */
 #define SBI_TRAP_REGS_zero			0
 /** Index of ra member in sbi_trap_regs */
@@ -78,14 +80,17 @@
 #define SBI_TRAP_REGS_mepc			32
 /** Index of mstatus member in sbi_trap_regs */
 #define SBI_TRAP_REGS_mstatus			33
+/** Index of mstatusH member in sbi_trap_regs */
+#define SBI_TRAP_REGS_mstatusH			34
 /** Last member index in sbi_trap_regs */
-#define SBI_TRAP_REGS_last			34
+#define SBI_TRAP_REGS_last			35
+
+/* clang-format on */
 
 /** Get offset of member with name 'x' in sbi_trap_regs */
-#define SBI_TRAP_REGS_OFFSET(x)			\
-				((SBI_TRAP_REGS_##x) * __SIZEOF_POINTER__)
+#define SBI_TRAP_REGS_OFFSET(x) ((SBI_TRAP_REGS_##x) * __SIZEOF_POINTER__)
 /** Size (in bytes) of sbi_trap_regs */
-#define SBI_TRAP_REGS_SIZE			SBI_TRAP_REGS_OFFSET(last)
+#define SBI_TRAP_REGS_SIZE SBI_TRAP_REGS_OFFSET(last)
 
 #ifndef __ASSEMBLY__
 
@@ -161,13 +166,29 @@ struct sbi_trap_regs {
 	unsigned long mepc;
 	/** mstatus register state */
 	unsigned long mstatus;
+	/** mstatusH register state (only for 32-bit) */
+	unsigned long mstatusH;
 } __packed;
+
+/** Representation of trap details */
+struct sbi_trap_info {
+	/** epc Trap program counter */
+	unsigned long epc;
+	/** cause Trap exception cause */
+	unsigned long cause;
+	/** tval Trap value */
+	unsigned long tval;
+	/** tval2 Trap value 2 */
+	unsigned long tval2;
+	/** tinst Trap instruction */
+	unsigned long tinst;
+};
 
 struct sbi_scratch;
 
 int sbi_trap_redirect(struct sbi_trap_regs *regs,
-		      struct sbi_scratch *scratch,
-		      ulong epc, ulong cause, ulong tval);
+		      struct sbi_trap_info *trap,
+		      struct sbi_scratch *scratch);
 
 void sbi_trap_handler(struct sbi_trap_regs *regs,
 		      struct sbi_scratch *scratch);

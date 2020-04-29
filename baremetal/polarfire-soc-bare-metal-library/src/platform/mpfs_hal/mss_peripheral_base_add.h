@@ -10,12 +10,12 @@
 /*******************************************************************************
  *
  * @file mss_peripheral_base_add.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief source excel file g5_mss_top-MAS svn rev:92231 comment: Updated
  * MSSIO bank numbers
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11867 $
+ * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 
 #ifndef MSS_ADDRESS_MAP_H

@@ -59,6 +59,22 @@ endif
 else
 endif
 
+all: ${TARGET}
+
+ifeq (${MACHINE},lc-mpfs)
+$(info LC-MPFS selected)
+-include platform/lc-mpfs/Makefile
+else ifeq (${MACHINE},mpfs)
+-include platform/mpfs/Makefile
+else ifeq (${MACHINE},icicles)
+-include platform/icicles/Makefile
+else
+$(warning No MACHINE target selected, defaulting to PLATFORM_POLARFIRESOC)
+MACHINE=icicles
+CONFIG_PLATFORM_POLARFIRESOC=y
+PLATFORM_CFLAGS += -DCONFIG_PLATFORM_POLARFIRESOC=1
+endif
+
 RISCV_TARGET=hss.elf
 
 SRCS-y= \
@@ -66,20 +82,17 @@ SRCS-y= \
     hss_clock.c \
     hss_registry.c \
 
-INCLUDES=\
+INCLUDES +=\
     -I./include \
-    -I./thirdparty/riscv-pk \
     -I.
 
 ASM_SRCS= \
     crt.S \
-    thirdparty/riscv-pk/machine/mentry.S \
-    thirdparty/riscv-pk/machine/mpfs_mutex.S
-EXTRA_SRCS-y= \
-    thirdparty/riscv-pk/machine/mtrap.c \
+
+
+EXTRA_SRCS-y += \
     hss_init.c \
     hss_main.c
-
 
 EXTRA_OBJS=$(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(OPENSBI_LIBS) 
 
@@ -102,12 +115,14 @@ LIBS =
 
 ifndef CONFIG_SERVICE_QSPI
 ifdef CONFIG_COMPRESSION
-EXTRA_OBJS += \
-        tools/compression/fastlz/bootImageBlob.bin.lz77.o
+PAYLOAD_OBJS += \
+    $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
 else
-EXTRA_OBJS += \
-        tools/bin2chunks/bootImageBlob.bin.o
+PAYLOAD_OBJS += \
+    $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
 endif
+else
+PAYLOAD_OBJECTS :=
 endif
 
 EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
@@ -117,6 +132,8 @@ ifdef CONFIG_OPENSBI
 OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
 $(OPENSBI_LIBS):
 	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
+
+.PHONY: $(OPENSBI_LIBS)
 else
 OPENSBI_LIBS =
 endif
@@ -126,10 +143,12 @@ endif
 hss_main.o: hss_main.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+
 hss_init.o: hss_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-thirdparty/riscv-pk/machine/mtrap.o: thirdparty/riscv-pk/machine/mtrap.c config.h
+
+hss_state_machine.o: hss_state_machine.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
@@ -147,9 +166,9 @@ dep: $(DEPENDENCIES)
 -include $(DEPENDENCIES)
 endif
 
-$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT)
+$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT)
 	@$(ECHO) " LD        $@";
-	+$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT)  $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT)  $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"

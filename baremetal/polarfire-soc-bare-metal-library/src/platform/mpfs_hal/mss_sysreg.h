@@ -11,13 +11,13 @@
 /**************************************************************************
     *
  * @file mss_sysreg.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Hardware register definitions.
  * updated sysreg defines Based on SVN rev 100432 of g5_mss_top_sysreg.xls
     
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12184 $
+ * SVN $Date: 2019-08-28 11:15:24 +0100 (Wed, 28 Aug 2019) $
  */
 #ifndef MSS_SYSREG_H
 #define MSS_SYSREG_H

@@ -1,3 +1,35 @@
+/******************************************************************************************
+ * 
+ * MPFS HSS Embedded Software
+ *
+ * Copyright 2019 Microchip Corporation.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+/*\!
+ *\file E51 Glue for ymodem
+ *\brief E51 Glue for ymodem
+ */
+
 #include "config.h"
 #include "hss_types.h"
 #include "hss_debug.h"
@@ -6,8 +38,11 @@
 #include <stdarg.h>
 #include <sys/types.h>
 
-#include "hw_platform.h"
-#include "mss_hal.h"
+#include "config/hardware/hw_platform.h"
+#include "clocks/hw_cfg_clocks.h"
+#undef ROUNDUP
+#undef ROUNDDOWN
+//#include "mss_hal.h"
 #include "mss_util.h"
 #include "mss_uart.h"
 #include "uart_helper.h"
@@ -16,9 +51,19 @@
 #include "mss_sysreg.h"
 #include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
 
-mss_sysreg_t*   SYSREG = (mss_sysreg_t*)BASE32_ADDR_MSS_SYSREG; // TODO: find a better place for this
 
 int ee_vsprintf(char *buf, const char *fmt, va_list args);
+
+
+//
+// Local prototypes
+//
+static int l_sprintf(char *buf, const char * const fmt, ...);
+static void print_result(uint8_t result, const char *msg);
+
+
+//
+//
 
 static int l_sprintf(char *buf, const char * const fmt, ...)
 {
@@ -32,7 +77,7 @@ static int l_sprintf(char *buf, const char * const fmt, ...)
 
 mss_uart_instance_t *g_uart = &g_mss_uart0_lo;
 
-void print_result(uint8_t result, const char *msg)
+static void print_result(uint8_t result, const char *msg)
 {
     static char buffer[256];
 
@@ -57,37 +102,6 @@ void print_result(uint8_t result, const char *msg)
 }
 
 
-void print_failure_at(uint32_t * address, const char *msg, uint32_t expected, uint32_t found)
-{
-    static char buffer[256];
-
-    l_sprintf(buffer, (const char * const)"%s - failure at 0x%p, expected 0x%08X, got 0x%08X" CRLF, 
-        msg, address, expected, found);
-    mHSS_DEBUG_PRINTF_EX(buffer);
-}
-
-
-void print_page_program_failure(uint8_t result, uint8_t sector, uint8_t page)
-{
-    static char buffer[256];
-
-    print_result(result, "envm_program_page()");
-    l_sprintf(buffer, (const char * const)"Failed at sector %u, page %u" CRLF, 
-        (unsigned int) sector, (unsigned int) page);
-    mHSS_DEBUG_PRINTF_EX(buffer);
-}
-
-
-void print_page_program_verify_failure(uint8_t * address, const char *msg, uint8_t expected, 
-    uint8_t found)
-{
-    static char buffer[256];
-
-    l_sprintf(buffer, (const char * const)"%s - failure at 0x%p, expected 0x%02X, got 0x%02X" CRLF, 
-        msg, address, expected, found);
-    mHSS_DEBUG_PRINTF_EX(buffer);
-}
-
 static void l_e51_envm_init(void)
 {
     static bool initialized = false;
@@ -96,7 +110,7 @@ static void l_e51_envm_init(void)
         volatile uint8_t resultTemp = envm_init();
         print_result(resultTemp, "envm_init()");
 
-        envm_set_clock(MSS_COREPLEX_CPU_CLK);
+        envm_set_clock(MSS_COREPLEX_CPU_CLK / 10000000u);
         print_result(0, "envm_set_clock()");
 
         MSS_QSPI_init();

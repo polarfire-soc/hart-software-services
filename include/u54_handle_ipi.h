@@ -38,7 +38,7 @@ extern "C" {
  * \brief U54 Handle IPI
  */
 
-bool U54_HandleIPI(void);
+bool HSS_U54_HandleIPI(void);
 
 #ifdef __cplusplus
 ]

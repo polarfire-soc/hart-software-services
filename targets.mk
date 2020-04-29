@@ -79,9 +79,10 @@ profile: clean $(TARGET)
 clean:
 	$(CMD_PREFIX)$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
 		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) \
+                $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) \
 		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) \
 		$(DEPENDENCIES) \
-		gmon.out cscope.out  $(EXTRA_OBJS) \
+		gmon.out cscope.out \
 		error.log flawfinder.log sparse.log output.map config.h \
                 $(TARGET:.elf=.hex) $(TARGET:.elf=.lss) $(TARGET:.elf=.sym) $(TARGET:.elf=.bin)
 	$(CMD_PREFIX)$(RM) -r docs/DoxygenOutput

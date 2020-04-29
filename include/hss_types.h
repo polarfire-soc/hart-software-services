@@ -149,8 +149,11 @@ struct HSS_CompressedImage {
 #define mSPAN_OF(x)          (sizeof(x)/sizeof(x[0]))
 #define mMIN(A,B)            ((A) < (B) ? A : B)
 
-#define HSS_BOOT_MAGIC       (0xB007C0DEu)
-#define HSS_COMPRESSED_MAGIC (0xC08B8355u)
+#define mHSS_BOOT_MAGIC       (0xB007C0DEu)
+#define mHSS_COMPRESSED_MAGIC (0xC08B8355u)
+
+#define mLIKELY(x)            __builtin_expect((x), 1)
+#define mUNLIKELY(x)          __builtin_expect((x), 0)
 
 #ifdef __cplusplus
 }
