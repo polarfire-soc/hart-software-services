@@ -44,19 +44,18 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
     baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c \
 
 INCLUDES += \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma \
-    -I./baremetal/drivers/mss_watchdog \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/hal \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/ \
-    -I./baremetal/polarfire-soc-bare-metal-library/src/platform/config/software/mpfs_hal/ \
+    -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi \
+    -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart \
+    -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma \
+    -Ibaremetal/drivers/mss_watchdog \
+    -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/hal \
+    -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/ \
+    -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/config/software/mpfs_hal/ \
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
-# TODO : for now, passing MSS clock in via define to HAL... This hardcode needs to be removed
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart/mss_uart.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart/mss_uart.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  

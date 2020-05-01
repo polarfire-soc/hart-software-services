@@ -50,6 +50,8 @@ config.h: .config
 	$(CMD_PREFIX)genconfig
 	@$(ECHO) " GENCONFIG"
 
+genconfig: config.h
+
 ##############################################################################
 #
 # Files that use CSRs needs GCC extensions..
@@ -104,8 +106,6 @@ cppcheck: $(SRCS-y)
 		 $(INCLUDES) -UDECLARE_CAUSE -UDECLARE_CSR -UDECLARE_INSN --force  . \
 		 >cppcheck.log 2>&1
 
-#sparse: $(SRCS-y)
-#	sparse $(INCLUDES) $(SRCS-y)
 sparse: REAL_CC:=$(CC)
 sparse: MCMODEL:=
 sparse: CC=cgcc

@@ -75,11 +75,11 @@ LINKER_SCRIPT=platform/${MACHINE}/hss.ld
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
 # 
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
-$(warning Not enabling -flto as stack protector enabled)
-CORE_CFLAGS+=-fstack-protector-strong
+  $(warning Not enabling -flto as stack protector enabled)
+  CORE_CFLAGS+=-fstack-protector-strong
 else
-$(warning NOTICE: enabling -flto (which means stack protection is disabled))
-OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug
+  $(warning NOTICE: enabling -flto (which means stack protection is disabled))
+  OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug
 endif
 
 all: config.h $(TARGET)
@@ -92,9 +92,9 @@ all: config.h $(TARGET)
 # Check if verbosity is ON for build process
 CMD_PREFIX_DEFAULT := @
 ifeq ($(V), 1)
-	CMD_PREFIX :=
+  CMD_PREFIX :=
 else
-	CMD_PREFIX := $(CMD_PREFIX_DEFAULT)
+  CMD_PREFIX := $(CMD_PREFIX_DEFAULT)
 endif
 
 OBJS = $(SRCS-y:.c=.o)

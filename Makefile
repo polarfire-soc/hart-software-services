@@ -38,41 +38,37 @@ SHELL=/bin/bash
 # such as MSYS2 or Cygwin.  
 #
 SYSTEM:=$(shell uname -s)
-ifneq (, $(findstring Linux, $(SYSTEM)))
-# Linux-specific mods
-#
-# Nothing special needed
-else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))
-# MSYS2-specific mods
-#
-# Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
-PATH+=:/usr/bin:/bin
-$(info MSYS2 detected, PATH is "$(PATH)")
-else ifneq (, $(findstring CYGWIN, $(SYSTEM)))
-# Any Cygwin-specific paths
-#
-# Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
-#
-ifdef CONFIG_OPENSBI
-$(warning OPENSBI build may fail on Cygwin due to issues with file paths)
-endif
+ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
+  # Nothing special needed
+else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))  # MSYS2-specific mods
+  #
+  # Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
+  PATH+=:/usr/bin:/bin
+  $(info MSYS2 detected, PATH is "$(PATH)")
+else ifneq (, $(findstring CYGWIN, $(SYSTEM)))   # Cygwin-specific mods
+  #
+  # Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
+  #
+ ifdef CONFIG_OPENSBI
+   $(warning OPENSBI build may fail on Cygwin due to issues with file paths)
+ endif
 else
 endif
 
 all: ${TARGET}
 
-ifeq (${MACHINE},lc-mpfs)
-$(info LC-MPFS selected)
--include platform/lc-mpfs/Makefile
-else ifeq (${MACHINE},mpfs)
--include platform/mpfs/Makefile
-else ifeq (${MACHINE},icicles)
--include platform/icicles/Makefile
+
+ifneq ("$(wildcard platform/${MACHINE}/Makefile)","")
+  include platform/${MACHINE}/Makefile
 else
-$(warning No MACHINE target selected, defaulting to PLATFORM_POLARFIRESOC)
-MACHINE=icicles
-CONFIG_PLATFORM_POLARFIRESOC=y
-PLATFORM_CFLAGS += -DCONFIG_PLATFORM_POLARFIRESOC=1
+  ifndef MACHINE 
+    $(warning MACHINE target not specified)
+  else
+    $(warning Target >>${MACHINE}<< not found)
+  endif
+
+  MACHINE:=icicle
+  include platform/${MACHINE}/Makefile
 endif
 
 RISCV_TARGET=hss.elf
@@ -108,34 +104,32 @@ include baremetal/Makefile
 include ssmb/Makefile
 include services/Makefile
 ifdef CONFIG_COMPRESSION
-include compression/Makefile
+  include compression/Makefile
 endif
 
 LIBS =
 
 ifndef CONFIG_SERVICE_QSPI
-ifdef CONFIG_COMPRESSION
-PAYLOAD_OBJS += \
-    $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
+  ifdef CONFIG_COMPRESSION
+    PAYLOAD_OBJS += $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
+  else
+    PAYLOAD_OBJS += $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
+  endif
 else
-PAYLOAD_OBJS += \
-    $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
-endif
-else
-PAYLOAD_OBJECTS :=
+  PAYLOAD_OBJECTS :=
 endif
 
 EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
 
 
 ifdef CONFIG_OPENSBI
-OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
-$(OPENSBI_LIBS):
+  OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
+  $(OPENSBI_LIBS):
 	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
 
-.PHONY: $(OPENSBI_LIBS)
+  .PHONY: $(OPENSBI_LIBS)
 else
-OPENSBI_LIBS =
+  OPENSBI_LIBS =
 endif
 
 #$(info $$INCLUDES is [${INCLUDES}])
@@ -159,11 +153,11 @@ tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c
 config.h: .config
 
 ifdef CONFIG_USE_MAKEDEP
-DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) 
-.PHONY: dep
-dep: $(DEPENDENCIES)
+  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) 
+  .PHONY: dep
+  dep: $(DEPENDENCIES)
 
--include $(DEPENDENCIES)
+  -include $(DEPENDENCIES)
 endif
 
 $(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT)
