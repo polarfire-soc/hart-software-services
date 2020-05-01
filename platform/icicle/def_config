@@ -39,7 +39,7 @@ CONFIG_OPENSBI=y
 #
 # OpenSBI
 #
-CONFIG_PROVIDE_DTB=y
+# CONFIG_PROVIDE_DTB is not set
 CONFIG_DEFAULT_DEVICE_TREE="services/opensbi/mpfs"
 
 #
