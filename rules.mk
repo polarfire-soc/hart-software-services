@@ -28,8 +28,7 @@
 # basic build rules (.c to .o, etc)
 #
 
-CROSS_COMPILE=riscv64-unknown-elf-
-#CROSS_COMPILE=riscv64-linux-gnu-
+CROSS_COMPILE?=riscv64-unknown-elf-
 CC=$(CROSS_COMPILE)gcc
 SIZE=$(CROSS_COMPILE)size
 GPROF=$(CROSS_COMPILE)gprof
@@ -40,7 +39,6 @@ NM=$(CROSS_COMPILE)nm
 ECHO=echo
 MAKE=make
 MAKEDEP=makedepend
-#MAKEDEP=$(CROSS_COMPILE)gcc -MD $(CFLAGS_GCCEXT)
 
 PLATFORM_RISCV_ABI=lp64
 PLATFORM_RISCV_ISA=rv64imac
@@ -48,7 +46,7 @@ PLATFORM_RISCV_ISA=rv64imac
 CORE_CFLAGS+=$(MCMODEL) -mstrict-align
 
 ifdef CONFIG_WITH_ARCH
-CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) 
+  CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) 
 endif
 
 CORE_CFLAGS+=-g -Wall -Werror -Wshadow -DDEBUG -ffast-math -fno-builtin-printf -fomit-frame-pointer
@@ -113,9 +111,9 @@ OBJS = $(SRCS-y:.c=.o)
 	$(CMD_PREFIX)$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
 ifdef CONFIG_USE_MAKEDEP
-%.o: %.c config.h %.d
+  %.o: %.c config.h %.d
 else
-%.o: %.c config.h
+  %.o: %.c config.h
 endif
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
