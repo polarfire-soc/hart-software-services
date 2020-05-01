@@ -20,13 +20,17 @@ SECTIONS
 
   . = _ddr_start;
 
-   _hss_start = .;
+   PROVIDE(_hss_start = .);
 
   .text.init         : ALIGN(8) { crt.o(.entry) } 
   .text.init         : ALIGN(8) { crt.o(.text) } 
   .text              : ALIGN(8) { *(.text) } 
-  .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) }
   .rodata            : ALIGN(8) { *(.rodata) *(.rodata*) } 
+
+  .gnu_build_id      : ALIGN(8) {
+    PROVIDE(gnu_build_id = .);
+    *(.note.gnu.build-id)
+   }
  
   .sbss : {
     *(.sbss .sbss.* .gnu.linkonce.sb.*)
@@ -61,9 +65,8 @@ SECTIONS
     *(.data) . = ALIGN(8);
 
     _gp = . ;
-    _bss_end = .;
-    _end = .;
+    PROVIDE(_end = .);
   }
 
-  _hss_end = .;
+  PROVIDE(_hss_end = .);
 }

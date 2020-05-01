@@ -37,6 +37,14 @@ config USE_MAKEDEP
 
 		If you don't know what to do here, say Y.
 
+config USE_GNU_BUILD_ID
+	bool "Enable GNU Build ID in image"
+	default y
+	help
+		This feature enables the generation of a GNU Build ID in binaries.
+
+		If you don't know what to do here, say Y.
+
 config HAS_INTTYPES
 	bool "Use inttypes.h"
 	default y

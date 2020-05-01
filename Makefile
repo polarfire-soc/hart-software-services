@@ -111,17 +111,6 @@ endif
 
 LIBS = $(OPENSBI_LIBS)
 
-ifndef CONFIG_SERVICE_QSPI
-  ifdef CONFIG_COMPRESSION
-    PAYLOAD_OBJS += $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
-  else
-    PAYLOAD_OBJS += $(CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE:"%"=%)
-  endif
-else
-  PAYLOAD_OBJECTS :=
-endif
-
-#EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
 EXTRA_SRCS-y += misc/stack_guard.c
 
 
@@ -167,9 +156,9 @@ ifdef CONFIG_USE_MAKEDEP
   -include $(DEPENDENCIES)
 endif
 
-$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS) 
+$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS) 
 	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"

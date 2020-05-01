@@ -34,16 +34,21 @@ SECTIONS
 
   . = __envm_start;
 
-  _hss_start = .;
-  .code_start = .;
+  PROVIDE(_hss_start = .);
+  PROVIDE(.code_start = .);
   .text.init         : ALIGN(8) { crt.o(.text) } > envm
   .text              : ALIGN(8) { *(.text) } > envm
   .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) } > envm
   .rodata            : ALIGN(8) { *(.rodata) *(.rodata*) } > envm
   . =         ALIGN(8);  /* Pad to 8 bytes  */
+
+  .gnu_build_id      : ALIGN(8) {
+    PROVIDE(gnu_build_id = .);
+    *(.note.gnu.build-id)
+   }
  
-  _hss_end = .;
-  .code_end = .;
+  PROVIDE(_hss_end = .);
+  PROVIDE(.code_end = .);
 
   /*
    * Initialized RW data lives in L2LIM, but is initialized from eNVM (FLASH)
@@ -84,8 +89,8 @@ SECTIONS
    * Uninitialized / Zero-Init data lives in L2LIM
    */
 
-  _hss_l2lim_start = .;
-  _bss_start = .;
+  PROVIDE(_hss_l2lim_start = .);
+  PROVIDE(_bss_start = .);
   sbss : {
     *(.sbss .sbss.* .gnu.linkonce.sb.*)
     *(.scommon)
@@ -110,7 +115,7 @@ SECTIONS
   } > l2lim
 
   /* End of uninitalized data segements */
-  _bss_end = .;
-  _hss_l2lim_end = .;
-  _end = .;
+  PROVIDE(_bss_end = .);
+  PROVIDE(_hss_l2lim_end = .);
+  PROVIDE(_end = .);
 }
