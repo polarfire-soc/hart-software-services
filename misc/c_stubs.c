@@ -52,7 +52,7 @@ __attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict s
         }
     }
 
-#if !CONFIG_OPENSBI
+#ifndef CONFIG_OPENSBI
     while (n--) {
         *cDest = *cSrc;
         cDest++; cSrc++;
@@ -66,7 +66,7 @@ __attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict s
 
 __attribute__((weak)) void *memset(void *dest, int c, size_t n)
 {
-#if !CONFIG_OPENSBI
+#ifndef CONFIG_OPENSBI
     char *cDest = (char*)dest;
 
     while (n--) {
@@ -82,7 +82,7 @@ __attribute__((weak)) void *memset(void *dest, int c, size_t n)
 
 __attribute__((weak)) size_t strlen (const char *s)
 {
-#if !CONFIG_OPENSBI
+#ifndef CONFIG_OPENSBI
     size_t result = 0;
 
     while (*s) {

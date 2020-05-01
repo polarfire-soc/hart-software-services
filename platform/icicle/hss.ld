@@ -36,9 +36,10 @@ SECTIONS
 
   _hss_start = .;
   .code_start = .;
-  .text.init : ALIGN(8) { crt.o(.text) } > envm
-  .text      : ALIGN(8) { *(.text) } > envm
-  .rodata    : ALIGN(8) { *(.rodata) *(.rodata*); } > envm
+  .text.init         : ALIGN(8) { crt.o(.text) } > envm
+  .text              : ALIGN(8) { *(.text) } > envm
+  .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) } > envm
+  .rodata            : ALIGN(8) { *(.rodata) *(.rodata*) } > envm
   . =         ALIGN(8);  /* Pad to 8 bytes  */
  
   _hss_end = .;

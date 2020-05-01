@@ -29,6 +29,7 @@
 #
 
 CROSS_COMPILE=riscv64-unknown-elf-
+#CROSS_COMPILE=riscv64-linux-gnu-
 CC=$(CROSS_COMPILE)gcc
 SIZE=$(CROSS_COMPILE)size
 GPROF=$(CROSS_COMPILE)gprof
@@ -44,7 +45,11 @@ MAKEDEP=makedepend
 PLATFORM_RISCV_ABI=lp64
 PLATFORM_RISCV_ISA=rv64imac
 
-CORE_CFLAGS+=$(MCMODEL) -mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) -mstrict-align
+CORE_CFLAGS+=$(MCMODEL) -mstrict-align
+
+ifdef CONFIG_WITH_ARCH
+CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) 
+endif
 
 CORE_CFLAGS+=-g -Wall -Werror -Wshadow -DDEBUG -ffast-math -fno-builtin-printf -fomit-frame-pointer
 CORE_CFLAGS+=-Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing -fno-common \
@@ -79,7 +84,7 @@ ifdef CONFIG_CC_STACKPROTECTOR_STRONG
   CORE_CFLAGS+=-fstack-protector-strong
 else
   $(warning NOTICE: enabling -flto (which means stack protection is disabled))
-  OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug
+  OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
 endif
 
 all: config.h $(TARGET)

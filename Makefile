@@ -40,18 +40,21 @@ SHELL=/bin/bash
 SYSTEM:=$(shell uname -s)
 ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
   # Nothing special needed
+  HOST_LINUX=true
 else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))  # MSYS2-specific mods
   #
   # Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
   PATH+=:/usr/bin:/bin
   $(info MSYS2 detected, PATH is "$(PATH)")
+  HOST_MSYS_NT=true
 else ifneq (, $(findstring CYGWIN, $(SYSTEM)))   # Cygwin-specific mods
   #
   # Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
   #
- ifdef CONFIG_OPENSBI
-   $(warning OPENSBI build may fail on Cygwin due to issues with file paths)
- endif
+  ifdef CONFIG_OPENSBI
+    $(warning OPENSBI build may fail on Cygwin due to issues with file paths)
+  endif
+  HOST_CYGWIN=true
 else
 endif
 
@@ -89,7 +92,7 @@ EXTRA_SRCS-y += \
     hss_init.c \
     hss_main.c
 
-EXTRA_OBJS=$(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(OPENSBI_LIBS) 
+EXTRA_OBJS= $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) 
 
 MCMODEL=-mcmodel=medany
 
@@ -106,7 +109,7 @@ ifdef CONFIG_COMPRESSION
   include compression/Makefile
 endif
 
-LIBS =
+LIBS = $(OPENSBI_LIBS)
 
 ifndef CONFIG_SERVICE_QSPI
   ifdef CONFIG_COMPRESSION
@@ -118,13 +121,18 @@ else
   PAYLOAD_OBJECTS :=
 endif
 
-EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
+#EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
+EXTRA_SRCS-y += misc/stack_guard.c
 
 
 ifdef CONFIG_OPENSBI
   OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
   $(OPENSBI_LIBS):
-	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
+ifdef CONFIG_WITH_ARCH
+	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_WITH_ARCH=$(CONFIG_WITH_ARCH) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
+else
+	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) -r --no-print-directory -C thirdparty/opensbi V=$(V)
+endif
 
   .PHONY: $(OPENSBI_LIBS)
 else
@@ -159,9 +167,9 @@ ifdef CONFIG_USE_MAKEDEP
   -include $(DEPENDENCIES)
 endif
 
-$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT)
+$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS) 
 	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT)  $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(PAYLOAD_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"

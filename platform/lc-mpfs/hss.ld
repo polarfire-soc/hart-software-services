@@ -22,10 +22,11 @@ SECTIONS
 
    _hss_start = .;
 
-  .text.init : ALIGN(8) { crt.o(.entry) } 
-  .text.init : ALIGN(8) { crt.o(.text) } 
-  .text      : ALIGN(8) { *(.text) } 
-  .rodata    : ALIGN(8) { *(.rodata) *(.rodata*); } 
+  .text.init         : ALIGN(8) { crt.o(.entry) } 
+  .text.init         : ALIGN(8) { crt.o(.text) } 
+  .text              : ALIGN(8) { *(.text) } 
+  .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) }
+  .rodata            : ALIGN(8) { *(.rodata) *(.rodata*) } 
  
   .sbss : {
     *(.sbss .sbss.* .gnu.linkonce.sb.*)
