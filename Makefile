@@ -62,13 +62,12 @@ ifneq ("$(wildcard platform/${MACHINE}/Makefile)","")
   include platform/${MACHINE}/Makefile
 else
   ifndef MACHINE 
-    $(warning MACHINE target not specified)
+    $(warning MACHINE target not specified) # default to icicle if nothing found
+    MACHINE:=icicle
+    include platform/${MACHINE}/Makefile
   else
-    $(warning Target >>${MACHINE}<< not found)
+    $(error Target >>${MACHINE}<< not found)
   endif
-
-  MACHINE:=icicle
-  include platform/${MACHINE}/Makefile
 endif
 
 RISCV_TARGET=hss.elf
