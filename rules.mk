@@ -49,10 +49,28 @@ ifdef CONFIG_WITH_ARCH
   CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) 
 endif
 
-CORE_CFLAGS+=-g -Wall -Werror -Wshadow -DDEBUG -ffast-math -fno-builtin-printf -fomit-frame-pointer
-CORE_CFLAGS+=-Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing -fno-common \
-  -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wformat-security -Wformat-y2k -Winit-self \
- -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition -Wtype-limits -Wstrict-prototypes 
+# Debug options
+CORE_CFLAGS+=-g3 -fdebug-prefix-map=/= -DDEBUG -pipe -grecord-gcc-switches
+
+
+# Warning / Code Quality
+CORE_CFLAGS+=-Wall -Werror -Wshadow -ffast-math -fno-builtin-printf \
+   -fomit-frame-pointer -Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing \
+   -fno-common -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wformat=2 -Wformat-security \
+   -Wformat-y2k -Winit-self -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition \
+   -Wtype-limits -Wstrict-prototypes -Wimplicit-fallthrough=5
+
+CORE_CFLAGS+=-mno-fdiv
+# CORE_CFLAGS+=-fanalyzer
+
+# Compiler hooks to enable link-time garbage collection
+CORE_CFLAGS+=-ffunction-sections -fdata-sections
+
+# Stack Usage
+ifdef CONFIG_CC_DUMP_STACKSIZE
+CORE_CFLAGS+=-fstack-usage
+endif
+
 #-ffreestanding
 
 # TODO - introduce the following prototype warnings...
@@ -70,20 +88,21 @@ CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
 OPT-y+=-Os -fno-strict-aliasing
 
-
-LINKER_SCRIPT=platform/${MACHINE}/hss.ld
-
 #
 # for some reason, -flto isn't playing nicely currently with -fstack-protector-strong...
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
 # 
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
   $(warning Not enabling -flto as stack protector enabled)
-  CORE_CFLAGS+=-fstack-protector-strong
+  CORE_CFLAGS+=-fstack-protector-strong 
+  # CORE_CFLAGS+=-fstack-clash-protection  # currently does nothing on RISC-V
 else
   $(warning NOTICE: enabling -flto (which means stack protection is disabled))
   OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
 endif
+
+
+LINKER_SCRIPT=platform/${MACHINE}/hss.ld
 
 all: config.h $(TARGET)
 

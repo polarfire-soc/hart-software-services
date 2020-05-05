@@ -232,10 +232,10 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
                 break;
 
             case XYMODEM_GETCHAR_TIMEOUT:
-                // deliberate fallthrough
+                __attribute__((fallthrough)); // deliberate fallthrough
             default:
                 //mHSS_DEBUG_PRINTF("%s(): %d: char is %0x" CRLF, __func__, syncAttempt, 
-                //                  pPacket->startByte);
+                //    pPacket->startByte);
                 can_rx_count = 0u;
                 ++syncAttempt;
                 synced = false;

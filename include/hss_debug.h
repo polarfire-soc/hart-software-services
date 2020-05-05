@@ -75,13 +75,13 @@ void sbi_puts(const char *buf);
 void sbi_putc(char c);
 #    define mHSS_PUTS sbi_puts
 #    define mHSS_PUTC sbi_putc
-#    define mHSS_FANCY_PRINTF sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
+#    define mHSS_FANCY_PRINTF (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
 #    define mHSS_FANCY_PRINTF_EX sbi_printf
-#    define mHSS_FANCY_PUTS sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_puts
+#    define mHSS_FANCY_PUTS (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_puts
 
 #ifndef mHSS_DEBUG_PRINTF
 #  ifdef DEBUG
-#      define mHSS_DEBUG_PRINTF sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
+#      define mHSS_DEBUG_PRINTF (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
 #      define mHSS_DEBUG_PRINTF_EX sbi_printf
 #      define mHSS_DEBUG_PUTS sbi_puts
 #  else

@@ -27,6 +27,14 @@ config CC_STACKPROTECTOR_STRONG
 
 		If you don't know what to do here, say Y.
 
+config CC_DUMP_STACKSIZE
+	bool "Dump stack sizes"
+	default n
+	help
+		This feature dumps information about the stack sizes
+
+		If you don't know what to do here, say N.
+
 config USE_MAKEDEP
 	bool "Enable make dependencies in build system"
 	default y

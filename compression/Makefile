@@ -33,11 +33,3 @@ SRCS-$(CONFIG_COMPRESSION) += \
 INCLUDES +=\
     -I./compression \
     -I./thirdparty/fastlz \
-
-#thirdparty/compression/fastlz.o: thirdparty/compression/fastlz.c config.h
-#	@$(ECHO) " CC        $@";
-#	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
-#
-#compression/hss_decompress.o: compression/hss_decompress.c config.h
-#	@$(ECHO) " CC        $@";
-#	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 

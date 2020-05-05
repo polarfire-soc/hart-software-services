@@ -77,11 +77,11 @@ bool HSS_BootInit(void)
     //
 #      if defined(CONFIG_COMPRESSION)
     extern const char _binary_bootImageBlob_bin_lz77_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_lz77_start;
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)((void *)&_binary_payload_bin_lz77_start);
     mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
 #      else
     extern const char _binary_payload_bin_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_start;
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)((void *)&_binary_payload_bin_start);
 #      endif
 #  endif
 
@@ -147,7 +147,12 @@ bool HSS_BootInit(void)
         } else if (validateCrc_(pBootImage)) {
             mHSS_DEBUG_PRINTF("decompressed boot image passed CRC" CRLF);
 
+        // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the set name as
+        // an out-of-bounds... So we'll disable that warning just for this print...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
             mHSS_DEBUG_PRINTF("Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
+#pragma GCC diagnostic pop
             HSS_Register_Boot_Image(pBootImage); 
             mHSS_DEBUG_PRINTF("Boot Image registered..." CRLF);
 

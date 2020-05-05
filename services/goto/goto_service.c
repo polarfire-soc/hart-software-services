@@ -210,8 +210,11 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
         switch (myHartId) {
         case HSS_HART_U54_1:
+            __attribute__((fallthrough); // deliberate fallthrough
         case HSS_HART_U54_2:
+            __attribute__((fallthrough); // deliberate fallthrough
         case HSS_HART_U54_3:
+            __attribute__((fallthrough); // deliberate fallthrough
         case HSS_HART_U54_4:
             result = IPI_IDLE;
             break;

@@ -73,7 +73,7 @@
 bool HSS_Setup_PAD_IO(void)
 {
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    const struct HSS_MSSIO_Bank_Config {
+    static const struct HSS_MSSIO_Bank_Config {
         uint32_t MSSIO_BANK4_CFG_CR;
         uint32_t MSSIO_BANK4_IO_CFG_0_CR;
         uint32_t MSSIO_BANK4_IO_CFG_1_CR;
@@ -126,7 +126,7 @@ bool HSS_Setup_PAD_IO(void)
     /**
      * \brief IOMUX configuration
      */
-    const struct HSS_IOMUX_Config {
+    static const struct HSS_IOMUX_Config {
         uint32_t IOMUX0_CR;
         uint32_t IOMUX1_CR;
         uint32_t IOMUX2_CR;
@@ -175,7 +175,7 @@ bool HSS_Setup_PAD_IO(void)
 bool HSS_Setup_PLIC(void)
 {
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    const struct HSS_PLIC_Config {
+    static const struct HSS_PLIC_Config {
         uint32_t source_priority[185];
         uint32_t pending_array[6];
         uint32_t e51_mEnables[6];
@@ -277,7 +277,7 @@ bool HSS_Setup_PLIC(void)
 bool HSS_Setup_MPU(void)
 {
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    const struct HSS_MPU_Config {
+    static const struct HSS_MPU_Config {
         uint64_t fic0;
         uint64_t fic1;
         uint64_t fic2;
@@ -338,7 +338,7 @@ bool HSS_Setup_MPU(void)
 bool HSS_Setup_PMP(void)
 {
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    const struct HSS_PMP_Config {
+    static const struct HSS_PMP_Config {
         uint64_t pmpcfg0;
         uint64_t pmpcfg2;
 
@@ -420,7 +420,7 @@ bool HSS_Setup_PMP(void)
 bool HSS_Setup_L2Cache(void)
 {
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    const struct HSS_L2Cache_Config {
+    static const struct HSS_L2Cache_Config {
         uint32_t Config;
         uint8_t  WayEnable;
         uint64_t WayMask0;
@@ -452,7 +452,7 @@ bool HSS_Setup_L2Cache(void)
 bool HSS_Setup_Clocks(void)
 {
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
+    static const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
     const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
         ~( (1u << 0u) | /* Release ENVM from Reset */ 
            (1u << 4u) | /* Release TIMER from Reset */  

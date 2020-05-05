@@ -69,10 +69,11 @@ static int mpfs_pmp_region_info(u32 hartid, u32 index,
         *prot = PMP_R | PMP_W | PMP_X;
         *addr = 0;
         *log2size = __riscv_xlen;
-    break;
+        break;
+
     default:
         ret = -1;
-    break;
+        break;
     };
 
     return ret;

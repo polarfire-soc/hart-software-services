@@ -57,7 +57,7 @@
 
 // RLE Microchip Logo, built up from our color pixel primitives above...
 // RLE shrinks the size of this
-const struct {
+const struct __attribute__((packed))  {
     uint8_t const count;
     char const * const token;
 } rleLogoElements[] = {

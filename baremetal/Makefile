@@ -43,6 +43,9 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
     baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.c \
     baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c \
 
+ASM_SRCS += \
+    baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mutex.S
+
 INCLUDES += \
     -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi \
     -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart \

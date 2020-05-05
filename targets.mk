@@ -80,9 +80,9 @@ profile: clean $(TARGET)
 
 clean:
 	$(CMD_PREFIX)$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
-		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) \
-                $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) \
-		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) \
+		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) $(OBJS:.o=.su) \
+                $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) $(EXTRA_OBJS:.o=.su) \
+		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) $(TEST_OBJS:.o=.su) \
 		$(DEPENDENCIES) \
 		gmon.out cscope.out \
 		error.log flawfinder.log sparse.log output.map config.h \
@@ -160,6 +160,16 @@ showfullsize: hss.elf
 	@echo
 	@$(NM) --print-size --size-sort --radix=x hss.elf 
 	@$(READELF) -e hss.elf 
+
+ifdef CONFIG_CC_DUMP_STACKSIZE
+showstack: hss.elf
+	@echo
+	@cat `find . -name \*.su` | awk '{print $$2 " " $$0}' | sort -rn | cut -d " " -f 2- | head -20
+
+showmaxstack:  hss.elf
+	@echo
+	@cat `find . -name \*.su` | awk '$$2>a {a=$$2; b=$$0} END {print b}'
+endif
 	
 
 .PHONY: config clean docs distclean doxygen showsize \
@@ -186,5 +196,9 @@ help:
 	@$(ECHO) "	$ make showloc		# Print number of lines of code"
 	@$(ECHO) "	$ make showsize		# Print information about binary size"
 	@$(ECHO) "	$ make showfullsize	# Dump detailed information about object sizes"
+ifdef CONFIG_CC_DUMP_STACKSIZE
+	@$(ECHO) "	$ make showstack	# Print top 10 functions by stack usage"
+	@$(ECHO) "	$ make showmaxstack	# Print top function by stack usage"
+endif
 	@$(ECHO) "	$ make dep		# Remake dependencies"
 
