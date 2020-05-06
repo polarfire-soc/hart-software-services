@@ -36,13 +36,19 @@
 extern "C" {
 #endif
 
-#if 0
-#  define TICKS_PER_SEC ((unsigned long long)CONFIG_MSS_AXI_SWITCH_CLK)
-#else
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
+   //# define TICKS_PER_SEC ((unsigned long long)CONFIG_MSS_AXI_SWITCH_CLK)
 #  define TICKS_PER_SEC 50000llu // TODO: fixme! This is about 1 sec on RENODE
 #  define TICKS_PER_MILLISEC 5llu // TODO: fixme! This is about 1 millisec on RENODE
 #  define ONE_SEC (1llu * TICKS_PER_SEC)
 #  define ONE_MILLISEC (1llu * TICKS_PER_MILLISEC)
+#endif
+
+#ifdef CONFIG_PLATFORM_MPFS
+#  define TICKS_PER_MILLISEC    1000llu // TODO: fixme!
+#  define TICKS_PER_SEC         (1000llu * TICKS_PER_MILLISEC) // TODO: fixme!
+#  define ONE_SEC               (1llu * TICKS_PER_SEC)
+#  define ONE_MILLISEC          (1llu * TICKS_PER_MILLISEC)
 #endif
 
 typedef uint64_t HSSTicks_t;

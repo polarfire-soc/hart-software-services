@@ -30,7 +30,7 @@ EXTRA_SRCS-y += \
     baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.c \
     baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.c \
     baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
-    baremetal/sysreg.c
+    baremetal/sysreg.c \
 
 EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
     baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \

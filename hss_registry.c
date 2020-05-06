@@ -256,7 +256,7 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_E51_Banner",                HSS_E51_Banner,                false },
     { "HSS_DDRInit",                   HSS_DDRInit,                   false },
 #ifdef CONFIG_TINYCLI
-    { "HSS_TinCLI_Parser",             HSS_TinyCLI_Parser,            false },
+    { "HSS_TinyCLI_Parser",             HSS_TinyCLI_Parser,            false },
 #endif
     { "HSS_RegistryInit",              HSS_RegistryInit,              false },
     { "IPI_QueuesInit",                IPI_QueuesInit,                false },

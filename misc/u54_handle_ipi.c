@@ -43,7 +43,7 @@
 
 bool HSS_U54_HandleIPI(void)
 {
-    mHSS_DEBUG_PRINTF(">>" CRLF);
+    //mHSS_DEBUG_PRINTF(">>" CRLF);
     volatile bool intentFound = false;
 
     mb();
@@ -78,7 +78,8 @@ bool HSS_U54_HandleIPI(void)
     //mb();
     // if not for me, pass to S-mode ...
     //mHSS_DEBUG_PRINTF("MTVEC is now %p" CRLF, mHSS_CSR_READ(mtvec));
-    mHSS_DEBUG_PRINTF("<<" CRLF);
+
+    //mHSS_DEBUG_PRINTF("<<" CRLF);
 
     return intentFound; 
 }

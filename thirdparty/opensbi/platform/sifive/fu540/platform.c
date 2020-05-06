@@ -69,7 +69,7 @@ static void fu540_modify_dt(void *fdt)
 	err  = fdt_open_into(fdt, fdt, size + 256);
 	if (err < 0)
 		sbi_printf(
-			"Device Tree can't be expanded to accmodate new node");
+			"Device Tree can't be expanded to accomodate new node");
 
 	for (i = 0; i < FU540_HART_COUNT; i++) {
 		sbi_sprintf(cpu_node, "/cpus/cpu@%d", i);

@@ -22,12 +22,12 @@ unsigned long __stack_chk_guard;
 void __stack_chk_guard_setup(void);
 void __stack_chk_fail(void);
 
-/*__attribute__((weak))*/ void __stack_chk_guard_setup(void)
+__attribute__((weak)) void __stack_chk_guard_setup(void)
 {
     __stack_chk_guard = 0xDEAD0BAD;
 }
 
-__attribute__((/*weak, */ noreturn)) void __stack_chk_fail(void)
+__attribute__((weak)) void __stack_chk_fail(void)
 {
     mHSS_DEBUG_PUTS("__stack_chk_fail(): stack corruption detected!!" CRLF);
     while (1); // stack has been corrupted

@@ -51,32 +51,18 @@
 
 #include <string.h>
 
-// **********************************************************************************************
-//
-// local prototypes
-//
+/******************************************************************************************/
 
-static void hss_main(void);
-static void runGlobalStateMachines(void);
-
-// **********************************************************************************************
-
-static void runGlobalStateMachines(void)
-{
-    RunStateMachines(spanOfPGlobalStateMachines, pGlobalStateMachines);
-}
-
-static void hss_main(void)
+void hss_main(void)
 {
 #ifdef CONFIG_SERVICE_WDOG
     HSS_Wdog_MonitorHart(HSS_HART_ALL);
 #endif
 
     while (true) {
-        runGlobalStateMachines();
+        RunStateMachines(spanOfPGlobalStateMachines, pGlobalStateMachines);
     }
 }
-
 
 int main(int argc, char **argv)
 {

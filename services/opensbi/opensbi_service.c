@@ -127,7 +127,7 @@ void HSS_OpenSBI_Setup(enum HSSHartId hartid)
     if (hartid == HSS_HART_E51) {
         sbi_hss_e51_init(&(scratches[hartid].scratch), false);
     } else {
-        sbi_printf("%s(): _trap_handler is %lx\n", __func__, (unsigned long)&_trap_handler);
+        //sbi_printf("%s(): _trap_handler is %lx\n", __func__, (unsigned long)&_trap_handler);
 	while (mHSS_CSR_READ(CSR_MTVEC) != (unsigned long)&_trap_handler) {
             mHSS_CSR_WRITE(CSR_MTVEC, (unsigned long)&_trap_handler);
 	}

@@ -42,12 +42,15 @@ bool HSS_WakeSleepingHarts(void);
 bool HSS_E51_Banner(void);
 
 bool HSS_QueuesInit(void);
+
 #ifdef CONFIG_SERVICE_QSPI
 bool HSS_QSPIInit(void);
 #endif
+
 #ifdef CONFIG_SERVICE_BOOT
 bool HSS_BootInit(void);
 #endif
+
 #ifdef CONFIG_OPENSBI
 bool HSS_OpenSBIInit(void);
 #endif

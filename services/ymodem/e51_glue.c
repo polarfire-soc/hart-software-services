@@ -59,7 +59,7 @@ int ee_vsprintf(char *buf, const char *fmt, va_list args);
 // Local prototypes
 //
 static int l_sprintf(char *buf, const char * const fmt, ...);
-static void print_result(uint8_t result, const char *msg);
+static void l_print_result(uint8_t result, const char *msg);
 
 
 //
@@ -77,7 +77,7 @@ static int l_sprintf(char *buf, const char * const fmt, ...)
 
 mss_uart_instance_t *g_uart = &g_mss_uart0_lo;
 
-static void print_result(uint8_t result, const char *msg)
+static void l_print_result(uint8_t result, const char *msg)
 {
     static char buffer[256];
 
@@ -108,15 +108,15 @@ static void l_e51_envm_init(void)
 
     if (!initialized) {
         volatile uint8_t resultTemp = envm_init();
-        print_result(resultTemp, "envm_init()");
+        l_print_result(resultTemp, "envm_init()");
 
         envm_set_clock(MSS_COREPLEX_CPU_CLK / 10000000u);
-        print_result(0, "envm_set_clock()");
+        l_print_result(0, "envm_set_clock()");
 
         MSS_QSPI_init();
         MSS_QSPI_enable();
         Flash_init(MSS_QSPI_NORMAL);
-        print_result(0, "Flash_init()");
+        l_print_result(0, "Flash_init()");
         initialized = true;
     }
 }

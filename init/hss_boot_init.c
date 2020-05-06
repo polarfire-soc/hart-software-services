@@ -77,11 +77,11 @@ bool HSS_BootInit(void)
     //
 #      if defined(CONFIG_COMPRESSION)
     extern const char _binary_bootImageBlob_bin_lz77_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)((void *)&_binary_payload_bin_lz77_start);
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_lz77_start;
     mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
 #      else
     extern const char _binary_payload_bin_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)((void *)&_binary_payload_bin_start);
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_start;
 #      endif
 #  endif
 
