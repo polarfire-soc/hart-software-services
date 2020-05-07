@@ -147,7 +147,7 @@ void e51_ymodem_loop(void)
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
                 l_e51_envm_init();
                 Flash_die_erase();
-                print_result(0, CRLF " QSPI FLASH_chip_erase()" CRLF);
+                l_print_result(0, CRLF " QSPI FLASH_chip_erase()" CRLF);
                 break;
 
             case '2':
