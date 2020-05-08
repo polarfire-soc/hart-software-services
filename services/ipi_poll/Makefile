@@ -27,7 +27,7 @@
 # IPI Polling as a Service
 
 SRCS-$(CONFIG_SERVICE_IPI_POLL) += \
-    services/ipi_poll/ipi_poll_service.c \
+	services/ipi_poll/ipi_poll_service.c \
 
 INCLUDES +=\
-    -I./services/ipi_poll \
+	-I./services/ipi_poll \

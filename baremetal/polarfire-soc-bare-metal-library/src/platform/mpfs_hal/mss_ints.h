@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -15,8 +15,6 @@
  *
  * Interrupt function prototypes
  *
- * SVN $Revision: 12097 $
- * SVN $Date: 2019-08-12 15:13:31 +0100 (Mon, 12 Aug 2019) $
  */
 
 #ifndef MSS_INTS_H

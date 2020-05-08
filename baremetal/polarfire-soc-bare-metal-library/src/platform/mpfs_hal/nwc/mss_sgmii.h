@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -21,13 +21,14 @@
 extern "C" {
 #endif
 
+#define TX_RX_CH_EN_MASK    0xFU
+#define TX_RX_CH_EN_OFFSET  0x4U
+
 /*
  *
  */
 void sgmii_off_mode(void);
 uint32_t sgmii_setup(void);
-void ddr_pvt_recalibration(void);
-void ddr_pvt_calibration(void);
 
 #ifdef __cplusplus
 }

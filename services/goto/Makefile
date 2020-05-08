@@ -27,10 +27,10 @@
 # U54-GOTO Service
 
 SRCS-$(CONFIG_SERVICE_GOTO) += \
-    services/goto/goto_service.c \
+	services/goto/goto_service.c \
 
 INCLUDES +=\
-    -I./services/goto \
+	-I./services/goto \
 
 services/goto/goto_service.o: services/goto/goto_service.c config.h
 	@$(ECHO) " CC        $@";

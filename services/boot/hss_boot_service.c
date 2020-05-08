@@ -45,7 +45,9 @@
 
 #include "hss_atomic.h"
 
-#include "mss_sysreg.h"
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#  include "mss_sysreg.h"
+#endif
 #include "hss_memcpy_via_pdma.h"
 
 /* Timeouts */

@@ -9,12 +9,12 @@
 
 /***************************************************************************
  * @file mss_mutex.S
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Mutex functions to help multiprocessor programming
 
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 11867 $
+ * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
   .text
   .align 3

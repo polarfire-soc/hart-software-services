@@ -42,7 +42,7 @@ config:
 	$(CMD_PREFIX)menuconfig
 	@$(ECHO) " MENUCONFIG"
 
-.config: Kconfig
+.config: 
 	$(CMD_PREFIX)menuconfig
 	@$(ECHO) " MENUCONFIG"
 

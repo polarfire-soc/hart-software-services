@@ -27,7 +27,7 @@
 # DDR Refresh Service
 
 SRCS-y += \
-    services/ddr/ddr_service.c \
+	services/ddr/ddr_service.c \
 
 INCLUDES +=\
-    -I./services/ddr \
+	-I./services/ddr \

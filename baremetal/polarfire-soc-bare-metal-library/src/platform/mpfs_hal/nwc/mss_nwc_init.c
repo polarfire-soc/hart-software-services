@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -14,13 +14,18 @@
  *
  */
 
-//#include <string.h>
-//#include <stdio.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "mpfs_hal/mss_hal.h"
 #include "mss_nwc_init.h"
+#include "simulation.h"
 
-void mss_pll_config(void); //external function
+#ifdef DEBUG_DDR_INIT
+#include "mss_uart.h"
+extern mss_uart_instance_t *g_debug_uart ;
+uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
+#endif
 
 /*******************************************************************************
  * Local Defines
@@ -38,8 +43,18 @@ g5_mss_top_scb_regs_TypeDef     *SCB_REGS    =\
 /*******************************************************************************
  * Local functions
  */
-void delay(uint32_t n);
-//static void set_up_l2_cache_test(void);
+void delay(uint32_t n); 
+
+/*******************************************************************************
+ * extern defined functions
+ */
+#ifndef SIFIVE_HIFIVE_UNLEASHED
+extern void mss_pll_config(void);
+#endif
+
+/******************************************************************************
+ * Public Functions - API
+ ******************************************************************************/
 
 /**
  * MSS_DDR_init_simulation(void)
@@ -47,12 +62,26 @@ void delay(uint32_t n);
  *
  * @return
  */
-uint8_t MSS_NWC_init(void)
+uint8_t mss_nwc_init(void)
 {
     uint8_t error = 0U;
 
-    //uint8_t sgmii_instruction;
-
+#ifndef SIFIVE_HIFIVE_UNLEASHED
+#ifdef SIMULATION_TEST_FEEDBACK
+    /*
+     * set the test version- this is read in Simulation environment
+     * x.y.z
+     * byte[0] = z
+     * byte[1] = y
+     * byte[2] = x
+     */
+    SIM_FEEDBACK0(0x33333333);
+    SYSREG->TEMP0 = (0U << 16U) | (3U << 8U) | 3U;
+    SYSREG->TEMP0 = 0x44444444U;
+    SIM_FEEDBACK0(1);
+    SIM_FEEDBACK0(0x55555555);
+    SIM_FEEDBACK0(1);
+#endif
     /*
      * Assumptions:
      *  1. We enter here shortly after start-up of E51 code by  the system
@@ -140,6 +169,15 @@ uint8_t MSS_NWC_init(void)
        2. setting using RPC on a soft reset
      */
     CFG_DDR_SGMII_PHY->DYN_CNTL.DYN_CNTL = (0x01U<< 10U) | (0x7FU<<0U);
+
+    /*
+     * Configure IOMUX and I/O settings for bank 2 and 4
+     */
+    {
+#ifdef MSSIO_SUPPORT
+        error |= mssio_setup();
+#endif
+    }
 
     /*************************************************************************/
 
@@ -288,22 +326,26 @@ uint8_t MSS_NWC_init(void)
      * The SGMII set-upset configures the external clock reference so this must
      * be called before configuring the MSS PLL
      */
+    SIM_FEEDBACK0(2);
     sgmii_setup();
 
     /*
      * Setup the MSS PLL
      */
+    SIM_FEEDBACK0(3);
     mss_pll_config();
-
-    /*
-     * Way enable test
-     */
-//    set_up_l2_cache_test();
 
     {
 #ifdef DDR_SUPPORT
+#ifdef DEBUG_DDR_INIT
+        {
+            (void)setup_ddr_debug_port(g_debug_uart);
+        }
+#endif
+
         uint32_t  ddr_status;
         ddr_status = ddr_state_machine(DDR_SS__INIT);
+
         while((ddr_status & DDR_SETUP_DONE) != DDR_SETUP_DONE)
         {
             ddr_status = ddr_state_machine(DDR_SS_MONITOR);
@@ -312,15 +354,14 @@ uint8_t MSS_NWC_init(void)
         {
             error |= (0x1U << 2U);
         }
-
-#endif
-    }
-    {
-#ifdef MSSIO_SUPPORT
-        error |= mssio_setup();
+        //todo: remove, just for sim test ddr_recalib_io_test();
 #endif
     }
 
+#endif /* end of !define SIFIVE_HIFIVE_UNLEASHED */
+    SIM_FEEDBACK0(0x12345678U);
+    SIM_FEEDBACK0(error);
+    SIM_FEEDBACK0(0x87654321U);
     return error;
 }
 
@@ -361,30 +402,3 @@ void mtime_delay(uint32_t microseconds)
     }
     return;
 }
-
-
-#if 0
-/* place in DTIM */
-__attribute__((section(".ram_codetext"))) \
-static void set_up_l2_cache_test(void)
-{
-    volatile uint32_t test = 0XFFFFFF;
-    while(test)
-    {
-        test--;
-        if (test == 0U)
-            break;
-    }
-    #define L2_Cache_wayenable ((uint8_t*) 0x02010008)
-    //*L2_Cache_wayenable = LIBERO_SETTING_WAY_ENABLE;
-    *L2_Cache_wayenable = 0x01;
-
-    test = 0XFFFFFF;
-    while(test)
-    {
-        test--;
-        if (test == 0U)
-            break;
-    }
-}
-#endif

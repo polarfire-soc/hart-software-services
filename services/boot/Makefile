@@ -27,12 +27,12 @@
 # U54 Boot Strapping Service
 
 SRCS-$(CONFIG_SERVICE_BOOT) += \
-    services/boot/hss_boot_service.c \
-    services/boot/hss_boot_pmp.c \
-    hss_sys_setup.c \
+	services/boot/hss_boot_service.c \
+	services/boot/hss_boot_pmp.c \
+	hss_sys_setup.c \
 
 INCLUDES +=\
-    -I./services/boot \
+	-I./services/boot \
 
 services/boot/hss_boot_service.o: services/boot/hss_boot_service.c config.h
 	@$(ECHO) " CC        $@";

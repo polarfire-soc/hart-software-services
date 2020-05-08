@@ -102,7 +102,7 @@ else
 endif
 
 
-LINKER_SCRIPT=platform/${MACHINE}/hss.ld
+LINKER_SCRIPT=boards/${MACHINE}/hss.ld
 
 all: config.h $(TARGET)
 

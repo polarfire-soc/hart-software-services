@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -11,11 +11,8 @@
  *
  * @file mss_peripheral_base_add.h
  * @author Microchip-FPGA Embedded Systems Solutions
- * @brief source excel file g5_mss_top-MAS svn rev:92231 comment: Updated
  * MSSIO bank numbers
  *
- * SVN $Revision: 11867 $
- * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 
 #ifndef MSS_ADDRESS_MAP_H

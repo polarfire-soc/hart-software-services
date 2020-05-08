@@ -44,7 +44,7 @@ void HSS_DDR_Train(void)
     mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
 
 #ifdef CONFIG_PLATFORM_POLARFIRESOC
-    MSS_NWC_init();    
+    assert(mss_nwc_init() == 0);
 #endif
 }
 

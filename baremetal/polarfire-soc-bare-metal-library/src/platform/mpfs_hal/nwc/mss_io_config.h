@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -56,7 +56,7 @@ extern "C" {
 
 #define SD_SDIO             0x0
 #define EMMC                0x1
-#define QSPI_OPTION         0x2
+#define QSPI                0x2
 #define SPI                 0x3
 #define USB                 0x4
 #define MMUART              0x5
@@ -89,11 +89,13 @@ typedef struct IOMUX_CONFIG_ {
 
 
 /*
-    pcode, ncode and drive strength for each bank is set using the
-    mssio_bank4_cfg_cr and mssio_bank2_cfg_cr registers.
+    pcode, ncode and drive strength for each bank is set using direct writes to
+    the SCB registers
 
     The MSS IO pad configuration is provided by nineteen system registers
     each configuring two IO’s using 15-bits per IO
+    Theses registers are located in the MSS sysreg.
+
     - (mssio_bank*_io_cfg_*_*_cr).
 
    | mssio_bank*_io_cfg_*_*_cr | offset        | info |
@@ -116,13 +118,22 @@ typedef struct IOMUX_CONFIG_ {
    |      io_cfg_lp_bypass_en  |14             |      |
 
 */
+
 /**
- * \brief MSS IO Banks configuration
+ * \brief Bank 2 and 4 voltage settings
  *
  */
 typedef struct HSS_MSSIO_Bank_Config_ {
-    __IO uint32_t mssio_bank4_cfg_cr;        /* bank 4- set pcode, ncode and
-                                                drive strength */
+    __IO uint32_t mssio_bank4_pcode_ncode_vs;   /* bank 4- set pcode, ncode and
+                                                   drive strength */
+    __IO uint32_t mssio_bank2_pcode_ncode_vs;   /* bank 2- set pcode, ncode and
+                                                   drive strength */
+}MSSIO_BANK_CONFIG;
+
+/**
+ * \brief MSS IO Bank 4 configuration
+ */
+typedef struct MSSIO_Bank4_IO_Config_ {
     __IO uint32_t mssio_bank4_io_cfg_0_cr;   /* x_vddi Ratio Rx<0-2> == 001
                                                 drv<3-6> == 1111
                                                 7:clamp   == 0
@@ -140,9 +151,24 @@ typedef struct HSS_MSSIO_Bank_Config_ {
     __IO uint32_t mssio_bank4_io_cfg_4_cr;
     __IO uint32_t mssio_bank4_io_cfg_5_cr;
     __IO uint32_t mssio_bank4_io_cfg_6_cr;
-    __IO uint32_t mssio_bank2_cfg_cr;        /* bank 2- set pcode, ncode and
-                                                drive strength */
-    __IO uint32_t mssio_bank2_io_cfg_0_cr;
+
+}MSSIO_BANK4_CONFIG;
+
+/**
+ * \brief MSS IO Bank 2 configuration
+ */
+typedef struct MSSIO_Bank2_IO_Config_ {
+    __IO uint32_t mssio_bank2_io_cfg_0_cr;   /* x_vddi Ratio Rx<0-2> == 001
+                                                drv<3-6> == 1111
+                                                7:clamp   == 0
+                                                enhyst   == 0
+                                                lockdn_en == 1
+                                                10:wpd  == 0
+                                                atp_en`== 0
+                                                lpmd_ibuf  == 0
+                                                lpmd_obuf == 0
+                                                persist == 0
+                                                */
     __IO uint32_t mssio_bank2_io_cfg_1_cr;
     __IO uint32_t mssio_bank2_io_cfg_2_cr;
     __IO uint32_t mssio_bank2_io_cfg_3_cr;
@@ -154,8 +180,7 @@ typedef struct HSS_MSSIO_Bank_Config_ {
     __IO uint32_t mssio_bank2_io_cfg_9_cr;
     __IO uint32_t mssio_bank2_io_cfg_10_cr;
     __IO uint32_t mssio_bank2_io_cfg_11_cr;
-}MSSIO_BANK_CONFIG;
-
+}MSSIO_BANK2_CONFIG;
 
 
 /***************************************************************************//**
@@ -179,6 +204,29 @@ typedef struct HSS_MSSIO_Bank_Config_ {
  */
 int32_t
 mssio_setup
+(
+    void
+);
+
+
+/***************************************************************************//**
+  The gpio_toggle_test(void)()
+
+  Toggle a GPIO PIN on start-up
+
+  @return
+    This function returns status, 0 => OK
+
+  Example:
+  @code
+
+        error |= mssio_setup();
+
+  @endcode
+
+ */
+int32_t
+gpio_toggle_test
 (
     void
 );

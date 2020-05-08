@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -16,7 +16,7 @@
 
 #include "mpfs_hal/mss_hal.h"
 #include "mss_pll.h"
-
+#ifndef SIFIVE_HIFIVE_UNLEASHED
 
 /**
  * We do it this way to avoid multiple LDAR warnings
@@ -34,7 +34,7 @@ IOSCB_CFM_SGMII *MSS_SCB_CFM_SGMII_MUX =\
         ((IOSCB_CFM_SGMII *) MSS_SCB_SGMII_MUX_BASE);
 IOSCB_IO_CALIB_STRUCT *IOSCB_IO_CALIB_SGMII =\
         (IOSCB_IO_CALIB_STRUCT *)IOSCB_IO_CALIB_SGMII_BASE;
-IOSCB_IO_CALIB_STRUCT *IOSCB_IO_CALIB_DDR 	=\
+IOSCB_IO_CALIB_STRUCT *IOSCB_IO_CALIB_DDR   =\
         (IOSCB_IO_CALIB_STRUCT *)IOSCB_IO_CALIB_DDR_BASE;
 
 
@@ -54,7 +54,6 @@ extern uint32_t __sc_end;
 /*******************************************************************************
  * Local function declarations
  */
-
 static void copy_switch_code(void);
 
 
@@ -69,9 +68,9 @@ void mss_pll_config(void);
 
 
 /*******************************************************************************
- Local functions															   *
+ Local functions                                 *
 *******************************************************************************/
-static void sgmii_mux_config_via_scb(uint8_t option);
+
 
 /***************************************************************************//**
  * set_RTC_divisor()
@@ -222,30 +221,30 @@ static void mss_mux_pre_mss_pll_config(void)
 __attribute__((section(".ram_codetext"))) \
         static void mss_mux_post_mss_pll_config(void)
 {
-	/*
-	 * Modify the eNVM clock, so it now matches new MSS clock
-	 *
-	 * [5:0]
-	 * Sets the number of AHB cycles used to generate the PNVM clock,.
-	 * Clock period = (Value+1) * (1000/AHBFREQMHZ)
-	 * Value must be 1 to 63 (0 defaults to 15)
-	 * e.g.
-	 * 7 will generate a 40ns period 25MHz clock if the AHB clock is 200MHz
-	 * 11 will generate a 40ns period 25MHz clock if the AHB clock is 250MHz
-	 * 15 will generate a 40ns period 25MHz clock if the AHB clock is 400MHz
-	 *
-	 */
-	SYSREG->ENVM_CR = LIBERO_SETTING_MSS_ENVM_CR;
+   /*
+    * Modify the eNVM clock, so it now matches new MSS clock
+    *
+    * [5:0]
+    * Sets the number of AHB cycles used to generate the PNVM clock,.
+    * Clock period = (Value+1) * (1000/AHBFREQMHZ)
+    * Value must be 1 to 63 (0 defaults to 15)
+    * e.g.
+    * 7 will generate a 40ns period 25MHz clock if the AHB clock is 200MHz
+    * 11 will generate a 40ns period 25MHz clock if the AHB clock is 250MHz
+    * 15 will generate a 40ns period 25MHz clock if the AHB clock is 400MHz
+    *
+    */
+    SYSREG->ENVM_CR = LIBERO_SETTING_MSS_ENVM_CR;
 
-	mb();	/* make sure we change clock in eNVM first so ready by the time we
-	           leave */
+    mb();  /* make sure we change clock in eNVM first so ready by the time we
+             leave */
 
-	/*
-	 * When you’re changing the eNVM clock frequency, there is a bit
-	 * (ENVM_CR_clock_okay) in the eNVM_CR which can be polled to check that
-	 * the frequency change has happened before bumping up the AHB frequency.
-	 */
-	volatile uint32_t wait_for_true;
+    /*
+    * When you’re changing the eNVM clock frequency, there is a bit
+    * (ENVM_CR_clock_okay) in the eNVM_CR which can be polled to check that
+    * the frequency change has happened before bumping up the AHB frequency.
+    */
+    volatile uint32_t wait_for_true;
     while ((SYSREG->ENVM_CR & ENVM_CR_CLOCK_OKAY_MASK) !=\
             ENVM_CR_CLOCK_OKAY_MASK)
     {
@@ -255,53 +254,53 @@ __attribute__((section(".ram_codetext"))) \
         wait_for_true++; /* need something here to stop debugger freezing */
     }
 
-	/*
-	 * Change the MSS clock as required.
-	 *
-	 * CLOCK_CONFIG_CR
-	 * [5:0]
-	 * Sets the master synchronous clock divider
-	 * bits [1:0] CPU clock divider
-	 * bits [3:2] AXI clock divider
-	 * bits [5:4] AHB/APB clock divider
-	 * 00=/1 01=/2 10=/4 11=/8 (AHB/APB divider may not be set to /1)
-	 * Reset = 0x3F
-	 *
-	 * SYSREG->CLOCK_CONFIG_CR = (0x0U<<0U) | (0x1U<<2U) | (0x2U<<4U);
-	 * MSS clk= 80Mhz, implies CPU = 80Mhz, AXI = 40Mhz, AHB/APB = 20Mhz
-	 * Until we switch in MSS PLL clock (MSS_SCB_CFM_MSS_MUX->MSSCLKMUX = 0x01)
-	 * e.g. If MSS clk 800Mhz
-	 * MSS clk= 800Mhz, implies CPU = 800Mhz, AXI = 400Mhz, AHB/APB = 200Mhz
-	*/
-	SYSREG->CLOCK_CONFIG_CR = LIBERO_SETTING_MSS_CLOCK_CONFIG_CR;
+   /*
+    * Change the MSS clock as required.
+    *
+    * CLOCK_CONFIG_CR
+    * [5:0]
+    * Sets the master synchronous clock divider
+    * bits [1:0] CPU clock divider
+    * bits [3:2] AXI clock divider
+    * bits [5:4] AHB/APB clock divider
+    * 00=/1 01=/2 10=/4 11=/8 (AHB/APB divider may not be set to /1)
+    * Reset = 0x3F
+    *
+    * SYSREG->CLOCK_CONFIG_CR = (0x0U<<0U) | (0x1U<<2U) | (0x2U<<4U);
+    * MSS clk= 80Mhz, implies CPU = 80Mhz, AXI = 40Mhz, AHB/APB = 20Mhz
+    * Until we switch in MSS PLL clock (MSS_SCB_CFM_MSS_MUX->MSSCLKMUX = 0x01)
+    * e.g. If MSS clk 800Mhz
+    * MSS clk= 800Mhz, implies CPU = 800Mhz, AXI = 400Mhz, AHB/APB = 200Mhz
+   */
+  SYSREG->CLOCK_CONFIG_CR = LIBERO_SETTING_MSS_CLOCK_CONFIG_CR;
 
-	/*
-	 * Feed clock from MSS PLL to MSS, using glitch-less mux
-	 *
-	 * MSS Clock mux selections
-	 * 	[31:5]	Reserved
-	 * 	[4]		clk_standby_sel
-	 * 	[3:2]	mssclk_mux_md
-	 * 	step 7: 7)	MSS Processor writes mssclk_mux_sel_int<0>=1 to select the
-	 * 	MSS PLL clock.
-	 * 	[1:0]	mssclk_mux_sel        MSS glitchless mux select
-	 *										00 - msspll_fdr_0=clk_standby
- 	 *       									 msspll_fdr_1=clk_standby
-	 *										01 - msspll_fdr_0=pllout0
- 	 *       									 msspll_fdr_1=clk_standby
-	 *										10 - msspll_fdr_0=clk_standby
-	 *        									 msspll_fdr_1=pllout1
-	 *										11 - msspll_fdr_0=pllout0
- 	 *       									 msspll_fdr_1=pllout1
-	 *
-	 *
-	 */
-	MSS_SCB_CFM_MSS_MUX->MSSCLKMUX 	= LIBERO_SETTING_MSS_MSSCLKMUX;
+   /*
+    * Feed clock from MSS PLL to MSS, using glitch-less mux
+    *
+    * MSS Clock mux selections
+    *   [31:5]  Reserved
+    *   [4]    clk_standby_sel
+    *   [3:2]  mssclk_mux_md
+    *   step 7: 7)  MSS Processor writes mssclk_mux_sel_int<0>=1 to select the
+    *   MSS PLL clock.
+    *   [1:0]  mssclk_mux_sel        MSS glitchless mux select
+    *                    00 - msspll_fdr_0=clk_standby
+    *                          msspll_fdr_1=clk_standby
+    *                    01 - msspll_fdr_0=pllout0
+    *                          msspll_fdr_1=clk_standby
+    *                    10 - msspll_fdr_0=clk_standby
+    *                           msspll_fdr_1=pllout1
+    *                    11 - msspll_fdr_0=pllout0
+    *                          msspll_fdr_1=pllout1
+    *
+    *
+    */
+    MSS_SCB_CFM_MSS_MUX->MSSCLKMUX   = LIBERO_SETTING_MSS_MSSCLKMUX;
 
-	/*
-	 * Change the RTC clock divisor, so RTC clock is 1MHz
-	 */
-	set_RTC_divisor();
+   /*
+    * Change the RTC clock divisor, so RTC clock is 1MHz
+    */
+    set_RTC_divisor();
 }
 
 /***************************************************************************//**
@@ -309,7 +308,7 @@ __attribute__((section(".ram_codetext"))) \
  * @param option 1 => soft reset, load RPC settings
  *               0 => write values using SCB
  ******************************************************************************/
-static void sgmii_mux_config_via_scb(uint8_t option)
+void sgmii_mux_config_via_scb(uint8_t option)
 {
     switch(option)
     {
@@ -329,16 +328,16 @@ static void sgmii_mux_config_via_scb(uint8_t option)
                  * SCB address: 0x3E20 0010
                  * Clock_Receiver
                  *
-                 * [13] 	en_rdiff
-                 * [12] 	clkbuf_en_pullup
-                 * [11:10] 	en_rxmode_n
-                 * [9:8] 	en_term_n
-                 * [7] 		en_ins_hyst_n
-                 * [6] 		en_udrive_n
-                 * [5:4] 	en_rxmode_p
-                 * [3:2] 	en_term_p
-                 * [1] 		en_ins_hyst_p
-                 * [0] 		en_udrive_p
+                 * [13]    en_rdiff
+                 * [12]    clkbuf_en_pullup
+                 * [11:10] en_rxmode_n
+                 * [9:8]   en_term_n
+                 * [7]     en_ins_hyst_n
+                 * [6]     en_udrive_n
+                 * [5:4]   en_rxmode_p
+                 * [3:2]   en_term_p
+                 * [1]     en_ins_hyst_p
+                 * [0]     en_udrive_p
                  */
                 MSS_SCB_CFM_SGMII_MUX->CLK_XCVR =\
                         LIBERO_SETTING_SGMII_CLK_XCVR;   /* 0x2011 */
@@ -347,22 +346,22 @@ static void sgmii_mux_config_via_scb(uint8_t option)
                  * PLL RF clk mux selections
                  *
                  * [3:2] pll0_rfclk1_sel
-                 * 								00 => vss
-                 * 								01 => refclk_p muxed to DDR PLL
-                 * 								    and SGMII PLL ( see
-                 * 								10 => scb_clk
-                 * 								11 => serdes_refclk_crn_mss<1>
+                 *             00 => vss
+                 *             01 => refclk_p muxed to DDR PLL
+                 *                   and SGMII PLL ( see
+                 *             10 => scb_clk
+                 *             11 => serdes_refclk_crn_mss<1>
                  * [1:0] pll0_rfclk0_sel
-                 * 								00 => vss
-                 * 								01 => refclk_n muxed to DDR PLL
-                 * 								    and SGMII PLL
-                 * 								10 => scb_clk
-                 * 								11 => serdes_refclk_crn_mss<1>
+                 *             00 => vss
+                 *             01 => refclk_n muxed to DDR PLL
+                 *                   and SGMII PLL
+                 *             10 => scb_clk
+                 *             11 => serdes_refclk_crn_mss<1>
                  *
                  *
                  */
                 /* 0x05 => ref to SGMII and DDR */
-                MSS_SCB_CFM_SGMII_MUX->RFCKMUX	=\
+                MSS_SCB_CFM_SGMII_MUX->RFCKMUX  =\
                         LIBERO_SETTING_SGMII_SGMII_CLKMUX;
                 break;
 
@@ -378,13 +377,13 @@ static void sgmii_mux_config_via_scb(uint8_t option)
 
 
 /***************************************************************************//**
- * pre_configure_sgmii_and_ddr_pll_via_scb(option)
+ * sgmii_mux_config_via_scb(option)
  * @param option 1 => soft reset, load RPC settings
  *               0 => write values using SCB
  ******************************************************************************/
 void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option)
 {
-	sgmii_mux_config_via_scb(option);
+    sgmii_mux_config_via_scb(option);
 }
 
 void post_configure_sgmii_and_ddr_pll_via_scb(void)
@@ -396,35 +395,30 @@ void post_configure_sgmii_and_ddr_pll_via_scb(void)
 /***************************************************************************//**
  *
  * On startup, MSS supplied with 80MHz SCB clock
- *
- *
- *
- *
-	From the DDRPHY SBMii SAC spec, section 9.2
 
-	9.2	Power on procedure for the MSS PLL clock
+  9.2  Power on procedure for the MSS PLL clock
 
-	During POR:
-	Keep PLL in power down mode. powerdown_int_b=0
+  During POR:
+  Keep PLL in power down mode. powerdown_int_b=0
 
-	After POR, Power-On steps:
-	1)	mssclk_mux_sel_int<0>=0 & powerdown_int_b=0 & clk_standby_sel=0
-	MSS PLL is powered down and selects clk_standby=scb_clk
-	2)	G5C Processor writes powerdown_int_b=1 & divq0_int_en=1
-	MSS PLL powers up, then lock asserts when locked.
-	3)	G5C Processor switches mssclk_mux_sel_int<0>=1
-	MSS PLL clock is now sent to MSS.
-	4)	When BOOT authentication is complete
-	a.	G5C processor writes mssclk_mux_sel_int<0>=0 to select clk_standby.
-	b.	G5C Processor writes powerdown_int_b=0 to power down the PLL
-	>>>>>>>> G5 Soc User code >>>>>>>>>>>>>>
-	c.	MSS Processor writes new parameters to the MSS PLL
-	5)	MSS Processor writes powerdown_int_b=1
-	Start up the PLL with NEW parameters.
-	Wait for LOCK
-	6)	MSS Processor enables all 4 PLL outputs.
-	7)	MSS Processor writes mssclk_mux_sel_int<0>=1 to select the MSS PLL
-	    clock.
+  After POR, Power-On steps:
+  1)  mssclk_mux_sel_int<0>=0 & powerdown_int_b=0 & clk_standby_sel=0
+  MSS PLL is powered down and selects clk_standby=scb_clk
+  2)  PFC Processor writes powerdown_int_b=1 & divq0_int_en=1
+  MSS PLL powers up, then lock asserts when locked.
+  3)  PFC Processor switches mssclk_mux_sel_int<0>=1
+  MSS PLL clock is now sent to MSS.
+  4)  When BOOT authentication is complete
+  a.  PFC processor writes mssclk_mux_sel_int<0>=0 to select clk_standby.
+  b.  PFC Processor writes powerdown_int_b=0 to power down the PLL
+  >>>>>>>> G5 Soc User code >>>>>>>>>>>>>>
+  c.  MSS Processor writes new parameters to the MSS PLL
+  5)  MSS Processor writes powerdown_int_b=1
+  Start up the PLL with NEW parameters.
+  Wait for LOCK
+  6)  MSS Processor enables all 4 PLL outputs.
+  7)  MSS Processor writes mssclk_mux_sel_int<0>=1 to select the MSS PLL
+      clock.
  *
  ******************************************************************************/
 void mss_pll_config(void)
@@ -516,66 +510,111 @@ void mss_pll_config(void)
     mss_mux_post_mss_pll_config();
 }
 
-/***************************************************************************//**
+
+/**
  *
- * Test
- * Pll_out[0] = 800 MHz
- * Pll_out[1] = 800 Mhz
- * Pll_out[2] = 200 MHz
- * Pll_out[3] = 80 MHz
- *
- ******************************************************************************/
-void ddr_pll_config_scb(void)
+ * @param option choose between SCB or RPC and soft reset  update method.
+ */
+void ddr_pll_config(REG_LOAD_METHOD option)
 {
-    /* PERIPH / periph_reset_b  -This asserts the functional reset of the block.
-       It is asserted at power up. When written is stays asserted until written
-       to 0. */
-	MSS_SCB_DDR_PLL->SOFT_RESET 	= 0x00000000U;
-	/* MSS PLL - 0x3E001000 - */
-    MSS_SCB_DDR_PLL->PLL_CTRL       = LIBERO_SETTING_DDR_PLL_CTRL;
-    /* PLL calibration register */
 
-    MSS_SCB_DDR_PLL->PLL_CAL        = LIBERO_SETTING_DDR_PLL_CAL;
-
-    MSS_SCB_DDR_PLL->PLL_REF_FB     = LIBERO_SETTING_DDR_PLL_REF_FB;
-
-
-    MSS_SCB_DDR_PLL->PLL_DIV_0_1    = LIBERO_SETTING_DDR_PLL_DIV_0_1;
-
-    MSS_SCB_DDR_PLL->PLL_DIV_2_3    = LIBERO_SETTING_DDR_PLL_DIV_2_3;
-
-
-    MSS_SCB_DDR_PLL->PLL_CTRL2      = LIBERO_SETTING_DDR_PLL_CTRL2;
-
-    MSS_SCB_DDR_PLL->PLL_FRACN      = LIBERO_SETTING_DDR_PLL_FRACN;
-    MSS_SCB_DDR_PLL->SSCG_REG_0     = LIBERO_SETTING_DDR_SSCG_REG_0;
-    MSS_SCB_DDR_PLL->SSCG_REG_1     = LIBERO_SETTING_DDR_SSCG_REG_1;
-
-    MSS_SCB_DDR_PLL->SSCG_REG_2     = LIBERO_SETTING_DDR_SSCG_REG_2;
-    MSS_SCB_DDR_PLL->SSCG_REG_3     = LIBERO_SETTING_DDR_SSCG_REG_3;
-
-    /* PLL phase registers */
-
-    MSS_SCB_DDR_PLL->PLL_PHADJ      = LIBERO_SETTING_DDR_PLL_PHADJ;
-    /* bit 0 == REG_POWERDOWN_B */
-    MSS_SCB_DDR_PLL->PLL_CTRL       = (LIBERO_SETTING_DDR_PLL_CTRL) | 0x01U;
-
-    volatile uint32_t timer_out=0x000000FFU;
-    while(((MSS_SCB_MSS_PLL->PLL_CTRL & ((0x01U) << 25U))) == 0U)
+    switch(option)
     {
-#ifdef RENODE_DEBUG
-        break;
-#endif
-        // todo: make clock based
-        if (timer_out != 0U)
-        {
-            timer_out--;
-        }
-        else
-        {
-            //todo: add failure mode
-        }
+
+        case SCB_UPDATE:   /* write to   SCB register */
+            /* PERIPH / periph_reset_b  - This asserts the functional reset of
+             * the block. It is asserted at power up. When written is stays
+             * asserted until written to 0.
+             * First set periph_reset_b, than remove reset. As may be called
+             * more than one.
+             * */
+            MSS_SCB_DDR_PLL->SOFT_RESET       = 0x00000100U;
+            MSS_SCB_DDR_PLL->SOFT_RESET       = 0x00000000U;
+
+            /* MSS PLL - 0x3E001000 - */
+            MSS_SCB_DDR_PLL->PLL_CTRL       = LIBERO_SETTING_DDR_PLL_CTRL;
+            /* PLL calibration register */
+
+            MSS_SCB_DDR_PLL->PLL_CAL       = LIBERO_SETTING_DDR_PLL_CAL;
+
+            MSS_SCB_DDR_PLL->PLL_REF_FB    = LIBERO_SETTING_DDR_PLL_REF_FB;
+
+
+            MSS_SCB_DDR_PLL->PLL_DIV_0_1   = LIBERO_SETTING_DDR_PLL_DIV_0_1;
+
+            MSS_SCB_DDR_PLL->PLL_DIV_2_3   = LIBERO_SETTING_DDR_PLL_DIV_2_3;
+
+
+            MSS_SCB_DDR_PLL->PLL_CTRL2     = LIBERO_SETTING_DDR_PLL_CTRL2;
+
+            MSS_SCB_DDR_PLL->PLL_FRACN     = LIBERO_SETTING_DDR_PLL_FRACN;
+            MSS_SCB_DDR_PLL->SSCG_REG_0    = LIBERO_SETTING_DDR_SSCG_REG_0;
+            MSS_SCB_DDR_PLL->SSCG_REG_1    = LIBERO_SETTING_DDR_SSCG_REG_1;
+
+            MSS_SCB_DDR_PLL->SSCG_REG_2    = LIBERO_SETTING_DDR_SSCG_REG_2;
+            MSS_SCB_DDR_PLL->SSCG_REG_3    = LIBERO_SETTING_DDR_SSCG_REG_3;
+
+            /* PLL phase registers */
+
+            MSS_SCB_DDR_PLL->PLL_PHADJ     = LIBERO_SETTING_MSS_PLL_PHADJ;
+
+            MSS_SCB_DDR_PLL->PLL_CTRL      = (LIBERO_SETTING_DDR_PLL_CTRL)\
+                    | 0x01U;  /* bit 0 == REG_POWERDOWN_B */
+
+            break;
+
+        case RPC_REG_UPDATE:
+            /* CFG_DDR_SGMII_PHY->SOFT_RESET_MAIN_PLL; */
+            CFG_DDR_SGMII_PHY->PLL_CTRL_MAIN.PLL_CTRL_MAIN        =\
+                                        LIBERO_SETTING_DDR_PLL_CTRL | 0x01U;
+            CFG_DDR_SGMII_PHY->PLL_REF_FB_MAIN.PLL_REF_FB_MAIN      =\
+                                                LIBERO_SETTING_DDR_PLL_REF_FB;
+            /* Read only in RPC
+             * CFG_DDR_SGMII_PHY->PLL_FRACN_MAIN.PLL_FRACN_MAIN      =\
+             *  LIBERO_SETTING_DDR_PLL_FRACN; */
+            CFG_DDR_SGMII_PHY->PLL_DIV_0_1_MAIN.PLL_DIV_0_1_MAIN    =\
+                                                LIBERO_SETTING_DDR_PLL_DIV_0_1;
+            CFG_DDR_SGMII_PHY->PLL_DIV_2_3_MAIN.PLL_DIV_2_3_MAIN  =\
+                                                LIBERO_SETTING_DDR_PLL_DIV_2_3;
+            CFG_DDR_SGMII_PHY->PLL_CTRL2_MAIN.PLL_CTRL2_MAIN      =\
+                                                   LIBERO_SETTING_DDR_PLL_CTRL2;
+            /* Read only in RPC  todo: verify this is correct
+             * CFG_DDR_SGMII_PHY->PLL_CAL_MAIN.PLL_CAL_MAIN  =\
+             *                                   LIBERO_SETTING_DDR_PLL_CAL; */
+            CFG_DDR_SGMII_PHY->PLL_PHADJ_MAIN.PLL_PHADJ_MAIN      =\
+                                                   LIBERO_SETTING_MSS_PLL_PHADJ;
+            /*__I  CFG_DDR_SGMII_PHY_SSCG_REG_0_MAIN_TypeDef SSCG_REG_0_MAIN; */
+            /*__I  CFG_DDR_SGMII_PHY_SSCG_REG_1_MAIN_TypeDef SSCG_REG_1_MAIN; */
+            CFG_DDR_SGMII_PHY->SSCG_REG_2_MAIN.SSCG_REG_2_MAIN       =\
+                                                LIBERO_SETTING_DDR_SSCG_REG_2;
+            /*__I  CFG_DDR_SGMII_PHY_SSCG_REG_3_MAIN_TypeDef SSCG_REG_3_MAIN; */
+            /*
+             * set the NV map reset
+             * This will load the APB registers, set via SGMII TIP.
+             * */
+            /* bit 0 == REG_POWERDOWN_B */
+            MSS_SCB_DDR_PLL->SOFT_RESET  = 0x01U;
+            break;
     }
+}
+
+/**
+ * ddr_pll_lock_scb(void)
+ * checks to see if lock has occurred
+ * @return => lock has occurred, 1=> no lock
+ */
+uint8_t ddr_pll_lock_scb(void)
+{
+    uint8_t result = 1U;
+#ifndef RENODE_DEBUG
+    if((MSS_SCB_MSS_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == PLL_CTRL_LOCK_BIT)
+    {
+        result = 0U; /* PLL lock has occurred */
+    }
+#else
+    result = 0U;
+#endif
+    return (result);
 }
 
 /***************************************************************************//**
@@ -602,10 +641,12 @@ void sgmii_pll_config_scb(uint8_t option)
         case 0:   /* write to   SCB register */
             /* PERIPH / periph_reset_b  - This asserts the functional reset of
              * the block. It is asserted at power up. When written is stays
-             * asserted until written to 0. */
-
+             * asserted until written to 0.
+             * First set periph_reset_b, than remove reset. As may be called
+             * more than one.
+             * */
+            MSS_SCB_SGMII_PLL->SOFT_RESET       = 0x00000100U;
             MSS_SCB_SGMII_PLL->SOFT_RESET       = 0x00000000U;
-
 
             /* MSS PLL - 0x3E001000 - */
             MSS_SCB_SGMII_PLL->PLL_CTRL      = LIBERO_SETTING_SGMII_PLL_CTRL;
@@ -639,7 +680,6 @@ void sgmii_pll_config_scb(uint8_t option)
 
             break;
 
-
         case 1:
             /*
              * set the NV map reset
@@ -649,24 +689,34 @@ void sgmii_pll_config_scb(uint8_t option)
             MSS_SCB_SGMII_PLL->SOFT_RESET  = 0x01U;
             break;
     }
-
-    /*
-     * check lock has occurred
-     * todo: make clock based
-     */
-    volatile uint32_t timer_out=0x00000FFFU;
-    while(((MSS_SCB_MSS_PLL->PLL_CTRL & ((0x01U) << 25U))) == 0U)
-    {
-#ifdef RENODE_DEBUG
-        break;
-#endif
-        if (timer_out == 0U)
-        {
-            timer_out--;
-        }
-    }
 }
 
+/**
+ * sgmii_pll_lock_scb(void)
+ * checks to see if lock has occurred
+ * @return => lock has occurred, 1=> no lock
+ */
+uint8_t sgmii_pll_lock_scb(void)
+{
+    uint8_t result = 1U;
+#ifndef RENODE_DEBUG
+    if((MSS_SCB_MSS_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == PLL_CTRL_LOCK_BIT)
+    {
+        result = 0U; /* PLL lock has occurred */
+    }
+#else
+    result = 0U;
+#endif
+    return (result);
+}
+
+/***************************************************************************//**
+ *
+ ******************************************************************************/
+void rotate_clk_by_ninty_deg(void)
+{
+
+}
 
 /***************************************************************************//**
  * Copy switch code routine to RAM.
@@ -678,16 +728,16 @@ static void copy_switch_code(void)
     uint32_t * end_sc_vma = &__sc_end;
     uint32_t * sc_vma = &__sc_start;
 
-	if ( sc_vma != sc_lma )
-	{
-		while ( sc_vma < end_sc_vma )
-		{
-			*sc_vma = *sc_lma;
-			sc_vma++ ; sc_lma++;
-		}
-	}
+    if ( sc_vma != sc_lma )
+    {
+        while ( sc_vma < end_sc_vma )
+        {
+            *sc_vma = *sc_lma;
+            sc_vma++ ; sc_lma++;
+         }
+    }
 }
 
-
+#endif
 
 

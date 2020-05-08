@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -11,9 +11,6 @@
  * @file system_startup.h
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Macros and APIs for the system_startup.c
-
- * SVN $Revision: 12118 $
- * SVN $Date: 2019-08-15 10:28:14 +0100 (Thu, 15 Aug 2019) $
  */
 
 #ifndef SYSTEM_STARTUP_H
@@ -40,23 +37,26 @@ typedef struct HLS_DATA_
 /*------------------------------------------------------------------------------
  * Symbols from the linker script used to locate the text, data and bss sections.
  */
+extern unsigned long __stack_top_h1$;
+extern unsigned long __stack_bottom_h1$;
 
-extern unsigned int __stack_top_h1$;
-extern unsigned int __stack_bottom_h1$;
+extern unsigned long __data_load;
+extern unsigned long __data_start;
+extern unsigned long __data_end;
 
-extern unsigned int __data_load;
-extern unsigned int __data_start;
-extern unsigned int __data_end;
+extern unsigned long __sbss_start;
+extern unsigned long __sbss_end;
 
-extern unsigned int __sbss_start;
-extern unsigned int __sbss_end;
+extern unsigned long __bss_start;
+extern unsigned long __bss_end;
 
-extern unsigned int __bss_start;
-extern unsigned int __bss_end;
+extern unsigned long __sdata_load;
+extern unsigned long __sdata_start;
+extern unsigned long __sdata_end;
 
-extern unsigned int __sdata_load;
-extern unsigned int __sdata_start;
-extern unsigned int __sdata_end;
+extern unsigned long __text_load;
+extern unsigned long __text_start;
+extern unsigned long __text_end;
 
 /*
  * Function Declarations
@@ -72,10 +72,7 @@ void init_memory( void);
 uint8_t init_mem_protection_unit(void);
 uint8_t init_pmp(uint8_t hart_id);
 uint8_t init_bus_error_unit( void);
-/*
- * extern Functions Used
- */
-extern uint8_t mss_nwc_init(void);
+char * config_copy(void *dest, const void * src, size_t len);
 
 #ifdef __cplusplus
 }

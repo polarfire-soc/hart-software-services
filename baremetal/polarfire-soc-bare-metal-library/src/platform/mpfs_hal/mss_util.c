@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,8 +12,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Utility functions
  *
- * SVN $Revision: 12296 $
- * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #include <stddef.h>
 #include <stdbool.h>
@@ -138,8 +136,9 @@ void exit_simulation(void) {
     uint64_t hartid = read_csr(mhartid);
     volatile uint32_t * exit_simulation_p = (uint32_t *)0x60000000U;
 
+
     *exit_simulation_p = 1U;
-    (void)hartid; /* use hartid to avoid compiler warning */
+	(void)hartid; /* use hartid to avoid compiler warning */
 }
 
 __attribute__((aligned(16))) uint64_t get_program_counter(void)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -13,8 +13,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief H2F access data structures and functions.
  *
- * SVN $Revision: 11865 $
- * SVN $Date: 2019-07-29 15:28:05 +0100 (Mon, 29 Jul 2019) $
  */
 #include "mss_plic.h"
 #include "mss_h2f.h"
@@ -23,6 +21,7 @@
 extern "C" {
 #endif
 
+#ifndef SIFIVE_HIFIVE_UNLEASHED
 
 #define H2F_MAPPING_INVALID 255U
 
@@ -313,4 +312,8 @@ void disable_h2f_int_output(uint32_t source_int)
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
+
 

@@ -27,7 +27,7 @@
 # U54 Watchdog Monitor Service
 
 SRCS-$(CONFIG_SERVICE_WDOG) += \
-    services/wdog/wdog_service.c \
+	services/wdog/wdog_service.c \
 
 INCLUDES +=\
-    -I./services/wdog \
+	-I./services/wdog \

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,8 +12,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Coreplex definitions
  *
- * SVN $Revision: 11867 $
- * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 #ifndef MSS_COREPLEX_H
 #define MSS_COREPLEX_H

@@ -39,7 +39,7 @@
 #include <sys/types.h>
 
 #include "config/hardware/hw_platform.h"
-#include "clocks/hw_cfg_clocks.h"
+#include "config/hardware/clocks/hw_mss_clks.h"
 #undef ROUNDUP
 #undef ROUNDDOWN
 //#include "mss_hal.h"
@@ -110,7 +110,7 @@ static void l_e51_envm_init(void)
         volatile uint8_t resultTemp = envm_init();
         l_print_result(resultTemp, "envm_init()");
 
-        envm_set_clock(MSS_COREPLEX_CPU_CLK / 10000000u);
+        envm_set_clock(LIBERO_SETTING_MSS_COREPLEX_CPU_CLK / 10000000u);
         l_print_result(0, "envm_set_clock()");
 
         MSS_QSPI_init();

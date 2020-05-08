@@ -27,7 +27,7 @@
 # Flash*Freeze Service
 
 SRCS-$(CONFIG_SERVICE_FLASHFREEZE) += \
-    services/flashfreeze/flashfreeze_service.c \
+	services/flashfreeze/flashfreeze_service.c \
 
 INCLUDES +=\
-    -I./services/flashfreeze \
+	-I./services/flashfreeze \

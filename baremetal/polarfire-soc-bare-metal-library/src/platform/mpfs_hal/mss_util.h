@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,8 +12,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MACROs defines and prototypes associated with utility functions
  *
- * SVN $Revision: 12296 $
- * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #ifndef G5SOC_UTIL_H
 #define G5SOC_UTIL_H

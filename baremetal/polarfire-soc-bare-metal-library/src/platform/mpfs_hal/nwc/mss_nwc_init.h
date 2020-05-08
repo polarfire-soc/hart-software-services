@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,8 +12,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief defines for mss_nwc_init.c
  *
- * SVN $Revision: 11867 $
- * SVN $Date: 2019-07-29 19:26:04 +0100 (Mon, 29 Jul 2019) $
  */
 
 /*=========================================================================*//**
@@ -117,11 +115,11 @@ extern "C" {
 
 
 /***************************************************************************//**
-  MSS_NWC_init()
+  mss_nwc_init()
   Called on start-up, initializes clocks, sgmii, ddr, mssio
  */
 uint8_t
-MSS_NWC_init
+mss_nwc_init
 (
     void
 );

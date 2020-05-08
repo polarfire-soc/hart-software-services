@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -13,8 +13,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief CLINT access data structures and functions.
  *
- * SVN $Revision: 12187 $
- * SVN $Date: 2019-08-28 11:34:40 +0100 (Wed, 28 Aug 2019) $
  */
 #ifndef MSS_CLINT_H
 #define MSS_CLINT_H

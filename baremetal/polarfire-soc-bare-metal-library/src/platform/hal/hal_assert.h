@@ -30,7 +30,8 @@ extern "C" {
  *------------------------------------------------------------------------------
   The behaviour is toolchain specific and project setting specific.
  ******************************************************************************/
-#define HAL_ASSERT(CHECK)     ASSERT(CHECK);
+#include <assert.h>
+#define HAL_ASSERT(CHECK)     assert(CHECK);
 
 #endif  /* NDEBUG */
 

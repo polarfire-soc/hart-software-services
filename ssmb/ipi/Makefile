@@ -27,10 +27,10 @@
 # Secure Software Messaging Bus over IPIs
 
 SRCS-y += \
-    ssmb/ipi/ssmb_ipi.c \
+	ssmb/ipi/ssmb_ipi.c \
 
 INCLUDES +=\
-    -I./ssmb/ipi \
+	-I./ssmb/ipi \
 
 ssmb/ipi/ssmb_ipi.o: ssmb/ipi/ssmb_ipi.c config.h
 	@$(ECHO) " CC        $@";

@@ -27,7 +27,7 @@
 # Powermode Service
 
 SRCS-$(CONFIG_SERVICE_POWERMODE) += \
-    services/powermode/powermode_service.c \
+	services/powermode/powermode_service.c \
 
 INCLUDES +=\
-    -I./services/powermode \
+	-I./services/powermode \

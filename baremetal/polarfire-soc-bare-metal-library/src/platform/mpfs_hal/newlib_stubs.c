@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,8 +12,6 @@
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Stubs for Newlib system calls.
  *  
- * SVN $Revision: 12296 $
- * SVN $Date: 2019-09-30 14:30:02 +0100 (Mon, 30 Sep 2019) $
  */
 #include <sys/times.h>
 #include <sys/stat.h>
@@ -221,12 +219,21 @@ int _write_r( void * reent, int file, char * ptr, int len )
 caddr_t _sbrk(int incr)
 {
     extern char _end;       /* Defined by the linker */
+    extern char __heap_start;
+    extern char __heap_end;
     static char *heap_end;
     char *prev_heap_end;
 #ifdef DEBUG_HEAP_SIZE
     char * stack_ptr = NULL;
 #endif
     
+    /*
+     * Did we allocated memory for the heap in the linker script?
+     * You need to set HEAP_SIZE to a non-zero value in your linker script if
+     * the following assertion fires.
+     */
+    ASSERT(&__heap_end > &__heap_start);
+
     if (heap_end == NULL)
     {
       heap_end = &_end;
@@ -276,6 +283,13 @@ caddr_t _sbrk(int incr)
     }
 #endif
     heap_end += incr;
+
+    /*
+     * Did we run out of heap?
+     * You need to increase the heap size in the linker script if the following
+     * assertion fires.
+     * */
+    ASSERT(heap_end <= &__heap_end);
 
     return ((caddr_t) prev_heap_end);
 }

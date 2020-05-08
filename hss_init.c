@@ -81,7 +81,9 @@
 #define DDR_START              0x801F0000u
 #define DDR_END                0x180000000llu
 
-#include "mss_sysreg.h"
+#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#  include "mss_sysreg.h"
+#endif
 
 #define CHUNK_SIZE             0x2000u
 

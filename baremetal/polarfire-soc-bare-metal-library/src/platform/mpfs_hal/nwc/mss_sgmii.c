@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -17,21 +17,28 @@
 #include <string.h>
 #include <stdio.h>
 #include "mpfs_hal/mss_hal.h"
-
+#include "simulation.h"
 
 /*
  * local functions
  */
 static void setup_sgmii_rpc_per_config(void);
-#ifdef SGMII_SUPPORT
 static uint32_t sgmii_channel_setup(void);
-#endif
+
+/*
+ * extern functions
+ */
+extern void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option);
+
 
 uint32_t sgmii_setup(void)
 {
 #ifdef SGMII_SUPPORT
     uint32_t mode = LIBERO_SETTING_SGMII_MODE;
-    if((mode & (0xF<<4U)) == 0U)   /* check if any channels enabled */
+	/*
+	 * Check if any tx/Rx channels enabled
+	 */
+    if((mode & (TX_RX_CH_EN_MASK<<TX_RX_CH_EN_OFFSET)) != 0U)   
     {
         sgmii_channel_setup();
     }
@@ -65,7 +72,6 @@ uint32_t sgmii_setup(void)
  * @param sgmii_instruction
  * @return
  */
-#ifdef SGMII_SUPPORT
 static uint32_t sgmii_channel_setup(void)
 {
     /*
@@ -115,16 +121,18 @@ static uint32_t sgmii_channel_setup(void)
      * -eugene.
      *
      */
+    SIM_FEEDBACK0(100U);
     CFG_DDR_SGMII_PHY->SOFT_RESET_SGMII.SOFT_RESET_SGMII = \
             (0x01 << 8U) | 1U; /* PERIPH   soft reset */
     CFG_DDR_SGMII_PHY->SOFT_RESET_SGMII.SOFT_RESET_SGMII = 1U;
+    SIM_FEEDBACK1(1U);
     setup_sgmii_rpc_per_config();      /* load RPC SGMII_MODE register ext */
 
     /* Enable the Bank controller */
     {
         /*
          * Set soft reset on IP to load RPC to SCB regs (dynamic mode)
-         * Bring the DDR bank controller out of reset =- ioscb_bank_ctrl_sgmii
+         * Bring the sgmii bank controller out of reset =- ioscb_bank_ctrl_sgmii
          */
         (*((uint32_t *) 0x3E400000U)) = 1U;  /* DPC_BITS      NV_MAP  reset */
         /*
@@ -156,6 +164,7 @@ static uint32_t sgmii_channel_setup(void)
         }
     }
 
+    SIM_FEEDBACK0(101U);
     {
         /*
          * fixme- not sure if we should be setting this register
@@ -172,6 +181,7 @@ static uint32_t sgmii_channel_setup(void)
          * should be switched over to the standby source in advance.
          */
         SCB_REGS->MSS_RESET_CR.MSS_RESET_CR = 0;
+        SIM_FEEDBACK0(102U);
     }
 
 
@@ -191,7 +201,9 @@ static uint32_t sgmii_channel_setup(void)
          * to soft reset the IP
          * ioscb_dll_sgmii
          * */
+        SIM_FEEDBACK1(2U);
         *((uint32_t *) 0x3E100000U) = (0x01U << 0x00U);  /*  reset sgmii DLL */
+        SIM_FEEDBACK0(103U);
     }
     /*
       * I have discovered the problem with the tx channels (soft reset issue)
@@ -219,6 +231,7 @@ static uint32_t sgmii_channel_setup(void)
         temp_reg = (uint32_t *)0x36510000;
         *temp_reg = 0x000000001U;
     }
+    SIM_FEEDBACK0(104U);
 
     /*
      * Kick-off calibration, by taking calibration IP out of reset
@@ -228,15 +241,19 @@ static uint32_t sgmii_channel_setup(void)
      */
     {
         /* PVT soft reset - APB*/
+        SIM_FEEDBACK1(4U);
         /* reg_pvt_soft_reset_periph  */
         CFG_DDR_SGMII_PHY->DYN_CNTL.DYN_CNTL    = (0x01U<< 10U) | (0x7FU<<0U);
         /* reg_pvt_soft_reset_periph  */
         CFG_DDR_SGMII_PHY->DYN_CNTL.DYN_CNTL    = (0x7FU<<0U);
+        SIM_FEEDBACK0(105U);
         /* PVT soft reset - SCB */
+        SIM_FEEDBACK1(5U);
         /* make sure out of reset */
         IOSCB_IO_CALIB_SGMII->SOFT_RESET_IOCALIB     = 0x1U;
         /* make sure out of reset */
         IOSCB_IO_CALIB_SGMII->SOFT_RESET_IOCALIB     = 0x0U;
+        SIM_FEEDBACK0(106U);
     }
 
     /*
@@ -250,8 +267,12 @@ static uint32_t sgmii_channel_setup(void)
      * PVT calibrator spec.
      *
      */
+    SIM_FEEDBACK1(6U);
     while((CFG_DDR_SGMII_PHY->PVT_STAT.PVT_STAT & (1U << 14U)) == 0U)
     {
+        SIM_FEEDBACK0(107U);
+        SIM_FEEDBACK1(7U);
+        SIM_FEEDBACK1(8U);
     }
 
     /*
@@ -262,15 +283,19 @@ static uint32_t sgmii_channel_setup(void)
         CFG_DDR_SGMII_PHY->PVT_STAT.PVT_STAT |= 0x40000000UL;
         IOSCB_IO_CALIB_SGMII->IOC_REG0 |= (0x01U<<14U);
     }
+    SIM_FEEDBACK0(108U);
 
     /*
       * SGMii Step 3)   Wait for PLL and DLL lock
       * Delay codes generated
       */
+    SIM_FEEDBACK1(9U);
     /* 0U => configure using scb, 1U => NVMAP reset */
     pre_configure_sgmii_and_ddr_pll_via_scb(1U);
+    SIM_FEEDBACK1(10U);
     /* 0U => configure using scb, 1U => NVMAP reset */
     sgmii_pll_config_scb(1U);
+    SIM_FEEDBACK0(109U);
     /*
      * Soft reset the DLL
      */
@@ -287,6 +312,7 @@ static uint32_t sgmii_channel_setup(void)
     /* ML step 4- This is a monitoring step- to be run constantly in the back
      * ground */
 
+    SIM_FEEDBACK1(11U);
     /* PERIPH   soft reset */
     //   CFG_DDR_SGMII_PHY->SOFT_RESET_SGMII.SOFT_RESET_SGMII = 1U;
 
@@ -295,6 +321,7 @@ static uint32_t sgmii_channel_setup(void)
      * the DLL codes generation (Step 5) completion before release from reset
      *
      */
+    SIM_FEEDBACK1(12U);
 
     /*
      * Provide mac clocks
@@ -305,7 +332,9 @@ static uint32_t sgmii_channel_setup(void)
      *
      */
     *((uint32_t *) 0x20110004U) |= (0x01U << 10U) | (0x01U << 11U);   /* GEM0 */
+    SIM_FEEDBACK1(13U);
     *((uint32_t *) 0x20112004U) |= (0x01U << 10U) | (0x01U << 11U);   /* GEM1 */
+    SIM_FEEDBACK1(14U);
 
     /*
      * DLL soft reset                   - Already configured
@@ -319,16 +348,64 @@ static uint32_t sgmii_channel_setup(void)
      *      __IO  uint32_t               reg_lane1_soft_reset_periph :1;  bit 14
      */
     CFG_DDR_SGMII_PHY->DYN_CNTL.DYN_CNTL  = (1U << 14U)|(1U << 13U)|(0x7FU<<0U);
+    SIM_FEEDBACK1(15U);
     /* todo: I think the above should soft reset should auto clear- Eugene to
      * confirm */
     CFG_DDR_SGMII_PHY->DYN_CNTL.DYN_CNTL  = (0U << 14U)|(0U << 13U)|(0x7FU<<0U);
+    SIM_FEEDBACK1(16U);
 
     /*
      *
      */
+#if 0
+    if (sgmii_instruction == SGMII_RECALIB)
+    {
+        SIM_FEEDBACK1(17U);
+        recalib();
+        SIM_FEEDBACK1(18U);
+    }
+
+    if (sgmii_instruction == SGMII_PVT_MONITOR)
+    {
+        SIM_FEEDBACK1(13U);
+        recalib_monitor_test((uint8_t) (1U));
+        SIM_FEEDBACK1(14U);
+    }
+#endif
+#if 0
+    if ((sgmii_instruction == SGMII_MAC0_LOOPBACK_TEST)||\
+            (sgmii_instruction == SGMII_MAC1_LOOPBACK_TEST))
+    {
+        /*
+         * Once SGMII setup, we can configure mss pll as external clock will be
+         * available
+         * */
+        SIM_FEEDBACK0(19U);
+        mss_pll_config();
+        SIM_FEEDBACK1(20U);
+        if(sgmii_instruction == SGMII_MAC0_LOOPBACK_TEST)
+        {
+            mac_test(0U);
+        }
+        else
+        {
+            mac_test(1U);
+        }
+        SIM_FEEDBACK1(21U);
+    }
+#endif
+#if 0
+    if (sgmii_instruction == SGMII_TRIM_IO)
+    {
+        SIM_FEEDBACK1(21U);
+        calib_trim_test((uint8_t) 1U);
+        SIM_FEEDBACK1(22U);
+    }
+#endif
+
+
     return(0U);
 }
-#endif
 
 
 

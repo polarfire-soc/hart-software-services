@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-uint8_t L2_Cache_config(void);
+void config_l2_cache(void);
 
 #ifdef __cplusplus
 }

@@ -61,15 +61,15 @@ endif
 all: ${TARGET}
 
 
-ifneq ("$(wildcard platform/${MACHINE}/Makefile)","")
-  include platform/${MACHINE}/Makefile
+ifneq ("$(wildcard boards/${MACHINE}/Makefile)","")
+  include boards/${MACHINE}/Makefile
 else
   ifndef MACHINE 
-    $(warning MACHINE target not specified) # default to icicle if nothing found
+    $(warning MACHINE board not specified) # default to icicle if nothing found
     MACHINE:=icicle
-    include platform/${MACHINE}/Makefile
+    include boards/${MACHINE}/Makefile
   else
-    $(error Target >>${MACHINE}<< not found)
+    $(error Board >>${MACHINE}<< not found)
   endif
 endif
 
@@ -145,8 +145,6 @@ hss_state_machine.o: hss_state_machine.c config.h
 tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c 
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-config.h: .config
 
 ifdef CONFIG_USE_MAKEDEP
   DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) 

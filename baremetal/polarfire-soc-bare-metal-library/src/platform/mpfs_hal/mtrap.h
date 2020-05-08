@@ -27,8 +27,6 @@
 
 /***********************************************************************************
  * Record of Microchip changes
- * SVN $Revision: 11865 $
- * SVN $Date: 2019-07-29 15:28:05 +0100 (Mon, 29 Jul 2019) $
  */
 #ifndef RISCV_MTRAP_H
 #define RISCV_MTRAP_H
