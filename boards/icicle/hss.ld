@@ -36,6 +36,7 @@ SECTIONS
 
   PROVIDE(_hss_start = .);
   PROVIDE(.code_start = .);
+  .text.init         : ALIGN(8) { crt.o(.entry) }  > envm
   .text.init         : ALIGN(8) { crt.o(.text) } > envm
   .text              : ALIGN(8) { *(.text) } > envm
   .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) } > envm
