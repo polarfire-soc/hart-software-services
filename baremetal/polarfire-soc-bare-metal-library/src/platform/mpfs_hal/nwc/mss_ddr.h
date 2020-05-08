@@ -337,7 +337,13 @@ typedef enum DDR_MEMORY_ACCESS_
 #define BCLK_SCLK_OFFSET_MASK           (0x7U<<3U)
 
 #define BCLK_DPC_VRGEN_V_SHIFT                (12U)
-#define BCLK_DPC_VRGEN_V_MASK           (0x3FU<<12U)
+#define BCLK_DPC_VRGEN_V_MASK          (0x3FU<<12U)
+
+#define BCLK_DPC_VRGEN_H_SHIFT                (4U)
+#define BCLK_DPC_VRGEN_H_MASK           (0xFU<<4U)
+
+#define BCLK_DPC_VRGEN_VS_SHIFT                (0U)
+#define BCLK_DPC_VRGEN_VS_MASK           (0xFU<<0U)
 
 
 /* masks and associated values used with  DDRPHY_MODE register */
@@ -364,9 +370,17 @@ typedef enum DDR_MEMORY_ACCESS_
 #define DDR_MODE_REG_VREF               0xCU
 
 #define CALIBRATION_PASSED              0xFF
-#define CALIBRATION_FAILED              0x11
-#define CALIBRATION_SUCCESS             0x12
+#define CALIBRATION_FAILED              0xFE
+#define CALIBRATION_SUCCESS             0xFC
 
+/*
+ * Some settings that are only used during testing in new DDR setup
+ */
+/* #define LANE_ALIGNMENT_RESET_REQUIRED leave commented, not required */
+#define ABNORMAL_RETRAIN_CA_DECREASE_COUNT          2U
+#define ABNORMAL_RETRAIN_CA_DLY_DECREASE_COUNT      2U
+#define DQ_DQS_NUM_TAPS                             5U
+//#define SW_CONFIG_LPDDR_WR_CALIB_FN
 
 /***************************************************************************//**
 
@@ -430,7 +444,6 @@ typedef enum DDR_TRAINING_SM_
     DDR_TRAINING_IP_SM_BCLKSCLK_SW,
     DDR_TRAINING_IP_SM_START,
     DDR_TRAINING_IP_SM_START_CHECK,
-    DDR_TRAINING_IP_SM,
     DDR_TRAINING_IP_SM_BCLKSCLK,
     DDR_TRAINING_IP_SM_ADDCMD,
     DDR_TRAINING_IP_SM_WRLVL,
@@ -453,7 +466,6 @@ typedef enum DDR_TRAINING_SM_
     DDR_TRAINING_FPGA_VREFDQ_CALIB,
     DDR_TRAINING_FINISH_CHECK,
     DDR_TRAINING_FINISHED,
-    DDR_TRAINING_FAIL_DDR_SANITY_CHECKS,
     DDR_TRAINING_FAIL_SM2_VERIFY,
     DDR_TRAINING_FAIL_SM_VERIFY,
     DDR_TRAINING_FAIL_SM_DQ_DQS,
@@ -466,6 +478,7 @@ typedef enum DDR_TRAINING_SM_
     DDR_TRAINING_FAIL_MIN_LATENCY,
     DDR_TRAINING_FAIL_START_CHECK,
     DDR_TRAINING_FAIL_PLL_LOCK,
+    DDR_TRAINING_FAIL_DDR_SANITY_CHECKS,
     DDR_SWEEP_AGAIN
 } DDR_TRAINING_SM;
 
@@ -501,7 +514,9 @@ typedef enum SWEEP_STATES_{
     INIT_SWEEP,                     //!< start the sweep
     ADDR_CMD_OFFSET_SWEEP,          //!< sweep address command
     BCLK_SCLK_OFFSET_SWEEP,         //!< sweep bclk sclk
+    DPC_VRGEN_V_SWEEP,              //!< sweep vgen_v
     DPC_VRGEN_H_SWEEP,              //!< sweep vgen_h
+    DPC_VRGEN_VS_SWEEP,             //!< VS sweep
     FINISHED_SWEEP,                 //!< finished sweep
 } SWEEP_STATES;
 
@@ -563,6 +578,8 @@ typedef struct sweep_index_{
     uint8_t cmd_index;
     uint8_t bclk_sclk_index;
     uint8_t dpc_vgen_index;
+    uint8_t dpc_vgen_h_index;
+    uint8_t dpc_vgen_vs_index;
 } sweep_index;
 
 /***************************************************************************//**
@@ -602,7 +619,7 @@ MSS_DDR_training
 
  */
 
-int32_t
+static int32_t
 ddr_setup
 (
     void

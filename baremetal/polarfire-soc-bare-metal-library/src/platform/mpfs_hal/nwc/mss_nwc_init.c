@@ -22,7 +22,7 @@
 #include "simulation.h"
 
 #ifdef DEBUG_DDR_INIT
-#include "mss_uart.h"
+#include "drivers/mss_uart/mss_uart.h"
 extern mss_uart_instance_t *g_debug_uart ;
 uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
 #endif
@@ -43,18 +43,28 @@ g5_mss_top_scb_regs_TypeDef     *SCB_REGS    =\
 /*******************************************************************************
  * Local functions
  */
-void delay(uint32_t n); 
+void delay(uint32_t n);
 
 /*******************************************************************************
  * extern defined functions
  */
+extern void delay(uint32_t n);
 #ifndef SIFIVE_HIFIVE_UNLEASHED
 extern void mss_pll_config(void);
+extern uint32_t sgmii_setup(void);
+#ifdef MSSIO_SUPPORT
+extern int32_t mssio_setup(void);
+#endif
+#endif
+#ifdef DEBUG_DDR_INIT
+uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
 #endif
 
 /******************************************************************************
  * Public Functions - API
  ******************************************************************************/
+uint8_t mss_nwc_init(void);
+
 
 /**
  * MSS_DDR_init_simulation(void)
@@ -67,6 +77,8 @@ uint8_t mss_nwc_init(void)
     uint8_t error = 0U;
 
 #ifndef SIFIVE_HIFIVE_UNLEASHED
+    uint8_t sgmii_instruction;
+
 #ifdef SIMULATION_TEST_FEEDBACK
     /*
      * set the test version- this is read in Simulation environment

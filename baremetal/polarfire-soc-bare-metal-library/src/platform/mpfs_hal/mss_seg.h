@@ -25,6 +25,13 @@
  * ranges as the MPU blocks. Each one has seven 32-segmentation registers, but
  * only two in SEG0 and five in SEG1 are actually implemented.
  *
+ * DDRC blocker - blocks writes to DDR before it is set-up
+ * SEG0.CFG[7]
+ * Is cleared at reset. When written to ‘1’ disables the blocker function
+ * Is allowing the L2 cache controller to access the DDRC.
+ * Is Once written to ‘1’ the register cannot be written to 0, only an MSS reset
+ * Is will clear the register
+ *
  */
 
 #ifndef MPFS_SEG_H
@@ -42,9 +49,9 @@ typedef struct {
         volatile int32_t    offset : 15;
         volatile int32_t    rsrvd  : 16;
         volatile int32_t    locked : 1;
-    } CFG[8]; //EMDALO: mpfs_hal/nwc/mss_ddr.c:3793 accesses SEG[0].CFG[7] ...
+    } CFG[8U];
 
-    uint32_t fill[64-6];
+    uint32_t fill[64U-8U];
 
 } seg_t;
 

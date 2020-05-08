@@ -30,10 +30,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "mss_hal.h"
-
 #ifdef  MPFS_HAL_HW_CONFIG
 #include "nwc/mss_nwc_init.h"
 #endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,9 +62,11 @@ mss_sysreg_t*   SYSREG = ((mss_sysreg_t*) BASE32_ADDR_MSS_SYSREG);
 __attribute__((weak)) int main_first_hart(void)
 {
     uint64_t hartid = read_csr(mhartid);
+    HLS_DATA* hls = NULL;
 
     if(hartid == MPFS_HAL_FIRST_HART)
     {
+        uint8_t hard_idx;
         /*
          * We only use code within the conditional compile
          * #ifdef MPFS_HAL_HW_CONFIG
@@ -106,11 +108,10 @@ __attribute__((weak)) int main_first_hart(void)
          * so we need to make sure hart is in wfi before we try and release.
         */
         WFI_SM sm_check_thread = INIT_THREAD_PR;
-        uint8_t hard_idx = MPFS_HAL_FIRST_HART + 1U;
+        hard_idx = MPFS_HAL_FIRST_HART + 1U;
         while( hard_idx <= MPFS_HAL_LAST_HART)
         {
             uint32_t wait_count;
-            HLS_DATA* hls = NULL;
 
             switch(sm_check_thread)
             {
@@ -168,7 +169,7 @@ __attribute__((weak)) int main_first_hart(void)
     /* should never get here */
     while(true)
     {
-       static volatile uint64_t counter = 0U; //EMDALO: static must be at start of declaration
+        static volatile uint64_t counter = 0U;
 
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;
@@ -246,7 +247,7 @@ __attribute__((weak)) int main_other_hart(void)
     /* should never get here */
     while(true)
     {
-       static volatile uint64_t counter = 0U; //EMDALO: static must be at start of declaration
+        static volatile uint64_t counter = 0U;
 
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;

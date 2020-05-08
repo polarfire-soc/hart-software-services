@@ -244,7 +244,7 @@ __attribute__((section(".ram_codetext"))) \
     * (ENVM_CR_clock_okay) in the eNVM_CR which can be polled to check that
     * the frequency change has happened before bumping up the AHB frequency.
     */
-    volatile uint32_t wait_for_true;
+    volatile uint32_t wait_for_true = 0U;
     while ((SYSREG->ENVM_CR & ENVM_CR_CLOCK_OKAY_MASK) !=\
             ENVM_CR_CLOCK_OKAY_MASK)
     {
@@ -312,7 +312,7 @@ void sgmii_mux_config_via_scb(uint8_t option)
 {
     switch(option)
     {
-
+        default:
         case 0:   /* write to   SCB register */
 
                 /*
@@ -520,7 +520,7 @@ void ddr_pll_config(REG_LOAD_METHOD option)
 
     switch(option)
     {
-
+        default:
         case SCB_UPDATE:   /* write to   SCB register */
             /* PERIPH / periph_reset_b  - This asserts the functional reset of
              * the block. It is asserted at power up. When written is stays
@@ -637,7 +637,7 @@ void sgmii_pll_config_scb(uint8_t option)
 
     switch(option)
     {
-
+        default:
         case 0:   /* write to   SCB register */
             /* PERIPH / periph_reset_b  - This asserts the functional reset of
              * the block. It is asserted at power up. When written is stays
