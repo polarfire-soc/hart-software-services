@@ -44,23 +44,15 @@ uint32_t sgmii_setup(void)
     }
     else
     {
+        pre_configure_sgmii_and_ddr_pll_via_scb(0U); /* 0U => configure
+                                                        using the SCB */
         sgmii_off_mode();
-#ifdef DDR_SUPPORT
-        {
-            pre_configure_sgmii_and_ddr_pll_via_scb(0U); /* 0U => configure
-                                                            using the SCB */
-        }
-#endif
     }
 #else
     {
+        pre_configure_sgmii_and_ddr_pll_via_scb(0U); /* 0U => configure
+                                                        using the SCB */
         sgmii_off_mode();
-#ifdef DDR_SUPPORT
-        {
-            pre_configure_sgmii_and_ddr_pll_via_scb(0U); /* 0U => configure
-                                                            using the SCB */
-        }
-#endif
     }
 #endif
     return(0UL);
@@ -406,7 +398,6 @@ static uint32_t sgmii_channel_setup(void)
 
     return(0U);
 }
-
 
 
 /**

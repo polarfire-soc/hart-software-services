@@ -115,7 +115,6 @@ typedef struct
 
 
 uint8_t mpu_configure(void);
-uint8_t pmp_configure(uint8_t hart_id);
 
 
 uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
@@ -195,6 +194,10 @@ static inline MPU_FailStatus_TypeDef MSS_MPU_get_failstatus(mss_mpu_mport_t mast
 }
 
 #endif /* ! SIFIVE_HIFIVE_UNLEASHED */
+
+uint8_t pmp_configure(uint8_t hart_id);
+
+
 
 #ifdef __cplusplus
 }

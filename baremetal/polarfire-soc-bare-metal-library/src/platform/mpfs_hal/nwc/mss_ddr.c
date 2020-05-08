@@ -66,6 +66,7 @@ uint8_t sweep_results[MAX_NUMBER_DPC_VS_GEN_SWEEPS]\
 /*******************************************************************************
  * Local function declarations
  */
+static int32_t ddr_setup(void);
 static void init_ddrc(void);
 static void setup_ddr_segments(void);
 static uint8_t write_calibration_using_mtc(uint32_t num_of_lanes_to_calibrate);
@@ -189,14 +190,16 @@ static int32_t ddr_setup(void)
     static DDR_TRAINING_SM ddr_training_state = DDR_TRAINING_INIT;
     static uint32_t error;
     static uint32_t timeout;
+#ifdef SWEEP_ENABLED
     static uint32_t addr_cmd_value;
     static uint32_t bclk_sclk_offset_value;
     static uint32_t dpc_vrgen_v_value;
     static uint32_t dpc_vrgen_h_value;
     static uint32_t dpc_vrgen_vs_value;
+    static SWEEP_STATES sweep_state = INIT_SWEEP;
+#endif
     static uint32_t retry_count;
     static uint32_t write_latency;
-    static SWEEP_STATES sweep_state = INIT_SWEEP;
     static uint32_t tip_cfg_params;
     static uint32_t dpc_bits;
     static uint8_t last_sweep_status;
@@ -216,12 +219,13 @@ static int32_t ddr_setup(void)
             tip_cfg_params = LIBERO_SETTING_TIP_CFG_PARAMS;
             dpc_bits = LIBERO_SETTING_DPC_BITS ;
             write_latency = LIBERO_SETTING_CFG_WRITE_LATENCY_SET;
+#ifdef SWEEP_ENABLED
             sweep_state = INIT_SWEEP;
+#endif
             ddr_error_count = 0U;
             error = 0U;
             config_copy((uint8_t *)&calib_data,0U,sizeof(calib_data));
- //           config_copy((uint8_t *)&sweep_results[0U][0U][0U][0U][0U],0U,\
- //                   sizeof(sweep_results));
+ //         config_copy((uint8_t *)&sweep_results[0U][0U][0U][0U][0U],0U, sizeof(sweep_results));
             retry_count = 0U;
 #ifdef DEBUG_DDR_INIT
             (void)uprint32(g_debug_uart, "\n\r Start training. TIP_CFG_PARAMS:"\
@@ -403,7 +407,9 @@ static int32_t ddr_setup(void)
                     }
                     else
                     {
+#ifdef SWEEP_ENABLED
                         sweep_state = INIT_SWEEP;
+#endif
                         retry_count = 0U;
                         ddr_training_state = DDR_TRAINING_SWEEP;
                     }
@@ -2690,7 +2696,6 @@ static uint8_t \
     uint32_t cal_data;
     uint64_t start_address = 0x0000000000001000;
     uint64_t size = 0x8U;  /* Number of reads for each iteration */
-    uint8_t shift = 0;
 
     calib_data.write_cal.status_lower = 0U;
     /*
@@ -4066,7 +4071,9 @@ static uint8_t get_best_sweep(sweep_index *good_index)
 }
 #endif /* SWEEP_ENABLED */
 
-
+#ifndef DDR_DIAGNOSTICS
+# define DDR_DIAGNOSTICS 0
+#endif
 #if DDR_DIAGNOSTICS /* todo: add support for diagnostics below during board bring-up */
 
 /*-------------------------------------------------------------------------*//**

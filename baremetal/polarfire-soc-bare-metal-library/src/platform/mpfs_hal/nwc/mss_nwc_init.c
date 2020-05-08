@@ -19,6 +19,7 @@
 
 #include "mpfs_hal/mss_hal.h"
 #include "mss_nwc_init.h"
+#include "mss_pll.h"
 #include "simulation.h"
 
 #ifdef DEBUG_DDR_INIT
@@ -48,23 +49,9 @@ void delay(uint32_t n);
 /*******************************************************************************
  * extern defined functions
  */
-extern void delay(uint32_t n);
-#ifndef SIFIVE_HIFIVE_UNLEASHED
-extern void mss_pll_config(void);
-extern uint32_t sgmii_setup(void);
-#ifdef MSSIO_SUPPORT
-extern int32_t mssio_setup(void);
-#endif
-#endif
 #ifdef DEBUG_DDR_INIT
 uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
 #endif
-
-/******************************************************************************
- * Public Functions - API
- ******************************************************************************/
-uint8_t mss_nwc_init(void);
-
 
 /**
  * MSS_DDR_init_simulation(void)
@@ -77,8 +64,6 @@ uint8_t mss_nwc_init(void)
     uint8_t error = 0U;
 
 #ifndef SIFIVE_HIFIVE_UNLEASHED
-    uint8_t sgmii_instruction;
-
 #ifdef SIMULATION_TEST_FEEDBACK
     /*
      * set the test version- this is read in Simulation environment

@@ -36,12 +36,12 @@
 #include <stdint.h>
 
 
-#ifndef __MSS_DDR_DEBUG_H_
-#define __MSS_DDR_DEBUG_H_ 1
+#ifndef __MSS_DDr_DEBUG_H_
+#define __MSS_DDr_DEBUG_H_ 1
 
 #ifdef DEBUG_DDR_INIT
 
-#include "drivers/mss_mmuart/mss_uart.h"
+#include "drivers/mss_uart/mss_uart.h"
 
 
 
@@ -115,11 +115,24 @@ setup_ddr_debug_port
 mss_uart_instance_t * uart
 );
 
-
+/***************************************************************************//**
+ *
+ */
 void
 sweep_status
 (
 mss_uart_instance_t *g_mss_uart_debug_pt
+);
+
+/***************************************************************************//**
+ *
+ */
+void
+print_reg_array
+(
+mss_uart_instance_t * uart,
+uint32_t *reg_pointer,
+uint32_t no_of_regs
 );
 
 #endif

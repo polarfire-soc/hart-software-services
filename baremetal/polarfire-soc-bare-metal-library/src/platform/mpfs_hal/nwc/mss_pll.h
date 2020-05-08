@@ -217,6 +217,7 @@ void sgmii_pll_config_scb(uint8_t option);
 uint8_t sgmii_pll_lock_scb(void);
 void ddr_pll_config_scb_turn_off(void);
 uint8_t set_RTC_divisor(void);
+void mss_pll_config(void);
 
 #ifdef __cplusplus
 }

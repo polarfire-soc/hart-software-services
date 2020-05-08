@@ -601,31 +601,6 @@ MSS_DDR_training
 );
 
 /***************************************************************************//**
-  The ddr_setup() function is Initialise all DDR related IP. It takes design
-  settings from Libero from the header files in platform/config/hardware/ddr/
-
-  @return
-    This function returns 0 if successful
-
-  Example:
-  @code
-
-    if (ddr_setup() != 0U)
-    {
-        .. warn the user, increment error count , wait for watchdog reset
-    }
-
-  @endcode
-
- */
-
-static int32_t
-ddr_setup
-(
-    void
-);
-
-/***************************************************************************//**
   The ddr_state_machine() function runs a state machine which initializes and
   monitors the DDR
 

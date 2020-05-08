@@ -33,7 +33,6 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart/mss_uart.c \
 	baremetal/drivers/mss_watchdog/mss_watchdog.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c \
@@ -41,6 +40,9 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
+	baremetal/sysreg.c \
+
+#	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c \
 
 ASM_SRCS += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mutex.S

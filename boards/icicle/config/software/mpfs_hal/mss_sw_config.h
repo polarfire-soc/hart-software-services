@@ -125,7 +125,7 @@
 /*
  * DDR software options
  */
-#define DDR_FULL_32BIT_NC_CHECK_EN
+//#define DDR_FULL_32BIT_NC_CHECK_EN
 
 #define PATTERN_INCREMENTAL     (0x01U << 0U)
 #define PATTERN_WALKING_ONE     (0x01U << 1U)

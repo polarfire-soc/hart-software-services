@@ -61,7 +61,7 @@ extern "C" {
 #define USB                 0x4
 #define MMUART              0x5
 #define I2C                 0x6
-#define CAN                 0x7
+#define CAN_BUS             0x7
 #define MDIO                0x8
 #define Miscellaneous       0x9
 #define Reservedx           0xA
