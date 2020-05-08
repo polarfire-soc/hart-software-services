@@ -37,8 +37,6 @@ INCLUDES += \
 	-Iboards/mpfs/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 
-CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE="boards/mpfs/payload.o"
-
 EXTRA_SRCS-y += \
 	boards/mpfs/hss_uart_init.c \
         boards/mpfs/uart_helper.c \
@@ -47,5 +45,6 @@ boards/mpfs/hss_uart_init.o: boards/mpfs/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
-boards/mpfs/payload.o: boards/mpfs/payload.bin
+EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += boards/mpfs/payload.o
+boards/mpfs/payload.o: payload.bin
 	$(CROSS_COMPILE)$(LD) -r -b binary $< -o $@

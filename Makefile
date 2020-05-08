@@ -60,6 +60,7 @@ endif
 
 all: ${TARGET}
 
+include .config
 
 ifneq ("$(wildcard boards/${MACHINE}/Makefile)","")
   include boards/${MACHINE}/Makefile
@@ -92,12 +93,11 @@ EXTRA_SRCS-y += \
     hss_init.c \
     hss_main.c
 
-EXTRA_OBJS= $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) 
+EXTRA_OBJS += $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(EXTRA_OBJS-y)
 
 MCMODEL=-mcmodel=medany
 
 TARGET:=$(RISCV_TARGET)
-include .config
 include rules.mk
 include targets.mk
 include init/Makefile

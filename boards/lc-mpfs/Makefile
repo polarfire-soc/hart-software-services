@@ -27,17 +27,15 @@
 # Defines target-specific build-rules variables, extra sources and include paths
 #
 
-$(info MPFS selected)
+$(info LC-MPFS selected)
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
 
 INCLUDES += \
-	-Iboards/mpfs/config/hardware \
-	-Iboards/mpfs/ \
+	-Iboards/lc-mpfs/config/hardware \
+	-Iboards/lc-mpfs/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
-
-CONFIG_SERVICE_BOOT_PAYLOAD_OBJECT_FILE="boards/lc-mpfs/payload.o"
 
 EXTRA_SRCS-y += \
 	boards/lc-mpfs/hss_uart_init.c \
@@ -47,5 +45,6 @@ boards/lc-mpfs/hss_uart_init.o: boards/lc-mpfs/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
-boards/lc-mpfs/payload.o: boards/lc-mpfs/payload.bin
+EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += boards/lc-mpfs/payload.o
+boards/lc-mpfs/payload.o: payload.bin
 	$(CROSS_COMPILE)$(LD) -r -b binary $< -o $@
