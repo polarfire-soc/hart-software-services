@@ -46,3 +46,6 @@ EXTRA_SRCS-y += \
 boards/lc-mpfs/hss_uart_init.o: boards/lc-mpfs/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+
+boards/lc-mpfs/payload.o: boards/lc-mpfs/payload.bin
+	$(CROSS_COMPILE)$(LD) -r -b binary $< -o $@
