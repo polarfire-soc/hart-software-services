@@ -47,4 +47,4 @@ boards/mpfs/hss_uart_init.o: boards/mpfs/hss_uart_init.c config.h
 
 EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += boards/mpfs/payload.o
 boards/mpfs/payload.o: payload.bin
-	$(CROSS_COMPILE)$(LD) -r -b binary $< -o $@
+	$(LD) -r -b binary $< -o $@
