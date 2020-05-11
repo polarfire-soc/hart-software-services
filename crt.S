@@ -22,6 +22,7 @@
 	.globl _start
 	.globl _start_warm
 _start:
+	csrw	CSR_SATP, 0 # clear SATP early, as it appears to be coming up randomly
 	li	ra, 0
 	call	_reset_regs
 
