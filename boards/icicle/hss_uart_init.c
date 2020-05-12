@@ -26,7 +26,7 @@ bool HSS_UARTInit(void)
 {
     // initialise debug UART
 
-#if defined(CONFIG_PLATFORM_POLARFIRESOC)
+#if defined(CONFIG_PLATFORM_MPFS)
     MSS_UART_init(&g_mss_uart0_lo, MSS_UART_57600_BAUD, 
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 

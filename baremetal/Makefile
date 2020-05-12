@@ -29,7 +29,7 @@
 EXTRA_SRCS-y += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.c \
 
-EXTRA_SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
+EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmuart/mss_uart.c \
 	baremetal/drivers/mss_watchdog/mss_watchdog.c \
@@ -122,7 +122,7 @@ INCLUDES += \
 	-I./baremetal/drivers/mss_envm \
 
 ifdef CONFIG_SERVICE_YMODEM
-SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
+SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/drivers/micron_mt25q/micron_mt25q.c \
 	baremetal/drivers/mss_envm/mss_envm.c 
 endif

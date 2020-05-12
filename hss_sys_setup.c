@@ -37,7 +37,7 @@
 
 #include "csr_helper.h"
 
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
 #  include "mss_sysreg.h"
 #endif
 #include "hss_memcpy_via_pdma.h"
@@ -74,7 +74,7 @@
  */
 bool HSS_Setup_PAD_IO(void)
 {
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     static const struct HSS_MSSIO_Bank_Config {
         uint32_t MSSIO_BANK4_CFG_CR;
         uint32_t MSSIO_BANK4_IO_CFG_0_CR;
@@ -176,7 +176,7 @@ bool HSS_Setup_PAD_IO(void)
  */
 bool HSS_Setup_PLIC(void)
 {
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     static const struct HSS_PLIC_Config {
         uint32_t source_priority[185];
         uint32_t pending_array[6];
@@ -278,7 +278,7 @@ bool HSS_Setup_PLIC(void)
  */
 bool HSS_Setup_MPU(void)
 {
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     static const struct HSS_MPU_Config {
         uint64_t fic0;
         uint64_t fic1;
@@ -339,7 +339,7 @@ bool HSS_Setup_MPU(void)
  */
 bool HSS_Setup_PMP(void)
 {
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     static const struct HSS_PMP_Config {
         uint64_t pmpcfg0;
         uint64_t pmpcfg2;
@@ -421,7 +421,7 @@ bool HSS_Setup_PMP(void)
  */
 bool HSS_Setup_L2Cache(void)
 {
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     static const struct HSS_L2Cache_Config {
         uint32_t Config;
         uint8_t  WayEnable;
@@ -453,7 +453,7 @@ bool HSS_Setup_L2Cache(void)
  */
 bool HSS_Setup_Clocks(void)
 {
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     static const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
     const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
         ~( (1u << 0u) | /* Release ENVM from Reset */ 

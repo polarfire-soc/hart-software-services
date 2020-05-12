@@ -27,10 +27,13 @@
 # Defines target-specific build-rules variables, extra sources and include paths
 #
 
+#
+# Confusingly, the ICICLE-ES-KIT is platform MPFS
+#
 $(info ICICLE selected)
 
-CONFIG_PLATFORM_POLARFIRESOC=y
-PLATFORM_CFLAGS += -DCONFIG_PLATFORM_POLARFIRESOC=1
+CONFIG_PLATFORM_MPFS=y
+PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
 
 INCLUDES += \
 	-Iboards/icicle/config/hardware \

@@ -26,7 +26,7 @@ bool HSS_UARTInit(void)
 {
     // initialise debug UART
 
-#if defined(CONFIG_PLATFORM_MPFS)
+#if defined(CONFIG_PLATFORM_FU540)
     char *pUartBase = (char *)0x10010000;
     *(uint32_t volatile *)(pUartBase + 0x08) = 1 | 2;
     *(uint32_t volatile *)(pUartBase + 0x10) = 0; // disable UART interrupts

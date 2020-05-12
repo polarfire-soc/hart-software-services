@@ -102,9 +102,6 @@ else
   OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
 endif
 
-
-LINKER_SCRIPT=boards/${MACHINE}/hss.ld
-
 all: config.h $(TARGET)
 
 ##############################################################################

@@ -27,7 +27,7 @@
 # YMODEM Service (NOTE: not a traditional super-loop service)
 
 ifdef CONFIG_SERVICE_YMODEM
-SRCS-$(CONFIG_PLATFORM_POLARFIRESOC) += \
+SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	services/ymodem/e51_glue.c \
 	services/ymodem/ymodem.c 
 endif

@@ -242,7 +242,7 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_Init_Setup_RWDATA_And_BSS", HSS_Init_Setup_RWDATA_And_BSS, false },
     { "HSS_Setup_Clocks",              HSS_Setup_Clocks,              false },
     { "HSS_Setup_Clocks",              HSS_Setup_PAD_IO,              false },
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     { "HSS_InitTIMs",                  HSS_InitTIMs,                  false },
     { "HSS_InitDDR",                   HSS_InitDDR,                   false },
 #endif

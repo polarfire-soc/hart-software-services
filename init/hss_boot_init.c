@@ -80,8 +80,8 @@ bool HSS_BootInit(void)
     struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_lz77_start;
     mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
 #      else
-    extern const char _binary_payload_bin_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_start;
+    extern const char _payload_start;
+    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_payload_start;
 #      endif
 #  endif
 

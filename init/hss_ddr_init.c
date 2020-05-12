@@ -35,7 +35,7 @@
  * TBD: is periodic re-calibration required during operation (e.g. temperature induced 
  * or other)
  */
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
 #  include "nwc/mss_nwc_init.h"
 #endif
 
@@ -43,7 +43,7 @@ void HSS_DDR_Train(void)
 {
     mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
 
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     assert(mss_nwc_init() == 0);
 #endif
 }

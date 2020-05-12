@@ -186,10 +186,10 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
 
         // set arg1 (A1) to point to device tree blob
 #ifdef CONFIG_PROVIDE_DTB
-#  if defined(CONFIG_PLATFORM_POLARFIRESOC)
+#  if defined(CONFIG_PLATFORM_MPFS)
         extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
         scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
-#  elif defined(CONFIG_PLATFORM_MPFS)
+#  elif defined(CONFIG_PLATFORM_FU540)
         extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
         scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
 #  else

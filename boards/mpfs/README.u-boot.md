@@ -49,7 +49,7 @@ We will be creating a payload from `u-boot-dtb.bin`. Copy this file to the tople
 From the toplevel `hart-software-services` directory, build the bin2chunks tool, which is a sample tool used to create a HSS bootable payload. bin2chunks relies on config.h, so first we configure the HSS:
 
     $ cp boards/mpfs/def_config .config
-    $ make MACHINE=mpfs genconfig
+    $ make BOARD=mpfs genconfig
 
 Now, built the bin2chunks tool:
     $ make -C tools/bin2chunks
@@ -64,7 +64,7 @@ The arguments to bin2chunks are the entrypoints for U54s 1 through 4, a chunk si
 
 At this point, we can build the HSS binary image:
 
-    $ make MACHINE=mpfs
+    $ make BOARD=mpfs
 
 This HSS binary can be used instead of U-Boot from riscv-yocto to boot a Linux image. To use it, pprepare an SDCARD as usual using the riscv-yocto flow. Then, overwrite the U-Boot partition using:
 

@@ -81,7 +81,7 @@
 #define DDR_START              0x801F0000u
 #define DDR_END                0x180000000llu
 
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
 #  include "mss_sysreg.h"
 #endif
 
@@ -141,7 +141,7 @@ bool HSS_Init_Setup_RWDATA_And_BSS(void)
     //UART not setup at this point
     //mHSS_DEBUG_PRINTF("Setting up RW Data and BSS sections" CRLF);
 
-#ifdef CONFIG_PLATFORM_POLARFIRESOC
+#ifdef CONFIG_PLATFORM_MPFS
     // Copy RWDATA
     {
         extern uint32_t _rwdata_load;

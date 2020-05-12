@@ -53,9 +53,11 @@ SECTIONS
     crt.o(.tbss.end)
   }
 
-  .data : ALIGN(8) 
+  .data.payload : ALIGN(8) 
   {
+    PROVIDE(_payload_start = .);
     boards/lc-mpfs/payload.o(.data) 
+    PROVIDE(_payload_end = .);
   }
 
   .data : ALIGN(8) 

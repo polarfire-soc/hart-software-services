@@ -27,10 +27,13 @@
 # Defines target-specific build-rules variables, extra sources and include paths
 #
 
-$(info LC-MPFS selected)
+$(info Board LC-MPFS selected)
 
-CONFIG_PLATFORM_MPFS=y
-PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
+#
+# Confusingly, the LC-MPFS board is actually the SiFive FU540 platform
+#
+CONFIG_PLATFORM_FU540=y
+PLATFORM_CFLAGS += -DCONFIG_PLATFORM_FU540=1
 
 INCLUDES += \
 	-Iboards/lc-mpfs/config/hardware \

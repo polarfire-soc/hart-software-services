@@ -62,16 +62,22 @@ all: ${TARGET}
 
 include .config
 
-ifneq ("$(wildcard boards/${MACHINE}/Makefile)","")
-  include boards/${MACHINE}/Makefile
+ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
+  include boards/${BOARD}/Makefile
 else
-  ifndef MACHINE 
-    $(warning MACHINE board not specified) # default to icicle if nothing found
-    MACHINE:=icicle
-    include boards/${MACHINE}/Makefile
+  ifndef BOARD 
+    $(warning BOARD not specified) # default to icicle if nothing found
+    BOARD:=icicle
+    include boards/${BOARD}/Makefile
   else
-    $(error Board >>${MACHINE}<< not found)
+    $(error Board >>${BOARD}<< not found)
   endif
+endif
+
+ifneq ("$(wildcard boards/${BOARD}/hss.ld)", "")
+  LINKER_SCRIPT=boards/${BOARD}/hss.ld
+else
+  $(error Linker Script >>${LINKER_SCRIPT}<< not found)
 endif
 
 RISCV_TARGET=hss.elf

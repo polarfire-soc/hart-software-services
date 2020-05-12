@@ -36,12 +36,12 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/utils/libfdt/fdt_wip.c \
 	thirdparty/opensbi/lib/utils/libfdt/fdt_addresses.c \
 
-ifdef CONFIG_PLATFORM_POLARFIRESOC
+ifdef CONFIG_PLATFORM_MPFS
 SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	services/opensbi/platform.c
 endif
 
-ifdef CONFIG_PLATFORM_MPFS
+ifdef CONFIG_PLATFORM_FU540
 SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/utils/serial/sifive-uart.c \
 	thirdparty/opensbi/platform/sifive/fu540/platform.c
