@@ -1,13 +1,10 @@
  /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  * 
  * Register bit offsets and masks definitions for PolarFire SoC MSS MMUART
  * 
- *
- * SVN $Revision$
- * SVN $Date$
  */
 
 #ifndef MSS_UART_REGS_H_

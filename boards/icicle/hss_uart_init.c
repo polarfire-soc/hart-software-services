@@ -20,28 +20,28 @@
 
 #include "hss_debug.h"
 
-#include <mss_uart.h>
+#include "drivers/mss_uart/mss_uart.h"
 
 bool HSS_UARTInit(void)
 {
     // initialise debug UART
 
 #if defined(CONFIG_PLATFORM_MPFS)
-    MSS_UART_init(&g_mss_uart0_lo, MSS_UART_57600_BAUD, 
+    MSS_UART_init(&g_mss_uart0_lo, MSS_UART_115200_BAUD, 
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 
-    // default all UARTs to 57600 for now 
+    // default all UARTs to 115200 for now 
     // subsequent OS loads can change these if needed...
-    MSS_UART_init(&g_mss_uart1_lo, MSS_UART_57600_BAUD, 
+    MSS_UART_init(&g_mss_uart1_lo, MSS_UART_115200_BAUD, 
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 
-    MSS_UART_init(&g_mss_uart2_lo, MSS_UART_57600_BAUD, 
+    MSS_UART_init(&g_mss_uart2_lo, MSS_UART_115200_BAUD, 
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 
-    MSS_UART_init(&g_mss_uart3_lo, MSS_UART_57600_BAUD, 
+    MSS_UART_init(&g_mss_uart3_lo, MSS_UART_115200_BAUD, 
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 
-    MSS_UART_init(&g_mss_uart4_lo, MSS_UART_57600_BAUD, 
+    MSS_UART_init(&g_mss_uart4_lo, MSS_UART_115200_BAUD, 
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 #else
 #  error Unknown PLATFORM

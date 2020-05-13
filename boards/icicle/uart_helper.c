@@ -14,7 +14,7 @@
 
 #include "hss_debug.h"
 
-#include <mss_uart.h>
+#include "drivers/mss_uart/mss_uart.h"
 #include <string.h>
 #include <stdint.h>
 

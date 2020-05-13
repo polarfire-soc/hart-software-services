@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,11 +25,10 @@
  * PolarFire SoC Microprocessor Subsystem MMUART bare metal software driver
  * public API.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 /*=========================================================================*//**
   @mainpage PolarFire SoC MSS UART Bare Metal Driver.
+  
   ==============================================================================
   Introduction
   ==============================================================================
@@ -99,6 +98,7 @@
     - LIN mode
     - IrDA mode
     - Smartcard or ISO 7816 mode
+    
   The MSS MMUART driver provides the MSS_UART_init(), MSS_UART_lin_init(),
   MSS_UART_irda_init() and MSS_UART_smartcard_init() functions to initialize the
   MSS MMUARTs for operation in one of these modes. One of these initialization
@@ -110,16 +110,16 @@
   structures is also used as the first parameter to many of the driver functions
   to identify which MSS MMUART will be used by the called function. The names of
   these data structures are:
-                  g_mss_uart0_lo
-                  g_mss_uart1_lo
-                  g_mss_uart2_lo
-                  g_mss_uart3_lo
-                  g_mss_uart4_lo
-                  g_mss_uart0_hi
-                  g_mss_uart1_hi
-                  g_mss_uart2_hi
-                  g_mss_uart3_hi
-                  g_mss_uart4_hi
+    - g_mss_uart0_lo
+    - g_mss_uart1_lo
+    - g_mss_uart2_lo
+    - g_mss_uart3_lo
+    - g_mss_uart4_lo
+    - g_mss_uart0_hi
+    - g_mss_uart1_hi
+    - g_mss_uart2_hi
+    - g_mss_uart3_hi
+    - g_mss_uart4_hi
     
   Therefore, any call to an MSS MMUART function should be of the form 
   MSS_UART_function_name( &g_mss_uart0_lo, ... ) or
@@ -148,6 +148,7 @@
     - MSS_UART_set_pidpei_handler()
     - MSS_UART_set_linbreak_handler()
     - MSS_UART_set_linsync_handler()
+    
   Note: These LIN mode configuration functions can only be called after the
   MSS_UART_lin_init() function is called.
   
@@ -172,6 +173,7 @@
     - MSS_UART_enable_halfduplex()
     - MSS_UART_disable_halfduplex()
     - MSS_UART_set_nack_handler()
+    
   Note: These Smartcard mode configuration functions can only be called after
   the MSS_UART_smartcard_init() function is called.
   
@@ -193,6 +195,7 @@
     - MSS_UART_set_filter_length()
     - MSS_UART_enable_afm()
     - MSS_UART_disable_afm()
+    
   Note: These configuration functions can only be called after one of the
         MSS_UART_init(), MSS_UART_lin_init(), MSS_UART_irda_init() or
         MSS_UART_smartcard_init() functions is called.
@@ -323,8 +326,27 @@ extern "C" {
 
 /***************************************************************************//**
   Baud rates
+  ==========
   The following definitions are used to specify standard baud rates as a
   parameter to the MSS_UART_init() function.
+  
+  | Constant             | Description      |
+  |----------------------|------------------|
+  | MSS_UART_110_BAUD    |    110 baud rate |
+  | MSS_UART_300_BAUD    |    300 baud rate |
+  | MSS_UART_600_BAUD    |    600 baud rate |
+  | MSS_UART_1200_BAUD   |   1200 baud rate |
+  | MSS_UART_2400_BAUD   |   2400 baud rate |
+  | MSS_UART_4800_BAUD   |   4800 baud rate |
+  | MSS_UART_9600_BAUD   |   9600 baud rate |
+  | MSS_UART_19200_BAUD  |  19200 baud rate |
+  | MSS_UART_38400_BAUD  |  38400 baud rate |
+  | MSS_UART_57600_BAUD  |  57600 baud rate |
+  | MSS_UART_115200_BAUD | 115200 baud rate |
+  | MSS_UART_230400_BAUD | 230400 baud rate |
+  | MSS_UART_460800_BAUD | 460800 baud rate |
+  | MSS_UART_921600_BAUD | 921600 baud rate |
+  
  */
 #define MSS_UART_110_BAUD       110U
 #define MSS_UART_300_BAUD       300U
@@ -343,8 +365,17 @@ extern "C" {
 
 /***************************************************************************//**
   Data Bits Length
+  ================
   The following defines are used to build the value of the MSS_UART_init()
   function line_config parameter.
+  
+  | Constant             | Description                |
+  |----------------------|----------------------------|
+  | MSS_UART_DATA_5_BITS | 5 bits of data transmitted |
+  | MSS_UART_DATA_6_BITS | 6 bits of data transmitted |
+  | MSS_UART_DATA_7_BITS | 7 bits of data transmitted |
+  | MSS_UART_DATA_8_BITS | 8 bits of data transmitted |
+  
  */
 #define MSS_UART_DATA_5_BITS     ((uint8_t) 0x00)
 #define MSS_UART_DATA_6_BITS     ((uint8_t) 0x01)
@@ -353,8 +384,18 @@ extern "C" {
 
 /***************************************************************************//**
   Parity
+  ======
   The following defines are used to build the value of the MSS_UART_init()
   function line_config parameter.
+  
+  | Constant                | Description              |
+  |-------------------------|--------------------------|
+  | MSS_UART_NO_PARITY      | No parity                |
+  | MSS_UART_ODD_PARITY     | Odd Parity               |
+  | MSS_UART_EVEN_PARITY    | Even parity              |
+  | MSS_UART_STICK_PARITY_0 | Stick parity bit to zero |
+  | MSS_UART_STICK_PARITY_1 | Stick parity bit to one  |
+
  */
 #define MSS_UART_NO_PARITY           ((uint8_t) 0x00)
 #define MSS_UART_ODD_PARITY          ((uint8_t) 0x08)
@@ -364,8 +405,16 @@ extern "C" {
 
 /***************************************************************************//**
   Number of Stop Bits
+  ===================
   The following defines are used to build the value of the MSS_UART_init()
   function line_config parameter.
+  
+  | Constant                  | Description              |
+  |---------------------------|--------------------------|
+  | MSS_UART_ONE_STOP_BIT     | One stop bit             |
+  | MSS_UART_ONEHALF_STOP_BIT | One and a half stop bits |
+  | MSS_UART_TWO_STOP_BITS    | Two stop bits            |
+  
  */
 #define MSS_UART_ONE_STOP_BIT        ((uint8_t) 0x00)
 #define MSS_UART_ONEHALF_STOP_BIT    ((uint8_t) 0x04)
@@ -373,10 +422,23 @@ extern "C" {
 
 /***************************************************************************//**
   Receiver Error Status
+  =====================
   The following defines are used to determine the UART receiver error type.
   These bit mask constants are used with the return value of the
   MSS_UART_get_rx_status() function to find out if any errors occurred while
   receiving data.
+  
+  
+  | Constant               | Description                                |
+  |------------------------|--------------------------------------------|
+  | MSS_UART_NO_ERROR      | No error bit mask (0x00)                   |
+  | MSS_UART_OVERUN_ERROR  | Overrun error bit mask (0x02)              |
+  | MSS_UART_PARITY_ERROR  | Parity error bit mask (0x04)               |
+  | MSS_UART_FRAMING_ERROR | Framing error bit mask (0x08)              |
+  | MSS_UART_BREAK_ERROR   | Break error bit mask (0x10)                |
+  | MSS_UART_FIFO_ERROR    | FIFO error bit mask (0x80)                 |
+  | MSS_UART_INVALID_PARAM | Invalid function parameter bit mask (0xFF) |
+
  */
 #define MSS_UART_INVALID_PARAM    ((uint8_t)0xFF)
 #define MSS_UART_NO_ERROR         ((uint8_t)0x00 )
@@ -388,9 +450,17 @@ extern "C" {
 
 /***************************************************************************//**
   Transmitter Status
+  ==================
   The following definitions are used to determine the UART transmitter status.
   These bit mask constants are used with the return value of the
   MSS_UART_get_tx_status() function to find out the status of the transmitter.
+    
+  | Constant         | Description                                        |
+  |------------------|----------------------------------------------------|
+  | MSS_UART_TX_BUSY | Transmitter busy (0x00)                            |
+  | MSS_UART_THRE    | Transmitter holding register empty bit mask (0x20) |
+  | MSS_UART_TEMT    | Transmitter empty bit mask (0x40)                  |
+  
  */
 #define MSS_UART_TX_BUSY          ((uint8_t) 0x00)
 #define MSS_UART_THRE             ((uint8_t) 0x20)
@@ -398,10 +468,23 @@ extern "C" {
 
 /***************************************************************************//**
   Modem Status
+  ============
   The following defines are used to determine the modem status. These bit
   mask constants are used with the return value of the
   MSS_UART_get_modem_status() function to find out the modem status of
   the UART.
+  
+  | Constant      | Description                                     |
+  |---------------|-------------------------------------------------|
+  | MSS_UART_DCTS | Delta clear to send bit mask (0x01)             |
+  | MSS_UART_DDSR | Delta data set ready bit mask (0x02)            |
+  | MSS_UART_TERI | Trailing edge of ring indicator bit mask (0x04) |
+  | MSS_UART_DDCD | Delta data carrier detect bit mask (0x08)       |
+  | MSS_UART_CTS  | Clear to send bit mask (0x10)                   |
+  | MSS_UART_DSR  | Data set ready bit mask (0x20)                  |
+  | MSS_UART_RI   | Ring indicator bit mask (0x40)                  |
+  | MSS_UART_DCD  | Data carrier detect bit mask (0x80)             |
+
  */
 #define MSS_UART_DCTS             ((uint8_t) 0x01)
 #define MSS_UART_DDSR             ((uint8_t) 0x02)
@@ -421,10 +504,26 @@ extern "C" {
 typedef uint16_t mss_uart_irq_t;
 
 /***************************************************************************//**
+  MSS MMUART Interrupts
+  =====================
   The following defines specify the interrupt masks to enable and disable MSS
   MMUART interrupts. They are used to build the value of the irq_mask parameter
   for the MSS_UART_enable_irq() and MSS_UART_disable_irq() functions. A bitwise
   OR of these constants is used to enable or disable multiple interrupts.
+  
+  
+  | Constant           | Description                                                   |
+  |--------------------|---------------------------------------------------------------|
+  | MSS_UART_RBF_IRQ   | Receive Data Available Interrupt bit mask (0x001)             |
+  | MSS_UART_TBE_IRQ   | Transmitter Holding Register Empty interrupt bit mask (0x002) |
+  | MSS_UART_LS_IRQ    | Receiver Line Status interrupt bit mask (0x004)               |
+  | MSS_UART_MS_IRQ    | Modem Status interrupt bit mask (0x008)                       |
+  | MSS_UART_RTO_IRQ   | Receiver time-out interrupt bit mask (0x010)                  |
+  | MSS_UART_NACK_IRQ  | NACK / ERR signal interrupt bit mask (0x020)                  |
+  | MSS_UART_PIDPE_IRQ | PID parity error interrupt bit mask (0x040)                   |
+  | MSS_UART_LINB_IRQ  | LIN break detection interrupt bit mask (0x080)                |
+  | MSS_UART_LINS_IRQ  | LIN Sync detection interrupt bit mask (0x100)                 |
+
  */
 #define MSS_UART_RBF_IRQ        0x001
 #define MSS_UART_TBE_IRQ        0x002
@@ -753,43 +852,49 @@ extern mss_uart_instance_t g_mss_uart4_hi;
 
   @param baud_rate
     The baud_rate parameter specifies the baud rate. It can be specified for
-    common baud rates’ using the following defines:
-    •   MSS_UART_110_BAUD
-    •   MSS_UART_300_BAUD
-    •   MSS_UART_600_BAUD
-    •   MSS_UART_1200_BAUD
-    •   MSS_UART_2400_BAUD
-    •   MSS_UART_4800_BAUD
-    •   MSS_UART_9600_BAUD
-    •   MSS_UART_19200_BAUD
-    •   MSS_UART_38400_BAUD
-    •   MSS_UART_57600_BAUD
-    •   MSS_UART_115200_BAUD
-    •   MSS_UART_230400_BAUD
-    •   MSS_UART_460800_BAUD
-    •   MSS_UART_921600_BAUD
+    common baud rates using the following defines:
+    - MSS_UART_110_BAUD
+    - MSS_UART_300_BAUD
+    - MSS_UART_600_BAUD
+    - MSS_UART_1200_BAUD
+    - MSS_UART_2400_BAUD
+    - MSS_UART_4800_BAUD
+    - MSS_UART_9600_BAUD
+    - MSS_UART_19200_BAUD
+    - MSS_UART_38400_BAUD
+    - MSS_UART_57600_BAUD
+    - MSS_UART_115200_BAUD
+    - MSS_UART_230400_BAUD
+    - MSS_UART_460800_BAUD
+    - MSS_UART_921600_BAUD
+    
     Alternatively, any nonstandard baud rate can be specified by simply passing
     the actual required baud rate as the value for this parameter.
 
   @param line_config
     The line_config parameter is the line configuration specifying the bit length,
-    number of stop bits and parity settings. This is a bitwise OR of one value
-    from each of the following groups of allowed values:
-    •   One of the following to specify the transmit/receive data bit length:
-        MSS_UART_DATA_5_BITS
-        MSS_UART_DATA_6_BITS,
-        MSS_UART_DATA_7_BITS
-        MSS_UART_DATA_8_BITS
-    •   One of the following to specify the parity setting:
-        MSS_UART_NO_PARITY
-        MSS_UART_EVEN_PARITY
-        MSS_UART_ODD_PARITY
-        MSS_UART_STICK_PARITY_0
-        MSS_UART_STICK_PARITY_1
-    •   One of the following to specify the number of stop bits:
-        MSS_UART_ONE_STOP_BIT
-        MSS_UART_ONEHALF_STOP_BIT
-        MSS_UART_TWO_STOP_BITS
+    number of stop bits and parity settings.
+    
+    This is a bitwise OR of one value from each of the following groups of
+    allowed values:
+    
+    One of the following to specify the transmit/receive data bit length:
+     - MSS_UART_DATA_5_BITS
+     - MSS_UART_DATA_6_BITS,
+     - MSS_UART_DATA_7_BITS
+     - MSS_UART_DATA_8_BITS
+     
+    One of the following to specify the parity setting:
+     - MSS_UART_NO_PARITY
+     - MSS_UART_EVEN_PARITY
+     - MSS_UART_ODD_PARITY
+     - MSS_UART_STICK_PARITY_0
+     - MSS_UART_STICK_PARITY_1
+        
+    One of the following to specify the number of stop bits:
+     - MSS_UART_ONE_STOP_BIT
+     - MSS_UART_ONEHALF_STOP_BIT
+     - MSS_UART_TWO_STOP_BITS
 
   @return
     This function does not return a value.
@@ -840,43 +945,49 @@ MSS_UART_init
 
   @param baud_rate
     The baud_rate parameter specifies the baud rate. It can be specified for
-    common baud rates• using the following defines:
-    •   MSS_UART_110_BAUD
-    •   MSS_UART_300_BAUD
-    •   MSS_UART_600_BAUD
-    •   MSS_UART_1200_BAUD
-    •   MSS_UART_2400_BAUD
-    •   MSS_UART_4800_BAUD
-    •   MSS_UART_9600_BAUD
-    •   MSS_UART_19200_BAUD
-    •   MSS_UART_38400_BAUD
-    •   MSS_UART_57600_BAUD
-    •   MSS_UART_115200_BAUD
-    •   MSS_UART_230400_BAUD
-    •   MSS_UART_460800_BAUD
-    •   MSS_UART_921600_BAUD
+    common baud rates using the following defines:
+    - MSS_UART_110_BAUD
+    - MSS_UART_300_BAUD
+    - MSS_UART_600_BAUD
+    - MSS_UART_1200_BAUD
+    - MSS_UART_2400_BAUD
+    - MSS_UART_4800_BAUD
+    - MSS_UART_9600_BAUD
+    - MSS_UART_19200_BAUD
+    - MSS_UART_38400_BAUD
+    - MSS_UART_57600_BAUD
+    - MSS_UART_115200_BAUD
+    - MSS_UART_230400_BAUD
+    - MSS_UART_460800_BAUD
+    - MSS_UART_921600_BAUD
+    
     Alternatively, any nonstandard baud rate can be specified by simply passing
     the actual required baud rate as the value for this parameter.
 
   @param line_config
     The line_config parameter is the line configuration specifying the bit length,
-    number of stop bits and parity settings. This is a bitwise OR of one value
-    from each of the following groups of allowed values:
-    •   One of the following to specify the transmit/receive data bit length:
-        MSS_UART_DATA_5_BITS
-        MSS_UART_DATA_6_BITS,
-        MSS_UART_DATA_7_BITS
-        MSS_UART_DATA_8_BITS
-    •   One of the following to specify the parity setting:
-        MSS_UART_NO_PARITY
-        MSS_UART_EVEN_PARITY
-        MSS_UART_ODD_PARITY
-        MSS_UART_STICK_PARITY_0
-        MSS_UART_STICK_PARITY_1
-    •   One of the following to specify the number of stop bits:
-        MSS_UART_ONE_STOP_BIT
-        MSS_UART_ONEHALF_STOP_BIT
-        MSS_UART_TWO_STOP_BITS
+    number of stop bits and parity settings.
+    
+    This is a bitwise OR of one value from each of the following groups of
+    allowed values:
+    
+    One of the following to specify the transmit/receive data bit length:
+     - MSS_UART_DATA_5_BITS
+     - MSS_UART_DATA_6_BITS,
+     - MSS_UART_DATA_7_BITS
+     - MSS_UART_DATA_8_BITS
+     
+    One of the following to specify the parity setting:
+     - MSS_UART_NO_PARITY
+     - MSS_UART_EVEN_PARITY
+     - MSS_UART_ODD_PARITY
+     - MSS_UART_STICK_PARITY_0
+     - MSS_UART_STICK_PARITY_1
+        
+    One of the following to specify the number of stop bits:
+     - MSS_UART_ONE_STOP_BIT
+     - MSS_UART_ONEHALF_STOP_BIT
+     - MSS_UART_TWO_STOP_BITS
 
   @return
     This function does not return a value.
@@ -927,43 +1038,49 @@ MSS_UART_lin_init
 
   @param baud_rate
     The baud_rate parameter specifies the baud rate. It can be specified for
-    common baud rates• using the following defines:
-    •   MSS_UART_110_BAUD
-    •   MSS_UART_300_BAUD
-    •   MSS_UART_600_BAUD
-    •   MSS_UART_1200_BAUD
-    •   MSS_UART_2400_BAUD
-    •   MSS_UART_4800_BAUD
-    •   MSS_UART_9600_BAUD
-    •   MSS_UART_19200_BAUD
-    •   MSS_UART_38400_BAUD
-    •   MSS_UART_57600_BAUD
-    •   MSS_UART_115200_BAUD
-    •   MSS_UART_230400_BAUD
-    •   MSS_UART_460800_BAUD
-    •   MSS_UART_921600_BAUD
+    common baud rates using the following defines:
+    - MSS_UART_110_BAUD
+    - MSS_UART_300_BAUD
+    - MSS_UART_600_BAUD
+    - MSS_UART_1200_BAUD
+    - MSS_UART_2400_BAUD
+    - MSS_UART_4800_BAUD
+    - MSS_UART_9600_BAUD
+    - MSS_UART_19200_BAUD
+    - MSS_UART_38400_BAUD
+    - MSS_UART_57600_BAUD
+    - MSS_UART_115200_BAUD
+    - MSS_UART_230400_BAUD
+    - MSS_UART_460800_BAUD
+    - MSS_UART_921600_BAUD
+    
     Alternatively, any nonstandard baud rate can be specified by simply passing
     the actual required baud rate as the value for this parameter.
 
   @param line_config
     The line_config parameter is the line configuration specifying the bit
-    length, number of stop bits and parity settings. This is a bitwise OR of one
-    value from each of the following groups of allowed values:
-    •   One of the following to specify the transmit/receive data bit length:
-        MSS_UART_DATA_5_BITS
-        MSS_UART_DATA_6_BITS,
-        MSS_UART_DATA_7_BITS
-        MSS_UART_DATA_8_BITS
-    •   One of the following to specify the parity setting:
-        MSS_UART_NO_PARITY
-        MSS_UART_EVEN_PARITY
-        MSS_UART_ODD_PARITY
-        MSS_UART_STICK_PARITY_0
-        MSS_UART_STICK_PARITY_1
-    •   One of the following to specify the number of stop bits:
-        MSS_UART_ONE_STOP_BIT
-        MSS_UART_ONEHALF_STOP_BIT
-        MSS_UART_TWO_STOP_BITS
+    length, number of stop bits and parity settings.
+    
+    This is a bitwise OR of one value from each of the following groups of
+    allowed values:
+    
+    One of the following to specify the transmit/receive data bit length:
+     - MSS_UART_DATA_5_BITS
+     - MSS_UART_DATA_6_BITS,
+     - MSS_UART_DATA_7_BITS
+     - MSS_UART_DATA_8_BITS
+     
+    One of the following to specify the parity setting:
+     - MSS_UART_NO_PARITY
+     - MSS_UART_EVEN_PARITY
+     - MSS_UART_ODD_PARITY
+     - MSS_UART_STICK_PARITY_0
+     - MSS_UART_STICK_PARITY_1
+     
+    One of the following to specify the number of stop bits:
+     - MSS_UART_ONE_STOP_BIT
+     - MSS_UART_ONEHALF_STOP_BIT
+     - MSS_UART_TWO_STOP_BITS
 
   @return
     This function does not return a value.
@@ -1015,43 +1132,49 @@ MSS_UART_irda_init
 
   @param baud_rate
     The baud_rate parameter specifies the baud rate. It can be specified for
-    common baud rates• using the following defines:
-    •   MSS_UART_110_BAUD
-    •   MSS_UART_300_BAUD
-    •   MSS_UART_600_BAUD
-    •   MSS_UART_1200_BAUD
-    •   MSS_UART_2400_BAUD
-    •   MSS_UART_4800_BAUD
-    •   MSS_UART_9600_BAUD
-    •   MSS_UART_19200_BAUD
-    •   MSS_UART_38400_BAUD
-    •   MSS_UART_57600_BAUD
-    •   MSS_UART_115200_BAUD
-    •   MSS_UART_230400_BAUD
-    •   MSS_UART_460800_BAUD
-    •   MSS_UART_921600_BAUD
+    common baud rates using the following defines:
+    - MSS_UART_110_BAUD
+    - MSS_UART_300_BAUD
+    - MSS_UART_600_BAUD
+    - MSS_UART_1200_BAUD
+    - MSS_UART_2400_BAUD
+    - MSS_UART_4800_BAUD
+    - MSS_UART_9600_BAUD
+    - MSS_UART_19200_BAUD
+    - MSS_UART_38400_BAUD
+    - MSS_UART_57600_BAUD
+    - MSS_UART_115200_BAUD
+    - MSS_UART_230400_BAUD
+    - MSS_UART_460800_BAUD
+    - MSS_UART_921600_BAUD
+    
     Alternatively, any nonstandard baud rate can be specified by simply passing
     the actual required baud rate as the value for this parameter.
 
   @param line_config
     The line_config parameter is the line configuration specifying the bit
-    length, number of stop bits and parity settings. This is a bitwise OR of one
-    value from each of the following groups of allowed values:
-    •   One of the following to specify the transmit/receive data bit length:
-        MSS_UART_DATA_5_BITS
-        MSS_UART_DATA_6_BITS,
-        MSS_UART_DATA_7_BITS
-        MSS_UART_DATA_8_BITS
-    •   One of the following to specify the parity setting:
-        MSS_UART_NO_PARITY
-        MSS_UART_EVEN_PARITY
-        MSS_UART_ODD_PARITY
-        MSS_UART_STICK_PARITY_0
-        MSS_UART_STICK_PARITY_1
-    •   One of the following to specify the number of stop bits:
-        MSS_UART_ONE_STOP_BIT
-        MSS_UART_ONEHALF_STOP_BIT
-        MSS_UART_TWO_STOP_BITS
+    length, number of stop bits and parity settings.
+    
+    This is a bitwise OR of one value from each of the following groups of
+    allowed values:
+    
+    One of the following to specify the transmit/receive data bit length:
+     - MSS_UART_DATA_5_BITS
+     - MSS_UART_DATA_6_BITS,
+     - MSS_UART_DATA_7_BITS
+     - MSS_UART_DATA_8_BITS
+        
+    One of the following to specify the parity setting:
+     - MSS_UART_NO_PARITY
+     - MSS_UART_EVEN_PARITY
+     - MSS_UART_ODD_PARITY
+     - MSS_UART_STICK_PARITY_0
+     - MSS_UART_STICK_PARITY_1
+        
+    One of the following to specify the number of stop bits:
+     - MSS_UART_ONE_STOP_BIT
+     - MSS_UART_ONEHALF_STOP_BIT
+     - MSS_UART_TWO_STOP_BITS
 
   @return
     This function does not return a value.
@@ -1843,6 +1966,7 @@ MSS_UART_set_linbreak_handler
 
   @return
     This function does not return a value.
+    
   Example:
   @code
   #include "mss_uart.h"
@@ -1900,6 +2024,7 @@ MSS_UART_set_linsync_handler
 
   @return
     This function does not return a value.
+    
   Example:
   @code
   #include "mss_uart.h"
@@ -1957,6 +2082,7 @@ MSS_UART_set_nack_handler
 
   @return
     This function does not return a value.
+    
   Example:
   @code
     #include "mss_uart.h"
@@ -2327,16 +2453,18 @@ MSS_UART_fill_tx_fifo
     used to mask the returned value to determine the receiver error status.
     When the return value is compared to the following bit masks, a non-zero
     result indicates that the corresponding error occurred:
-        •   MSS_UART_OVERRUN_ERROR      (bit mask = 0x02)
-        •   MSS_UART_PARITY_ERROR       (bit mask = 0x04)
-        •   MSS_UART_FRAMING_ERROR      (bit mask = 0x08)
-        •   MSS_UART_BREAK_ERROR        (bit mask = 0x10)
-        •   MSS_UART_FIFO_ERROR     (bit mask = 0x80)
+        - MSS_UART_OVERRUN_ERROR      (bit mask = 0x02)
+        - MSS_UART_PARITY_ERROR       (bit mask = 0x04)
+        - MSS_UART_FRAMING_ERROR      (bit mask = 0x08)
+        - MSS_UART_BREAK_ERROR        (bit mask = 0x10)
+        - MSS_UART_FIFO_ERROR         (bit mask = 0x80)
+        
     When the return value is compared to the following bit mask, a non-zero
     result indicates that no error occurred:
-        •   MSS_UART_NO_ERROR       (bit mask = 0x00)
+        - MSS_UART_NO_ERROR       (bit mask = 0x00)
+        
     Upon unsuccessful execution, this function returns:
-        •   MSS_UART_INVALID_PARAM      (bit mask = 0xFF)
+        - MSS_UART_INVALID_PARAM      (bit mask = 0xFF)
 
   Example:
   @code
@@ -2378,14 +2506,14 @@ MSS_UART_get_rx_status
     unsigned integer. The driver provides the following set of bit mask
     constants that should be compared with and/or used to mask the
     returned value to determine the modem status:
-        •   MSS_UART_DCTS   (bit mask = 0x01)
-        •   MSS_UART_DDSR   (bit mask = 0x02)
-        •   MSS_UART_TERI   (bit mask = 0x04)
-        •   MSS_UART_DDCD   (bit mask = 0x08)
-        •   MSS_UART_CTS    (bit mask = 0x10)
-        •   MSS_UART_DSR    (bit mask = 0x20)
-        •   MSS_UART_RI     (bit mask = 0x40)
-        •   MSS_UART_DCD    (bit mask = 0x80)
+        - MSS_UART_DCTS   (bit mask = 0x01)
+        - MSS_UART_DDSR   (bit mask = 0x02)
+        - MSS_UART_TERI   (bit mask = 0x04)
+        - MSS_UART_DDCD   (bit mask = 0x08)
+        - MSS_UART_CTS    (bit mask = 0x10)
+        - MSS_UART_DSR    (bit mask = 0x20)
+        - MSS_UART_RI     (bit mask = 0x40)
+        - MSS_UART_DCD    (bit mask = 0x80)
 
   Example:
   @code
@@ -2435,12 +2563,13 @@ MSS_UART_get_modem_status
     returned value to determine the transmitter status.
     When the return value is compared to the following bit mask, a non-zero
     result indicates that the corresponding transmitter status bit is set:
-        •   MSS_UART_THRE       (bit mask = 0x20)
-        •   MSS_UART_TEMT       (bit mask = 0x40)
+      - MSS_UART_THRE       (bit mask = 0x20)
+      - MSS_UART_TEMT       (bit mask = 0x40)
+        
     When the return value is compared to the following bit mask, a non-zero
     result indicates that the transmitter is busy or the function execution
     failed.
-        •   MSS_UART_TX_BUSY        (bit mask = 0x00)
+      - MSS_UART_TX_BUSY        (bit mask = 0x00)
 
   Example:
   @code

@@ -78,7 +78,7 @@ follow ODT_STR table, depends on drive STR setting */
 #if !defined (LIBERO_SETTING_RPC_ODT_STATIC_DQS)
 /*0x2000 73AC (rpc11_ODT) */ 
 #define LIBERO_SETTING_RPC_ODT_STATIC_DQS    0x00000005UL
-    /* RPC_ODT_STATIC_DQS                [0:32]  RW value= 0x5 */ 
+    /* RPC_ODT_STATIC_DQS                [0:32]  RW value= 0x5 Temporally */
 #endif
 #if !defined (LIBERO_SETTING_RPC_ODT_STATIC_ADDCMD)
 /*0x2000 739C (rpc7_ODT) */ 

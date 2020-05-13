@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -8,11 +8,9 @@
  */
 /***************************************************************************//**
  * 
- * Legacy interrupt control functions for the Microsemi driver library hardware
+ * Legacy interrupt control functions for the Microchip driver library hardware
  * abstraction layer.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 #include <stdio.h>
 #include "hal/hal.h"

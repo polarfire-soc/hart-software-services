@@ -9,11 +9,11 @@
  * SVN $Date:  $
  */
 
-#include "mss_qspi.h"
+#include "drivers/mss_qspi/mss_qspi.h"
 #include "micron_mt25q.h"
 #include "mss_plic.h"
 #include "hal_assert.h"
-#include "mss_uart.h"
+#include "drivers/mss_uart/mss_uart.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -44,10 +44,11 @@
 #undef ROUNDDOWN
 //#include "mss_hal.h"
 #include "mss_util.h"
-#include "mss_uart.h"
+#include "drivers/mss_uart/mss_uart.h"
 #include "uart_helper.h"
 #include "ymodem.h"
-#include "mss_envm.h"
+#include "drivers/mss_envm/mss_envm.h"
+#include "drivers/mss_sys_services/mss_sys_services.h"
 #include "mss_sysreg.h"
 #include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
 
@@ -101,13 +102,15 @@ static void l_print_result(uint8_t result, const char *msg)
     }
 }
 
-
+static uint8_t l_envm_params[256];
 static void l_e51_envm_init(void)
 {
     static bool initialized = false;
 
     if (!initialized) {
-        volatile uint8_t resultTemp = envm_init();
+        MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+        MSS_SYS_read_envm_parameter(l_envm_params, 0);
+        volatile uint8_t resultTemp = envm_init(l_envm_params);
         l_print_result(resultTemp, "envm_init()");
 
         envm_set_clock(LIBERO_SETTING_MSS_COREPLEX_CPU_CLK / 10000000u);

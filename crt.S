@@ -22,7 +22,6 @@
 	.globl _start
 	.globl _start_warm
 _start:
-	csrw	CSR_SATP, 0 # clear SATP early, as it appears to be coming up randomly
 	li	ra, 0
 	call	_reset_regs
 
@@ -90,6 +89,7 @@ _start:
         csrr a0, CSR_MHARTID
         beqz	a0, .boot_e51
 
+	csrw	CSR_SATP, 0 # clear SATP early, as it appears to be coming up randomly
         /* set MSIE bit to receive IPIs */
         li	a2, MIP_MSIP
         csrw	CSR_MIE, a2

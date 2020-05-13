@@ -54,6 +54,7 @@
 #include <string.h>
 
 #define mMEM_SIZE(REGION)      (REGION##_END - REGION##_START + 1u)
+#if 1
 #define E51_DTIM_START         0x01000000u
 #define E51_DTIM_END           0x01001FFFu
 
@@ -79,7 +80,44 @@
 #define L2_ZERO_DEVICE_END     0x0BFFFFFFu
 
 #define DDR_START              0x801F0000u
-#define DDR_END                0x180000000llu
+#define DDR_END                0x100000000llu
+#else
+extern uint64_t __e51dtim_start,    __e51dtim_end;
+extern uint64_t __e51itim_start,    __e51itim_end;
+extern uint64_t __u54_1_itim_start, __u54_1_itim_end;
+extern uint64_t __u54_2_itim_start, __u54_2_itim_end;
+extern uint64_t __u54_3_itim_start, __u54_3_itim_end;
+extern uint64_t __u54_4_itim_start, __u54_4_itim_end;
+extern uint64_t __l2lim_start,      __l2lim_end;
+extern uint64_t __ddr_start,        __ddr_end;
+
+#define E51_DTIM_START         (&__e51dtim_start)         
+#define E51_DTIM_END           (&__e51dtim_end)
+
+#define E51_ITIM_START         (&__e51itim_start)         
+#define E51_ITIM_END           (&__e51itim_end)
+
+#define U54_1_ITIM_START       (&__u54_1_itim_start)         
+#define U54_1_ITIM_END         (&__u54_1_itim_end)
+
+#define U54_2_ITIM_START       (&__u54_2_itim_start)         
+#define U54_2_ITIM_END         (&__u54_2_itim_end)
+
+#define U54_3_ITIM_START       (&__u54_3_itim_start)         
+#define U54_3_ITIM_END         (&__u54_3_itim_end)
+
+#define U54_4_ITIM_START       (&__u54_4_itim_start)         
+#define U54_4_ITIM_END         (&__u54_4_itim_end)
+
+#define L2LIM_START            (&__l2lim_start)         
+#define L2LIM_END              (&__l2lim_end)
+
+#define L2_ZERO_DEVICE_START   0x0A000000u
+#define L2_ZERO_DEVICE_END     0x0BFFFFFFu
+
+#define DDR_START              (&__ddr_start)
+#define DDR_END                (&__ddr_end)
+#endif
 
 #ifdef CONFIG_PLATFORM_MPFS
 #  include "mss_sysreg.h"

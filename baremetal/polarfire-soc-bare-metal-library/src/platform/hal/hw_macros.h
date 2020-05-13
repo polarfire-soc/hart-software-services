@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -20,17 +20,14 @@
  * 
  * Some of these macros also allow to access a specific register field.
  * 
- * SVN $Revision$
- * SVN $Date$
  */
-#ifndef HW_REGISTER_MACROS_H
-#define HW_REGISTER_MACROS_H
+
+#ifndef HW_MACROS_H
+#define HW_MACROS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef MACRO_METHOD_REG_ACCESS_REQUIED
 
 /*------------------------------------------------------------------------------
  * 32 bits registers access:
@@ -106,11 +103,12 @@ extern "C" {
 
 #define HW_set_uint8(BASE_ADDR, VALUE) (*((uint8_t volatile *)(BASE_ADDR)) = (VALUE))
 
-#endif /* #ifdef MACRO_METHOD_REG_ACCESS_REQUIED */
+
  
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#endif  /* HW_REGISTER_MACROS_H */
+#endif /* HW_MACROS_ */
+
 

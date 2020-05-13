@@ -9,7 +9,7 @@
  * SVN $Date$
  */
 
-#include "mss_pdma.h"
+#include "drivers/mss_pdma/mss_pdma.h"
 #include "mpfs_hal/mss_hal.h"
 
 #ifdef __cplusplus

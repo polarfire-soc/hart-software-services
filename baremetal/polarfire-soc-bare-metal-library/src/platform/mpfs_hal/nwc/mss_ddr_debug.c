@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "drivers/mss_uart/mss_uart.h"
 #include "mpfs_hal/mss_hal.h"
 #include "mss_ddr_debug.h"
 
@@ -49,8 +50,6 @@ static uint32_t ddr_write ( volatile uint64_t *DDR_word_ptr,\
         uint32_t no_of_access, uint8_t data_ptrn );
 static uint32_t ddr_read ( volatile uint64_t *DDR_word_ptr,\
         uint32_t no_of_access, uint8_t data_ptrn );
-
-extern mss_uart_instance_t g_mss_uart0_lo;
 
 
 #ifdef DEBUG_DDR_INIT
@@ -149,7 +148,7 @@ static uint32_t ddr_write
 )
 {
     uint32_t i;
-    uint64_t DATA, read_data;
+    uint64_t DATA = 0lu;
     uint32_t error_count = 0U;
 
     switch (data_ptrn)
@@ -231,8 +230,8 @@ uint32_t ddr_read
 )
 {
     uint32_t i;
-    uint64_t DATA;
-    uint32_t err_cnt, read_data, *GPIO_addr, *DDR_apb_addr;
+    uint64_t DATA = 0lu;
+    uint32_t err_cnt; //read_data, *GPIO_addr, *DDR_apb_addr;
     volatile uint64_t ddr_data;
     volatile uint64_t *DDR_word_pt_t, *first_DDR_word_pt_t;
     uint32_t rand_addr_offset;

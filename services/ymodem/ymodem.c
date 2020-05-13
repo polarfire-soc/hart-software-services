@@ -22,7 +22,7 @@
 #include "hss_crc16.h"
 #include "hss_clock.h"
 #include "ymodem.h"
-#include "mss_uart.h"
+#include "drivers/mss_uart/mss_uart.h"
 #include "uart_helper.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

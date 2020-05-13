@@ -20,8 +20,6 @@
 
 #include "hss_debug.h"
 
-#include <mss_uart.h>
-
 bool HSS_UARTInit(void)
 {
     // initialise debug UART
