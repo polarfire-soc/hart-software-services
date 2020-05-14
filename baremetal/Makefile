@@ -36,15 +36,18 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/drivers/mss_watchdog/mss_watchdog.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
-	baremetal/sysreg.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c \
 
-#	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.c \
-#	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c \
+EXTRA_SRCS-$(CONFIG_PLATFORM_FU540) += \
+	baremetal/sysreg.c \
 
 ASM_SRCS += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mutex.S
@@ -106,6 +109,10 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.o: 
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
 

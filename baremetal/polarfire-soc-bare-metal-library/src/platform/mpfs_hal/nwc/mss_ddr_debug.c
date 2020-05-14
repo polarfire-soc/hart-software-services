@@ -36,6 +36,7 @@ extern uint8_t sweep_results[MAX_NUMBER_DPC_VS_GEN_SWEEPS]\
                             [MAX_NUMBER__BCLK_SCLK_OFFSET_SWEEPS]\
                             [MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS];
 #endif
+mss_uart_instance_t *g_debug_uart = &g_mss_uart0_lo;
 #endif
 
 /*******************************************************************************
@@ -84,7 +85,7 @@ __attribute__((weak))\
 static void dumpbyte(mss_uart_instance_t * uart, uint8_t b)
 {
 #ifdef DEBUG_DDR_INIT
-    const char hexchrs[] = { '0','1','2','3','4','5','6','7','8','9','A','B',\
+    const uint8_t hexchrs[] = { '0','1','2','3','4','5','6','7','8','9','A','B',\
             'C','D','E','F' };
     MSS_UART_polled_tx(uart, &hexchrs[b >> 4u] , 1);
     MSS_UART_polled_tx(uart, &hexchrs[b & 0x0fu] , 1);
@@ -102,7 +103,7 @@ static void dumpbyte(mss_uart_instance_t * uart, uint8_t b)
 __attribute__((weak))\
         void uprint32(mss_uart_instance_t * uart, const char* msg, uint32_t d)
 {
-    MSS_UART_polled_tx_string(uart, msg);
+    MSS_UART_polled_tx_string(uart, (const uint8_t *)msg);
     for (unsigned i=0; i < 4; i++)
     {
         dumpbyte(uart, (d >> (8*(3-i))) & 0xffu);
@@ -129,6 +130,11 @@ void print_reg_array(mss_uart_instance_t * uart, uint32_t *reg_pointer,\
 #endif
 }
 
+__attribute__((weak)) int rand(void)
+{
+    return 0;
+}
+
 #endif
 
 
@@ -148,7 +154,7 @@ static uint32_t ddr_write
 )
 {
     uint32_t i;
-    uint64_t DATA = 0lu;
+    uint64_t DATA =0lu; //, read_data;
     uint32_t error_count = 0U;
 
     switch (data_ptrn)
@@ -409,12 +415,12 @@ uint32_t wrcalib_status(mss_uart_instance_t *g_mss_uart_debug_pt)
 uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
 {
 
-    uint32_t t_status;
+    uint32_t t_status = 0u;
     uint32_t MSS_DDR_APB_ADDR;
-    uint32_t lane_sel;
+    //uint32_t lane_sel; //unused
     uint32_t ddr_lane_sel;
     uint32_t dq0_dly, dq1_dly, dq2_dly, dq3_dly, dq4_dly, dq5_dly;
-    uint64_t uart_lock;
+    //uint64_t uart_lock; //unused
 
     /*  MSS_UART_polled_tx_string(g_mss_uart_debug_pt, "\n\n\r TIP register status \n");
     delay(1000);*/
@@ -436,7 +442,7 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
             (((CFG_DDR_SGMII_PHY->IOC_REG5.IOC_REG5) >> 24) & 0x3F));
 
     MSS_UART_polled_tx_string(g_mss_uart_debug_pt, \
-            "\n\n\r lane_select \t gt_err_comb \t gt_txdly \t gt_steps_180 \t gt_state \t wl_delay_0 \t dqdqs_err_done \t dqdqs_state \t delta0 \t delta1");
+            (const uint8_t *)"\n\n\r lane_select \t gt_err_comb \t gt_txdly \t gt_steps_180 \t gt_state \t wl_delay_0 \t dqdqs_err_done \t dqdqs_state \t delta0 \t delta1");
 
     for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED; ddr_lane_sel++)
     {
@@ -480,9 +486,11 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
         dq5_dly = (MSS_DDR_APB_ADDR & 0xFF00) >> 8;
         dq2_dly = (MSS_DDR_APB_ADDR & 0xFF0000) >> 16;
         dq3_dly = (MSS_DDR_APB_ADDR & 0xFF000000) >> 24;
+
+        (void)t_status; // reference to avoid compiler warning
     }
 
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt, "\n\r\n\r lane_select\t rdqdqs_status2\t addcmd_status0\t addcmd_status1\t addcmd_answer1\t dqdqs_status1\n\r");
+    MSS_UART_polled_tx_string(g_mss_uart_debug_pt, (const uint8_t *)"\n\r\n\r lane_select\t rdqdqs_status2\t addcmd_status0\t addcmd_status1\t addcmd_answer1\t dqdqs_status1\n\r");
     for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED;\
                                                                 ddr_lane_sel++)
     {

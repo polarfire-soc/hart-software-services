@@ -227,25 +227,17 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
  * \brief Init Function Registration Table
  *
  * The following structure is used to connect in new init functions.
- *
- * \warning It must end with a 'NULL' sentinel to indicate end
  */
-
-// TODO/TBD: clean these up into headers
 
 #include "hss_init.h"
 #include "hss_tinycli.h"
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
+#include "hss_board_init.h"
 
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_Init_Setup_RWDATA_And_BSS", HSS_Init_Setup_RWDATA_And_BSS, false },
-    { "HSS_Setup_Clocks",              HSS_Setup_Clocks,              false },
-    { "HSS_Setup_Clocks",              HSS_Setup_PAD_IO,              false },
-#ifdef CONFIG_PLATFORM_MPFS
-    { "HSS_InitTIMs",                  HSS_InitTIMs,                  false },
-    { "HSS_InitDDR",                   HSS_InitDDR,                   false },
-#endif
+    { "HSS_BoardInit",                 HSS_BoardInit,                 false },
     { "HSS_UARTInit",                  HSS_UARTInit,                  false },
 #ifdef CONFIG_OPENSBI
     { "HSS_OpenSBIInit",               HSS_OpenSBIInit,               false },
@@ -254,43 +246,19 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_LogoInit",                  HSS_LogoInit,                  false },
 #endif
     { "HSS_E51_Banner",                HSS_E51_Banner,                false },
-    { "HSS_DDRInit",                   HSS_DDRInit,                   false },
 #ifdef CONFIG_TINYCLI
-    { "HSS_TinyCLI_Parser",             HSS_TinyCLI_Parser,            false },
+    { "HSS_TinyCLI_Parser",            HSS_TinyCLI_Parser,            false },
 #endif
-    { "HSS_RegistryInit",              HSS_RegistryInit,              false },
     { "IPI_QueuesInit",                IPI_QueuesInit,                false },
 #ifdef CONFIG_SERVICE_QSPI
     { "HSS_QSPIInit",                  HSS_QSPIInit,                  false },
 #endif
 #ifdef CONFIG_SERVICE_BOOT
-    { "HSS_Setup_PLIC",                HSS_Setup_PLIC,                false },
-    { "HSS_Setup_MPU",                 HSS_Setup_MPU,                 false },
     { "HSS_PMP_Init",                  HSS_PMP_Init,                  false },
     { "HSS_BootInit",                  HSS_BootInit,                  false },
 #endif
 };
 const size_t spanOfGlobalInitFunctions = mSPAN_OF(globalInitFunctions);
 
-
-/******************************************************************************************************/
-
-/*!
- * \brief Initialise Registry
- *
- * This function is intended to be called at E51 software startup, and it will ensure that the
- * ipiRegistry[], initFunctions[] and pStateMachines[] array tables are correctly terminated.
- *
- * These arrays are extern'd into other modules and so must be correctly terminated for use.
- */
-bool HSS_RegistryInit(void)
-{
-    mHSS_DEBUG_PRINTF("Initializing Registry..." CRLF);
-    //assert(ipiRegistry[mSPAN_OF(ipiRegistry)-1].handler == NULL);
-    //assert(initFunctions[mSPAN_OF(initFunctions)-1].handler == NULL);
-    //assert(pStateMachines[mSPAN_OF(pStateMachines)-1] == NULL);
-
-    return true;
-}
 
 /******************************************************************************************************/

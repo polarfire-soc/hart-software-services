@@ -74,10 +74,6 @@ uint8_t init_pmp(uint8_t hart_id);
 uint8_t init_bus_error_unit( void);
 char * config_copy(void *dest, const void * src, size_t len);
 
-/*
- * extern Functions Used
- */
-
 #ifdef __cplusplus
 }
 #endif

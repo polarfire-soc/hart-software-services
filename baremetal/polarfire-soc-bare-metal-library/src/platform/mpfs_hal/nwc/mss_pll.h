@@ -196,6 +196,14 @@ extern "C" {
 #endif
 
 #define PLL_CTRL_LOCK_BIT ((0x01U) << 25U)
+/*
+ * bit0 1: This when asserted resets all the non-volatile register  bits
+ *         e.g. RW-P bits, the bit self clears i.e. is similar to a W1P bit
+ * bit1 1: This when asserted resets all the register  bits apart from the
+ *         non-volatile registers,  the bit self clears.  i.e. is similar to a
+ *         W1P bit
+ */
+#define PLL_INIT_AND_OUT_OF_RESET   0x00000003UL
 
 typedef enum RTC_CLK_SOURCE_
 {

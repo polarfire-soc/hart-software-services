@@ -28,23 +28,24 @@
 #
 
 #
-# Confusingly, the ICICLE-ES-KIT is platform MPFS
+# Confusingly, the ICICLE-KIT-ES is platform MPFS
 #
-$(info ICICLE selected)
+$(info ICICLE-KIT-ES selected)
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
 
 INCLUDES += \
-	-Iboards/icicle/config/hardware \
-	-Iboards/icicle/ \
+	-Iboards/icicle-kit-es/config/hardware \
+	-Iboards/icicle-kit-es/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 
 EXTRA_SRCS-y += \
-	boards/icicle/hss_uart_init.c \
-        boards/icicle/uart_helper.c \
+	boards/icicle-kit-es/hss_uart_init.c \
+        boards/icicle-kit-es/uart_helper.c \
+        boards/icicle-kit-es/hss_board_init.c \
 
-boards/icicle/hss_uart_init.o: boards/icicle/hss_uart_init.c config.h
+boards/icicle-kit-es/hss_uart_init.o: boards/icicle-kit-es/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 

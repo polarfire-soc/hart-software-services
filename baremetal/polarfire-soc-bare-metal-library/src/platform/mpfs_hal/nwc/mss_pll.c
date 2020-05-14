@@ -307,7 +307,7 @@ void sgmii_mux_config_via_scb(uint8_t option)
     switch(option)
     {
         default:
-        case 0:   /* write to   SCB register */
+        case SCB_UPDATE:   /* write to   SCB register */
 
                 /*
                  * SCB address: 0x3E20 0008
@@ -359,7 +359,7 @@ void sgmii_mux_config_via_scb(uint8_t option)
                         LIBERO_SETTING_SGMII_SGMII_CLKMUX;
                 break;
 
-        case 1:
+        case RPC_REG_UPDATE:
             /*
              * set the NV map reset
              * This will load the APB registers, set via SGMII TIP.
@@ -419,7 +419,8 @@ void mss_pll_config(void)
 {
     copy_switch_code(); /* copy switch code to RAM */
 
-    MSS_SCB_MSS_PLL->SOFT_RESET     = 0x00000000U;
+    MSS_SCB_DDR_PLL->SOFT_RESET     = PLL_INIT_AND_OUT_OF_RESET;
+
     /*
         Enable the PLL by removing the reset-
         PERIPH / periph_reset_b  - This asserts the functional reset of the
@@ -447,7 +448,12 @@ void mss_pll_config(void)
     MSS_SCB_MSS_PLL->PLL_CTRL       = LIBERO_SETTING_MSS_PLL_CTRL;
     /* PLL calibration register */
 
-    MSS_SCB_MSS_PLL->PLL_CAL        = LIBERO_SETTING_MSS_PLL_CAL;
+    /*
+     * PLL calibration register
+     * This value is factory set, do not overwrite
+     * MSS_SCB_MSS_PLL->PLL_CAL        = LIBERO_SETTING_MSS_PLL_CAL;
+     *
+     */
 
     MSS_SCB_MSS_PLL->PLL_REF_FB     = LIBERO_SETTING_MSS_PLL_REF_FB;
 
@@ -481,7 +487,7 @@ void mss_pll_config(void)
      *  todo: make wait clock based
      */
     volatile uint32_t timer_out=0x000000FFU;
-    while(((MSS_SCB_MSS_PLL->PLL_CTRL & ((0x01U) << 25U))) == 0U)
+    while((MSS_SCB_MSS_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == 0U)
     {
 #ifdef RENODE_DEBUG
         break;
@@ -522,14 +528,18 @@ void ddr_pll_config(REG_LOAD_METHOD option)
              * First set periph_reset_b, than remove reset. As may be called
              * more than one.
              * */
-            MSS_SCB_DDR_PLL->SOFT_RESET       = 0x00000100U;
-            MSS_SCB_DDR_PLL->SOFT_RESET       = 0x00000000U;
+            MSS_SCB_DDR_PLL->SOFT_RESET       = PLL_INIT_AND_OUT_OF_RESET;
 
             /* MSS PLL - 0x3E001000 - */
-            MSS_SCB_DDR_PLL->PLL_CTRL       = LIBERO_SETTING_DDR_PLL_CTRL;
+            MSS_SCB_DDR_PLL->PLL_CTRL         = LIBERO_SETTING_DDR_PLL_CTRL;
             /* PLL calibration register */
 
-            MSS_SCB_DDR_PLL->PLL_CAL       = LIBERO_SETTING_DDR_PLL_CAL;
+            /*
+             * PLL calibration register
+             * This value is factory set, do not overwrite
+             * MSS_SCB_DDR_PLL->PLL_CAL        = LIBERO_SETTING_MSS_PLL_CAL;
+             *
+             */
 
             MSS_SCB_DDR_PLL->PLL_REF_FB    = LIBERO_SETTING_DDR_PLL_REF_FB;
 
@@ -587,7 +597,7 @@ void ddr_pll_config(REG_LOAD_METHOD option)
              * This will load the APB registers, set via SGMII TIP.
              * */
             /* bit 0 == REG_POWERDOWN_B */
-            MSS_SCB_DDR_PLL->SOFT_RESET  = 0x01U;
+            MSS_SCB_DDR_PLL->SOFT_RESET  = PLL_INIT_AND_OUT_OF_RESET;
             break;
     }
 }
@@ -639,14 +649,18 @@ void sgmii_pll_config_scb(uint8_t option)
              * First set periph_reset_b, than remove reset. As may be called
              * more than one.
              * */
-            MSS_SCB_SGMII_PLL->SOFT_RESET       = 0x00000100U;
-            MSS_SCB_SGMII_PLL->SOFT_RESET       = 0x00000000U;
+            MSS_SCB_DDR_PLL->SOFT_RESET      = PLL_INIT_AND_OUT_OF_RESET;
 
             /* MSS PLL - 0x3E001000 - */
             MSS_SCB_SGMII_PLL->PLL_CTRL      = LIBERO_SETTING_SGMII_PLL_CTRL;
             /* PLL calibration register */
 
-            MSS_SCB_SGMII_PLL->PLL_CAL       = LIBERO_SETTING_SGMII_PLL_CAL;
+            /*
+             * PLL calibration register
+             * This value is factory set, do not overwrite
+             * MSS_SCB_SGMII_PLL->PLL_CAL        = LIBERO_SETTING_MSS_PLL_CAL;
+             *
+             */
 
             MSS_SCB_SGMII_PLL->PLL_REF_FB    = LIBERO_SETTING_SGMII_PLL_REF_FB;
 

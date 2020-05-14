@@ -104,8 +104,8 @@ extern void ddr_pvt_calibration(void);
 extern void ddr_pvt_recalibration(void);
 extern void delay(uint32_t n);
 #ifdef DDR_FULL_32BIT_NC_CHECK_EN
-extern uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access,\
-                                                              uint32_t pattern);
+//extern uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access,
+//                                                              uint32_t pattern);
 #endif
 #ifdef DEBUG_DDR_INIT
 extern mss_uart_instance_t *g_debug_uart;
@@ -190,12 +190,14 @@ static int32_t ddr_setup(void)
     static DDR_TRAINING_SM ddr_training_state = DDR_TRAINING_INIT;
     static uint32_t error;
     static uint32_t timeout;
-#ifdef SWEEP_ENABLED
+#ifdef DEBUG_DDR_INIT
     static uint32_t addr_cmd_value;
     static uint32_t bclk_sclk_offset_value;
     static uint32_t dpc_vrgen_v_value;
     static uint32_t dpc_vrgen_h_value;
     static uint32_t dpc_vrgen_vs_value;
+#endif
+#ifdef SWEEP_ENABLED
     static SWEEP_STATES sweep_state = INIT_SWEEP;
 #endif
     static uint32_t retry_count;
@@ -391,7 +393,7 @@ static int32_t ddr_setup(void)
                         tip_cfg_params = ((tip_cfg_params &\
                             (~BCLK_SCLK_OFFSET_MASK))|\
                              (bclk_sclk_offset_value<<BCLK_SCLK_OFFSET_SHIFT));
-                        addr_cmd_value = 4;
+                        //addr_cmd_value = 4;
                         tip_cfg_params = ((tip_cfg_params &\
                                  (~ADDRESS_CMD_OFFSETT_MASK))|(addr_cmd_value));
                         dpc_bits = ((dpc_bits &\
@@ -1394,10 +1396,12 @@ static int32_t ddr_setup(void)
              * write and read back test from drr, non cached access
              */
             {
+#ifdef DEBUG_DDR_INIT
 #ifdef DDR_FULL_32BIT_NC_CHECK_EN
                 error = ddr_read_write_fn((uint64_t*)MSS_BASE_ADD_DRC_NC,\
                                         SW_CFG_NUM_READS_WRITES,\
                                         SW_CONFIG_PATTERN);
+#endif
 #endif
             }
             if(error == 0U)
@@ -1410,10 +1414,12 @@ static int32_t ddr_setup(void)
             }
             break;
         case DDR_FULL_32BIT_CACHE_CHECK:
+#ifdef DEBUG_DDR_INIT
 #ifdef DDR_FULL_32BIT_CACHED_CHECK_EN
             error = ddr_read_write_fn((uint64_t*)0x80000000ULL /*MSS_BASE_ADD_DRC_NC*/,\
                                     SW_CFG_NUM_READS_WRITES,\
                                     SW_CONFIG_PATTERN);
+#endif
 #endif
             if(error == 0U)
             {
@@ -2696,6 +2702,7 @@ static uint8_t \
     uint32_t cal_data;
     uint64_t start_address = 0x0000000000001000;
     uint64_t size = 0x8U;  /* Number of reads for each iteration */
+    //uint8_t shift = 0;
 
     calib_data.write_cal.status_lower = 0U;
     /*
@@ -2719,7 +2726,10 @@ static uint8_t \
         for (laneToTest = 0x00U; laneToTest<number_of_lanes_to_calibrate;\
                                                                 laneToTest++)
         {
-            /* read one to flush MTC -  this is required */
+            /* 
+             * read once to flush MTC. During write calibration the first MTC read 
+             * must be discarded as it is unreliable after a series of bad writes.
+             */
             result = MTC_test(1U<<laneToTest, start_address, size);
             /* Read twice, two different patterns will be used */
             result = MTC_test(1U<<laneToTest, start_address, size);

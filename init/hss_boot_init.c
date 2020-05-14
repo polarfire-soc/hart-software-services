@@ -25,6 +25,9 @@
 #endif
 
 #ifdef CONFIG_SERVICE_QSPI
+//#  define read_csr csr_read
+//#  define set_csr csr_write
+#  include "encoding.h"
 #  include "qspi_service.h"
 #  include <mss_qspi.h>
 #endif
@@ -64,7 +67,6 @@ static bool validateCrc_(struct HSS_BootImage *pImage)
 bool HSS_BootInit(void)
 {
     bool result = false;
-    mHSS_DEBUG_PRINTF("Checking memory..." CRLF);
 
     mHSS_DEBUG_PRINTF("Initializing Boot Image.." CRLF);
 

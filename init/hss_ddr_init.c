@@ -53,13 +53,14 @@ void HSS_DDR_Train(void)
  */
 bool HSS_DDRInit(void)
 {
+    mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
+    HSS_DDR_Train();
+
 #ifdef CONFIG_MEMTEST
     mHSS_DEBUG_PRINTF("Memory Testing DDR..." CRLF);
     HSS_MemTestDDRFast();
 #endif
 
-    mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
-    HSS_DDR_Train();
 
     return true;
 }

@@ -80,18 +80,18 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
     memset(myBuffer, 0, bufferLen);
 
-    uint8_t c;
+    uint8_t cBuf[1];
     while (!finished) {
-        while (0 == MSS_UART_get_rx(&g_mss_uart0_lo, &c, 1));
+        while (0 == MSS_UART_get_rx(&g_mss_uart0_lo, cBuf, 1));
 
-        switch (c) {
+        switch (cBuf[0]) {
         case '\r':
-            MSS_UART_polled_tx(&g_mss_uart0_lo, &c, 1u);
+            MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
             finished = true;
             break;
 
         case '\n':
-            MSS_UART_polled_tx(&g_mss_uart0_lo, &c, 1u);
+            MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
             finished = true;
             break;
 
@@ -131,8 +131,8 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
         default:
             if (result < bufferLen) {
-                MSS_UART_polled_tx(&g_mss_uart0_lo, &c, 1u);
-                myBuffer[result] = c;
+                MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+                myBuffer[result] = cBuf[0];
                 result++;
             }
             break;
@@ -157,7 +157,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
 {
     bool result = false;
     bool done = false;
-    uint8_t rx_byte;
+    uint8_t rx_buff[1];
     HSSTicks_t start_time = 0u;
     HSSTicks_t last_sec_time = 0u;
 
@@ -168,11 +168,11 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
     }
 
     while (!done) {
-        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, &rx_byte, 1u);
+        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);
         if (0u != received) {
             done = true;
             if (MSS_UART_NO_ERROR == MSS_UART_get_rx_status(&g_mss_uart0_lo)) {
-                *pbuf = rx_byte;
+                *pbuf = rx_buff[0];
                 result = true;
                 break;
             } else {

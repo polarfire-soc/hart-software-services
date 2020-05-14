@@ -29,7 +29,6 @@
 SRCS-$(CONFIG_SERVICE_BOOT) += \
 	services/boot/hss_boot_service.c \
 	services/boot/hss_boot_pmp.c \
-	hss_sys_setup.c \
 
 INCLUDES +=\
 	-I./services/boot \
@@ -39,9 +38,5 @@ services/boot/hss_boot_service.o: services/boot/hss_boot_service.c config.h
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 services/boot/hss_boot_pmp.o: services/boot/hss_boot_pmp.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
-
-hss_sys_setup.o: hss_sys_setup.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 

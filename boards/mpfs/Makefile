@@ -43,6 +43,7 @@ INCLUDES += \
 EXTRA_SRCS-y += \
 	boards/mpfs/hss_uart_init.c \
         boards/mpfs/uart_helper.c \
+        boards/mpfs/hss_board_init.c \
 
 boards/mpfs/hss_uart_init.o: boards/mpfs/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";

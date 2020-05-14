@@ -245,10 +245,5 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
                 while (true) { ; } // HALT on failure 
             }
         }
-
-        //register volatile int const * const sp asm("sp");
-        //mHSS_DEBUG_PRINTF("After %s(), SP is %p" CRLF, initFunctions[i].pName, sp);
     }
-
-    mHSS_DEBUG_PRINTF("Init finished..." CRLF CRLF);
 }

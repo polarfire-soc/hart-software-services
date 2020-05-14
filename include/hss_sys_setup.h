@@ -48,6 +48,7 @@ bool HSS_Setup_MPU(void);
 bool HSS_Setup_L2Cache(void);
 bool HSS_Setup_Clocks(void);
 bool HSS_Setup_PMP(void);
+bool HSS_Setup_BusErrorUnit(void);
 
 #ifdef __cplusplus
 }

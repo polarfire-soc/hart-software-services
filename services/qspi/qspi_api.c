@@ -17,11 +17,10 @@
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 
-#include "ssmb_ipi.h"
-
 #include <assert.h>
 
 #include "qspi_service.h"
+#include "encoding.h"
 #include "mss_qspi.h"
 
 /*
@@ -41,14 +40,14 @@ bool HSS_QSPIInit(void)
         .sample = 0
     };
 
-#if 0
-/* TODO: disabling for RENODE */
+    mHSS_DEBUG_PRINTF("Initializing QSPI" CRLF);
     MSS_QSPI_init();
+
+    mHSS_DEBUG_PRINTF("Enabling QSPI" CRLF);
     MSS_QSPI_enable();
+
+    mHSS_DEBUG_PRINTF("Configuring" CRLF);
     MSS_QSPI_configure(&qspiConfig);
-#else
-    (void)qspiConfig;
-#endif
 
     return true;
 }

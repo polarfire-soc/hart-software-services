@@ -1,5 +1,5 @@
-#ifndef HSS_REGISTRY_H
-#define HSS_REGISTRY_H
+#ifndef HSS_BOARD_INIT_H
+#define HSS_BOARD_INIT_H
 
 /*******************************************************************************
  * Copyright 2019-2020 Microchip Corporation.
@@ -25,27 +25,15 @@
  * IN THE SOFTWARE.
  *
  * 
- * Hart Software Services - Registry of Tables (State Machines, IPI handlers, Init
- * Functions)
+ * Hart Software Services - Board Init Routines
  *
- */
-
-/*!
- * \file HSS Registry
- * \brief Initalization for any registered tables. 
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern const struct IPI_Handler  /*@null@*/ ipiRegistry[];
-extern struct StateMachine /*@null@*/ * const pGlobalStateMachines[];
-extern const struct InitFunction /*@null@*/ globalInitFunctions[];
-
-extern const size_t spanOfIpiRegistry;
-extern const size_t spanOfPGlobalStateMachines;
-extern const size_t spanOfGlobalInitFunctions;
+bool HSS_BoardInit(void);
 
 #ifdef __cplusplus
 }

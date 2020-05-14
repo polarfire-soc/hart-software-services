@@ -27,21 +27,29 @@
 #include "hss_types.h"
 #include "hss_debug.h"
 
+#define read_csr csr_read
+#define set_csr  csr_write
+
 #include <assert.h>
 #include <string.h>
 
+#include "hss_clock.h"
 #include "hss_state_machine.h"
 #include "hss_sys_setup.h"
-
-#include "mpfs_reg_map.h"
 
 #include "csr_helper.h"
 
 #ifdef CONFIG_PLATFORM_MPFS
+#  define RISCV_CSR_ENCODING_H
+#  define RISCV_ENCODING_H
 #  include "mss_sysreg.h"
+#  include "mss_plic.h"
+#  include "mss_l2_cache.h"
+#  include "system_startup.h"
 #endif
 #include "hss_memcpy_via_pdma.h"
 
+#include "mpfs_reg_map.h"
 
 /******************************************************************************/
 
@@ -177,89 +185,37 @@ bool HSS_Setup_PAD_IO(void)
 bool HSS_Setup_PLIC(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-    static const struct HSS_PLIC_Config {
-        uint32_t source_priority[185];
-        uint32_t pending_array[6];
-        uint32_t e51_mEnables[6];
-        uint32_t u54_1_mEnables[6];
-        uint32_t u54_1_sEnables[6];
-        uint32_t u54_2_mEnables[6];
-        uint32_t u54_2_sEnables[6];
-        uint32_t u54_3_mEnables[6];
-        uint32_t u54_3_sEnables[6];
-        uint32_t u54_4_mEnables[6];
-        uint32_t u54_4_sEnables[6];
-    } hss_PLIC_Config = {
-        { // source priority
-           0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 1-16
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u,     
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 17-32
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 33-48
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 49-64
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 65-80
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 81-96
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 97-112
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 113-128
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 129-144
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 146-160
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, // 161-176
-            0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-            0x0u                                            // 177-185
-        },
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // pending array
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // E51 m-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_1 m-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_1 s-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_2 m-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_2 s-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_3 m-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_3 s-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_4 m-mode enables
-        { 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u }, // U54_4 s-mode enables
-    };
+    uint32_t inc;
 
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x0004), &(hss_PLIC_Config.source_priority),
-        sizeof(hss_PLIC_Config.source_priority));
+    /* default all priorities so effectively disabled */
+    for(inc = 0U; inc < PLIC_NUM_SOURCES; ++inc)
+    {   
+        /* priority must be greater than threshold to be enabled, so setting to
+         * 7 disables */
+        PLIC->SOURCE_PRIORITY[inc]  = 0U; 
+    }   
 
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x1000), &(hss_PLIC_Config.pending_array),
-        sizeof(hss_PLIC_Config.pending_array));
+    for(inc = 0U; inc < NUM_CLAIM_REGS; ++inc)
+    {   
+        PLIC->TARGET[inc].PRIORITY_THRESHOLD  = 7U; 
+    }   
 
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2000), &(hss_PLIC_Config.e51_mEnables),
-        sizeof(hss_PLIC_Config.e51_mEnables));
+    /* and clear all the enables */
+    for(inc = 0UL; inc < PLIC_SET_UP_REGISTERS; inc++)
+    {   
+        PLIC->HART0_MMODE_ENA[inc] = 0U; 
+        PLIC->HART1_MMODE_ENA[inc] = 0U; 
+        PLIC->HART1_SMODE_ENA[inc] = 0U; 
+        PLIC->HART2_MMODE_ENA[inc] = 0U; 
+        PLIC->HART2_SMODE_ENA[inc] = 0U; 
+        PLIC->HART3_MMODE_ENA[inc] = 0U; 
+        PLIC->HART3_SMODE_ENA[inc] = 0U; 
+        PLIC->HART4_MMODE_ENA[inc] = 0U; 
+        PLIC->HART4_SMODE_ENA[inc] = 0U; 
+    }   
 
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2080), &(hss_PLIC_Config.u54_1_mEnables),
-        sizeof(hss_PLIC_Config.u54_1_mEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2100), &(hss_PLIC_Config.u54_1_sEnables),
-        sizeof(hss_PLIC_Config.u54_1_sEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2180), &(hss_PLIC_Config.u54_2_mEnables),
-        sizeof(hss_PLIC_Config.u54_2_mEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2200), &(hss_PLIC_Config.u54_2_sEnables),
-        sizeof(hss_PLIC_Config.u54_2_sEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2280), &(hss_PLIC_Config.u54_3_mEnables),
-        sizeof(hss_PLIC_Config.u54_3_mEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2300), &(hss_PLIC_Config.u54_3_sEnables),
-        sizeof(hss_PLIC_Config.u54_3_sEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2380), &(hss_PLIC_Config.u54_4_mEnables),
-        sizeof(hss_PLIC_Config.u54_4_mEnables));
-
-    memcpy_via_pdma((void *)(PLIC_BASE_ADDR + 0x2400), &(hss_PLIC_Config.u54_4_sEnables),
-        sizeof(hss_PLIC_Config.u54_4_sEnables));
+    /* clear any pending interrupts- in case already there */
+    PLIC_ClearPendingIRQ();
 #endif
 
     return true;
@@ -422,26 +378,9 @@ bool HSS_Setup_PMP(void)
 bool HSS_Setup_L2Cache(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-    static const struct HSS_L2Cache_Config {
-        uint32_t Config;
-        uint8_t  WayEnable;
-        uint64_t WayMask0;
-        uint64_t WayMask1;
-        uint64_t WayMask2;
-        uint64_t WayMask3;
-        uint64_t WayMask4;
-    } hss_L2Cache_Config = {
-        0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 0x0u, 
-    };
-
-    mHSS_WriteRegU32(L2_CACHE_CTRL, CONFIG,    hss_L2Cache_Config.Config);
-    mHSS_WriteRegU8(L2_CACHE_CTRL,  WAYENABLE, hss_L2Cache_Config.WayEnable);
-    mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK0,  hss_L2Cache_Config.WayMask0);
-    mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK1,  hss_L2Cache_Config.WayMask1);
-    mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK2,  hss_L2Cache_Config.WayMask2);
-    mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK3,  hss_L2Cache_Config.WayMask3);
-    mHSS_WriteRegU64(L2_CACHE_CTRL, WAYMASK4,  hss_L2Cache_Config.WayMask4);
+    config_l2_cache();
 #endif
+
     return true;
 }
 
@@ -455,20 +394,38 @@ bool HSS_Setup_Clocks(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
     static const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
-    const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
-        ~( (1u << 0u) | /* Release ENVM from Reset */ 
-           (1u << 4u) | /* Release TIMER from Reset */  
-           (1u << 5u) | /* Release MMUART0 from Reset */ 
-           (1u << 6u) | /* Release MMUART1 from Reset */ 
-           (1u << 7u) | /* Release MMUART2 from Reset */ 
-           (1u << 8u) | /* Release MMUART3 from Reset */ 
-           (1u << 9u) | /* Release MMUART4 from Reset */ 
-           (1u << 19u) | /* Release QSPI from Reset */ 
-           (1u << 23u) | /* Release DDRC from Reset */ 
-           (1u << 28u) ); /* Release ATHENA from Reset */
+    const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR & 
+        ~( SOFT_RESET_CR_ENVM_MASK |
+           SOFT_RESET_CR_MAC0_MASK |
+           SOFT_RESET_CR_MAC1_MASK |
+           SOFT_RESET_CR_TIMER_MASK |
+           SOFT_RESET_CR_MMUART0_MASK |
+           SOFT_RESET_CR_MMUART1_MASK |
+           SOFT_RESET_CR_MMUART2_MASK |
+           SOFT_RESET_CR_MMUART3_MASK |
+           SOFT_RESET_CR_MMUART4_MASK |
+           SOFT_RESET_CR_QSPI_MASK |
+           SOFT_RESET_CR_DDRC_MASK |
+           SOFT_RESET_CR_ATHENA_MASK |
+           SOFT_RESET_CR_SGMII_MASK );
 
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
 #endif
+
+    return true;
+}
+
+/*!
+ * \brief Bus Error Unit
+ *
+ * Setup bus error unit
+ */
+bool HSS_Setup_BusErrorUnit(void)
+{
+#ifdef CONFIG_PLATFORM_MPFS
+    (void)init_bus_error_unit();
+#endif
+
     return true;
 }

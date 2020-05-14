@@ -1316,10 +1316,10 @@ MSS_UART_enable_local_irq
     const mss_uart_instance_t * this_uart
 )
 {
-	/*Make sure to disable interrupt on PLIC as it might have been enabled
-	 * when application registered an interrupt handler function or
-	 * used MSS_UART_enable_irq() to enable PLIC interrupt*/
-	disable_irq(this_uart);
+    /*Make sure to disable interrupt on PLIC as it might have been enabled
+     * when application registered an interrupt handler function or
+     * used MSS_UART_enable_irq() to enable PLIC interrupt */
+    disable_irq(this_uart);
 
     /* Enable local interrupt UART instance.
      * Local interrupt will be enabled on the HART on which the application

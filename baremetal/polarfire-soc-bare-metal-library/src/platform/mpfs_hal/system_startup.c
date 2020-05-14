@@ -39,11 +39,7 @@
 extern "C" {
 #endif
 
-static void copy_section
-(
-    uint64_t * p_load,
-    uint64_t * p_vma,
-    uint64_t * p_vma_end);
+static void copy_section(uint64_t * p_load, uint64_t * p_vma, uint64_t * p_vma_end);
 
 #ifdef  MPFS_HAL_HW_CONFIG
 static void load_virtual_rom(void);
@@ -262,8 +258,8 @@ __attribute__((weak)) int main_other_hart(void)
  * registers with an executable allowing to park a hart in an infinite loop.
  */
 #ifdef  MPFS_HAL_HW_CONFIG
-#define VIRTUAL_BOOTROM_BASE_ADDR   0x20003120U
-#define NB_BOOT_ROM_WORDS       8
+#define VIRTUAL_BOOTROM_BASE_ADDR   0x20003120UL
+#define NB_BOOT_ROM_WORDS           8U
 static void load_virtual_rom(void)
 {
     int inc;

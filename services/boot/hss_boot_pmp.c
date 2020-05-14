@@ -47,8 +47,11 @@ bool HSS_PMP_Init(void)
     enum HSSHartId target;
     unsigned int pmpIndex;
 
+    mHSS_DEBUG_PRINTF("Initializing PMPs" CRLF);
+
     for (target = HSS_HART_U54_1; target <HSS_HART_NUM_PEERS; target++) {
         for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {
+#if 0
 #ifdef CONFIG_PLATFORM_MPFS
             const uint64_t configVal = pmp_getConfigVal(pmpIndex);
             const uint64_t addrVal = pmp_getAddrVal(pmpIndex);
@@ -61,6 +64,7 @@ bool HSS_PMP_Init(void)
             }
 
             pmp_decode(pCurrentEntry, pPreviousEntry, configVal, addrVal);
+#endif
 #else
             (void)pmp_decode;
             //(void)configVal;

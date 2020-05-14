@@ -7,15 +7,16 @@ OUTPUT_ARCH( "riscv" )
 MEMORY
 {
   envm    (RX) :     ORIGIN = 0x20220000, LENGTH = 128K,
-  ddr     (RWX) :    ORIGIN = 0x80000000, LENGTH = 4096M,
   e51dtim (RWX) :    ORIGIN = 0x01000000, LENGTH = 8K,
+  switch_code (RX) : ORIGIN = 0x01001C00, LENGTH = 1K,
   e51itim (RWX) :    ORIGIN = 0x01800000, LENGTH = 8K,
   u54_1_itim (RWX) : ORIGIN = 0x01808000, LENGTH = 28K,
   u54_2_itim (RWX) : ORIGIN = 0x01810000, LENGTH = 28K,
   u54_3_itim (RWX) : ORIGIN = 0x01818000, LENGTH = 28K,
   u54_4_itim (RWX) : ORIGIN = 0x01820000, LENGTH = 28K,
   l2lim   (RW) :     ORIGIN = 0x08000000, LENGTH = 128K,
-  switch_code (RX) : ORIGIN = 0x01001C00, LENGTH = 1K
+  scratchpad(RWX) :  ORIGIN = 0x0A000000, LENGTH = 512K,
+  ddr     (RWX) :    ORIGIN = 0x80000000, LENGTH = 4096M
 }
 
 
@@ -74,6 +75,17 @@ SECTIONS
    }
   PROVIDE(_hss_end = .);
   PROVIDE(.code_end = .);
+
+  .l2_scratchpad : ALIGN(0x10)
+  {
+    __l2_scratchpad_load = LOADADDR(.l2_scratchpad);
+    __l2_scratchpad_start = .;
+    __l2_scratchpad_vma_start = .;
+    *(.l2_scratchpad)
+    . = ALIGN(0x10);
+    __l2_scratchpad_end = .;
+    __l2_scratchpad_vma_end = .;
+  } >scratchpad AT>envm
  
   /*  
    *   The .ram_code section will contain the code That is run from RAM.
