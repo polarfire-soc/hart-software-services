@@ -107,7 +107,7 @@ __attribute__((weak)) int main_first_hart(void)
         hard_idx = MPFS_HAL_FIRST_HART + 1U;
         while( hard_idx <= MPFS_HAL_LAST_HART)
         {
-            uint32_t wait_count;
+            uint32_t wait_count = 0u; // initialize to avoid compiler warning
 
             switch(sm_check_thread)
             {

@@ -125,7 +125,7 @@ extern uint64_t __ddr_start,        __ddr_end;
 
 #define CHUNK_SIZE             0x2000u
 
-bool HSS_InitDDR(void)
+bool HSS_ZeroDDR(void)
 {
 #ifdef CONFIG_INITIALIZE_MEMORIES
 #  ifdef CONFIG_USE_ZERO_DEVICE
@@ -149,7 +149,7 @@ bool HSS_InitDDR(void)
 }
 
 /* Init memories.. */
-bool HSS_InitTIMs(void)
+bool HSS_ZeroTIMs(void)
 {
 #ifdef CONFIG_INITIALIZE_MEMORIES
 #  ifdef CONFIG_USE_ZERO_DEVICE

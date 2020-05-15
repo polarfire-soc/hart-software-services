@@ -66,7 +66,6 @@ void uart_putc(int hartid, const char ch)
     string[1] = 0u;
 
     mss_uart_instance_t *pUart = get_uart_instance(hartid);
-    //MSS_UART_polled_tx(pUart, (unsigned char *)&ch, 1u);
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)string);
 }
 
@@ -167,8 +166,10 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
         start_time = last_sec_time = HSS_GetTime();
     }
 
+    (void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky statust
+
     while (!done) {
-        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);
+        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, sizeof(rx_buff));
         if (0u != received) {
             done = true;
             if (MSS_UART_NO_ERROR == MSS_UART_get_rx_status(&g_mss_uart0_lo)) {

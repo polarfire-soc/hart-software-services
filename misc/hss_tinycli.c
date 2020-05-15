@@ -135,7 +135,7 @@ static void HSS_TinyCLI_PrintHelp(void)
 
 static void HSS_TinyCLI_CmdHandler(int cmdIndex)
 {
-#ifdef CONFIG_YMODEM
+#ifdef CONFIG_SERVICE_YMODEM
     void e51_ymodem_loop(void);
 #endif
     void _start(void);
@@ -151,7 +151,7 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
         break;
 
     case CMD_YMODEM:
-#ifdef CONFIG_YMODEM
+#ifdef CONFIG_SERVICE_YMODEM
         e51_ymodem_loop();
 #endif
         break;

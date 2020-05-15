@@ -234,6 +234,7 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
 
         //mHSS_DEBUG_PRINTF("Running %d of %d: %s()" CRLF, i, spanOfInitFunctions, 
         //    initFunctions[i].pName);
+
         bool result = (initFunctions[i].handler)();
 
         if (!result) {

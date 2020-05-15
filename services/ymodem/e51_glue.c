@@ -102,19 +102,19 @@ static void l_print_result(uint8_t result, const char *msg)
     }
 }
 
-static uint8_t l_envm_params[256];
+//static uint8_t l_envm_params[256];
 static void l_e51_envm_init(void)
 {
     static bool initialized = false;
 
     if (!initialized) {
-        MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
-        MSS_SYS_read_envm_parameter(l_envm_params, 0);
-        volatile uint8_t resultTemp = envm_init(l_envm_params);
-        l_print_result(resultTemp, "envm_init()");
+        //MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+        //MSS_SYS_read_envm_parameter(l_envm_params, 0);
+        //volatile uint8_t resultTemp = envm_init(l_envm_params);
+        //l_print_result(resultTemp, "envm_init()");
 
-        envm_set_clock(LIBERO_SETTING_MSS_COREPLEX_CPU_CLK / 10000000u);
-        l_print_result(0, "envm_set_clock()");
+        //envm_set_clock(LIBERO_SETTING_MSS_COREPLEX_CPU_CLK / 10000000u);
+        //l_print_result(0, "envm_set_clock()");
 
         MSS_QSPI_init();
         MSS_QSPI_enable();

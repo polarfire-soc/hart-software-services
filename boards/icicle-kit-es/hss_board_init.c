@@ -38,12 +38,12 @@
 const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     { "HSS_Setup_Clocks",              HSS_Setup_Clocks,              false },
     { "HSS_Setup_PAD_IO",              HSS_Setup_PAD_IO,              false },
-    { "HSS_InitTIMs",                  HSS_InitTIMs,                  false },
+    { "HSS_ZeroTIMs",                  HSS_ZeroTIMs,                  false },
     { "HSS_Setup_PLIC",                HSS_Setup_PLIC,                false },
     { "HSS_Setup_BusErrorUnit",        HSS_Setup_BusErrorUnit,        false },
     { "HSS_Setup_MPU",                 HSS_Setup_MPU,                 false },
     { "HSS_DDRInit",                   HSS_DDRInit,                   false },
-    { "HSS_InitDDR",                   HSS_InitDDR,                   false },
+    { "HSS_ZeroDDR",                   HSS_ZeroDDR,                   false },
 };
 const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 

@@ -45,6 +45,7 @@
 #  include "mss_sysreg.h"
 #  include "mss_plic.h"
 #  include "mss_l2_cache.h"
+#  include "nwc/mss_io_config.h"
 #  include "system_startup.h"
 #endif
 #include "hss_memcpy_via_pdma.h"
@@ -83,80 +84,7 @@
 bool HSS_Setup_PAD_IO(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-    static const struct HSS_MSSIO_Bank_Config {
-        uint32_t MSSIO_BANK4_CFG_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_0_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_1_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_2_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_3_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_4_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_5_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_6_CR;
-        uint32_t MSSIO_BANK2_CFG_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_0_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_1_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_2_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_3_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_4_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_5_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_6_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_7_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_8_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_9_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_10_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_11_CR;
-    } hss_MSSIO_Bank_Config = {
-        0x00000FFFu,  // mssio_bank4_cfg_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_0_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_1_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_2_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_3_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_4_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_5_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_6_cr;
-        0x00000FFFu,  // mssio_bank2_cfg_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_0_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_1_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_2_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_3_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_4_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_5_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_6_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_7_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_8_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_9_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_10_cr;
-        0x00000000u   // mssio_bank2_io_cfg_11_cr;
-    };
-
-    /* Configure MSS IO banks */
-    memcpy((void *)(&(SYSREG->MSSIO_BANK4_CFG_CR)), 
-        &(hss_MSSIO_Bank_Config.MSSIO_BANK4_CFG_CR), sizeof(hss_MSSIO_Bank_Config));
-
-    /**
-     * \brief IOMUX configuration
-     */
-    static const struct HSS_IOMUX_Config {
-        uint32_t IOMUX0_CR;
-        uint32_t IOMUX1_CR;
-        uint32_t IOMUX2_CR;
-        uint32_t IOMUX3_CR;
-        uint32_t IOMUX4_CR;
-        uint32_t IOMUX5_CR;
-        uint32_t IOMUX6_CR;
-    } hss_IOMUX_Config = {
-        0xFFFFFE7Fu, // iomux0_cr
-        0x05500000u, // iomux1_cr
-        0xFFFFFFFFu, // iomux2_cr
-        0xFFFFFFFFu, // iomux3_cr
-        0xFFFFFFFFu, // iomux4_cr
-        0xFFFFFFFFu, // iomux5_cr
-        0x00000000u  // iomux6_cr
-    };
-
-    /* Configure IO muxes */
-    memcpy((void *)(&(SYSREG->IOMUX0_CR)), &(hss_IOMUX_Config.IOMUX0_CR), 
-        sizeof(hss_IOMUX_Config));
+    (void)mssio_setup();
 #endif
 
     return true;
@@ -235,6 +163,7 @@ bool HSS_Setup_PLIC(void)
 bool HSS_Setup_MPU(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
+#if 0
     static const struct HSS_MPU_Config {
         uint64_t fic0;
         uint64_t fic1;
@@ -273,6 +202,7 @@ bool HSS_Setup_MPU(void)
     mHSS_WriteRegU64(MPU, SEG0,		hss_MPU_Config.seg0);
     mHSS_WriteRegU64(MPU, SEG1,		hss_MPU_Config.seg1);
 #endif
+#endif
 
     return true;
 }
@@ -296,6 +226,7 @@ bool HSS_Setup_MPU(void)
 bool HSS_Setup_PMP(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
+#if 0
     static const struct HSS_PMP_Config {
         uint64_t pmpcfg0;
         uint64_t pmpcfg2;
@@ -364,6 +295,7 @@ bool HSS_Setup_PMP(void)
     mHSS_CSR_WRITE(CSR_PMPADDR14, pConfig->pmpaddr14);
     mHSS_CSR_WRITE(CSR_PMPADDR15, pConfig->pmpaddr15);
 #endif
+#endif
 
     return true;
 }
@@ -404,11 +336,14 @@ bool HSS_Setup_Clocks(void)
            SOFT_RESET_CR_MMUART2_MASK |
            SOFT_RESET_CR_MMUART3_MASK |
            SOFT_RESET_CR_MMUART4_MASK |
+           SOFT_RESET_CR_RTC_MASK |
            SOFT_RESET_CR_QSPI_MASK |
-           SOFT_RESET_CR_DDRC_MASK |
-           SOFT_RESET_CR_ATHENA_MASK |
+           SOFT_RESET_CR_GPIO2_MASK |
+           //SOFT_RESET_CR_DDRC_MASK |
+           //SOFT_RESET_CR_ATHENA_MASK |
            SOFT_RESET_CR_SGMII_MASK );
 
+    SYSREG->SOFT_RESET_CR = 0xFFFFFFFFu;
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
 #endif
