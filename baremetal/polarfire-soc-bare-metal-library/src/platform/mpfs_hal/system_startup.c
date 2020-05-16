@@ -46,7 +46,7 @@ static void load_virtual_rom(void);
 #endif  /* MPFS_HAL_HW_CONFIG */
 
 /*LDRA_INSPECTED 440 S MR:R.11.1,R.11.2,R.11.4,R.11.6,R.11.7  Have to allocate number (address) as point reference*/
-mss_sysreg_t*   SYSREG = ((mss_sysreg_t*) BASE32_ADDR_MSS_SYSREG);
+mss_sysreg_t * const SYSREG = ((mss_sysreg_t * const) BASE32_ADDR_MSS_SYSREG);
 
 
 /*==============================================================================

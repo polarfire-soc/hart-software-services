@@ -8,7 +8,7 @@
 
 #include "mss_sysreg.h"
 
-mss_sysreg_t*   SYSREG = (mss_sysreg_t*)BASE32_ADDR_MSS_SYSREG; // TODO: find a better place for this
+mss_sysreg_t * const SYSREG = (mss_sysreg_t * const)BASE32_ADDR_MSS_SYSREG; 
 
  /*==============================================================================
   * Copy hardware configuration to registers.

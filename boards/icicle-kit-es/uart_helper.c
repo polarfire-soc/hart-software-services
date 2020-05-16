@@ -169,7 +169,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
     (void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky statust
 
     while (!done) {
-        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, sizeof(rx_buff));
+        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);
         if (0u != received) {
             done = true;
             if (MSS_UART_NO_ERROR == MSS_UART_get_rx_status(&g_mss_uart0_lo)) {

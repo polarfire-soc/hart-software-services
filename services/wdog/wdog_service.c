@@ -77,7 +77,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
     (void) pMyMachine;
 
     if (hartBitmask.uint) {
-        mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%x" CRLF, hartBitmask.uint);
+        mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%X" CRLF, hartBitmask.uint);
         wdog_service.state = WDOG_MONITORING; 
     }
 

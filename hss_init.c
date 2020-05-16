@@ -36,6 +36,7 @@
 
 #ifdef CONFIG_OPENSBI
 #  include "sbi/riscv_asm.h"
+#  include "sbi/sbi_version.h"
 #endif
 
 #include "hss_sys_setup.h"
@@ -239,8 +240,7 @@ bool HSS_E51_Banner(void)
 {
     mHSS_FANCY_STATUS_TEXT;
 
-    mHSS_FANCY_PRINTF("PolarFire SoC Hart Software Services (HSS) - Version %d.%d.%d" CRLF, 
-        HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH);
+    mHSS_FANCY_PRINTF("PolarFire SoC Hart Software Services (HSS) - Version %d.%d.%d (OpenSBI %d.%d)" CRLF, HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
     mHSS_FANCY_PRINTF("(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF);
 
 #ifdef CONFIG_USE_GNU_BUILD_ID

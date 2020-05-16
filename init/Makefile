@@ -59,6 +59,6 @@ init/hss_opensbi_init.o: init/hss_opensbi_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
-hss_sys_setup.o: hss_sys_setup.c config.h
+init/hss_sys_setup.o: init/hss_sys_setup.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 

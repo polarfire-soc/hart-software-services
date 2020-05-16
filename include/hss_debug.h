@@ -91,8 +91,8 @@ void sbi_putc(char c);
 #  endif
 #endif
 
-#define DO_PRAGMA(x) _Pragma(#x)
-#define TODO(x) DO_PRAGMA(message ("TODO: " #x))
+#define mDO_PRAGMA(x) _Pragma(#x)
+#define mTODO(x) mDO_PRAGMA(message ("TODO: " #x))
 
 #ifdef __cplusplus
 }

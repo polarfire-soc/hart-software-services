@@ -4060,7 +4060,7 @@ typedef struct _mss_sysreg
 #define SYSREG_SOFTRESET_FIC3       (1U << 27U)
 #define SYSREG_SOFTRESET_ATHENA     (1U << 28U)
 
-extern mss_sysreg_t*   SYSREG;
+extern mss_sysreg_t * const SYSREG;
 
 #ifdef __cplusplus
 }

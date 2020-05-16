@@ -79,15 +79,15 @@ _start:
 	/* update the mscratch */
 	csrw	CSR_MSCRATCH, tp
 
-	/* Setup trap handler */
-	la	a4, hss_trap_vector
+        csrr a0, CSR_MHARTID
+        beqz	a0, .boot_e51
+
+	/* Setup U54 trap handler */
+	la	a4, hss_u54_trap_handler
 	csrw	CSR_MTVEC, a4
 	/* Make sure that mtvec is updated */
 1:	csrr	a5, CSR_MTVEC
 	bne	a4, a5, 1b
-
-        csrr a0, CSR_MHARTID
-        beqz	a0, .boot_e51
 
 	csrw	CSR_SATP, 0 # clear SATP early, as it appears to be coming up randomly
         /* set MSIE bit to receive IPIs */
@@ -96,11 +96,19 @@ _start:
         csrw    CSR_MSTATUS, a2
 
         jal	HSS_U54_Banner
-.spin_u54:
+
+.spin_forever:
         wfi
-        j	.spin_u54
+        j	.spin_forever
 
 .boot_e51:
+	/* Setup E51 trap handler */
+	la	a4, hss_e51_trap_handler
+	csrw	CSR_MTVEC, a4
+	/* Make sure that mtvec is updated */
+1:	csrr	a5, CSR_MTVEC
+	bne	a4, a5, 1b
+
         li	a2, MIP_MSIP
 	csrc	CSR_MSTATUS, a2
         j main
@@ -291,8 +299,16 @@ _reset_regs:
 
 	.section .entry, "ax", %progbits
 	.align 3
-	.globl hss_trap_handler
-hss_trap_vector:
+	.globl hss_e51_trap_handler
+hss_e51_trap_handler:
+        wfi
+        j	hss_e51_trap_handler
+
+
+	.section .entry, "ax", %progbits
+	.align 3
+	.globl hss_u54_trap_handler
+hss_u54_trap_handler:
 	sd 	a0, 10*REGBYTES(sp)
 	sd 	a1, 11*REGBYTES(sp)
 	csrr 	a1, CSR_MCAUSE
