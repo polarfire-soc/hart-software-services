@@ -94,11 +94,11 @@ OPT-y+=-Os -fno-strict-aliasing
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
 # 
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
-  $(warning Not enabling -flto as stack protector enabled)
+  $(info Not enabling -flto as stack protector enabled)
   CORE_CFLAGS+=-fstack-protector-strong 
   # CORE_CFLAGS+=-fstack-clash-protection  # currently does nothing on RISC-V
 else
-  $(warning NOTICE: enabling -flto (which means stack protection is disabled))
+  $(info NOTICE: enabling -flto (which means stack protection is disabled))
   OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
 endif
 
