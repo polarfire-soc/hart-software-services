@@ -18,6 +18,7 @@ static EnvmTrims     envmTrims;
 static EnvmReadTrims envmReadTrims;
 static uint8_t       envm_clock_freq = DEFAULT_CLOCK_FREQ ;
 static uint_fast8_t  envm_lock_prog_page = 1u; /* default value is lock active */
+static uint32_t envm_cr_orig;
 
 /**
 * envm_set_clock function which setups the clock and timing for the eNVM
@@ -426,6 +427,13 @@ void envm_clear_page_data(void)
 */
 void Enter_C_Bus_Mode(void)
 {
+    volatile uint32_t temp32envm;
+    uint32_t * temp32 = (uint32_t *)MSS_ENVM_DATA_SECTOR2;
+    envm_cr_orig = SYSREG->ENVM_CR;
+    SYSREG->ENVM_CR &= ~SYSENVMREG_ENVM_CR_READ_AHEAD;
+    temp32envm = *temp32;
+    temp32envm++;    /* Avoid unused variable warning*/
+
     /* Suppress Clock */
     SYSREG->ENVM_CR       |= SYSENVMREG_ENVM_CR_CLK_SUPPRESS;
     REG_FM_SYS_SW2FM_ADDR  = SW2FM_SEQ0;
@@ -1197,4 +1205,5 @@ void ClearPageLatch(void)
 void Exit_C_Bus_Mode(void)
 {
     REG_FM_SYS_SW2FM_ADDR = SW2FM_READ;
+    SYSREG->ENVM_CR = envm_cr_orig;
 }
