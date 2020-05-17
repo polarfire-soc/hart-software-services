@@ -97,7 +97,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
         case 0x7Fu: // delete
             if (result) {
                 result--;
-                mHSS_PUTS("\033[D \033[D");
+                MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[D \033[D", 7u);
                 myBuffer[result] = 0;
             }
             break;
@@ -105,7 +105,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
         case 0x08u: // backspace - ^H
             if (result) {
                 result--;
-                mHSS_PUTS(" \033[D");
+                MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)" \033[D", 4u);
                 myBuffer[result] = 0;
             }
             break;
@@ -124,6 +124,8 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
         case 0x04u: // ^D
             if (result == 0) {
+                result = -1;
+                myBuffer[0] = 0;
                 finished = true;
             }
             break;
@@ -160,13 +162,12 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
     HSSTicks_t start_time = 0u;
     HSSTicks_t last_sec_time = 0u;
 
-    const HSSTicks_t timeout_ticks = timeout_sec * TICKS_PER_SEC;
-
-    if (timeout_sec > 0) {
+    //if (timeout_sec > 0) {
         start_time = last_sec_time = HSS_GetTime();
-    }
+    //}
 
-    (void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky status
+    const HSSTicks_t timeout_ticks = timeout_sec * TICKS_PER_SEC;
+    //(void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky status
 
     while (!done) {
         size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);

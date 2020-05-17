@@ -103,23 +103,16 @@ static void l_print_result(uint8_t result, const char *msg)
 }
 
 //static uint8_t l_envm_params[256];
-static void l_e51_envm_init(void)
+static void l_e51_qspi_init(void)
 {
     static bool initialized = false;
 
     if (!initialized) {
-        //MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
-        //MSS_SYS_read_envm_parameter(l_envm_params, 0);
-        //volatile uint8_t resultTemp = envm_init(l_envm_params);
-        //l_print_result(resultTemp, "envm_init()");
-
-        //envm_set_clock(LIBERO_SETTING_MSS_COREPLEX_CPU_CLK / 10000000u);
-        //l_print_result(0, "envm_set_clock()");
+        MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
 
         MSS_QSPI_init();
         MSS_QSPI_enable();
         Flash_init(MSS_QSPI_NORMAL);
-        l_print_result(0, "Flash_init()");
         initialized = true;
     }
 }
@@ -132,7 +125,7 @@ void e51_ymodem_loop(void)
     uint32_t received = 0u;
     extern uint64_t __ddr_start;
     uint8_t *pBuffer = (uint8_t *)&__ddr_start;
-    uint32_t g_rx_size = 1024 * 128;
+    uint32_t g_rx_size = 1024 * 1024 * 10u;
 
     while (!done) {
         static const char menuText[] = CRLF "QSPI Utility" CRLF \
@@ -148,9 +141,10 @@ void e51_ymodem_loop(void)
             switch (rx_byte) {
             case '1':
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
-                l_e51_envm_init();
+                l_e51_qspi_init();
+                l_print_result(0, "Flash_init()");
                 Flash_die_erase();
-                l_print_result(0, CRLF " QSPI FLASH_chip_erase()" CRLF);
+                l_print_result(0, "Flash_die_erase()");
                 break;
 
             case '2':
@@ -164,7 +158,7 @@ void e51_ymodem_loop(void)
 
             case '3':
                 mHSS_PUTS(CRLF "Attempting to flash received data" CRLF);
-                l_e51_envm_init();
+                l_e51_qspi_init();
                 Flash_program((uint8_t *)pBuffer, 0, received);
                 break;
 

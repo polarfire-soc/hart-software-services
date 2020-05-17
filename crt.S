@@ -11,6 +11,8 @@
  * Copyright (c) 2019 Western Digital Corporation or its affiliates.
  */
 
+#include <config.h>
+
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_encoding.h>
 #include <sbi/sbi_platform.h>
@@ -22,6 +24,10 @@
 	.globl _start
 	.globl _start_warm
 _start:
+	li	ra, 0
+	call	_reset_regs
+
+.macro LOAD_GP
         /*
          * RISC-V Relaxing and the Global Pointer, GP
          *
@@ -34,13 +40,15 @@ _start:
          *
          * This process can be disabled by -Wl,--no-relax.
          */
+#ifdef CONFIG_LD_RELAX
 .option push
 .option norelax
         lla	gp, __global_pointer$
 .option pop
+#endif
+.endm
 
-	li	ra, 0
-	call	_reset_regs
+	LOAD_GP
 
 	/* Preload HART details
 	 * s7 -> HART Count
@@ -86,15 +94,14 @@ _start:
 
 .validate_hart_id:
 	/* HART ID should be within expected limit */
-	csrr	s6, CSR_MHARTID
         add     s7, s7, 1 /* allow for E51, which is not an application core */
-	bge	s6, s7, _start_hang
+	bge	a0, s7, _start_hang
 
 .find_my_scratch_space:
 	la	tp, scratches /* find the scratch space for this hart */
 	mul	a5, s7, s8
 	add	tp, tp, a5
-	mul	a5, s8, s6
+	mul	a5, s8, a0
 	sub	tp, tp, a5
 	li	a5, SBI_SCRATCH_SIZE
 	sub	tp, tp, a5
@@ -246,6 +253,8 @@ _trap_handler_all_mode:
 	REG_S	t5, SBI_TRAP_REGS_OFFSET(t5)(sp)
 	REG_S	t6, SBI_TRAP_REGS_OFFSET(t6)(sp)
 
+	LOAD_GP
+
 	/* Call C routine */
 	add	a0, sp, zero
 	csrr	a1, CSR_MSCRATCH
@@ -303,8 +312,8 @@ _reset_regs:
 	/* flush the instruction cache */
 	fence.i
 
-	/* Reset all registers except gp, ra, a0, a1 and a2 */
-	//li gp, 0
+	/* Reset all registers except ra, a0, a1 and a2 */
+	li gp, 0
 	li sp, 0
 	li tp, 0
 	li t0, 0

@@ -131,9 +131,6 @@ MSS_UART_init
 
     /* Disable SmartCard Mode */
     this_uart->hw_reg->MM2 &= ~EERR_MASK;
-
-    /* set default tx handler for automated TX using interrupt in USART mode */
-    this_uart->tx_handler = default_tx_handler;
 }
 
 /***************************************************************************//**

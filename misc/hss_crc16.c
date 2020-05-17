@@ -30,9 +30,10 @@ uint16_t CRC16_calculate(const uint8_t *input, size_t numBytes)
         input++;
 
         for (i = 0; i < 8; i++) {
-            result = result << 1;
             if (result & 0x8000u) {
-                result ^= 0x1021u;
+                result = (result << 1) ^ 0x1021u;
+            } else {
+               result = result << 1;
             }
         }
     }

@@ -381,7 +381,6 @@ void Flash_sector_erase(uint32_t addr)
 
 void Flash_die_erase(void)
 {
-
     uint8_t command_buf[5] __attribute__ ((aligned (4))) = {MICRON_WRITE_ENABLE};
     /*Both Write enable and Die erase can work in all modes*/
 
