@@ -45,6 +45,7 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.c \
 
 EXTRA_SRCS-$(CONFIG_PLATFORM_FU540) += \
 	baremetal/sysreg.c \
@@ -125,6 +126,10 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.o: ba
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
 

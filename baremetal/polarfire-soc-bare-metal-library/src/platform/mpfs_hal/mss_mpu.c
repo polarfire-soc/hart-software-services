@@ -350,7 +350,6 @@ uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
     uint64_t range;
     volatile uint64_t baddr=0ULL;
 
-
     /*size must be minimum 4k
       Size must be power of 2
       different masters have different number of regions*/
@@ -372,6 +371,7 @@ uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
 
         baddr = (MSS_MPU(master_port)->PMPCFG[pmp_region].mode);
         baddr = (MSS_MPU(master_port)->PMPCFG[pmp_region].pmp);
+        (void)baddr; // reference baddr to avoid compiler warning
 
         return ((uint8_t)0);
     }

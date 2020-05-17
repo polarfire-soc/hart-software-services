@@ -7,14 +7,14 @@ OUTPUT_ARCH( "riscv" )
 MEMORY
 {
   envm         (RX)  : ORIGIN = 0x20220000, LENGTH = 128K,
-  e51dtim      (RWX) : ORIGIN = 0x01000000, LENGTH = 8K,
+  dtim         (RWX) : ORIGIN = 0x01000000, LENGTH = 8K,
   switch_code  (RX)  : ORIGIN = 0x01001C00, LENGTH = 1K,
   e51itim      (RWX) : ORIGIN = 0x01800000, LENGTH = 8K,
   u54_1_itim   (RWX) : ORIGIN = 0x01808000, LENGTH = 28K,
   u54_2_itim   (RWX) : ORIGIN = 0x01810000, LENGTH = 28K,
   u54_3_itim   (RWX) : ORIGIN = 0x01818000, LENGTH = 28K,
   u54_4_itim   (RWX) : ORIGIN = 0x01820000, LENGTH = 28K,
-  l2lim        (RW)  : ORIGIN = 0x08000000, LENGTH = 128K,
+  l2lim        (RW)  : ORIGIN = 0x08000000, LENGTH = 2M,
   l2zerodevice (RWX) : ORIGIN = 0x0A000000, LENGTH = 512K,
   ddr          (RWX) : ORIGIN = 0x80000000, LENGTH = 4096M
 }
@@ -34,8 +34,8 @@ SECTIONS
   PROVIDE(__ddr_start   = ORIGIN(ddr));
   PROVIDE(__ddr_end     = ORIGIN(ddr) + LENGTH(ddr));
 
-  PROVIDE(__e51dtim_start = ORIGIN(e51dtim));
-  PROVIDE(__e51dtim_end   = ORIGIN(e51dtim) + LENGTH(e51dtim));
+  PROVIDE(__dtim_start = ORIGIN(dtim));
+  PROVIDE(__dtim_end   = ORIGIN(dtim) + LENGTH(dtim));
 
   PROVIDE(__e51itim_start = ORIGIN(e51itim));
   PROVIDE(__e51itim_end   = ORIGIN(e51itim) + LENGTH(e51itim));
@@ -58,15 +58,15 @@ SECTIONS
    * Code and RO data live in eNVM (FLASH)
    */
 
-  . = __envm_start;
+  . = __l2lim_start;
 
   PROVIDE(_hss_start = .);
   PROVIDE(.code_start = .);
-  .text.init         : ALIGN(8) { crt.o(.entry) }  > envm
-  .text.init         : ALIGN(8) { crt.o(.text) } > envm
-  .text              : ALIGN(8) { *(.text) } > envm
-  .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) } > envm
-  .rodata            : ALIGN(8) { *(.rodata) *(.rodata*) } > envm
+  .text.init         : ALIGN(8) { crt.o(.entry) }  > l2lim
+  .text.init         : ALIGN(8) { crt.o(.text) } > l2lim
+  .text              : ALIGN(8) { *(.text) } > l2lim
+  .note.gnu.build-id : ALIGN(8) { *(.note.gnu.build-id) } > l2lim
+  .rodata            : ALIGN(8) { *(.rodata) *(.rodata*) } > l2lim
   . =         ALIGN(8);  /* Pad to 8 bytes  */
 
   .gnu_build_id      : ALIGN(8) {
@@ -85,7 +85,7 @@ SECTIONS
     . = ALIGN(0x10);
     __l2_scratchpad_end = .;
     __l2_scratchpad_vma_end = .;
-  } >l2zerodevice AT>envm
+  } >l2zerodevice AT>l2lim
  
   /*  
    *   The .ram_code section will contain the code That is run from RAM.
@@ -104,13 +104,12 @@ SECTIONS
     *(.ram_coderodata*)
     . = ALIGN (4);
     __sc_end = .;
-  } >switch_code AT>envm
+  } >switch_code AT>l2lim
 
   /*
    * Initialized RW data lives in L2LIM, but is initialized from eNVM (FLASH)
    * at power up
    */
-  . = __l2lim_start;
   .data : ALIGN(4) 
   { 
     _rwdata_exec_start = .;
@@ -118,7 +117,7 @@ SECTIONS
     *(.sdata .sdata.* .gnu.linkonce.s.*)
     *(.data) . = ALIGN(4);
     _rwdata_exec_end = .;
-  } >l2lim AT >envm
+  } >l2lim 
 
   _rwdata_load = LOADADDR(.data);
 

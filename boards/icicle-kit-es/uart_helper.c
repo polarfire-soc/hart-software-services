@@ -166,7 +166,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
         start_time = last_sec_time = HSS_GetTime();
     }
 
-    (void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky statust
+    (void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky status
 
     while (!done) {
         size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);

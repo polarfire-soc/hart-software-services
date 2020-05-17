@@ -84,7 +84,7 @@
 bool HSS_Setup_PAD_IO(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-#if 0
+#if 1
     static const struct HSS_MSSIO_Bank_Config {
         uint32_t MSSIO_BANK4_CFG_CR;
         uint32_t MSSIO_BANK4_IO_CFG_0_CR;
@@ -413,14 +413,15 @@ bool HSS_Setup_Clocks(void)
            SOFT_RESET_CR_MMUART2_MASK |
            SOFT_RESET_CR_MMUART3_MASK |
            SOFT_RESET_CR_MMUART4_MASK |
-           //SOFT_RESET_CR_RTC_MASK |
+           SOFT_RESET_CR_RTC_MASK |
            SOFT_RESET_CR_QSPI_MASK |
-           //SOFT_RESET_CR_GPIO2_MASK |
+           SOFT_RESET_CR_GPIO2_MASK |
            SOFT_RESET_CR_DDRC_MASK |
            SOFT_RESET_CR_ATHENA_MASK |
            SOFT_RESET_CR_SGMII_MASK );
 
-    //SYSREG->SOFT_RESET_CR = 0xFFFFFFFFu;
+    //SYSREG->SOFT_RESET_CR = 0x3FFFFFFEu; // everything but ENVM
+    SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
 #endif

@@ -23,6 +23,7 @@
 	.globl _start_warm
 _start:
 	li	ra, 0
+	li	sp, 2
 	call	_reset_regs
 
 	/* Preload HART details
@@ -33,19 +34,19 @@ _start:
 	lwu	s7, SBI_PLATFORM_HART_COUNT_OFFSET(a4)
 	lwu	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
 
-        lla gp, _gp
-        lla tp, _end + 63
-        addi tp, tp, 63
-        and tp, tp, -64
-        csrr a0, CSR_MHARTID
-        li a1, 1
+        lla	gp, _gp
+        lla	tp, _end + 63
+        and	tp, tp, -64
+        csrr	a0, CSR_MHARTID
+        li	a1, 1
+
 	/* Setup stack */
-#define STKSHIFT 13
-        slli a2, a0, STKSHIFT
-        add tp, tp, a2
-        add sp, a0, 1
-        slli sp, sp, STKSHIFT
-        add sp, sp, tp
+#define STKSHIFT 14
+        slli	a2, a0, STKSHIFT
+        add	tp, tp, a2
+        li	sp, 1
+        slli	sp, sp, STKSHIFT
+        add	sp, sp, tp
 
 	/* Setup scratch space for all the HARTs*/
 	la	tp, scratches
@@ -79,15 +80,12 @@ _start:
 	/* update the mscratch */
 	csrw	CSR_MSCRATCH, tp
 
-        csrr a0, CSR_MHARTID
+        csrr	a0, CSR_MHARTID
         beqz	a0, .boot_e51
 
 	/* Setup U54 trap handler */
 	la	a4, hss_u54_trap_handler
-	csrw	CSR_MTVEC, a4
-	/* Make sure that mtvec is updated */
-1:	csrr	a5, CSR_MTVEC
-	bne	a4, a5, 1b
+        call	.set_trap_handler
 
 	csrw	CSR_SATP, 0 # clear SATP early, as it appears to be coming up randomly
         /* set MSIE bit to receive IPIs */
@@ -104,14 +102,30 @@ _start:
 .boot_e51:
 	/* Setup E51 trap handler */
 	la	a4, hss_e51_trap_handler
-	csrw	CSR_MTVEC, a4
-	/* Make sure that mtvec is updated */
-1:	csrr	a5, CSR_MTVEC
-	bne	a4, a5, 1b
+        call	.set_trap_handler
+        /*
+         * Clear the E51 DTIM to prevent anu memory errors on initial access to the cache
+         */
+        la	a4, __dtim_start
+        la	a5, __dtim_end
+1:
+	REG_S	x0, 0(a4)
+	add	a4, a4, __SIZEOF_POINTER__
+	blt	a4, a5, 1b
 
         li	a2, MIP_MSIP
 	csrc	CSR_MSTATUS, a2
         j main
+
+.set_trap_handler:
+        csrw	CSR_MTVEC, a4
+	/*
+         * Make sure that mtvec is updated
+         *
+         */
+	csrr    a5, CSR_MTVEC
+	bne	a4, a5, .set_trap_handler
+	ret
 
 	.section .entry, "ax", %progbits
 	.align 3
@@ -309,8 +323,8 @@ hss_e51_trap_handler:
 	.align 3
 	.globl hss_u54_trap_handler
 hss_u54_trap_handler:
-	sd 	a0, 10*REGBYTES(sp)
-	sd 	a1, 11*REGBYTES(sp)
+	REG_S 	a0, 10*REGBYTES(sp)
+	REG_S 	a1, 11*REGBYTES(sp)
 	csrr 	a1, CSR_MCAUSE
 
 	slli 	a1, a1, 1         	/* discard MSB and decode remainder as an interrupt */
@@ -321,13 +335,13 @@ hss_u54_trap_handler:
 	csrc 	CSR_MIP, MIP_SSIP
 	csrw 	CSR_MIP, 0
 
-	ld	a0, 10*REGBYTES(sp)
-	ld	a1, 11*REGBYTES(sp)
+	REG_L	a0, 10*REGBYTES(sp)
+	REG_L	a1, 11*REGBYTES(sp)
 	fence
 	mret
 
 
 .delegate_trap_to_opensbi:
-	ld a0, 10*REGBYTES(sp)
-	ld a1, 11*REGBYTES(sp)
+	REG_L a0, 10*REGBYTES(sp)
+	REG_L a1, 11*REGBYTES(sp)
 	j _trap_handler
