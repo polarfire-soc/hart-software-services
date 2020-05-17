@@ -89,6 +89,11 @@ CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
 OPT-y+=-Os -fno-strict-aliasing
 
+ifndef CONFIG_LD_RELAX
+$(error Foo)
+OPT-y+=-Wl,--no-relax
+endif
+
 #
 # for some reason, -flto isn't playing nicely currently with -fstack-protector-strong...
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation

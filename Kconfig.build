@@ -35,6 +35,22 @@ config CC_DUMP_STACKSIZE
 
 		If you don't know what to do here, say N.
 
+config LD_RELAX
+	bool "Use RISC-V Relaxing and the Global Pointer, GP"
+	default n
+        help
+		The GP (Global Pointer) register optimises memory accesses within a single 4KB region.
+		This size is 4K because RISC-V immediate values ar 12-bit signed values (+/- 2048)
+		
+		The linker uses the __global_pointer$ symbol definition to compare memory addresses
+		and, if within range, it replaces absolute/pc-relative addressing with gp-relative
+		addressing.
+       		
+		This can lead to smaller code size, but it does impose requirements on subsequent
+		firmwares that they save/restore the GP.
+		  
+		If you don't know what to do here, say N.
+
 config USE_MAKEDEP
 	bool "Enable make dependencies in build system"
 	default y
