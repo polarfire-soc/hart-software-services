@@ -29,8 +29,12 @@ __attribute__((weak)) void __stack_chk_guard_setup(void)
 
 __attribute__((weak)) void __stack_chk_fail(void)
 {
+#if 0
     mHSS_DEBUG_PUTS("__stack_chk_fail(): stack corruption detected!!" CRLF);
     while (1); // stack has been corrupted
+#else
+    asm("ebreak");
+#endif
 }
 
 #ifdef __linux

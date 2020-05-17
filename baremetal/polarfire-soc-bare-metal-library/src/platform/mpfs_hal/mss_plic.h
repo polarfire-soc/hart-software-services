@@ -702,7 +702,7 @@ typedef struct
  */
 #define PLIC_BASE_ADDR 0x0C000000UL
 
-#define PLIC    ((PLIC_Type *)PLIC_BASE_ADDR)
+#define PLIC    ((PLIC_Type * const)PLIC_BASE_ADDR)
 
 /*-------------------------------------------------------------------------*//**
  * The function PLIC_init() initializes the PLIC controller and enables the

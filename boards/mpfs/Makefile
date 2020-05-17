@@ -33,7 +33,7 @@ $(info Board MPFS selected)
 # Confusingly, the MPFS board is actually the SiFive FU540 platform
 #
 CONFIG_PLATFORM_FU540=y
-PLATFORM_CFLAGS += -DCONFIG_PLATFORM_FU540=1
+PLATFORM_CFLAGS += -DCONFIG_PLATFORM_FU540=1 -DSIFIVE_HIFIVE_UNLEASHED
 
 INCLUDES += \
 	-Iboards/mpfs/config/hardware \

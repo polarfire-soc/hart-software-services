@@ -36,6 +36,7 @@
 #include "hss_board_init.h"
 
 const struct InitFunction /*@null@*/ boardInitFunctions[] = {
+    { "HSS_Init_RWDATA_BSS",           HSS_Init_RWDATA_BSS,           false },
     { "HSS_Setup_Clocks",              HSS_Setup_Clocks,              false },
     { "HSS_Setup_PAD_IO",              HSS_Setup_PAD_IO,              false },
     { "HSS_ZeroTIMs",                  HSS_ZeroTIMs,                  false },

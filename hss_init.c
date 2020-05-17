@@ -175,41 +175,19 @@ bool HSS_ZeroTIMs(void)
     return true;
 }
 
-bool HSS_Init_Setup_RWDATA_And_BSS(void)
+#include "system_startup.h"
+bool HSS_Init_RWDATA_BSS(void)
 {
     //UART not setup at this point
     //mHSS_DEBUG_PRINTF("Setting up RW Data and BSS sections" CRLF);
 
 #ifdef CONFIG_PLATFORM_MPFS
-    // Copy RWDATA
-    {
-        extern uint32_t _rwdata_load;
-        extern uint32_t _rwdata_exec_start;
-        extern uint32_t _rwdata_exec_end;
-        uint32_t *pSrc = &_rwdata_load, *pDst = &_rwdata_exec_start;
-        size_t len = (size_t)(&_rwdata_exec_end - &_rwdata_exec_start);
-
-        assert(len);
-
-        while (len--) {
-            *pDst++ = *pSrc++;
-        }
-    }
-
-    // Setup BSS
-    {
-        extern char _bss_start;
-        extern char _bss_end;
-        size_t len = (size_t)(&_bss_end - &_bss_start);
-
-        assert(len);
-
-        memset(&_bss_start, 0, len);
-    }
+    init_memory();
 #endif
 
     return true;
 }
+
 
 #ifdef CONFIG_USE_GNU_BUILD_ID
 void HSS_PrintBuildId(void);
@@ -240,7 +218,8 @@ bool HSS_E51_Banner(void)
 {
     mHSS_FANCY_STATUS_TEXT;
 
-    mHSS_FANCY_PRINTF("PolarFire SoC Hart Software Services (HSS) - Version %d.%d.%d (OpenSBI %d.%d)" CRLF, HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
+    mHSS_FANCY_PRINTF("PolarFire SoC Hart Software Services (HSS) - Version %d.%d.%d (OpenSBI %d.%d)" CRLF, 
+        HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
     mHSS_FANCY_PRINTF("(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF);
 
 #ifdef CONFIG_USE_GNU_BUILD_ID

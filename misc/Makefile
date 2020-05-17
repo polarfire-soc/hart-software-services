@@ -78,6 +78,10 @@ misc/hss_memtest.o: misc/hss_memtest.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
+misc/stack_guard.o: misc/stack_guard.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+
 ###################################################################################
 #
 # Optional OPENSBI support

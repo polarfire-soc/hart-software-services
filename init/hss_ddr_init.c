@@ -41,7 +41,7 @@
 
 void HSS_DDR_Train(void)
 {
-    mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
+    //mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
 
 #ifdef CONFIG_PLATFORM_MPFS
     assert(mss_nwc_init() == 0);
@@ -53,11 +53,11 @@ void HSS_DDR_Train(void)
  */
 bool HSS_DDRInit(void)
 {
-    mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
+    //mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
     HSS_DDR_Train();
 
 #ifdef CONFIG_MEMTEST
-    mHSS_DEBUG_PRINTF("Memory Testing DDR..." CRLF);
+    //mHSS_DEBUG_PRINTF("Memory Testing DDR..." CRLF);
     HSS_MemTestDDRFast();
 #endif
 

@@ -22,54 +22,76 @@
 	.globl _start
 	.globl _start_warm
 _start:
+        /*
+         * RISC-V Relaxing and the Global Pointer, GP
+         *
+         * The gp (Global Pointer) register optimises memory accesses within a single 4KB region.
+         * This size is 4K because RISC-V immediate values ar 12-bit signed values (+/- 2048)
+         *
+         * The linker uses the __global_pointer$ symbol definition to compare memory addresses
+         * and, if within range, it replaces absolute/pc-relative addressing with gp-relative
+         * addressing.
+         *
+         * This process can be disabled by -Wl,--no-relax.
+         */
+.option push
+.option norelax
+        lla	gp, __global_pointer$
+.option pop
+
 	li	ra, 0
-	li	sp, 2
 	call	_reset_regs
 
 	/* Preload HART details
 	 * s7 -> HART Count
 	 * s8 -> HART Stack Size
+         * a0 -> current HART ID
 	 */
-	la	a4, platform
+        la	a4, platform
 	lwu	s7, SBI_PLATFORM_HART_COUNT_OFFSET(a4)
-	lwu	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
-
-        lla	gp, _gp
-        lla	tp, _end + 63
-        and	tp, tp, -64
+	//lwu	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
+	lla	s8, STACK_SIZE_PER_HART
         csrr	a0, CSR_MHARTID
+
+        lla	tp, __stack_bottom + 63
+        and	tp, tp, -64
         li	a1, 1
 
-	/* Setup stack */
-#define STKSHIFT 14
-        slli	a2, a0, STKSHIFT
-        add	tp, tp, a2
-        li	sp, 1
-        slli	sp, sp, STKSHIFT
-        add	sp, sp, tp
+.setup_stack:
+//#define STKSHIFT 14
+        //slli	a2, a0, STKSHIFT
+        //add	tp, tp, a2
+        //li	sp, 1
+        //slli	sp, sp, STKSHIFT
+        //add	sp, sp, tp
 
+	mul	a2, s8, a0
+	add	tp, tp, a2
+        la	sp, STACK_SIZE_PER_HART
+	add	sp, sp, tp
+
+.setup_scratches:
 	/* Setup scratch space for all the HARTs*/
 	la	tp, scratches
 	mul	a5, s7, s8
 	add	tp, tp, a5
-	/* Keep a copy of tp */
-	add	t3, tp, zero
-	/* Counter */
-	li	t2, 1
-	/* hartid 0 is mandated by ISA */
-	li	t1, 0
+	add	t3, tp, zero /* Keep a copy of tp */
+	li	t2, 1 /* Counter */
+	li	t1, 0 /* hartid 0 is mandated by ISA */
 
+.disable_and_clear_interrupts:
 	/* Disable and clear all interrupts */
 	csrw	CSR_MIE, zero
 	csrw	CSR_MIP, zero
 
+.validate_hart_id:
 	/* HART ID should be within expected limit */
 	csrr	s6, CSR_MHARTID
         add     s7, s7, 1 /* allow for E51, which is not an application core */
 	bge	s6, s7, _start_hang
 
-	/* find the scratch space for this hart */
-	la	tp, scratches
+.find_my_scratch_space:
+	la	tp, scratches /* find the scratch space for this hart */
 	mul	a5, s7, s8
 	add	tp, tp, a5
 	mul	a5, s8, s6
@@ -77,19 +99,19 @@ _start:
 	li	a5, SBI_SCRATCH_SIZE
 	sub	tp, tp, a5
 
-	/* update the mscratch */
-	csrw	CSR_MSCRATCH, tp
+	csrw	CSR_MSCRATCH, tp /* update the mscratch */
 
         csrr	a0, CSR_MHARTID
         beqz	a0, .boot_e51
 
-	/* Setup U54 trap handler */
+.setup_u54_trap_handler:
 	la	a4, hss_u54_trap_handler
         call	.set_trap_handler
 
-	csrw	CSR_SATP, 0 # clear SATP early, as it appears to be coming up randomly
-        /* set MSIE bit to receive IPIs */
-        li	a2, MIP_MSIP
+	csrw	CSR_SATP, 0 # clear SATP early on U54s, as it appears to be coming up randomly
+
+.enable_interrupts:
+        li	a2, MIP_MSIP /* set MSIE bit to receive IPIs */
         csrw	CSR_MIE, a2
         csrw    CSR_MSTATUS, a2
 
@@ -103,8 +125,10 @@ _start:
 	/* Setup E51 trap handler */
 	la	a4, hss_e51_trap_handler
         call	.set_trap_handler
+
         /*
-         * Clear the E51 DTIM to prevent anu memory errors on initial access to the cache
+         * Clear the E51 DTIM to prevent any memory errors on initial access 
+         * to the cache
          */
         la	a4, __dtim_start
         la	a5, __dtim_end
@@ -113,7 +137,7 @@ _start:
 	add	a4, a4, __SIZEOF_POINTER__
 	blt	a4, a5, 1b
 
-        li	a2, MIP_MSIP
+        li	a2, MIP_MSIP 
 	csrc	CSR_MSTATUS, a2
         j main
 
@@ -279,9 +303,9 @@ _reset_regs:
 	/* flush the instruction cache */
 	fence.i
 
-	/* Reset all registers except ra, a0, a1 and a2 */
+	/* Reset all registers except gp, ra, a0, a1 and a2 */
+	//li gp, 0
 	li sp, 0
-	li gp, 0
 	li tp, 0
 	li t0, 0
 	li t1, 0

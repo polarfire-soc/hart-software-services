@@ -37,7 +37,7 @@ void HSS_Init(void);
 
 bool HSS_ZeroTIMs(void);
 bool HSS_ZeroDDR(void);
-bool HSS_Init_Setup_RWDATA_And_BSS(void);
+bool HSS_Init_RWDATA_BSS(void);
 bool HSS_WakeSleepingHarts(void);
 bool HSS_E51_Banner(void);
 

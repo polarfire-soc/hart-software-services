@@ -84,84 +84,7 @@
 bool HSS_Setup_PAD_IO(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-#if 1
-    static const struct HSS_MSSIO_Bank_Config {
-        uint32_t MSSIO_BANK4_CFG_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_0_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_1_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_2_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_3_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_4_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_5_CR;
-        uint32_t MSSIO_BANK4_IO_CFG_6_CR;
-        uint32_t MSSIO_BANK2_CFG_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_0_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_1_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_2_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_3_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_4_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_5_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_6_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_7_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_8_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_9_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_10_CR;
-        uint32_t MSSIO_BANK2_IO_CFG_11_CR;
-    } hss_MSSIO_Bank_Config = {
-        0x00000FFFu,  // mssio_bank4_cfg_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_0_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_1_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_2_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_3_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_4_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_5_cr;
-        0x00000000u,  // mssio_bank4_io_cfg_6_cr;
-        0x00000FFFu,  // mssio_bank2_cfg_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_0_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_1_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_2_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_3_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_4_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_5_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_6_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_7_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_8_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_9_cr;
-        0x00000000u,  // mssio_bank2_io_cfg_10_cr;
-        0x00000000u   // mssio_bank2_io_cfg_11_cr;
-    };
-
-    /* Configure MSS IO banks */
-    memcpy((void *)(&(SYSREG->MSSIO_BANK4_CFG_CR)), 
-        &(hss_MSSIO_Bank_Config.MSSIO_BANK4_CFG_CR), sizeof(hss_MSSIO_Bank_Config));
-
-    /**
-     * \brief IOMUX configuration
-     */
-    static const struct HSS_IOMUX_Config {
-        uint32_t IOMUX0_CR;
-        uint32_t IOMUX1_CR;
-        uint32_t IOMUX2_CR;
-        uint32_t IOMUX3_CR;
-        uint32_t IOMUX4_CR;
-        uint32_t IOMUX5_CR;
-        uint32_t IOMUX6_CR;
-    } hss_IOMUX_Config = {
-        0xFFFFFE7Fu, // iomux0_cr
-        0x05500000u, // iomux1_cr
-        0xFFFFFFFFu, // iomux2_cr
-        0xFFFFFFFFu, // iomux3_cr
-        0xFFFFFFFFu, // iomux4_cr
-        0xFFFFFFFFu, // iomux5_cr
-        0x00000000u  // iomux6_cr
-    };
-
-    /* Configure IO muxes */
-    memcpy((void *)(&(SYSREG->IOMUX0_CR)), &(hss_IOMUX_Config.IOMUX0_CR), 
-        sizeof(hss_IOMUX_Config));
-#else
     (void)mssio_setup();
-#endif
 #endif
 
     return true;
@@ -195,28 +118,28 @@ bool HSS_Setup_PLIC(void)
     /* default all priorities so effectively disabled */
     for(inc = 0U; inc < PLIC_NUM_SOURCES; ++inc)
     {   
-        /* priority must be greater than threshold to be enabled, so setting to
-         * 7 disables */
-        PLIC->SOURCE_PRIORITY[inc]  = 0U; 
+        PLIC->SOURCE_PRIORITY[inc]  = 0u; 
     }   
 
     for(inc = 0U; inc < NUM_CLAIM_REGS; ++inc)
     {   
+        /* priority must be greater than threshold to be enabled, so setting to
+         * 7 disables */
         PLIC->TARGET[inc].PRIORITY_THRESHOLD  = 7U; 
     }   
 
     /* and clear all the enables */
     for(inc = 0UL; inc < PLIC_SET_UP_REGISTERS; inc++)
     {   
-        PLIC->HART0_MMODE_ENA[inc] = 0U; 
-        PLIC->HART1_MMODE_ENA[inc] = 0U; 
-        PLIC->HART1_SMODE_ENA[inc] = 0U; 
-        PLIC->HART2_MMODE_ENA[inc] = 0U; 
-        PLIC->HART2_SMODE_ENA[inc] = 0U; 
-        PLIC->HART3_MMODE_ENA[inc] = 0U; 
-        PLIC->HART3_SMODE_ENA[inc] = 0U; 
-        PLIC->HART4_MMODE_ENA[inc] = 0U; 
-        PLIC->HART4_SMODE_ENA[inc] = 0U; 
+        PLIC->HART0_MMODE_ENA[inc] = 0u; 
+        PLIC->HART1_MMODE_ENA[inc] = 0u; 
+        PLIC->HART1_SMODE_ENA[inc] = 0u; 
+        PLIC->HART2_MMODE_ENA[inc] = 0u; 
+        PLIC->HART2_SMODE_ENA[inc] = 0u; 
+        PLIC->HART3_MMODE_ENA[inc] = 0u; 
+        PLIC->HART3_SMODE_ENA[inc] = 0u; 
+        PLIC->HART4_MMODE_ENA[inc] = 0u; 
+        PLIC->HART4_SMODE_ENA[inc] = 0u; 
     }   
 
     /* clear any pending interrupts- in case already there */
@@ -387,7 +310,9 @@ bool HSS_Setup_PMP(void)
 bool HSS_Setup_L2Cache(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
+#if 0
     config_l2_cache();
+#endif
 #endif
 
     return true;
@@ -420,10 +345,9 @@ bool HSS_Setup_Clocks(void)
            SOFT_RESET_CR_ATHENA_MASK |
            SOFT_RESET_CR_SGMII_MASK );
 
-    //SYSREG->SOFT_RESET_CR = 0x3FFFFFFEu; // everything but ENVM
+    SYSREG->SOFT_RESET_CR = 0x3FFFFFFEu; // everything but ENVM
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
-    SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
 #endif
 
     return true;

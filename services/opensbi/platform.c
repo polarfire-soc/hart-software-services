@@ -42,6 +42,8 @@
 
 #define MPFS_HARITD_DISABLED            ~(MPFS_ENABLED_HART_MASK)
 
+extern unsigned long STACK_SIZE_PER_HART;
+
 static int mpfs_final_init(bool cold_boot)
 {
     //void *fdt;
@@ -202,7 +204,7 @@ const struct sbi_platform platform = {
     .features = SBI_PLATFORM_DEFAULT_FEATURES & (~SBI_PLATFORM_HAS_PMP), // already have PMPs setup
     .hart_count = MPFS_HART_COUNT,
     .disabled_hart_mask = MPFS_HARITD_DISABLED,
-    .hart_stack_size = MPFS_HART_STACK_SIZE,
+    .hart_stack_size = MPFS_HART_STACK_SIZE, //TODO: revisit
     .platform_ops_addr = (unsigned long)&platform_ops,
     .firmware_context = 0
 };

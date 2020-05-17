@@ -236,7 +236,6 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 #include "hss_board_init.h"
 
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
-    { "HSS_Init_Setup_RWDATA_And_BSS", HSS_Init_Setup_RWDATA_And_BSS, false },
     { "HSS_BoardInit",                 HSS_BoardInit,                 false },
     { "HSS_UARTInit",                  HSS_UARTInit,                  false },
 #ifdef CONFIG_OPENSBI
