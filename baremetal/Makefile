@@ -133,25 +133,3 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.o: bare
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
 
-
-################################################################################################
-
-#
-# Extra hardware dependency rules for YMODEM
-#
-INCLUDES += \
-	-I./baremetal/ \
-
-ifdef CONFIG_SERVICE_YMODEM
-SRCS-$(CONFIG_PLATFORM_MPFS) += \
-	baremetal/drivers/micron_mt25q/micron_mt25q.c \
-	baremetal/drivers/mss_envm/mss_envm.c 
-endif
-
-baremetal/drivers/micron_mt25q/micron_mt25q.o: baremetal/drivers/micron_mt25q/micron_mt25q.c config.h 
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
-
-baremetal/drivers/mss_envm/mss_envm.o: baremetal/drivers/mss_envm/mss_envm.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 

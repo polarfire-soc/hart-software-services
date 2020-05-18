@@ -60,6 +60,7 @@ uint8_t Flash_program
 
 void Flash_sector_erase(uint32_t addr);
 void Flash_die_erase(void);
+#define Flash_erase Flash_die_erase
 
 void Flash_read_flagstatusreg
 (

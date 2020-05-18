@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -22,12 +22,9 @@
  * IN THE SOFTWARE.
  *
  * 
- * PolarFire SoC (MPFS) microprocessor subsystem QSPI bare metal software
+ * PolarFire SoC (MPFS) Microprocessor SubSystem QSPI bare metal software
  * driver public API.
  *
- 
- * SVN $Revision$
- * SVN $Date$
  */
 /*=========================================================================*//**
   @mainpage PolarFire SoC MSS QSPI Bare Metal Driver
@@ -35,7 +32,7 @@
   ==============================================================================
   Introduction
   ==============================================================================
-  The PolarFire SoC Microprocessor subsystem (MSS) includes a QSPI controller
+  The PolarFire SoC Microprocessor SubSystem (MSS) includes a QSPI controller
   for fast SPI transfers. The MSS QSPI is designed as a SPI master to work 
   specifically with the (Q)SPI memory devices. The PolarFire SoC MSS QSPI driver 
   provides a set of functions for controlling the MSS QSPI as part of a bare 

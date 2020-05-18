@@ -1,13 +1,11 @@
 /***************************************************************************//**
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * PolarFire SoC (MPFS) microprocessor subsystem QSPI bare metal software driver
+ * PolarFire SoC (MPFS) Microprocessor SubSystem QSPI bare metal software driver
  * implementation.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 
 #include "mss_qspi.h"
@@ -283,6 +281,8 @@ void MSS_QSPI_set_status_handler
 static void qspi_isr(void)
 {
     uint32_t idx;
+    //static uint32_t empty = 0u; // unused
+    //static uint32_t tx_fifo_full = 0u; // unused
     uint32_t status;
 
     status = QSPI->STATUS;

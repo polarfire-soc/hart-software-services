@@ -50,7 +50,8 @@
 #include "drivers/mss_envm/mss_envm.h"
 #include "drivers/mss_sys_services/mss_sys_services.h"
 #include "mss_sysreg.h"
-#include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
+//#include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
+#include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
 
 
 int ee_vsprintf(char *buf, const char *fmt, va_list args);
@@ -143,8 +144,8 @@ void e51_ymodem_loop(void)
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
                 l_e51_qspi_init();
                 l_print_result(0, "Flash_init()");
-                Flash_die_erase();
-                l_print_result(0, "Flash_die_erase()");
+                Flash_erase();
+                l_print_result(0, "Flash_erase()");
                 break;
 
             case '2':
