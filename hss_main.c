@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     HSS_Init();
 
     if (current_hartid() != 0) {
-	sbi_hart_hang();
+        sbi_hart_hang();
     }
 
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
