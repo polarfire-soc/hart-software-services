@@ -83,6 +83,16 @@ config SERVICE_QSPI_COPY_TO_DDR
 
 		If you don't know what to do here, say Y.
 
+config SERVICE_QSPI_USE_XIP
+	bool "XIP Mode"
+	depends on SERVICE_QSPI
+	default n
+	help
+                If CONFIG_SERVICE_QSPI is enabled, this feature enables Execute in Place mode
+                as a means of speeding up booting.
+
+		If you don't know what to do here, say N for now.
+
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for BOOT to DDR copy"
 	default 0xB0000000

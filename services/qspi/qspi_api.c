@@ -30,6 +30,7 @@
 
 bool HSS_QSPIInit(void)
 {
+#ifdef CONFIG_SERVICE_QSPI_USE_XIP
     static mss_qspi_config_t qspiConfig =
     { 
         .xip = 1,
@@ -48,6 +49,25 @@ bool HSS_QSPIInit(void)
 
     mHSS_DEBUG_PRINTF("Configuring" CRLF);
     MSS_QSPI_configure(&qspiConfig);
+#else
+    void e51_qspi_init(void); /* TODO: refactor */
+    e51_qspi_init();
+#endif
 
     return true;
+}
+
+void *HSS_QSPI_MemCopy(void *pDest, void *pSrc, size_t count)
+{
+#ifdef CONFIG_SERVICE_QSPI_USE_XIP
+    memcpy_via_pdma(pDest, pSrc, count);
+#else
+    /* temporary code to bring up Icicle board */
+    void Flash_read(uint8_t* buf, uint32_t read_addr, uint32_t read_len);
+
+    uint32_t read_addr = (uint32_t)((uint8_t *)pSrc - (uint8_t *)QSPI_BASE);
+    Flash_read((uint8_t *)pDest, read_addr, (uint32_t) count);
+#endif
+
+    return pDest;
 }

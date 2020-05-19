@@ -104,14 +104,13 @@ static void l_print_result(uint8_t result, const char *msg)
 }
 
 //static uint8_t l_envm_params[256];
-static void l_e51_qspi_init(void)
+void e51_qspi_init(void)
 {
     static bool initialized = false;
 
     if (!initialized) {
         MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
 
-        MSS_QSPI_init();
         MSS_QSPI_enable();
         Flash_init(MSS_QSPI_NORMAL);
         initialized = true;
@@ -142,7 +141,7 @@ void e51_ymodem_loop(void)
             switch (rx_byte) {
             case '1':
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
-                l_e51_qspi_init();
+                e51_qspi_init();
                 l_print_result(0, "Flash_init()");
                 Flash_erase();
                 l_print_result(0, "Flash_erase()");
@@ -159,7 +158,7 @@ void e51_ymodem_loop(void)
 
             case '3':
                 mHSS_PUTS(CRLF "Attempting to flash received data" CRLF);
-                l_e51_qspi_init();
+                e51_qspi_init();
                 Flash_program((uint8_t *)pBuffer, 0, received);
                 break;
 

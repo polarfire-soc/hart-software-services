@@ -25,8 +25,6 @@
 #endif
 
 #ifdef CONFIG_SERVICE_QSPI
-//#  define read_csr csr_read
-//#  define set_csr csr_write
 #  include "encoding.h"
 #  include "qspi_service.h"
 #  include <mss_qspi.h>
@@ -73,18 +71,14 @@ bool HSS_BootInit(void)
 #ifdef CONFIG_SERVICE_BOOT
 #  ifdef CONFIG_SERVICE_QSPI
     struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)QSPI_BASE;
-#  else
+#  elif defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     // assuming that boot image is statically linked with the HSS ELF
-    // Note: this method is deprecated and will be disappearing soon!
     //
-#      if defined(CONFIG_COMPRESSION)
-    extern const char _binary_bootImageBlob_bin_lz77_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_binary_payload_bin_lz77_start;
-    mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
-#      else
     extern const char _payload_start;
     struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_payload_start;
-#      endif
+    //mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
+#  else
+#      error Unable to determine boot mechanism
 #  endif
 
     if (!pBootImage) {
@@ -131,7 +125,7 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) from 0x%X to 0x%X\r", 
                 throbber[state], chunkSize, bytesLeft, (void *)pSrc, pDest);
 
-    	    memcpy_via_pdma(pDest, pSrc, chunkSize);
+    	    HSS_QSPI_MemCopy(pDest, pSrc, chunkSize);
 
             pSrc += chunkSize;
             pDest += chunkSize;
