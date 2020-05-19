@@ -41,17 +41,24 @@ bool HSS_QSPIInit(void)
         .sample = 0
     };
 
-    mHSS_DEBUG_PRINTF("Initializing QSPI" CRLF);
+    mHSS_FANCY_PRINTF("Initializing QSPI" CRLF);
     MSS_QSPI_init();
 
-    mHSS_DEBUG_PRINTF("Enabling QSPI" CRLF);
+    mHSS_FANCY_PRINTF("Enabling QSPI" CRLF);
     MSS_QSPI_enable();
 
-    mHSS_DEBUG_PRINTF("Configuring" CRLF);
+    mHSS_FANCY_PRINTF("Configuring" CRLF);
     MSS_QSPI_configure(&qspiConfig);
 #else
+    /* temporary code for Icicle board bringup */
     void e51_qspi_init(void); /* TODO: refactor */
     e51_qspi_init();
+
+    /* read and output Flash ID as a sanity test */
+    void Flash_readid(uint8_t *buf);
+    uint8_t rd_buf[10] __attribute__ ((aligned(4)));
+    Flash_readid(rd_buf);
+    mHSS_FANCY_PRINTF("JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
 #endif
 
     return true;
