@@ -105,36 +105,46 @@ bool HSS_BootInit(void)
         // set pDestImageInDDR to an appropriate location in DDR
         void *pDestImageInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
-        // TODO: add validation routine to quickly validate boot image header 
-        // before a needless copy is performed
-        //if (pBootImage->magic != HSS_BOOT_MAGIC) { // causes problems w. RENODE
+#ifndef CONFIG_SERVICE_QSPI_USE_XIP
+        // if we are not using XIP, then we need to do an initial copy of the
+        // boot header into our structure, for subsequent use
+        struct HSS_BootImage bootImage;
+    	HSS_QSPI_MemCopy(&bootImage, (void *)QSPI_BASE, sizeof(struct HSS_BootImage));
+        pBootImage = &bootImage;
+#endif
 
-        mHSS_DEBUG_PRINTF("Copying %lu bytes from 0x%X to 0x%X" CRLF, 
-            pBootImage->bootImageLength, QSPI_BASE, pDestImageInDDR);
+        // quickly validate boot image header before a needless copy is performed
+        if (pBootImage->magic == mHSS_BOOT_MAGIC) { // causes problems w. RENODE
+            mHSS_DEBUG_PRINTF("Copying %lu bytes from 0x%X to 0x%X" CRLF, 
+                pBootImage->bootImageLength, QSPI_BASE, pDestImageInDDR);
 
-        const size_t maxChunkSize = 4096u * 256u;
-        size_t bytesLeft = pBootImage->bootImageLength;
-        size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
-        char *pSrc = (void *)QSPI_BASE;
-        char *pDest = pDestImageInDDR;
+            const size_t maxChunkSize = 4096u * 256u;
+            size_t bytesLeft = pBootImage->bootImageLength;
+            size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
+            char *pSrc = (void *)QSPI_BASE;
+            char *pDest = pDestImageInDDR;
 
-        const char throbber[] = { '|', '/', '-', '\\' };
-        unsigned int state = 0u;
-        while (bytesLeft) {
-            state++; state %= 4;
-            mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) from 0x%X to 0x%X\r", 
-                throbber[state], chunkSize, bytesLeft, (void *)pSrc, pDest);
+            const char throbber[] = { '|', '/', '-', '\\' };
+            unsigned int state = 0u;
+            while (bytesLeft) {
+                state++; state %= 4;
+                mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) from 0x%X to 0x%X\r", 
+                    throbber[state], chunkSize, bytesLeft, (void *)pSrc, pDest);
 
-    	    HSS_QSPI_MemCopy(pDest, pSrc, chunkSize);
+    	        HSS_QSPI_MemCopy(pDest, pSrc, chunkSize);
 
-            pSrc += chunkSize;
-            pDest += chunkSize;
-            bytesLeft -= chunkSize;
+                pSrc += chunkSize;
+                pDest += chunkSize;
+                bytesLeft -= chunkSize;
 
-            chunkSize = mMIN(bytesLeft, maxChunkSize);
+                chunkSize = mMIN(bytesLeft, maxChunkSize);
+            }
+
+            // clear copy output to console by printing an empty string
+            mHSS_DEBUG_PRINTF_EX("                                                                               \r");
+
+            pBootImage = (struct HSS_BootImage *)pDestImageInDDR;
         }
-        mHSS_DEBUG_PRINTF_EX("                                                                               \r");
-        pBootImage = (struct HSS_BootImage *)pDestImageInDDR;
 #  endif
 
         if (!pBootImage) {
