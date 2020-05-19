@@ -122,7 +122,7 @@ void e51_ymodem_loop(void)
     uint8_t rx_byte;
     bool done = false;
 
-    uint32_t received = 0u;
+    uint32_t receivedCount = 0u;
     extern uint64_t __ddr_start;
     uint8_t *pBuffer = (uint8_t *)&__ddr_start;
     uint32_t g_rx_size = 1024 * 1024 * 10u;
@@ -150,16 +150,16 @@ void e51_ymodem_loop(void)
             case '2':
                 mHSS_PUTS(CRLF "Attempting to receive .bin file using YMODEM (CTRL-C to cancel)" 
                     CRLF);
-                received = ymodem_receive(pBuffer, g_rx_size);
-                if (received == 0) {
+                receivedCount = ymodem_receive(pBuffer, g_rx_size);
+                if (receivedCount == 0) {
                     mHSS_PUTS(CRLF "YMODEM failed to receive file successfully" CRLF CRLF);
                 }
                 break;
 
             case '3':
-                mHSS_PUTS(CRLF "Attempting to flash received data" CRLF);
+                mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
                 e51_qspi_init();
-                Flash_program((uint8_t *)pBuffer, 0, received);
+                Flash_program((uint8_t *)pBuffer, 0, receivedCount);
                 break;
 
             case '4':

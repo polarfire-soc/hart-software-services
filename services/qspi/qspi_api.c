@@ -59,6 +59,11 @@ bool HSS_QSPIInit(void)
     uint8_t rd_buf[10] __attribute__ ((aligned(4)));
     Flash_readid(rd_buf);
     mHSS_FANCY_PRINTF("JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
+
+    if (((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2])) == 0xEFAA21) {
+        // EFh => Winbond, AA21h => W25N01GV
+        mHSS_FANCY_PRINTF("Winbond W25N01GV detected" CRLF);
+    }
 #endif
 
     return true;

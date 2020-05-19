@@ -17,6 +17,8 @@
 
 #include "drivers/mss_uart/mss_uart.h"
 
+#include "hss_debug.h"
+
 /*Following constant must be defined if you want to use the interrupt mode 
   transfers provided by the MSS QSPI driver. Comment this out to use the polling
   mode transfers.*/
@@ -677,6 +679,8 @@ uint8_t Flash_program
     uint32_t wr_len
 )
 {
+    mHSS_DEBUG_PRINTF("called: buf = %p, wr_addr = %u, wr_len = %u" CRLF, buf, wr_addr, wr_len);
+
     int32_t remaining_length = (int32_t)wr_len;
     uint32_t target_offset = wr_addr;
 

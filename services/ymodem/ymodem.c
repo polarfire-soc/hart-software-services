@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "hss_debug.h"
+#include "hss_crc32.h"
 #include "hss_crc16.h"
 #include "hss_clock.h"
 #include "ymodem.h"
@@ -447,7 +448,8 @@ size_t ymodem_receive(uint8_t *buffer, size_t bufferSize)
     XYMODEM_Purge(); 
 
     if (result != 0) {
-        mHSS_FANCY_PRINTF_EX(CRLF CRLF "Received %lu bytes from %s" CRLF, result, state.filename);
+        uint32_t crc32 = CRC32_calculate((const unsigned char *)buffer, result);
+        mHSS_PRINTF(CRLF CRLF "Received %lu bytes from %s (CRC32 is 0x%08X)" CRLF, result, state.filename, crc32);
     }
 
     return result;

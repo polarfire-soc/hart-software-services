@@ -27,7 +27,7 @@ void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
         (uint32_t)(((totalNumTasks - numTasksRemaining) * 100u) / totalNumTasks);
 
     if (oldProgressPercent != progressPercent) {
-        mHSS_FANCY_PRINTF_EX(" % 3u%%" CR, progressPercent);
+        mHSS_PRINTF(" % 3u%%" CR, progressPercent);
         oldProgressPercent = progressPercent;
     }
 }

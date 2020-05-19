@@ -76,6 +76,7 @@ void sbi_putc(char c);
 #    define mHSS_PUTS sbi_puts
 #    define mHSS_PUTC sbi_putc
 #    define mHSS_FANCY_PRINTF (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
+#    define mHSS_PRINTF sbi_printf
 #    define mHSS_FANCY_PRINTF_EX sbi_printf
 #    define mHSS_FANCY_PUTS (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_puts
 

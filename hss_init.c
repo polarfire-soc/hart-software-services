@@ -207,10 +207,10 @@ void HSS_PrintBuildId(void)
     mHSS_FANCY_PRINTF("Build ID: ");
 
     for (int i = 0; i < gnu_build_id.descsz; ++i) {
-        mHSS_FANCY_PRINTF_EX("%02x", pBuildId[i]);
+        mHSS_PRINTF("%02x", pBuildId[i]);
     }
 
-    mHSS_FANCY_PRINTF_EX(CRLF);
+    mHSS_PRINTF(CRLF);
 }
 #endif
 
@@ -218,7 +218,7 @@ bool HSS_E51_Banner(void)
 {
     mHSS_FANCY_STATUS_TEXT;
 
-    mHSS_FANCY_PRINTF("PolarFire SoC Hart Software Services (HSS) - Version %d.%d.%d (OpenSBI %d.%d)" CRLF, 
+    mHSS_PRINTF("PolarFire SoC Hart Software Services (HSS) - Version %d.%d.%d (OpenSBI %d.%d)" CRLF, 
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
     mHSS_FANCY_PRINTF("(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF);
 

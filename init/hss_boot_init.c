@@ -108,9 +108,14 @@ bool HSS_BootInit(void)
 #ifndef CONFIG_SERVICE_QSPI_USE_XIP
         // if we are not using XIP, then we need to do an initial copy of the
         // boot header into our structure, for subsequent use
-        struct HSS_BootImage bootImage;
+        struct HSS_BootImage bootImage __attribute__((aligned(8)));
+
+        mHSS_DEBUG_PRINTF("Attempting to read image header (%d bytes) from QSPI..." CRLF, sizeof(struct HSS_BootImage));
     	HSS_QSPI_MemCopy(&bootImage, (void *)QSPI_BASE, sizeof(struct HSS_BootImage));
         pBootImage = &bootImage;
+        mHSS_DEBUG_PRINTF(" - set name is  >>%s<<" CRLF, bootImage.set_name);
+        mHSS_DEBUG_PRINTF(" - magic is     %08X" CRLF, bootImage.magic);
+        mHSS_DEBUG_PRINTF(" - length is    %08X" CRLF, bootImage.bootImageLength);
 #endif
 
         // quickly validate boot image header before a needless copy is performed
@@ -118,7 +123,7 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF("Copying %lu bytes from 0x%X to 0x%X" CRLF, 
                 pBootImage->bootImageLength, QSPI_BASE, pDestImageInDDR);
 
-            const size_t maxChunkSize = 4096u * 256u;
+            const size_t maxChunkSize = 4096u;
             size_t bytesLeft = pBootImage->bootImageLength;
             size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
             char *pSrc = (void *)QSPI_BASE;
@@ -144,6 +149,7 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF_EX("                                                                               \r");
 
             pBootImage = (struct HSS_BootImage *)pDestImageInDDR;
+        } else {
         }
 #  endif
 
@@ -151,7 +157,11 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
             result = false;
         } else if (validateCrc_(pBootImage)) {
+#  if defined(CONFIG_COMPRESSION)
             mHSS_DEBUG_PRINTF("decompressed boot image passed CRC" CRLF);
+#  else
+            mHSS_DEBUG_PRINTF("boot image passed CRC" CRLF);
+#  endif
 
         // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the set name as
         // an out-of-bounds... So we'll disable that warning just for this print...
@@ -168,7 +178,11 @@ bool HSS_BootInit(void)
                 result = false;
 	    }
         } else {
-            mHSS_DEBUG_PRINTF("decompressed boot image failed CRC" CRLF);
+#  if defined(CONFIG_COMPRESSION)
+            mHSS_DEBUG_PRINTF("decompressed boot image passed CRC" CRLF);
+#  else
+            mHSS_DEBUG_PRINTF("boot image passed CRC" CRLF);
+#  endif
         }
     }
 #endif
