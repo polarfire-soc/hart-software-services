@@ -106,8 +106,6 @@ else
   OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
 endif
 
-all: config.h $(TARGET)
-
 ##############################################################################
 #
 # Build Rules
