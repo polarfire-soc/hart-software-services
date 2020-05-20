@@ -45,17 +45,18 @@
 #include "drivers/mss_uart/mss_uart.h"
 #include "uart_helper.h"
 #include "ymodem.h"
-#include "emmc_service.h"
 #include "drivers/mss_sys_services/mss_sys_services.h"
 #include "mss_sysreg.h"
 
 #ifdef CONFIG_SERVICE_QSPI
-//#    include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
-#    include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
+#  include "qspi_service.h"
+//#  include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
+#  include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
 #endif
 
 #ifdef CONFIG_SERVICE_EMMC
-#    include "mss_mmc.h"
+#  include "emmc_service.h"
+#  include "mss_mmc.h"
 #endif
 
 

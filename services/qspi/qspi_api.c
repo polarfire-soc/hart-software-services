@@ -22,6 +22,7 @@
 #include "qspi_service.h"
 #include "encoding.h"
 #include "mss_qspi.h"
+#include "mss_sys_services.h"
 
 /*
  * QSPI doesn't need a "service" to run every super-loop, but it does need to be
@@ -80,13 +81,13 @@ bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
 
 #ifdef CONFIG_SERVICE_QSPI_USE_XIP
-    memcpy_via_pdma(pDest, pSrc, count);
+    memcpy_via_pdma(pDest, pSrc, byteCount);
 #else
     /* temporary code to bring up Icicle board */
     void Flash_read(uint8_t* buf, uint32_t read_addr, uint32_t read_len);
 
-    uint32_t read_addr = (uint32_t)((uint8_t *)pSrc - (uint8_t *)QSPI_BASE);
-    Flash_read((uint8_t *)pDest, read_addr, (uint32_t) count);
+    uint32_t read_addr = (uint32_t)((uint8_t *)pDest - (uint8_t *)QSPI_BASE);
+    Flash_read((uint8_t *)pDest, read_addr, (uint32_t) byteCount);
 #endif
 
     return result;
@@ -99,7 +100,9 @@ bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     // Temporary code for ICICLE Bringup
     if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
 
-    Flash_program((uint8_t *)pBuffer, (uint32_t)dstOffset, (uint32_t)byteCount);
+    uint8_t Flash_program(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len);
+
+    Flash_program((uint8_t *)pSrc, (uint32_t)dstOffset, (uint32_t)byteCount);
     return result;
 }
 

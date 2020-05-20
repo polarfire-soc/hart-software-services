@@ -66,6 +66,7 @@ INCLUDES += \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma \
+        -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services \
 	-Ibaremetal/drivers/mss_watchdog \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/hal \

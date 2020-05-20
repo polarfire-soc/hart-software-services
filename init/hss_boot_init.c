@@ -285,7 +285,6 @@ static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
         sizeof(struct HSS_BootImage));
 
     size_t srcOffset = 0u; // assuming zero as sector/block offset for now
-    struct HSS_BootImage bootImage __attribute__((aligned(8)));
     HSS_QSPI_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
 
     result = verifyMagic_(*ppBootImage);
