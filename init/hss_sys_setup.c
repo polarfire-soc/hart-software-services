@@ -44,6 +44,7 @@
 #  define RISCV_ENCODING_H
 #  include "mss_sysreg.h"
 #  include "mss_plic.h"
+#  include "mss_util.h"
 #  include "mss_l2_cache.h"
 #  include "nwc/mss_io_config.h"
 #  include "system_startup.h"
@@ -113,37 +114,8 @@ bool HSS_Setup_PAD_IO(void)
 bool HSS_Setup_PLIC(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-    uint32_t inc;
-
-    /* default all priorities so effectively disabled */
-    for(inc = 0U; inc < PLIC_NUM_SOURCES; ++inc)
-    {   
-        PLIC->SOURCE_PRIORITY[inc]  = 0u; 
-    }   
-
-    for(inc = 0U; inc < NUM_CLAIM_REGS; ++inc)
-    {   
-        /* priority must be greater than threshold to be enabled, so setting to
-         * 7 disables */
-        PLIC->TARGET[inc].PRIORITY_THRESHOLD  = 7U; 
-    }   
-
-    /* and clear all the enables */
-    for(inc = 0UL; inc < PLIC_SET_UP_REGISTERS; inc++)
-    {   
-        PLIC->HART0_MMODE_ENA[inc] = 0u; 
-        PLIC->HART1_MMODE_ENA[inc] = 0u; 
-        PLIC->HART1_SMODE_ENA[inc] = 0u; 
-        PLIC->HART2_MMODE_ENA[inc] = 0u; 
-        PLIC->HART2_SMODE_ENA[inc] = 0u; 
-        PLIC->HART3_MMODE_ENA[inc] = 0u; 
-        PLIC->HART3_SMODE_ENA[inc] = 0u; 
-        PLIC->HART4_MMODE_ENA[inc] = 0u; 
-        PLIC->HART4_SMODE_ENA[inc] = 0u; 
-    }   
-
-    /* clear any pending interrupts- in case already there */
-    PLIC_ClearPendingIRQ();
+    __disable_all_irqs();
+    PLIC_init_on_reset();
 #endif
 
     return true;

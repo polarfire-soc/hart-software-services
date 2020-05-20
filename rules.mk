@@ -90,7 +90,6 @@ CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 OPT-y+=-Os -fno-strict-aliasing
 
 ifndef CONFIG_LD_RELAX
-$(error Foo)
 OPT-y+=-Wl,--no-relax
 endif
 

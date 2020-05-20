@@ -156,12 +156,15 @@ bool HSS_BootInit(void)
         if (!pBootImage) {
             mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
             result = false;
+        } else if (pBootImage->magic != mHSS_BOOT_MAGIC) { 
+            mHSS_DEBUG_PRINTF("Boot Image magic invalid, ignoring" CRLF);
+            result = false;
         } else if (validateCrc_(pBootImage)) {
+            mHSS_DEBUG_PRINTF(""
 #  if defined(CONFIG_COMPRESSION)
-            mHSS_DEBUG_PRINTF("decompressed boot image passed CRC" CRLF);
-#  else
-            mHSS_DEBUG_PRINTF("boot image passed CRC" CRLF);
+                "decompressed "
 #  endif
+                "boot image passed CRC" CRLF);
 
         // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the set name as
         // an out-of-bounds... So we'll disable that warning just for this print...
@@ -178,11 +181,11 @@ bool HSS_BootInit(void)
                 result = false;
 	    }
         } else {
+            mHSS_DEBUG_PRINTF(""
 #  if defined(CONFIG_COMPRESSION)
-            mHSS_DEBUG_PRINTF("decompressed boot image passed CRC" CRLF);
-#  else
-            mHSS_DEBUG_PRINTF("boot image passed CRC" CRLF);
+                "decompressed "
 #  endif
+                "boot image passed CRC" CRLF);
         }
     }
 #endif
