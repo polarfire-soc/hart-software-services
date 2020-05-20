@@ -42,7 +42,8 @@ extern "C" {
 #include "hss_types.h"
 
 bool HSS_QSPIInit(void);
-void *HSS_QSPI_MemCopy(void *pDest, void *pSrc, size_t count);
+bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
+bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
 
 #ifdef __cplusplus
 }

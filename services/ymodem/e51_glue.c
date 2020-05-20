@@ -35,51 +35,47 @@
 #include "hss_debug.h"
 
 #include <string.h>
-#include <stdarg.h>
 #include <sys/types.h>
 
 #include "config/hardware/hw_platform.h"
 #include "config/hardware/clocks/hw_mss_clks.h"
 #undef ROUNDUP
 #undef ROUNDDOWN
-//#include "mss_hal.h"
 #include "mss_util.h"
 #include "drivers/mss_uart/mss_uart.h"
 #include "uart_helper.h"
 #include "ymodem.h"
-#include "drivers/mss_envm/mss_envm.h"
+#include "emmc_service.h"
 #include "drivers/mss_sys_services/mss_sys_services.h"
 #include "mss_sysreg.h"
-//#include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
-#include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
 
+#ifdef CONFIG_SERVICE_QSPI
+//#    include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
+#    include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
+#endif
 
-int ee_vsprintf(char *buf, const char *fmt, va_list args);
+#ifdef CONFIG_SERVICE_EMMC
+#    include "mss_mmc.h"
+#endif
 
 
 //
 // Local prototypes
 //
-static int l_sprintf(char *buf, const char * const fmt, ...);
-static void l_print_result(uint8_t result, const char *msg);
+static void printResult_(uint8_t result, const char *msg);
+#ifdef CONFIG_SERVICE_QSPI
+static void e51_qspi_init(void);
+static void e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
+static void e51_qspi_erase(void);
+#endif
 
+#ifdef CONFIG_SERVICE_EMMC
+static void e51_emmc_init(void);
+static void e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
+static void e51_emmc_erase(void);
+#endif
 
-//
-//
-
-static int l_sprintf(char *buf, const char * const fmt, ...)
-{
-    int result;
-    va_list args;
-    va_start(args, fmt);
-    result = ee_vsprintf(buf, fmt, args);
-    va_end(args);
-    return result;
-}
-
-mss_uart_instance_t *g_uart = &g_mss_uart0_lo;
-
-static void l_print_result(uint8_t result, const char *msg)
+static void printResult_(uint8_t result, const char *msg)
 {
     static char buffer[256];
 
@@ -92,30 +88,61 @@ static void l_print_result(uint8_t result, const char *msg)
         "Sector Outside Bounds Error" CRLF,
     };
 
-    mHSS_DEBUG_PRINTF_EX("%s returned - ", msg);
+    mHSS_PRINTF("%s returned - ", msg);
 
     if (result < mSPAN_OF(errorTable)) {
-        mHSS_DEBUG_PRINTF_EX(errorTable[result]);
+        mHSS_PRINTF(errorTable[result]);
     } else {
-        l_sprintf(buffer, (const char * const)"Unknown Error (%u)" CRLF,
+        mHSS_PRINTF(buffer, (const char * const)"Unknown Error (%u)" CRLF,
                 (unsigned int) result);
-        mHSS_DEBUG_PRINTF_EX(buffer);
     }
 }
 
-//static uint8_t l_envm_params[256];
+#ifdef CONFIG_SERVICE_QSPI
 void e51_qspi_init(void)
 {
     static bool initialized = false;
 
     if (!initialized) {
-        MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+        HSS_QSPIInit();
 
-        MSS_QSPI_enable();
         Flash_init(MSS_QSPI_NORMAL);
         initialized = true;
     }
 }
+
+static void e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
+{
+    (void)HSS_QSPI_WriteBlock(wrAddr, pBuffer, receivedCount);
+}
+
+static void e51_qspi_erase(void)
+{
+    Flash_erase();
+}
+#endif
+
+#ifdef CONFIG_SERVICE_EMMC
+static void e51_emmc_init(void)
+{
+    //static bool initialized = false;
+
+    //if (!initialized) {
+        HSS_EMMCInit();
+    //    initialized = true;
+    //}
+}
+
+static void e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
+{
+    (void)HSS_EMMC_WriteBlock(wrAddr, pBuffer, receivedCount);
+}
+
+static void e51_emmc_erase(void)
+{
+    // dummy
+}
+#endif
 
 void e51_ymodem_loop(void)
 {
@@ -128,26 +155,57 @@ void e51_ymodem_loop(void)
     uint32_t g_rx_size = 1024 * 1024 * 10u;
 
     while (!done) {
-        static const char menuText[] = CRLF "QSPI Utility" CRLF \
-            " 1. QSPI Erase Bulk -- erase all sectors" CRLF \
-            " 2. YMODEM Receive -- receive application file" CRLF \
-            " 3. QSPI Write -- write application file to the Device" CRLF \
-            " 4. Quit -- quit QSPI Utility " CRLF CRLF \
-            " Press a number (1--4):" CRLF;
+        static const char menuText[] = CRLF
+#ifdef CONFIG_SERVICE_QSPI
+            "QSPI"
+#endif
+#if defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_EMMC)
+           "/"
+#endif
+#ifdef CONFIG_SERVICE_EMMC
+           "EMMC"
+#endif
+           " Utility" CRLF
+#ifdef CONFIG_SERVICE_QSPI
+            " 1. QSPI Erase Bulk -- erase all sectors" CRLF
+#endif
+#ifdef CONFIG_SERVICE_EMMC
+            " 2. EMMC Erase Bulk -- erase all sectors" CRLF
+#endif
+            " 3. YMODEM Receive -- receive application file" CRLF
+#ifdef CONFIG_SERVICE_QSPI
+            " 4. QSPI Write -- write application file to the Device" CRLF
+#endif
+#ifdef CONFIG_SERVICE_EMMC
+            " 5. EMMC Write -- write application file to the Device" CRLF
+#endif
+            " 6. Quit -- quit QSPI Utility " CRLF CRLF
+            " Select a number:" CRLF;
 
         mHSS_PUTS(menuText);
 
         if (uart_getchar(&rx_byte, -1, false)) {
             switch (rx_byte) {
+#ifdef CONFIG_SERVICE_QSPI
             case '1':
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
                 e51_qspi_init();
-                l_print_result(0, "Flash_init()");
-                Flash_erase();
-                l_print_result(0, "Flash_erase()");
+                printResult_(0, "e51_qspi_init()");
+                e51_qspi_erase();
+                printResult_(0, "e51_qspi_erase()");
                 break;
+#endif
 
+#ifdef CONFIG_SERVICE_EMMC
             case '2':
+                mHSS_PUTS(CRLF "Erasing all of EMMC" CRLF );
+                e51_emmc_init();
+                printResult_(0, "e51_emmc_init()");
+                e51_emmc_erase();
+                printResult_(0, "e51_emmc_erase()");
+                break;
+#endif
+            case '3':
                 mHSS_PUTS(CRLF "Attempting to receive .bin file using YMODEM (CTRL-C to cancel)" 
                     CRLF);
                 receivedCount = ymodem_receive(pBuffer, g_rx_size);
@@ -156,19 +214,33 @@ void e51_ymodem_loop(void)
                 }
                 break;
 
-            case '3':
+#ifdef CONFIG_SERVICE_QSPI
+            case '4':
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
                 e51_qspi_init();
-                Flash_program((uint8_t *)pBuffer, 0, receivedCount);
+                printResult_(0, "e51_emmc_init()");
+                e51_qspi_program((uint8_t *)pBuffer, 0, receivedCount);
+                printResult_(0, "e51_qspi_program()");
                 break;
+#endif
 
-            case '4':
+#ifdef CONFIG_SERVICE_EMMC
+            case '5':
+                mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
+                e51_emmc_init();
+                printResult_(0, "e51_emmc_init()");
+                e51_emmc_program((uint8_t *)pBuffer, 0, receivedCount);
+                printResult_(0, "e51_emmc_program()");
+                break;
+#endif
+
+            case '6':
                 done = true;
                 break;
 
-            default:
+            default: // ignore
                 break;
-            }
-        }
+	    }
+        } 
     }
 }

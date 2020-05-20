@@ -51,8 +51,10 @@ bool HSS_QSPIInit(void)
     MSS_QSPI_configure(&qspiConfig);
 #else
     /* temporary code for Icicle board bringup */
-    void e51_qspi_init(void); /* TODO: refactor */
-    e51_qspi_init();
+
+    MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+    MSS_QSPI_init();
+    MSS_QSPI_enable();
 
     /* read and output Flash ID as a sanity test */
     void Flash_readid(uint8_t *buf);
@@ -69,8 +71,14 @@ bool HSS_QSPIInit(void)
     return true;
 }
 
-void *HSS_QSPI_MemCopy(void *pDest, void *pSrc, size_t count)
+#define HSS_QSPI_PAGE_SIZE 512u
+bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
+    bool result = true;
+
+    // Temporary code for ICICLE Bringup
+    if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
+
 #ifdef CONFIG_SERVICE_QSPI_USE_XIP
     memcpy_via_pdma(pDest, pSrc, count);
 #else
@@ -81,5 +89,17 @@ void *HSS_QSPI_MemCopy(void *pDest, void *pSrc, size_t count)
     Flash_read((uint8_t *)pDest, read_addr, (uint32_t) count);
 #endif
 
-    return pDest;
+    return result;
 }
+
+bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
+{
+    bool result = true;
+
+    // Temporary code for ICICLE Bringup
+    if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
+
+    Flash_program((uint8_t *)pBuffer, (uint32_t)dstOffset, (uint32_t)byteCount);
+    return result;
+}
+

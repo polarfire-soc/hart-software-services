@@ -127,7 +127,11 @@ OBJS = $(SRCS-y:.c=.o)
 
 %.e: %.c config.h
 	@$(ECHO) " CC -E     $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
+
+#%.dot: %.c config.h
+#	@$(ECHO) " DOT       $@";
+#	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -fdump-tree-all-graph -o $@ $<
 
 ifdef CONFIG_USE_MAKEDEP
   %.o: %.c config.h %.d

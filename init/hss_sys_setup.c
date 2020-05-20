@@ -304,6 +304,7 @@ bool HSS_Setup_Clocks(void)
         ~( SOFT_RESET_CR_ENVM_MASK |
            SOFT_RESET_CR_MAC0_MASK |
            SOFT_RESET_CR_MAC1_MASK |
+           SOFT_RESET_CR_MMC_MASK |
            SOFT_RESET_CR_TIMER_MASK |
            SOFT_RESET_CR_MMUART0_MASK |
            SOFT_RESET_CR_MMUART1_MASK |

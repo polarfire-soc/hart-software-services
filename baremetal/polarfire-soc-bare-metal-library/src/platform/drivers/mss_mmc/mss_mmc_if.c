@@ -359,6 +359,8 @@ static cif_response_t cq_execute_task(uint8_t task_id)
     {
         ret_status = TRANSFER_IF_FAIL;
     }
+
+    (void) cmd_response; // unused, so referencing to avoid compiler warning
     return ret_status;
 }
 /******************************************************************************/

@@ -25,9 +25,13 @@
 #endif
 
 #ifdef CONFIG_SERVICE_QSPI
-#  include "encoding.h"
+//#  include "encoding.h"
 #  include "qspi_service.h"
-#  include <mss_qspi.h>
+//#  include <mss_qspi.h>
+#endif
+
+#ifdef CONFIG_SERVICE_EMMC
+#  include "emmc_service.h"
 #endif
 
 #include "hss_state_machine.h"
@@ -41,118 +45,82 @@
 #  include "hss_decompress.h"
 #endif
 
-#include "hss_memcpy_via_pdma.h"
 #include "hss_boot_pmp.h"
 
-static bool validateCrc_(struct HSS_BootImage *pImage)
-{
-    bool result = false;
-    uint32_t headerCrc, originalCrc;
-    struct HSS_BootImage header = *pImage;
+//
+// local module functions
+static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
+    size_t srcOffset,
+    bool (*pCopyFunction)(void *pDest, size_t srcOffset, size_t byteCount));
+static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage);
+#if defined(CONFIG_SERVICE_QSPI)
+static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage);
+#endif
+#if defined(CONFIG_SERVICE_EMMC)
+static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage);
+#endif
+#if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage);
+#endif
+static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
+static bool validateCrc_(struct HSS_BootImage *pImage);
 
-    originalCrc = header.headerCrc;
-    header.headerCrc = 0u;
-
-    headerCrc = CRC32_calculate((const uint8_t *)&header, sizeof(struct HSS_BootImage)); 
-
-    if (headerCrc == originalCrc) {
-        result = true;
-    }
-
-    return result;
-}
+//
+//
 
 bool HSS_BootInit(void)
 {
     bool result = false;
+    bool decompressedFlag = false;
+    struct HSS_BootImage *pBootImage = NULL;
 
     mHSS_DEBUG_PRINTF("Initializing Boot Image.." CRLF);
 
 #ifdef CONFIG_SERVICE_BOOT
-#  ifdef CONFIG_SERVICE_QSPI
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)QSPI_BASE;
+#  if defined(CONFIG_SERVICE_QSPI)
+    result = getBootImageFromQSPI_(&pBootImage);
+#  elif defined(CONFIG_SERVICE_EMMC)
+    result = getBootImageFromEMMC_(&pBootImage);
 #  elif defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
-    // assuming that boot image is statically linked with the HSS ELF
-    //
-    extern const char _payload_start;
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)&_payload_start;
-    //mHSS_DEBUG_PRINTF("pBootImage is %p, magic is %x" CRLF, pBootImage, pBootImage->magic);
+    result = getBootImageFromPayload_(&pBootImage);
 #  else
-#      error Unable to determine boot mechanism
+#    error Unable to determine boot mechanism
 #  endif
 
-    if (!pBootImage) {
-        mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
-        result = false;
-    } else {
+    //
+    // check if this image is compressed...
+    // if so, decompress it to DDR
+    //
+    // for now, compression only works with a source already in DDR or XIP-QSPI
 #  if defined(CONFIG_COMPRESSION)
-        mHSS_DEBUG_PRINTF("Preparing to decompress to DDR..." CRLF);
-        void* const pInput = (void*)pBootImage;
-        void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
-
-        int outputSize = HSS_Decompress(pInput, pOutputInDDR);
-        mHSS_DEBUG_PRINTF("decompressed %d bytes..." CRLF, outputSize);
-
-        if (outputSize) {
-            pBootImage = (struct HSS_BootImage *)pOutputInDDR;
+    if (result && pBootImage->magic = mHSS_COMPRESSED_MAGIC) {
+        decompressedFlag = true;
+        if (!result) {
+            mHSS_DEBUG_PRINTF("Failed to get boot image, cannot decompress" CRLF);
+        } else if (!pBootImage) {
+            mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
+            result = false;
         } else {
-            pBootImage = NULL;
-        }
-#  elif defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_QSPI_COPY_TO_DDR)
-        mHSS_DEBUG_PRINTF("Preparing to copy from QSPI to DDR..." CRLF);
-        // code to copy from QSPI base to DDR to go here...
+            mHSS_DEBUG_PRINTF("Preparing to decompress to DDR..." CRLF);
+            void* const pInput = (void*)pBootImage;
+            void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
-        // set pDestImageInDDR to an appropriate location in DDR
-        void *pDestImageInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+            int outputSize = HSS_Decompress(pInput, pOutputInDDR);
+            mHSS_DEBUG_PRINTF("decompressed %d bytes..." CRLF, outputSize);
 
-#ifndef CONFIG_SERVICE_QSPI_USE_XIP
-        // if we are not using XIP, then we need to do an initial copy of the
-        // boot header into our structure, for subsequent use
-        struct HSS_BootImage bootImage __attribute__((aligned(8)));
-
-        mHSS_DEBUG_PRINTF("Attempting to read image header (%d bytes) from QSPI..." CRLF, sizeof(struct HSS_BootImage));
-    	HSS_QSPI_MemCopy(&bootImage, (void *)QSPI_BASE, sizeof(struct HSS_BootImage));
-        pBootImage = &bootImage;
-        mHSS_DEBUG_PRINTF(" - set name is  >>%s<<" CRLF, bootImage.set_name);
-        mHSS_DEBUG_PRINTF(" - magic is     %08X" CRLF, bootImage.magic);
-        mHSS_DEBUG_PRINTF(" - length is    %08X" CRLF, bootImage.bootImageLength);
-#endif
-
-        // quickly validate boot image header before a needless copy is performed
-        if (pBootImage->magic == mHSS_BOOT_MAGIC) { // causes problems w. RENODE
-            mHSS_DEBUG_PRINTF("Copying %lu bytes from 0x%X to 0x%X" CRLF, 
-                pBootImage->bootImageLength, QSPI_BASE, pDestImageInDDR);
-
-            const size_t maxChunkSize = 4096u;
-            size_t bytesLeft = pBootImage->bootImageLength;
-            size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
-            char *pSrc = (void *)QSPI_BASE;
-            char *pDest = pDestImageInDDR;
-
-            const char throbber[] = { '|', '/', '-', '\\' };
-            unsigned int state = 0u;
-            while (bytesLeft) {
-                state++; state %= 4;
-                mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) from 0x%X to 0x%X\r", 
-                    throbber[state], chunkSize, bytesLeft, (void *)pSrc, pDest);
-
-    	        HSS_QSPI_MemCopy(pDest, pSrc, chunkSize);
-
-                pSrc += chunkSize;
-                pDest += chunkSize;
-                bytesLeft -= chunkSize;
-
-                chunkSize = mMIN(bytesLeft, maxChunkSize);
+            if (outputSize) {
+                pBootImage = (struct HSS_BootImage *)pOutputInDDR;
+            } else {
+                pBootImage = NULL;
             }
-
-            // clear copy output to console by printing an empty string
-            mHSS_DEBUG_PRINTF_EX("                                                                               \r");
-
-            pBootImage = (struct HSS_BootImage *)pDestImageInDDR;
-        } else {
         }
+    }
 #  endif
 
+    //
+    // now have a Boot Image, let's check it is a valid one...
+    //
+    {
         if (!pBootImage) {
             mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
             result = false;
@@ -160,14 +128,12 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF("Boot Image magic invalid, ignoring" CRLF);
             result = false;
         } else if (validateCrc_(pBootImage)) {
-            mHSS_DEBUG_PRINTF(""
-#  if defined(CONFIG_COMPRESSION)
-                "decompressed "
-#  endif
-                "boot image passed CRC" CRLF);
+            mHSS_DEBUG_PRINTF("%s boot image passed CRC" CRLF, 
+                decompressedFlag ? "decompressed":"");
 
-        // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the set name as
-        // an out-of-bounds... So we'll disable that warning just for this print...
+        // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the 
+        // set name as an out-of-bounds... So we'll disable that warning just for 
+        // this print...
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
             mHSS_DEBUG_PRINTF("Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
@@ -181,14 +147,177 @@ bool HSS_BootInit(void)
                 result = false;
 	    }
         } else {
-            mHSS_DEBUG_PRINTF(""
-#  if defined(CONFIG_COMPRESSION)
-                "decompressed "
-#  endif
-                "boot image passed CRC" CRLF);
+            mHSS_DEBUG_PRINTF("%s boot image failed CRC" CRLF, 
+                decompressedFlag ? "decompressed":"");
         }
     }
 #endif
 
     return result;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+static bool validateCrc_(struct HSS_BootImage *pImageHdr)
+{
+    bool result = false;
+    uint32_t headerCrc, originalCrc;
+
+    originalCrc = pImageHdr->headerCrc;
+    pImageHdr->headerCrc = 0u;
+
+    headerCrc = CRC32_calculate((const uint8_t *)pImageHdr, sizeof(struct HSS_BootImage)); 
+
+    if (headerCrc == originalCrc) {
+        result = true;
+    }
+ 
+    // restore original headerCrc
+    pImageHdr->headerCrc = originalCrc;
+
+    return result;
+}
+
+static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage)
+{
+    mHSS_DEBUG_PRINTF(" - set name is >>%s<<" CRLF, pBootImage->set_name);
+    mHSS_DEBUG_PRINTF(" - magic is    %08X" CRLF, pBootImage->magic);
+    mHSS_DEBUG_PRINTF(" - length is   %08X" CRLF, pBootImage->bootImageLength);
+}
+
+static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
+    size_t srcOffset,
+    bool (*pCopyFunction)(void *pDest, size_t srcOffset, size_t count))
+{
+    bool result = true;
+
+    printBootImageDetails_(pBootImage);
+
+    // TODO: quickly validate boot image header before a needless copy is 
+    // performed
+    mHSS_DEBUG_PRINTF("Copying %lu bytes to 0x%X" CRLF, 
+        pBootImage->bootImageLength, pDest);
+
+    const size_t maxChunkSize = 512u;
+    size_t bytesLeft = pBootImage->bootImageLength;
+    size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
+
+    const char throbber[] = { '|', '/', '-', '\\' };
+    unsigned int state = 0u;
+    while (bytesLeft) {
+        state++; state %= 4;
+        mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) to 0x%X\r", 
+            throbber[state], chunkSize, bytesLeft, pDest);
+
+        result = pCopyFunction(pDest, srcOffset, chunkSize);
+
+         if (!result) { break; }
+
+        srcOffset += chunkSize;
+        pDest += chunkSize;
+        bytesLeft -= chunkSize;
+
+        chunkSize = mMIN(bytesLeft, maxChunkSize);
+    }
+
+    // clear copy output to console by printing an empty string
+    mHSS_DEBUG_PRINTF_EX("                                                                      \r");
+
+    return result;
+}
+
+static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
+{
+    bool result = false;
+
+    if ((pBootImage->magic == mHSS_BOOT_MAGIC) || (pBootImage->magic == mHSS_COMPRESSED_MAGIC)) {
+        result = true;
+    }
+
+    return result;
+}
+
+#if defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI)
+struct HSS_BootImage bootImage __attribute__((aligned(8)));
+#endif
+
+#ifdef CONFIG_SERVICE_EMMC
+static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
+{
+    bool result = false;
+
+    assert(ppBootImage);
+
+    // if we are using EMMC, then we need to do an initial copy of the
+    // boot header into our structure, for subsequent use
+    mHSS_DEBUG_PRINTF("Preparing to copy from EMMC to DDR ..." CRLF);
+    mHSS_DEBUG_PRINTF("Attempting to read image header (%d bytes) ..." CRLF, 
+        sizeof(struct HSS_BootImage));
+
+    size_t srcOffset = 0u; // assuming zero as sector/block offset for now
+    HSS_EMMC_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
+
+    result = verifyMagic_(*ppBootImage);
+
+    if (result) {
+        result = copyBootImageToDDR_(*ppBootImage, 
+            (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), 
+            srcOffset, HSS_EMMC_ReadBlock);
+        *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+    }
+
+    return result;
+}
+#endif
+
+#ifdef CONFIG_SERVICE_QSPI
+static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
+{
+    bool result = false;
+
+    assert(ppBootImage);
+
+#  ifndef CONFIG_SERVICE_QSPI_USE_XIP
+    // if we are not using XIP, then we need to do an initial copy of the
+    // boot header into our structure, for subsequent use
+    mHSS_DEBUG_PRINTF("Preparing to copy from QSPI to DDR ..." CRLF);
+    mHSS_DEBUG_PRINTF("Attempting to read image header (%d bytes) ..." CRLF, 
+        sizeof(struct HSS_BootImage));
+
+    size_t srcOffset = 0u; // assuming zero as sector/block offset for now
+    struct HSS_BootImage bootImage __attribute__((aligned(8)));
+    HSS_QSPI_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
+
+    result = verifyMagic_(*ppBootImage);
+
+    if (result) {
+        result = copyBootImageToDDR_(*ppBootImage, 
+            (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), 
+            srcOffset, HSS_QSPI_ReadBlock);
+        *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+    }
+
+#  else
+    *ppBootImage = (struct HSS_BootImage *)QSPI_BASE;
+    result = verifyMagic_(**ppBootImage);
+#  endif
+
+    return result;
+}
+#endif
+
+#ifdef CONFIG_SERVICE_BOOT_USE_PAYLOAD
+static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage)
+{
+    bool result = false;
+
+    assert(ppBootImage);
+
+    extern struct HSS_BootImage _payload_start;
+    *ppBootImage = (struct HSS_BootImage *)&_payload_start;
+
+    result = verifyMagic_(*ppBootImage);
+
+    return result;
+}
+#endif

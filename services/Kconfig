@@ -21,11 +21,11 @@ config SERVICE_BOOT_SETS_SUPPORT
                 This setting is is enabled by default.
 
 config SERVICE_BOOT_DDR_TARGET_ADDR
-	hex "Target Base address for QSPI/Decompressor"
+	hex "Target Base address for EMMC/QSPI/Decompressor"
 	default 0xB0000000
 	depends on SERVICE_BOOT 
         help
-                This feature specifies a scratch address for QSPI decompression
+                This feature specifies a scratch address for EMMC/QSPI decompression
 
 config SERVICE_BOOT_USE_PAYLOAD
         bool "Use Payload file"
@@ -47,7 +47,7 @@ config SERVICE_CRYPTO
 	help
                 This feature enables support for crytographic signing of boot images.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_FLASHFREEZE
 	bool "Flash*Freeze support*"
@@ -55,7 +55,7 @@ config SERVICE_FLASHFREEZE
 	help
                 This feature enables support for Flash*Freeze.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_POWERMODE
 	bool "Low Power Mode support"
@@ -63,7 +63,15 @@ config SERVICE_POWERMODE
 	help
                 This feature enables support for Low Power Mode operation.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
+
+config SERVICE_EMMC
+	bool "EMMC support"
+	default n
+	help
+                This feature enables support for booting via EMMC.
+
+		If you do not know what to do here, say Y.
 
 config SERVICE_QSPI
 	bool "QSPI support"
@@ -71,7 +79,7 @@ config SERVICE_QSPI
 	help
                 This feature enables support for booting via QSPI.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_QSPI_COPY_TO_DDR
 	bool "QSPI support"
@@ -81,7 +89,7 @@ config SERVICE_QSPI_COPY_TO_DDR
                 If CONFIG_SERVICE_QSPI is enabled, this feature copies the boot image from 
                 QSPI to DDR as a means of speeding up booting.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_QSPI_USE_XIP
 	bool "XIP Mode"
@@ -91,7 +99,7 @@ config SERVICE_QSPI_USE_XIP
                 If CONFIG_SERVICE_QSPI is enabled, this feature enables Execute in Place mode
                 as a means of speeding up booting.
 
-		If you don't know what to do here, say N for now.
+		If you do not know what to do here, say N for now.
 
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for BOOT to DDR copy"
@@ -108,7 +116,7 @@ config SERVICE_SGDMA
 	help
                 This feature enables support for E51-delegated Scatter-Gather DMA.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_SPI
 	bool "SPI support"
@@ -116,7 +124,7 @@ config SERVICE_SPI
 	help
                 This feature enables support for virtual SPI.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_UART
 	bool "UART support"
@@ -124,7 +132,7 @@ config SERVICE_UART
 	help
                 This feature enables support for virtual UART.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_WDOG
 	bool "Virtual watchdog support"
@@ -133,7 +141,7 @@ config SERVICE_WDOG
                 This feature enables support for E51-delegated virtual watchdog monitoring of the
                 U54 application harts.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_IPI_POLL
 	bool "IPI Polling support"
@@ -141,7 +149,7 @@ config SERVICE_IPI_POLL
 	help
                 This feature enables support for IPI Polling.
                 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_OPENSBI
 	def_bool y
@@ -149,7 +157,7 @@ config SERVICE_OPENSBI
 	help
                 This feature enables support for OPENSBI.
                 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config SERVICE_YMODEM
 	bool "YMODEM support"
@@ -158,6 +166,6 @@ config SERVICE_YMODEM
 	help
                 This feature enables support for YMODEM.
                 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 endmenu

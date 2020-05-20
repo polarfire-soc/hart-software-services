@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -72,7 +72,7 @@ enum XYModem_Signals {
 
 mss_uart_instance_t *g_my_uart = &g_mss_uart0_lo;
 
-static int16_t ymodem_getchar(int32_t timeout_sec)
+static int16_t getchar_with_timeout_(int32_t timeout_sec)
 {
     uint8_t rx_byte = 0;
     int16_t result = 0;
@@ -80,15 +80,15 @@ static int16_t ymodem_getchar(int32_t timeout_sec)
     bool retval = uart_getchar(&rx_byte, timeout_sec, false);
 
     if (retval) {
-        result = rx_byte; 
+        result = rx_byte;
     } else {
         result = -1;
-    } 
+    }
 
     return result;
 }
 
-static void ymodem_putchar(uint8_t tx_byte)
+static void putchar_(uint8_t tx_byte)
 {
     MSS_UART_polled_tx(g_my_uart, &tx_byte, 1);
 }
@@ -110,15 +110,17 @@ struct XYModem_State {
     union {
         struct {
             int syncFail:1;
-            int eot:1;
+            int endOfSession:1;
             int abort:1;
         } s;
         int done;
     } status;
+    bool eotReceived;
     uint8_t lastReceivedBlkNum;
     uint8_t expectedBlkNum;
     size_t totalReceivedSize;
     size_t numReceivedPackets;
+    size_t numNAKs;
     char filename[HSS_XYMODEM_MAX_FILENAME_LENGTH];
     size_t expectedSize;
     size_t maxSize;
@@ -129,38 +131,34 @@ struct XYModem_State {
 /*static*/ void XYMODEM_SendReadyChar(struct XYModem_State *pState)
 {
     if (pState->protocol == HSS_XYMODEM_PROTOCOL_YMODEM) {
-        ymodem_putchar(XYMODEM_C); // explicitly request CRC16 mode
+        putchar_(XYMODEM_C); // explicitly request CRC16 mode
     } else {
-        ymodem_putchar(XYMODEM_NAK); // 
+        pState->numNAKs++;
+        putchar_(XYMODEM_NAK);
     }
-}
-
-static void XYMODEM_SendACK(void)
-{
-    ymodem_putchar(XYMODEM_ACK);
 }
 
 static void XYMODEM_SendCAN(void)
 {
     // two consequtive CAN characters without modem errors is transfer abort
-    ymodem_putchar(XYMODEM_CAN);
-    ymodem_putchar(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
 
     // YAM sends 8, for good measure
-    ymodem_putchar(XYMODEM_CAN);
-    ymodem_putchar(XYMODEM_CAN);
-    ymodem_putchar(XYMODEM_CAN);
-    ymodem_putchar(XYMODEM_CAN);
-    ymodem_putchar(XYMODEM_CAN);
-    ymodem_putchar(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
+    putchar_(XYMODEM_CAN);
 }
 
-static void XYMODEM_Purge(void)
+static void XYMODEM_Purge(int32_t timeout_sec)
 {
     // wait for line to clear
     // to prevent infinite loop here, we count down
     uint32_t max_loop_counter = 10u;
-    while (ymodem_getchar(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC) != XYMODEM_GETCHAR_TIMEOUT) {
+    while (getchar_with_timeout_(timeout_sec) != XYMODEM_GETCHAR_TIMEOUT) {
         --max_loop_counter;
         if (0u == max_loop_counter) { break; }
     }
@@ -170,13 +168,13 @@ static bool XYMODEM_ValidatePacket(struct XYModem_Packet *pPacket, struct XYMode
 {
     bool result = true;
 
-    uint16_t crc16 = CRC16_calculate((const unsigned char *)pPacket->buffer, 
+    uint16_t crc16 = CRC16_calculate((const unsigned char *)pPacket->buffer,
         pPacket->length + HSS_XYMODEM_PACKET_TRAILER);
 
     if (crc16 != 0u) { // CRC failure
         result = false;
     } else if (pPacket->blkNum != (pPacket->blkNumOnesComplement ^ 0xFFu)) { // sequence failure
-        result = false; 
+        result = false;
     } else if (pPacket->blkNum != pState->expectedBlkNum) { // sequence failure
         result = false;
     }
@@ -198,9 +196,9 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
     } else {
         //
         // Attempt to synchronize up to HSS_XYMODEM_MAX_SYNC_ATTEMPTS times
-        // 
+        //
         while (!synced && (syncAttempt < HSS_XYMODEM_MAX_SYNC_ATTEMPTS)) {
-            int16_t rawStartByte = ymodem_getchar(timeout_sec);
+            int16_t rawStartByte = getchar_with_timeout_(timeout_sec);
 
             if ((rawStartByte >= 0) && (rawStartByte < 256)) {
                 pPacket->startByte = (uint8_t)rawStartByte;
@@ -224,7 +222,8 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
             case XYMODEM_EOT:
                 can_rx_count = 0u;
                 pPacket->length = 0u;
-                pState->status.s.eot = true;
+                //pState->status.s.endOfSession = true;
+                pState->eotReceived= true;
                 synced = true;
                 syncAttempt = HSS_XYMODEM_MAX_SYNC_ATTEMPTS;
                 break;
@@ -252,7 +251,7 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
             case XYMODEM_GETCHAR_TIMEOUT:
                 __attribute__((fallthrough)); // deliberate fallthrough
             default:
-                //mHSS_DEBUG_PRINTF("%s(): %d: char is %0x" CRLF, __func__, syncAttempt, 
+                //mHSS_DEBUG_PRINTF("%s(): %d: char is %0x" CRLF, __func__, syncAttempt,
                 //    pPacket->startByte);
                 can_rx_count = 0u;
                 ++syncAttempt;
@@ -265,38 +264,41 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
         //
         // if synchronized, extract packet and validate it
         //
-        if (pState->status.s.eot) {
-            pPacket->length = 0u;
+        if (pState->status.s.endOfSession) {
             result = true;
         } else if (synced) {
             timeout_sec = HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC;
-            pPacket->blkNum = ymodem_getchar(timeout_sec);
-            pPacket->blkNumOnesComplement = ymodem_getchar(timeout_sec);
+            pPacket->blkNum = getchar_with_timeout_(timeout_sec);
+            pPacket->blkNumOnesComplement = getchar_with_timeout_(timeout_sec);
             ++(pState->numReceivedPackets);
-   
-            size_t i = 0u; 
+
+            size_t i = 0u;
             while (i < pPacket->length) {
-                pPacket->buffer[i] = ymodem_getchar(timeout_sec);
+                pPacket->buffer[i] = getchar_with_timeout_(timeout_sec);
                 ++i;
             }
 
-            pPacket->buffer[i] = ymodem_getchar(timeout_sec); ++i; //crc_hi
-            pPacket->buffer[i] = ymodem_getchar(timeout_sec); ++i; //crc_lo
+            pPacket->buffer[i] = getchar_with_timeout_(timeout_sec); ++i; //crc_hi
+            pPacket->buffer[i] = getchar_with_timeout_(timeout_sec); ++i; //crc_lo
 
             if (pState->status.done) {
                 ;
             } else {
-                if (XYMODEM_ValidatePacket(pPacket, pState)) {
+                if (pState->eotReceived)  {
+                    ;
+                } else if (XYMODEM_ValidatePacket(pPacket, pState)) {
                     pState->lastReceivedBlkNum = pPacket->blkNum;
                     ++(pState->expectedBlkNum);
-                } else {
-                    //mHSS_DEBUG_PRINTF("%s(): validate failure" CRLF, __func__);
-                    result = false; 
+                } else { // corrupt packet?
+                    result = false;
                 }
             }
-        } else {
-            //mHSS_DEBUG_PRINTF("%s(): sync failure" CRLF, __func__);
-            result = synced;
+        } else { // not synchronized
+            if (pState->status.s.abort) {
+                result = true;
+            } else {
+                result = synced;
+            }
             pPacket->length = 0u;
             pState->status.s.syncFail = true;
         }
@@ -334,7 +336,7 @@ size_t XYMODEM_GetFileSize(char *pStart, char *pEnd)
                 finished = true;
             }
             break;
-       
+
         default:
             if (!hunting) {
                 finished = true;
@@ -352,7 +354,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
 {
     size_t result;
     uint8_t retries = 0u;
-   
+
     // initialize state
     pState->status.done = 0;
     pState->lastReceivedBlkNum = 0u;
@@ -371,60 +373,61 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
         pState->expectedBlkNum = 1;
     }
 
-    static struct XYModem_Packet packet; // make this static, as it is contains a large buffer, 
+    static struct XYModem_Packet packet; // make this static, as it is contains a large buffer,
                                          //which is not friendly to the stack
     memset(&packet, 0, sizeof(packet));
 
-    // 
+    //
     // main receive loop
     //
     retries = 0u;
     while (!pState->status.done && (retries < HSS_XYMODEM_BAD_PACKET_RETRIES)) {
         if (XYMODEM_ReadPacket(&packet, pState)) {
-            XYMODEM_SendACK();
+            putchar_(XYMODEM_ACK);
 
             if (!pState->status.done) {
-                if ((pState->protocol == HSS_XYMODEM_PROTOCOL_YMODEM) && (pState->numReceivedPackets == 1u)) {
+                if ((pState->protocol == HSS_XYMODEM_PROTOCOL_YMODEM) && (pState->lastReceivedBlkNum == 0) && (pState->numReceivedPackets == 1u)) {
                     memcpy(pState->filename, packet.buffer, HSS_XYMODEM_MAX_FILENAME_LENGTH-1);
-                    pState->expectedSize = XYMODEM_GetFileSize(packet.buffer, packet.buffer+1024);
-                  
-                    // if expected file size is known a priori, ensure we have enough buffer 
+                    pState->expectedSize = XYMODEM_GetFileSize(packet.buffer, packet.buffer + mSPAN_OF(packet.buffer));
+
+                    // if expected file size is known a priori, ensure we have enough buffer
                     // space to receive and abort transfer early
-                    if (pState->expectedSize > pState->maxSize) { 
+                    if (pState->expectedSize > pState->maxSize) {
                         pState->status.s.abort = true;
                         pState->totalReceivedSize = 0u;
                         XYMODEM_SendCAN();
                         break;
                     }
+                } else if (pState->eotReceived) { // end of session
+                    pState->status.s.endOfSession = true;
+                    putchar_(XYMODEM_ACK);
+                } else if ((pState->totalReceivedSize + packet.length) < pState->maxSize) {
+                    // dynamically ensure we have enough buffer space to receive, on each received chunk
+                    memcpy(buffer + pState->totalReceivedSize, packet.buffer, packet.length);
+                    pState->totalReceivedSize += packet.length;
                 } else {
-                    // dynamically ensure we have enough buffer space to receive, on each 
-                    // received chunk
-                    if ((pState->totalReceivedSize + packet.length) < pState->maxSize) { 
-                        memcpy(buffer + pState->totalReceivedSize, packet.buffer, packet.length);
-                        pState->totalReceivedSize += packet.length;
-                    } else {
-                        pState->status.s.abort = true;
-                        pState->totalReceivedSize = 0u;
-                        XYMODEM_SendCAN();
-                        break;
-                    }
+                    pState->status.s.abort = true;
+                    pState->totalReceivedSize = 0u;
+                    XYMODEM_SendCAN();
+                    break;
                 }
-            } else {
-                // transfer was aborted
+            } else { // transfer is done
                 if (pState->status.s.abort) {
                     pState->totalReceivedSize = 0u;
                     XYMODEM_SendCAN();
                     break;
-                } else if (pState->status.s.eot) {
-                    XYMODEM_SendACK();
-                    XYMODEM_Purge(); 
+                } else if (pState->status.s.endOfSession) {
+                    putchar_(XYMODEM_ACK);
+                    XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
                 }
             }
-        } else {
+        } else { // bad packet read
            ++retries;
+
            if (pState->numReceivedPackets) {
-               XYMODEM_Purge(); 
-               ymodem_putchar(XYMODEM_NAK);
+               XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
+               pState->numNAKs++;
+               putchar_(XYMODEM_NAK);
            }
         }
     }
@@ -445,11 +448,14 @@ size_t ymodem_receive(uint8_t *buffer, size_t bufferSize)
     memset(state.filename, 0, HSS_XYMODEM_MAX_FILENAME_LENGTH);
 
     result = XYMODEM_Receive(HSS_XYMODEM_PROTOCOL_YMODEM, &state, (char *)buffer, bufferSize);
-    XYMODEM_Purge(); 
+    XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
 
     if (result != 0) {
         uint32_t crc32 = CRC32_calculate((const unsigned char *)buffer, result);
-        mHSS_PRINTF(CRLF CRLF "Received %lu bytes from %s (CRC32 is 0x%08X)" CRLF, result, state.filename, crc32);
+        mHSS_PRINTF(CRLF CRLF "Received %lu bytes from %s (CRC32 is 0x%08X)" CRLF, result, 
+            state.filename, crc32);
+        //mHSS_PRINTF(CRLF CRLF "Expected %lu bytes in %lu packets (%lu NAKs)" CRLF, state.expectedSize, 
+        //    state.numReceivedPackets, state.numNAKs);
     }
 
     return result;

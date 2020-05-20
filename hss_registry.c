@@ -245,13 +245,16 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_LogoInit",                  HSS_LogoInit,                  false },
 #endif
     { "HSS_E51_Banner",                HSS_E51_Banner,                false },
+#ifdef CONFIG_SERVICE_EMMC
+    { "HSS_EMMCInit",                  HSS_EMMCInit,                  false },
+#endif
+#ifdef CONFIG_SERVICE_QSPI
+    { "HSS_QSPIInit",                  HSS_QSPIInit,                  false },
+#endif
 #ifdef CONFIG_TINYCLI
     { "HSS_TinyCLI_Parser",            HSS_TinyCLI_Parser,            false },
 #endif
     { "IPI_QueuesInit",                IPI_QueuesInit,                false },
-#ifdef CONFIG_SERVICE_QSPI
-    { "HSS_QSPIInit",                  HSS_QSPIInit,                  false },
-#endif
 #ifdef CONFIG_SERVICE_BOOT
     { "HSS_PMP_Init",                  HSS_PMP_Init,                  false },
     { "HSS_BootInit",                  HSS_BootInit,                  false },
