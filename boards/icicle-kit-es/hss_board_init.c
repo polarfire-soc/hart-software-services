@@ -63,33 +63,7 @@ const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 #include "mss_sysreg.h"
 bool HSS_BoardInit(void)
 {
-#if 0
-    bool HSS_TinyCLI_Parser(void);
-    void init_memory(void);
-    void init_bus_error_unit(void);
-    void init_mem_protection_unit(void);
-    void init_pmp(uint8_t);
-    uint8_t mss_nwc_init(void);
-
-    HSS_Setup_Clocks();
-    HSS_Setup_PAD_IO();
-    init_memory();
-    init_bus_error_unit();
-    init_mem_protection_unit();
-    init_pmp(0);
-
-    HSS_DDRInit();
-
-    //mss_nwc_init();
-    //HSS_UARTInit();
-
-    //HSS_TinyCLI_Parser();
-
-    HSS_ZeroDDR();
-
-#else
     RunInitFunctions(spanOfBoardInitFunctions, boardInitFunctions);
-#endif
 
     return true;
 }
