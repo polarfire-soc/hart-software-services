@@ -25,7 +25,7 @@ config CC_STACKPROTECTOR_STRONG
 	help
 		This feature enables strong stack checking on all function calls.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config CC_DUMP_STACKSIZE
 	bool "Dump stack sizes"
@@ -33,7 +33,7 @@ config CC_DUMP_STACKSIZE
 	help
 		This feature dumps information about the stack sizes
 
-		If you don't know what to do here, say N.
+		If you do not know what to do here, say N.
 
 config LD_RELAX
 	bool "Use RISC-V Relaxing and the Global Pointer, GP"
@@ -49,7 +49,7 @@ config LD_RELAX
 		This can lead to smaller code size, but it does impose requirements on subsequent
 		firmwares that they save/restore the GP.
 		  
-		If you don't know what to do here, say N.
+		If you do not know what to do here, say N.
 
 config USE_MAKEDEP
 	bool "Enable make dependencies in build system"
@@ -59,7 +59,7 @@ config USE_MAKEDEP
                 files - one for each source file - which contain the analysed dependencies for the
                 source.  This improves source dependency checking during builds.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config USE_GNU_BUILD_ID
 	bool "Enable GNU Build ID in image"
@@ -67,7 +67,7 @@ config USE_GNU_BUILD_ID
 	help
 		This feature enables the generation of a GNU Build ID in binaries.
 
-		If you don't know what to do here, say Y.
+		If you do not know what to do here, say Y.
 
 config HAS_INTTYPES
 	bool "Use inttypes.h"
