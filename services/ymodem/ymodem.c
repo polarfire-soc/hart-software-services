@@ -101,7 +101,7 @@ struct XYModem_Packet {
     uint8_t blkNumOnesComplement;
     char buffer[1024 + HSS_XYMODEM_PACKET_TRAILER];
     //
-    uint8_t padding[3];
+    //uint8_t padding[3];
     size_t length;
 };
 
@@ -392,7 +392,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
                     // space to receive and abort transfer early
                     if (pState->expectedSize > pState->maxSize) { 
                         pState->status.s.abort = true;
-                        pState->totalReceivedSize = 0;
+                        pState->totalReceivedSize = 0u;
                         XYMODEM_SendCAN();
                         break;
                     }
@@ -404,7 +404,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
                         pState->totalReceivedSize += packet.length;
                     } else {
                         pState->status.s.abort = true;
-                        pState->totalReceivedSize = 0;
+                        pState->totalReceivedSize = 0u;
                         XYMODEM_SendCAN();
                         break;
                     }
@@ -412,7 +412,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
             } else {
                 // transfer was aborted
                 if (pState->status.s.abort) {
-                    pState->totalReceivedSize = 0;
+                    pState->totalReceivedSize = 0u;
                     XYMODEM_SendCAN();
                     break;
                 } else if (pState->status.s.eot) {
