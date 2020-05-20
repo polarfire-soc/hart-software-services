@@ -50,7 +50,7 @@ extern uint32_t __sc_end;
 /*******************************************************************************
  * Local function declarations
  */
-static void copy_switch_code(void);
+__attribute__((weak)) void copy_switch_code(void);
 
 
 /*******************************************************************************
@@ -726,7 +726,7 @@ void rotate_clk_by_ninty_deg(void)
  * Copy switch code routine to RAM.
  * Copy locations have been defined in the linker script
  ******************************************************************************/
-static void copy_switch_code(void)
+__attribute__((weak)) void copy_switch_code(void)
 {
     uint32_t * sc_lma = &__sc_load;
     uint32_t * end_sc_vma = &__sc_end;

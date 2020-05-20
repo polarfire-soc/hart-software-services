@@ -373,7 +373,7 @@ __attribute__((weak)) void u54_4(void)
   * example copying before the copy_section of the .text section has taken
   * place.
   */
- char * config_copy(void *dest, const void * src, size_t len)
+ __attribute__((weak)) char * config_copy(void *dest, const void * src, size_t len)
  {
      char *csrc = (char *)src;
      char *cdest = (char *)dest;

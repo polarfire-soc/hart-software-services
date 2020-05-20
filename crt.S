@@ -22,9 +22,9 @@
 	.section .entry, "ax", %progbits
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
-	.align 3
-	.globl _start
-	.globl _start_warm
+	.align	3
+	.globl	_start
+	.globl	_start_warm
 _start:
 	li	ra, 0
 	call	_reset_regs
@@ -45,7 +45,7 @@ _start:
 #ifdef CONFIG_LD_RELAX
 .option push
 .option norelax
-        lla	gp, __global_pointer$
+        la	gp, __global_pointer$
 .option pop
 #endif
 .endm
@@ -60,10 +60,10 @@ _start:
         la	a4, platform
 	lwu	s7, SBI_PLATFORM_HART_COUNT_OFFSET(a4)
 	//lwu	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
-	lla	s8, STACK_SIZE_PER_HART
+	la	s8, STACK_SIZE_PER_HART
         csrr	a0, CSR_MHARTID
 
-        lla	tp, __stack_bottom + 63
+        la	tp, __stack_bottom + 63
         and	tp, tp, -64
         li	a1, 1
 
@@ -301,54 +301,54 @@ _trap_handler_all_mode:
 	mret
 
 	.section .entry, "ax", %progbits
-	.align 3
-	.globl _reset_regs
+	.align	3
+	.globl	_reset_regs
 _reset_regs:
 	// flush the instruction cache
 	fence.i
 
 	// Reset all registers except ra, a0, a1 and a2
-	li gp, 0
-	li sp, 0
-	li tp, 0
-	li t0, 0
-	li t1, 0
-	li t2, 0
-	li s0, 0
-	li s1, 0
-	li a3, 0
-	li a4, 0
-	li a5, 0
-	li a6, 0
-	li a7, 0
-	li s2, 0
-	li s3, 0
-	li s4, 0
-	li s5, 0
-	li s6, 0
-	li s7, 0
-	li s8, 0
-	li s9, 0
-	li s10, 0
-	li s11, 0
-	li t3, 0
-	li t4, 0
-	li t5, 0
-	li t6, 0
-	csrw CSR_MSCRATCH, 0
+	li gp,	0
+	li sp,	0
+	li tp,	0
+	li t0,	0
+	li t1,	0
+	li t2,	0
+	li s0,	0
+	li s1,	0
+	li a3,	0
+	li a4,	0
+	li a5,	0
+	li a6,	0
+	li a7,	0
+	li s2,	0
+	li s3,	0
+	li s4,	0
+	li s5,	0
+	li s6,	0
+	li s7,	0
+	li s8,	0
+	li s9,	0
+	li s10,	0
+	li s11,	0
+	li t3,	0
+	li t4,	0
+	li t5,	0
+	li t6,	0
+	csrw	CSR_MSCRATCH, 0
 
 	ret
 
 	.section .entry, "ax", %progbits
-	.align 3
-	.globl hss_e51_trap_handler
+	.align	3
+	.globl	hss_e51_trap_handler
 hss_e51_trap_handler:
         wfi
         j	hss_e51_trap_handler
 
 	.section .entry, "ax", %progbits
-	.align 3
-	.globl hss_u54_trap_handler
+	.align	3
+	.globl	hss_u54_trap_handler
 hss_u54_trap_handler:
 	REG_S 	a0, 10*REGBYTES(sp)
 	REG_S 	a1, 11*REGBYTES(sp)
@@ -367,13 +367,13 @@ hss_u54_trap_handler:
 	fence
 	mret
 
-
 .delegate_trap_to_opensbi:
-	REG_L a0, 10*REGBYTES(sp)
-	REG_L a1, 11*REGBYTES(sp)
-	j _trap_handler
+	REG_L	a0, 10*REGBYTES(sp)
+	REG_L	a1, 11*REGBYTES(sp)
+	j	_trap_handler
 
-/***********************************************************************
+
+/***********************************************************************************
  *
  * The following init_memory() symbol overrides the weak symbol in the HAL and does
  * a safe copy of RW data and clears zero-init memory
@@ -385,9 +385,9 @@ hss_u54_trap_handler:
         //
 	.type	.zero_section, @function
 .zero_section:
-	beq	a0,a1,.zero_section_done
-	sd	zero,(a0)
-	addi	a0,a0,8
+	beq	a0, a1, .zero_section_done
+	sd	zero, (a0)
+	addi	a0, a0, 8
 	j	.zero_section
 .zero_section_done:
 	ret
@@ -396,19 +396,18 @@ hss_u54_trap_handler:
         //	a0 = load_addr
         //	a1 = exec_start_addr
         //	a2 = exec_end_addr
-	.type	.copy_section, @function
-.copy_section:
-	sub	a2,a2,a1                   // length = exec_end_addr - exec_start_addr
-	li	a5,0                       // offset = 0
+	.globl	copy_section
+	.type	copy_section, @function
+copy_section:
         beq     a1, a0, .copy_section_done // if load_addr == exec_start_addr, goto copy_section_done 
+.check_if_copy_section_done:
+	beq	a1, a2, .copy_section_done // if offset != length, goto keep_copying
 .keep_copying:
-	add	a4,a0,a5                   // tmp = load_addr + offset
-	ld	a3,0(a4)                   // val = *tmp
-	add	a4,a1,a5                   // tmp = exec_start_addr + offset
-	sd	a3,0(a4)                   // *tmp = val;
-	addi	a5,a5,8                    // offset = offset + 8
-.checkIfCopyDone:
-	bne	a5,a2,.keep_copying        // if offset != length, goto keep_copying
+	ld	a3, 0(a0)                  // val = *load_addr
+	sd	a3, 0(a1)                  // *exec_start_addr = val;
+	addi	a0, a0, 8                  // load_addr = load_addr + 8
+	addi	a1, a1, 8                  // exec_start_addr = exec_start_addr + 8
+        j	.check_if_copy_section_done
 .copy_section_done:
         ret
 
@@ -427,17 +426,17 @@ init_memory:
         la	a0, __sdata_load
         la	a1, __sdata_start
         la	a2, __sdata_end
-	call	.copy_section
+	call	copy_section
 
         la	a0, __data_load
         la	a1, __data_start
         la	a2, __data_end
-	call	.copy_section
+	call	copy_section
 
         la	a0, __l2_scratchpad_load
         la	a1, __l2_scratchpad_start
         la	a2, __l2_scratchpad_end
-	call	.copy_section
+	call	copy_section
 
         //
         // Clear zero-init memory
@@ -453,3 +452,62 @@ init_memory:
 	ld	ra,8(sp)
 	addi	sp,sp,16
 	tail	.zero_section
+
+/***********************************************************************************
+ *
+ * The following config_copy() symbol overrides the weak symbol in the HAL and does
+ * a safe copy of HW config data
+ */
+        // config_copy helper function:
+        //	a0 = src
+        //	a1 = dest
+        //	a2 = length
+        .globl  config_copy
+        .type   config_copy, @function
+config_copy:
+        li      a5,0                     # initialize offset
+.check_if_config_copy_done:
+        beq     a2,a5, .config_copy_done # if offset == length, goto config_copy_done
+.do_config_copy:
+        add     a4,a1,a5                 # csrc = src + offset
+        lbu     a3,0(a4)                 # tmp = *csrc
+        add     a4,a0,a5                 # cdest = dest + offset
+        addi    a5,a5,1                  # offset = offset + 1
+        sb      a3,0(a4)                 # *cdest = *csrc
+        j       .check_if_config_copy_done
+.config_copy_done:
+        mv      a0,a1                    # return origin dest 
+        ret
+
+/***********************************************************************************
+ *
+ * The following config_copy() symbol overrides the weak symbol in the HAL and does
+ * a safe copy of HW config data
+ */
+	.globl	copy_switch_code
+	.type	copy_switch_code, @function
+copy_switch_code:
+        la      a5, __sc_start               // a5 = __sc_start
+        la      a4, __sc_load                // a4 = __sc_load
+	beq	a5,a4,.copy_switch_code_done // if a5 == a4, goto copy_switch_code_done
+        la      a3, __sc_end                 // a3 = __sc_end
+	beq	a5,a3,.copy_switch_code_done // if a5 == a3, goto copy_switch_code_done
+.copy_switch_code_loop:
+	lw	a2,0(a4)                     // a2 = *a4
+	sw	a2,0(a5)                     // *a5 = a2
+	addi	a5,a5,4                      // a5+=4
+	addi	a4,a4,4                      // a4+=4
+
+	bltu	a5,a3,.copy_switch_code_loop // if a5 < a3, goto copy_switch_code_loop
+.copy_switch_code_done:
+	ret
+
+        // copy_section helper function:
+        //	a0 = load_addr
+        //	a1 = exec_start_addr
+        //	a2 = exec_end_addr
+        // copy_switch_code:
+        // la	a0, __sc_load
+	// la	a1, __sc_start
+	// la	a2, __sc_end
+	// tail copy_section

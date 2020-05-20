@@ -72,7 +72,7 @@ void init_memory( void);
 uint8_t init_mem_protection_unit(void);
 uint8_t init_pmp(uint8_t hart_id);
 uint8_t init_bus_error_unit( void);
-char * config_copy(void *dest, const void * src, size_t len);
+__attribute__((weak)) char * config_copy(void *dest, const void * src, size_t len);
 
 #ifdef __cplusplus
 }
