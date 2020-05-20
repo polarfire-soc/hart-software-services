@@ -337,13 +337,13 @@ typedef struct {
 /* Command Queuing - interrupt */
 #define SRS12_CMD_QUEUING_INT       0x00004000u
 /* Re-Tuning Event */
-/*#define SRS12_RETUNING_EVENT        0x00001000u
+/*#define SRS12_RETUNING_EVENT        0x00001000u */
 /* Interrupt on line C */
 #define SRS12_INTERRUPT_ON_LINE_C   0x00000800u
 /* Interrupt on line B */
 #define SRS12_INTERRUPT_ON_LINE_B   0x00000400u
 /* Interrupt on line A */
-#define SRS12_INTERRUPT_ON_LINE_A   0x00000200u*/
+#define SRS12_INTERRUPT_ON_LINE_A   0x00000200u
 /* Card interrupt */
 #define SRS12_CARD_INTERRUPT        0x00000100u
 /* Card removal */

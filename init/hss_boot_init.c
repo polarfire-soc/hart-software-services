@@ -25,9 +25,13 @@
 #endif
 
 #ifdef CONFIG_SERVICE_QSPI
-#  include "encoding.h"
+//#  include "encoding.h"
 #  include "qspi_service.h"
-#  include <mss_qspi.h>
+//#  include <mss_qspi.h>
+#endif
+
+#ifdef CONFIG_SERVICE_EMMC
+#  include "emmc_service.h"
 #endif
 
 #include "hss_state_machine.h"
@@ -69,8 +73,8 @@ bool HSS_BootInit(void)
     mHSS_DEBUG_PRINTF("Initializing Boot Image.." CRLF);
 
 #ifdef CONFIG_SERVICE_BOOT
-#  ifdef CONFIG_SERVICE_QSPI
-    struct HSS_BootImage *pBootImage = (struct HSS_BootImage *)QSPI_BASE;
+#  if (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_EMMC))
+    struct HSS_BootImage *pBootImage = NULL;
 #  elif defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     // assuming that boot image is statically linked with the HSS ELF
     //
@@ -81,11 +85,12 @@ bool HSS_BootInit(void)
 #      error Unable to determine boot mechanism
 #  endif
 
-    if (!pBootImage) {
+#  if defined(CONFIG_COMPRESSION)
+     // for now, compression only works with payload
+     (!pBootImage) {
         mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
         result = false;
-    } else {
-#  if defined(CONFIG_COMPRESSION)
+     } else {
         mHSS_DEBUG_PRINTF("Preparing to decompress to DDR..." CRLF);
         void* const pInput = (void*)pBootImage;
         void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
@@ -98,40 +103,58 @@ bool HSS_BootInit(void)
         } else {
             pBootImage = NULL;
         }
-#  elif defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_QSPI_COPY_TO_DDR)
-        mHSS_DEBUG_PRINTF("Preparing to copy from QSPI to DDR..." CRLF);
-        // code to copy from QSPI base to DDR to go here...
+#  elif defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI)
+     {
+#    ifndef CONFIG_SERVICE_QSPI_COPY_TO_DDR
+         // TODO: refactor
+#        error SERVICE_QSPI_COPY_TO_DDR must be set
+#    endif
 
+#    if defined(CONFIG_SERVICE_EMMC)
+        mHSS_DEBUG_PRINTF("Preparing to copy from EMMC to DDR..." CRLF);
+#    elif defined (CONFIG_SERVICE_QSPI)
+        mHSS_DEBUG_PRINTF("Preparing to copy from QSPI to DDR..." CRLF);
+#    endif
         // set pDestImageInDDR to an appropriate location in DDR
         void *pDestImageInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
-#ifndef CONFIG_SERVICE_QSPI_USE_XIP
+#    if (defined(CONFIG_SERVICE_QSPI) && !defined(CONFIG_SERVICE_QSPI_USE_XIP))
         // if we are not using XIP, then we need to do an initial copy of the
         // boot header into our structure, for subsequent use
         struct HSS_BootImage bootImage;
-    	HSS_QSPI_MemCopy(&bootImage, (void *)QSPI_BASE, sizeof(struct HSS_BootImage));
+    	HSS_QSPI_MemCopy(&bootImage, (void *)0, sizeof(struct HSS_BootImage));
         pBootImage = &bootImage;
-#endif
+#    elif defined(CONFIG_SERVICE_EMMC)
+        // if we are using EMMC, then we also need to do an initial copy of the
+        // boot header into our structure, for subsequent use
+        struct HSS_BootImage bootImage;
+    	HSS_EMMC_MemCopy(&bootImage, (void *)0, sizeof(struct HSS_BootImage));
+        pBootImage = &bootImage;
+#    endif
 
         // quickly validate boot image header before a needless copy is performed
         if (pBootImage->magic == mHSS_BOOT_MAGIC) { // causes problems w. RENODE
-            mHSS_DEBUG_PRINTF("Copying %lu bytes from 0x%X to 0x%X" CRLF, 
-                pBootImage->bootImageLength, QSPI_BASE, pDestImageInDDR);
+            mHSS_DEBUG_PRINTF("Copying %lu bytes to 0x%X" CRLF, 
+                pBootImage->bootImageLength, pDestImageInDDR);
 
             const size_t maxChunkSize = 4096u * 256u;
             size_t bytesLeft = pBootImage->bootImageLength;
             size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
-            char *pSrc = (void *)QSPI_BASE;
+            char *pSrc = (char *)0;
             char *pDest = pDestImageInDDR;
 
             const char throbber[] = { '|', '/', '-', '\\' };
             unsigned int state = 0u;
             while (bytesLeft) {
                 state++; state %= 4;
-                mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) from 0x%X to 0x%X\r", 
-                    throbber[state], chunkSize, bytesLeft, (void *)pSrc, pDest);
+                mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) to 0x%X\r", 
+                    throbber[state], chunkSize, bytesLeft, pDest);
 
+#    if defined(CONFIG_SERVICE_EMMC)
+    	        HSS_EMMC_MemCopy(pDest, pSrc, chunkSize);
+#    else
     	        HSS_QSPI_MemCopy(pDest, pSrc, chunkSize);
+#    endif
 
                 pSrc += chunkSize;
                 pDest += chunkSize;
@@ -141,7 +164,7 @@ bool HSS_BootInit(void)
             }
 
             // clear copy output to console by printing an empty string
-            mHSS_DEBUG_PRINTF_EX("                                                                               \r");
+            mHSS_DEBUG_PRINTF_EX("                                                                      \r");
 
             pBootImage = (struct HSS_BootImage *)pDestImageInDDR;
         }

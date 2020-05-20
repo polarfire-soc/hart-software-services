@@ -29,8 +29,17 @@
 EXTRA_SRCS-y += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.c \
 
-EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
+ifdef CONFIG_PLATFORM_MPFS
+EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \
+
+EXTRA_SRCS-$(CONFIG_SERVICE_EMMC) += \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc_if.c \
+
+endif
+
+EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_uart/mss_uart.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.c \
 	baremetal/drivers/mss_watchdog/mss_watchdog.c \
@@ -54,12 +63,17 @@ ASM_SRCS += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mutex.S
 
 INCLUDES += \
+	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma \
 	-Ibaremetal/drivers/mss_watchdog \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/hal \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal \
+
+baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c config.h
 	@$(ECHO) " CC        $@";

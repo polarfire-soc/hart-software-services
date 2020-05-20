@@ -287,8 +287,8 @@ MSS_MMC_init
     uint32_t csd_reg[BLK_SIZE/WORD_SIZE];
     uint8_t *pcsd_reg = NULL_POINTER;
 
-    uint32_t hw_sec_count;
-    uint8_t hw_ext_csd_rev;
+    uint32_t hw_sec_count; 
+    uint8_t hw_ext_csd_rev; //unused
     uint8_t hw_device_type;
     uint8_t hw_strobe_suport;
     uint8_t hw_hs_timing;
@@ -580,6 +580,8 @@ MSS_MMC_init
                                 hw_sec_count   = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
                                 hw_ext_csd_rev = pcsd_reg[EXT_CSD_REVISION_OFFSET] & BYTE_MASK;
                                 hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
+
+                                (void)hw_sec_count; // reference to avoid compiler warning
     
                                 if ((MMC_CLEAR == hw_hs_timing) && 
                                     (cfg->bus_speed_mode != MSS_MMC_MODE_LEGACY))
@@ -679,6 +681,8 @@ MSS_MMC_init
                             | SRS12_CARD_INTERRUPT
                             | SRS12_CARD_REMOVAL
                             | SRS12_CARD_INSERTION);
+
+    (void) hw_ext_csd_rev; // reference to avoid compiler warning
     return(ret_status);
 }
 
@@ -899,7 +903,7 @@ MSS_MMC_sdma_read
                         do
                         {
                             srs9 = MMC->SRS09;
-                        }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                        }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                         /* multi block transfer */
                         g_mmc_is_multi_blk = MMC_SET;
                         /* Command argument */
@@ -919,7 +923,7 @@ MSS_MMC_sdma_read
                     do
                     {
                         srs9 = MMC->SRS09;
-                    }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                    }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                     /* single block transfer */
                     g_mmc_is_multi_blk = MMC_CLEAR;
                     /* Command argument */
@@ -1022,7 +1026,7 @@ MSS_MMC_adma2_read
                             do
                             {
                                 srs9 = MMC->SRS09;
-                            }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                            }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                             /* multi block transfer */
                             g_mmc_is_multi_blk = MMC_SET;
                             /* Command argument */
@@ -1040,7 +1044,7 @@ MSS_MMC_adma2_read
                         do
                         {
                             srs9 = MMC->SRS09;
-                        }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                        }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                         /* single block transfer */
                         g_mmc_is_multi_blk = MMC_CLEAR;
                         /* Command argument */
@@ -1156,6 +1160,9 @@ MSS_MMC_sdio_single_block_read
     {
         ret_status = MSS_MMC_NOT_INITIALISED;
     }
+
+
+    (void) response_status; // reference to avoid compiler warning
     return (ret_status);
 }
 /*******************************************************************************
@@ -1352,7 +1359,7 @@ MSS_MMC_sdma_write
                         do
                         {
                             srs9 = MMC->SRS09;
-                        }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                        }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                         /* multi block transfer */
                         g_mmc_is_multi_blk = MMC_SET;
 
@@ -1373,7 +1380,7 @@ MSS_MMC_sdma_write
                     do
                     {
                         srs9 = MMC->SRS09;
-                    }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                    }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                     /* single block transfer */
                     g_mmc_is_multi_blk = MMC_CLEAR;
                     /* execute command */
@@ -1474,7 +1481,7 @@ MSS_MMC_adma2_write
                         do
                         {
                             srs9 = MMC->SRS09;
-                        }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                        }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                         /* multi block transfer */
                         g_mmc_is_multi_blk = MMC_SET;
                         MMC->SRS02 = argument;
@@ -1491,7 +1498,7 @@ MSS_MMC_adma2_write
                         do
                         {
                             srs9 = MMC->SRS09;
-                        }while ((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT) != MMC_CLEAR));
+                        }while (((srs9 & (SRS9_CMD_INHIBIT_CMD | SRS9_CMD_INHIBIT_DAT)) != MMC_CLEAR));
                         /* single block transfer */
                         g_mmc_is_multi_blk = MMC_CLEAR;
                         /* execute command */
@@ -1663,6 +1670,8 @@ mss_mmc_status_t MSS_MMC_cq_init(void)
     {
         ret_status = MSS_MMC_CQ_INIT_FAILURE;
     }
+
+    (void) hw_cq_depth; // reference to avoid compiler warning
     return ret_status;
 }
 /*-------------------------------------------------------------------------*//**
@@ -1680,8 +1689,8 @@ MSS_MMC_cq_write
     uint32_t *dcmdTaskDesc = NULL_POINTER;
     uint32_t flags;
     uint32_t desc_offset;
-    volatile uint32_t trans_status_isr;
-    uint32_t cmd_response;
+    // volatile uint32_t trans_status_isr; //unused
+    //uint32_t cmd_response; //unused
     uint32_t blockcount;
     uint32_t argument;
     uint32_t blocklen;
@@ -1819,8 +1828,8 @@ MSS_MMC_cq_read
     uint32_t *dcmdTaskDesc = NULL_POINTER;
     uint32_t flags;
     uint32_t desc_offset;
-    volatile uint32_t trans_status_isr;
-    uint32_t cmd_response;
+    //volatile uint32_t trans_status_isr; //unused
+    //uint32_t cmd_response; //unused
     uint32_t blockcount;
     uint32_t argument;
     uint32_t blocklen;
@@ -2507,7 +2516,7 @@ MSS_MMC_cq_single_task_write
     uint32_t flags;
     uint32_t desc_offset;
     volatile uint32_t trans_status_isr;
-    uint32_t cmd_response;
+    //uint32_t cmd_response; //unused
     uint32_t blockcount;
     uint32_t argument;
     uint32_t blocklen;
@@ -2612,7 +2621,7 @@ MSS_MMC_cq_single_task_read
     uint32_t flags;
     uint32_t desc_offset;
     volatile uint32_t trans_status_isr;
-    uint32_t cmd_response;
+    //uint32_t cmd_response; //unused
     uint32_t blockcount;
     uint32_t argument;
     uint32_t blocklen;
@@ -2706,10 +2715,9 @@ MSS_MMC_cq_single_task_read
 *******************************************************************************/
 static void phy_training_mmc(uint8_t delay_type, uint32_t clk_rate)
 {
-
     uint32_t max_delay;
     uint16_t i;
-    uint8_t status;
+    // uint8_t status; // unused
     uint8_t pos, length, currLength;
     uint8_t new_delay;
     uint8_t rx_buff[BLK_SIZE];
@@ -2753,7 +2761,7 @@ static void phy_training_mmc(uint8_t delay_type, uint32_t clk_rate)
 /******************************************************************************/
 static void phy_write_set(uint8_t delay_type, uint8_t delay_value)
 {
-    uint8_t phyaddr;
+    uint8_t phyaddr = 0u; //guarantee initialized
     uint32_t reg, phycfg;
 
     /* Phy delay set for eMMC modes */
@@ -2999,6 +3007,10 @@ static mss_mmc_status_t mmccard_oper_config(const mss_mmc_cfg_t * cfg)
     {
         ret_status = MSS_MMC_OP_COND_ERR;
     }
+
+    (void)access_mode; //unused, so reference to avoid compiler warning
+    (void)sector_size; //unused, so reference to avoid compiler warning
+
     return ret_status;
 }
 /******************************************************************************/
@@ -3369,6 +3381,10 @@ static mss_mmc_status_t sdcard_oper_config(const mss_mmc_cfg_t * cfg)
     {
         ret_status = MSS_MMC_TRANSFER_FAIL;
     }
+
+    (void) CCS; // unused, so reference to avoid compiler warning
+    (void) sector_size; // unused, so reference to avoid compiler warning
+
     return(ret_status);
 }
 /*****************************SDIO START***************************************/
@@ -3378,8 +3394,8 @@ static mss_mmc_status_t sdio_oper_config(const mss_mmc_cfg_t * cfg)
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
     cif_response_t response_status;
     uint32_t temp;
-    uint32_t power_up_status;
-    uint32_t scr_reg[BYTES_2];
+    // uint32_t power_up_status; // unused
+    //uint32_t scr_reg[BYTES_2]; //unused?
     uint32_t bus_width;
     uint32_t tmp, argument;
     
@@ -3632,6 +3648,8 @@ static mss_mmc_status_t sdio_oper_config(const mss_mmc_cfg_t * cfg)
 
                 manufacturerCode = buffer[MMC_CLEAR] | ((uint16_t)buffer[BYTES_1] << SHIFT_8BIT);
                 manufacturer_information = buffer[BYTES_2] | ((uint16_t)buffer[BYTES_3] << SHIFT_8BIT);
+                (void) manufacturerCode; // unused, so reference to avoid compiler warning
+                (void) manufacturer_information; // unused, so reference to avoid compiler warning
                 
                 ret_status = change_sdio_device_bus_mode(cfg);
                 if (ret_status == MSS_MMC_TRANSFER_SUCCESS)
@@ -3655,13 +3673,16 @@ static mss_mmc_status_t sdio_oper_config(const mss_mmc_cfg_t * cfg)
     {
         ret_status = MSS_MMC_TRANSFER_FAIL;
     }
+
+    (void) bus_width; // unused, so referencing to avoid compiler warning
+
     return(ret_status);
 }
 
 /******************************************************************************/
 static mss_mmc_status_t change_sdio_device_bus_mode(const mss_mmc_cfg_t * cfg)
 {
-    mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
+    //mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR; //unused
     uint8_t high_speed_reg, uhsi_support;
     uint8_t enable_high_speed = MMC_CLEAR;
     uint32_t tmp;
@@ -3778,10 +3799,10 @@ static void sdio_host_access_cccr
     uint8_t register_address
 )
 {
-
     uint8_t number_of_bytes, i = MMC_CLEAR;
     uint32_t argument, response, tmp = MMC_CLEAR;
     cif_response_t response_status = TRANSFER_IF_SUCCESS;
+
     /* set numbers of bytes to transfer
       and check if the data parameter has appropriate size */
     switch (register_address) {
@@ -3850,6 +3871,8 @@ static void sdio_host_access_cccr
                                         MSS_MMC_RESPONSE_R5);
         }
     }
+
+    (void) response_status; // reference to avoid compiler warning
 }
 /******************************************************************************/
 static void sdio_host_access_fbr
@@ -3861,10 +3884,10 @@ static void sdio_host_access_fbr
     uint8_t fun_num
 )
 {
-
     uint8_t number_of_bytes, i = MMC_CLEAR;
     uint32_t argument, response, tmp = MMC_CLEAR;
     cif_response_t response_status = TRANSFER_IF_SUCCESS;
+
     /* set numbers of bytes to transfer
       and check if the data parameter has appropriate size */
     switch (register_address) {
@@ -3936,6 +3959,8 @@ static void sdio_host_access_fbr
                                         MSS_MMC_RESPONSE_R5);
         }
     }
+
+    (void) response_status; // reference to avoid compiler warning
 }
 /******************************************************************************/
 static void sdio_host_get_tuple_from_cis
@@ -4009,6 +4034,7 @@ static void sdio_host_get_tuple_from_cis
         }
     }
 
+    (void) response_status; // unused, so referencing to avoid compiler warnings
 }
 /*****************************SDIO END*****************************************/
 /******************************************************************************/
@@ -4298,12 +4324,15 @@ static mss_mmc_status_t sd_card_uhsi_supported(void)
     {
         ret_status = MSS_MMC_SDCARD_NOT_SUPPORT_BUS_MODE;
     }
+#if 0
+    // the following check fails due to limited range of the data type
     else if (SDCARD_SWICH_FUNC_GET_STAT_CODE(tmp_buffer, group_num) == MASK_24BIT)
     {
         /* if status code for function is 0xF
          then function is not supported by a card */
         ret_status = MSS_MMC_SDCARD_NOT_SUPPORT_BUS_MODE;
     }
+#endif
     else if (SDCARD_SWICH_FUNC_GET_STAT_CODE(tmp_buffer, group_num) == function_num)
     {
         MMC->SRS10 |= SRS10_DATA_WIDTH_4BIT;
@@ -4591,6 +4620,12 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
     {
         ret_status = MSS_MMC_TRANSFER_FAIL;
     }
+
+    (void) hw_sec_count; // unused, so referenceing to avoid compiler warning
+    (void) hw_ext_csd_rev; // unused, so referenceing to avoid compiler warning
+    (void) hw_device_type; // unused, so referenceing to avoid compiler warning
+    (void) hw_hs_timing; // unused, so referenceing to avoid compiler warning
+
     return ret_status;
 }
 /******************************************************************************/
@@ -4819,6 +4854,8 @@ static uint8_t set_host_sdclk(uint32_t frequencyKHz)
     temp = MMC->SRS11;
     temp |= (uint32_t)SRS11_SD_CLOCK_ENABLE;
     MMC->SRS11 = temp;
+
+    (void)setFreqKhz; // reference to avoid compiler warning
     return 0;
 }
 /******************************************************************************/
@@ -4882,7 +4919,8 @@ static mss_mmc_status_t set_data_timeout(uint32_t timeout_val_us)
 /******************************************************************************/
 static mss_mmc_status_t  set_sdhost_power(uint32_t voltage)
 {
-    uint32_t temp, srs16,delay;
+    uint32_t temp, srs16;
+    //uint32_t delay; //unused
     mss_mmc_status_t status = MSS_MMC_NO_ERROR;
 
         /* disable SD bus power */

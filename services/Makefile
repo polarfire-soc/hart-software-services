@@ -35,6 +35,7 @@ include services/sgdma/Makefile
 include services/spi/Makefile
 include services/flashfreeze/Makefile
 include services/goto/Makefile
+include services/emmc/Makefile
 include services/qspi/Makefile
 include services/ipi_poll/Makefile
 include services/ddr/Makefile

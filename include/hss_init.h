@@ -47,6 +47,10 @@ bool HSS_QueuesInit(void);
 bool HSS_QSPIInit(void);
 #endif
 
+#ifdef CONFIG_SERVICE_EMMC
+bool HSS_EMMCInit(void);
+#endif
+
 #ifdef CONFIG_SERVICE_BOOT
 bool HSS_BootInit(void);
 #endif
