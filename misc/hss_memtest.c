@@ -193,7 +193,8 @@ extern const uint64_t __ddr_end;
 // However, we can workaround by using the GNU assembler to store the DDR size into a 64-bit memory 
 // location and use this size in our C code
 //
-asm("  __ddr_size: .quad (__ddr_end-__ddr_start)\n"
+asm(".align 3\n"
+    "__ddr_size: .quad (__ddr_end-__ddr_start)\n"
     ".globl   __ddr_size\n");
 extern const size_t __ddr_size;
 
