@@ -49,9 +49,11 @@
 
 //
 // local module functions
+#ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset,
     bool (*pCopyFunction)(void *pDest, size_t srcOffset, size_t byteCount));
+#endif
 static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage);
 #if defined(CONFIG_SERVICE_QSPI)
 static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage);
@@ -185,6 +187,7 @@ static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage
     mHSS_DEBUG_PRINTF(" - length is   %08X" CRLF, pBootImage->bootImageLength);
 }
 
+#ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset,
     bool (*pCopyFunction)(void *pDest, size_t srcOffset, size_t count))
@@ -225,6 +228,7 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
 
     return result;
 }
+#endif
 
 static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
 {
@@ -316,6 +320,7 @@ static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage)
     *ppBootImage = (struct HSS_BootImage *)&_payload_start;
 
     result = verifyMagic_(*ppBootImage);
+    printBootImageDetails_(*ppBootImage);
 
     return result;
 }

@@ -35,20 +35,22 @@ $(info Board MPFS selected)
 CONFIG_PLATFORM_FU540=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_FU540=1 -DSIFIVE_HIFIVE_UNLEASHED
 
+BOARD_DIR=boards/mpfs
+
 INCLUDES += \
-	-Iboards/mpfs/config/hardware \
-	-Iboards/mpfs/ \
+	-I$(BOARD_DIR)/config/hardware \
+	-I$(BOARD_DIR)/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 
 EXTRA_SRCS-y += \
-	boards/mpfs/hss_uart_init.c \
-        boards/mpfs/uart_helper.c \
-        boards/mpfs/hss_board_init.c \
+	$(BOARD_DIR)/hss_uart_init.c \
+        $(BOARD_DIR)/uart_helper.c \
+        $(BOARD_DIR)/hss_board_init.c \
 
-boards/mpfs/hss_uart_init.o: boards/mpfs/hss_uart_init.c config.h
+$(BOARD_DIR)/hss_uart_init.o: $(BOARD_DIR)/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
 
-EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += boards/mpfs/payload.o
-boards/mpfs/payload.o: payload.bin
+EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += $(BOARD_DIR)/payload.o
+$(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 	$(LD) -r -b binary $< -o $@
