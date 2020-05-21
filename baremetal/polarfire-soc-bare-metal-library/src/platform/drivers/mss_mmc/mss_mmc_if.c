@@ -10,8 +10,8 @@
  * contained within the eMMC/SD interface driver are accessed through the
  * mss_mmc_if.h header file.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12579 $
+ * SVN $Date: 2019-12-04 16:41:30 +0530 (Wed, 04 Dec 2019) $
  */
 #include "mss_mmc_if.h"
 #include "mss_mmc_regs.h"

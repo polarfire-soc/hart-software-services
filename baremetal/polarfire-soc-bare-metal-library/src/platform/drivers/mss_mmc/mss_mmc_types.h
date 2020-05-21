@@ -8,8 +8,8 @@
  * This eMMC Interface header file provides a subset of definitions from the eMMC
  * protocol JESD84-B51
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12579 $
+ * SVN $Date: 2019-12-04 16:41:30 +0530 (Wed, 04 Dec 2019) $
  */
 
 #ifndef __MSS_MMC_TYPE_H

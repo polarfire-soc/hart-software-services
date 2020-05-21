@@ -23,8 +23,8 @@
  *
  * PolarFire SoC MSS eMMC SD bare metal software driver public API.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12579 $
+ * SVN $Date: 2019-12-04 16:41:30 +0530 (Wed, 04 Dec 2019) $
  */
 /*=========================================================================*//**
   @mainpage PolarFire SoC MSS eMMC SD Bare Metal Driver
@@ -179,6 +179,7 @@ extern "C"
 #define MSS_MMC_CLOCK_25MHZ             25000u
 #define MSS_MMC_CLOCK_26MHZ             26000u
 #define MSS_MMC_CLOCK_50MHZ             50000u
+#define MSS_MMC_CLOCK_70MHZ             70000u
 #define MSS_MMC_CLOCK_100MHZ            100000u
 #define MSS_MMC_CLOCK_200MHZ            200000u
 /*  card type */
@@ -263,6 +264,12 @@ extern "C"
 #define MSS_MMC_DATA_WIDTH_4BIT         0x01u
 #define MSS_MMC_DATA_WIDTH_8BIT         0x02u
 
+/* eMMC bus voltage */
+/* 1.8v */
+#define MSS_MMC_1_8V_BUS_VOLTAGE     18u
+/* 3.3v */
+#define MSS_MMC_3_3V_BUS_VOLTAGE      33u
+
 #define MSS_SDIO_FUNCTION_NUMBER_0      0u
 #define MSS_SDIO_FUNCTION_NUMBER_1      1u
 #define MSS_SDIO_FUNCTION_NUMBER_2      2u
@@ -346,6 +353,8 @@ typedef struct
      uint8_t data_bus_width;
     /* Specifies the bus speed mode of the eMMC/SD/SDIO */ 
      uint8_t bus_speed_mode;
+    /* Specifies the bus voltage for eMMC */
+     uint8_t bus_voltage; 
 } mss_mmc_cfg_t;
 
 /*-------------------------------------------------------------------------*//**
@@ -395,6 +404,7 @@ typedef void (*mss_mmc_handler_t)(uint32_t status);
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
     
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
@@ -450,6 +460,7 @@ MSS_MMC_init
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
     
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
@@ -516,6 +527,7 @@ MSS_MMC_single_block_write
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
     
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
@@ -596,7 +608,8 @@ MSS_MMC_single_block_read
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
-    
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
@@ -672,7 +685,8 @@ MSS_MMC_sdma_write
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
-    
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
@@ -749,6 +763,7 @@ MSS_MMC_sdma_read
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
     
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
@@ -766,13 +781,13 @@ MSS_MMC_sdma_read
     }
   @endcode
  */
-mss_mmc_status_t
+/*mss_mmc_status_t
 MSS_MMC_adma2_write
 (
     const uint8_t *src,
     uint32_t dest,
     uint32_t size
-);
+); */
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_adma2_read() function is used to read a single or multiple blocks
   of data from the eMMC/SD device to the host controller using ADMA2. The size
@@ -825,6 +840,7 @@ MSS_MMC_adma2_write
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
+    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
 
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
@@ -842,13 +858,13 @@ MSS_MMC_adma2_write
     }
   @endcode
  */
-mss_mmc_status_t
+/*mss_mmc_status_t
 MSS_MMC_adma2_read
 (
     uint32_t src,
     uint8_t *dest,
     uint32_t size
-);
+); */
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_sdio_single_block_write() function is used to transfer a single
   block of data from the host controller to the SDIO device. The size of the
@@ -911,13 +927,13 @@ MSS_MMC_adma2_read
     }
   @endcode
  */
-mss_mmc_status_t
+/*mss_mmc_status_t
 MSS_MMC_sdio_single_block_write
 (
     uint8_t function_num,
     const uint32_t * src_addr,
     uint32_t dst_addr
-);
+);*/
 
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_sdio_single_block_read() function is used to read a single block
@@ -973,13 +989,13 @@ MSS_MMC_sdio_single_block_write
     }
   @endcode
  */
-mss_mmc_status_t
+/*mss_mmc_status_t
 MSS_MMC_sdio_single_block_read
 (
     uint8_t function_num,
     uint32_t src_addr,
     uint8_t *dst_addr
-);
+);*/
 
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_get_transfer_status() function returns the status of the MMC
@@ -1108,7 +1124,7 @@ void MSS_MMC_set_handler(mss_mmc_handler_t handler);
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
  */
-mss_mmc_status_t MSS_MMC_cq_init(void);
+/*mss_mmc_status_t MSS_MMC_cq_init(void); */
 
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_cq_write() function is used to transmit a single block or multiple
@@ -1184,13 +1200,13 @@ mss_mmc_status_t MSS_MMC_cq_init(void);
     }
   @endcode
  */
-mss_mmc_status_t
+/*mss_mmc_status_t
 MSS_MMC_cq_write
 (
     const uint8_t *src,
     uint32_t dest,
     uint32_t size
-);
+);*/
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_cq_read() function is used to read a single block or multiple
   blocks of data from the eMMC device to the host controller using command queue
@@ -1267,13 +1283,13 @@ MSS_MMC_cq_write
     }
   @endcode
  */
-mss_mmc_status_t
+/*mss_mmc_status_t
 MSS_MMC_cq_read
 (
     uint32_t src,
     uint8_t *dest,
     uint32_t size
-);
+);*/
 
 #ifdef __cplusplus
 }

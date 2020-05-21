@@ -9,8 +9,8 @@
  * used to configure and program the eMMC/SD device to allow data transfers
  * to be performed with the eMMC/SD Host.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12579 $
+ * SVN $Date: 2019-12-04 16:41:30 +0530 (Wed, 04 Dec 2019) $
  */
 
 #ifndef __MSS_MMC_IF_H

@@ -5,8 +5,8 @@
  *
  * PolarFire SoC MSS eMMC SD driver API's for internal use cases.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12619 $
+ * SVN $Date: 2019-12-09 12:07:14 +0530 (Mon, 09 Dec 2019) $
  */
 /*=========================================================================*//**
   Note: The MSS_MMC_pause_sdma_write_hpi(), MSS_MMC_resume_sdma_write_hpi(),

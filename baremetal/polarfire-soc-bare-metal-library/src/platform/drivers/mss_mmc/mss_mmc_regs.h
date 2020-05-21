@@ -5,8 +5,8 @@
  *
  * Register definitions of the PolarFire SoC MSS eMMC SD.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12579 $
+ * SVN $Date: 2019-12-04 16:41:30 +0530 (Wed, 04 Dec 2019) $
  */
 
 #ifndef __MSS_MMC_REGS_H_
@@ -336,14 +336,18 @@ typedef struct {
 #define SRS12_ERROR_INTERRUPT       0x00008000u
 /* Command Queuing - interrupt */
 #define SRS12_CMD_QUEUING_INT       0x00004000u
+
+#if 0
 /* Re-Tuning Event */
-/*#define SRS12_RETUNING_EVENT        0x00001000u */
+#define SRS12_RETUNING_EVENT        0x00001000u
 /* Interrupt on line C */
 #define SRS12_INTERRUPT_ON_LINE_C   0x00000800u
 /* Interrupt on line B */
 #define SRS12_INTERRUPT_ON_LINE_B   0x00000400u
 /* Interrupt on line A */
 #define SRS12_INTERRUPT_ON_LINE_A   0x00000200u
+#endif
+
 /* Card interrupt */
 #define SRS12_CARD_INTERRUPT        0x00000100u
 /* Card removal */
