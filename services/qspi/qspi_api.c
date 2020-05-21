@@ -24,6 +24,8 @@
 #include "mss_qspi.h"
 #include "mss_sys_services.h"
 
+#include "winbond_w25n01gv.h"
+
 /*
  * QSPI doesn't need a "service" to run every super-loop, but it does need to be
  * initialized early...
@@ -58,8 +60,9 @@ bool HSS_QSPIInit(void)
     MSS_QSPI_enable();
 
     /* read and output Flash ID as a sanity test */
-    void Flash_readid(uint8_t *buf);
     uint8_t rd_buf[10] __attribute__ ((aligned(4)));
+
+    Flash_init();
     Flash_readid(rd_buf);
     mHSS_FANCY_PRINTF("JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
 

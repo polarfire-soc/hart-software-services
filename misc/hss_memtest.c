@@ -20,6 +20,8 @@
  */
 
 #include "config.h"
+
+#include <stddef.h>
 #include "hss_types.h"
 
 #include "hss_debug.h"
@@ -44,7 +46,7 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
 }
 
 // Walking Ones test of the Address Bus wiring
-static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t numBytes)
+/*static*/ uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t numBytes)
 {
     const size_t numWords = numBytes / sizeof(uint64_t);
     const size_t addrMask = numWords - 1u;
@@ -55,7 +57,7 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     const uint64_t pattern = (uint64_t)0xAAAAAAAAu;
     const uint64_t antiPattern = (uint64_t)0x55555555u;
 
-    // set every cell to the pattern
+    //mHSS_FANCY_PRINTF("Walking up address bus, setting cells to pattern" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         baseAddr[offset] = pattern;
     }
@@ -63,26 +65,27 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     testOffset = 0u;
     baseAddr[0] = antiPattern;
 
+    //mHSS_FANCY_PRINTF("Walking up address bus, verifying set cells" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         if (baseAddr[offset] != pattern) {
-            mHSS_FANCY_PRINTF("1: baseAddr[0x%016llx]==0x%016llx vs 0x%016llx" CRLF, 
-                offset, baseAddr[offset], pattern);
+            mHSS_FANCY_PRINTF("1: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
+                baseAddr + offset, baseAddr[offset], pattern);
             result = ((uint64_t *)&baseAddr[offset]);
             break;
         }
     }
 
-    baseAddr[testOffset] = pattern;
+    baseAddr[0] = pattern;
 
-    // walk up the address bus, setting the cells to the antipattern
+    //mHSS_FANCY_PRINTF("Walking up address bus, setting cells to antipattern" CRLF);
     if (result == NULL) {
         for (testOffset = 1u; (testOffset & addrMask) != 0u; testOffset <<= 1) {
             baseAddr[testOffset] = antiPattern;
 
             // ensure that the base isn't affected
             if (baseAddr[0] != pattern) {
-                mHSS_FANCY_PRINTF("2: baseAddr[0x%016llx]==0x%016llx vs 0x%016llx" CRLF, 
-                    offset, baseAddr[offset], pattern);
+                mHSS_FANCY_PRINTF("2: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
+                    baseAddr + offset, baseAddr[offset], pattern);
                 result = ((uint64_t *)&baseAddr[testOffset]);
                 break;
             }
@@ -91,10 +94,10 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
                 // walk up the address bus, ensuring that no other address is affected
                 for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
                     if ((baseAddr[offset] != pattern) && (offset != testOffset)) {
-                        mHSS_FANCY_PRINTF("3: baseAddr[0x%016llx]==0x%016llx vs 0x%016llx" CRLF, 
-                            offset, baseAddr[offset], pattern);
+                        mHSS_FANCY_PRINTF("3: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
+                            baseAddr + offset, baseAddr[offset], pattern);
                         result = ((uint64_t *)&baseAddr[testOffset]);
-                        offset = 0; testOffset = 0; // terminate loops
+                        offset = 0u; testOffset = 0u; // terminate loops
                         break;
                     }
                 }
@@ -165,6 +168,15 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 
 
 //
+//
+//
+extern const uint64_t __ddr_start;
+extern const uint64_t __ddr_end;
+
+#define mGB_IN_BYTES (1024llu * 1024llu * 1024llu)
+#define mMB_IN_BYTES (1024llu * 1024llu)
+
+//
 // We only want to specify the DDR location and size in one place - the linker script
 //
 // ddr_end is too high for the RV64 toolchain, sadly.  We get an error message concerning 
@@ -176,27 +188,24 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 // So we can't easily do ...
 //
 //     extern uint64_t __ddr_end;
-//     const size_t ddr_size = (size_t)((char *)&__ddr_end - (char *)&__ddr_start);
+//     const ptrdiff_t ddr_size = (size_t)((char *)&__ddr_end - (char *)&__ddr_start);
 //
 // However, we can workaround by using the GNU assembler to store the DDR size into a 64-bit memory 
 // location and use this size in our C code
 //
 asm("  __ddr_size: .quad (__ddr_end-__ddr_start)\n"
     ".globl   __ddr_size\n");
-extern uint64_t __ddr_start;
-extern size_t   __ddr_size;
-
-#define mGB_IN_BYTES (1024llu * 1024llu * 1024llu)
+extern const size_t __ddr_size;
 
 bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    mHSS_FANCY_PRINTF("DDR size is %d GiB" CRLF, (uint32_t)(__ddr_size/mGB_IN_BYTES));
+    //mHSS_FANCY_PRINTF("DDR size is %lu GiB" CRLF, (uint32_t)(__ddr_size/mGB_IN_BYTES));
+    mHSS_FANCY_PRINTF("DDR size is %lu MiB" CRLF, (uint32_t)(__ddr_size/mMB_IN_BYTES));
 
-    if ((HSS_MemTestDataBus(&__ddr_start) != 0) 
-            || (HSS_MemTestAddressBus(&__ddr_start, __ddr_size) != NULL)) {
-        mHSS_FANCY_PRINTF("FAILED!" CRLF);
+    if ((HSS_MemTestDataBus((uint64_t *)&__ddr_start) != 0u) 
+            || (HSS_MemTestAddressBus((uint64_t *)&__ddr_start, __ddr_size) != NULL)) {
         result = false;
     }
 
@@ -208,7 +217,7 @@ bool HSS_MemTestDDRFull(void)
     bool result = HSS_MemTestDDRFast();
 
     if (result) {
-        if (HSS_MemTestDevice(&__ddr_start, __ddr_size) != NULL) {
+        if (HSS_MemTestDevice((uint64_t *)&__ddr_start, __ddr_size) != NULL) {
             mHSS_FANCY_PRINTF("FAILED!" CRLF);
             result = false;
         }

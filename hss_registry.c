@@ -234,6 +234,9 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_board_init.h"
+#ifdef CONFIG_MEMTEST
+#  include "hss_memtest.h"
+#endif
 
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_BoardInit",                 HSS_BoardInit,                 false },
@@ -245,6 +248,9 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_LogoInit",                  HSS_LogoInit,                  false },
 #endif
     { "HSS_E51_Banner",                HSS_E51_Banner,                false },
+#ifdef CONFIG_MEMTEST
+    { "HSS_MemTestDDRFast",            HSS_MemTestDDRFast,            true },
+#endif
 #ifdef CONFIG_SERVICE_EMMC
     { "HSS_EMMCInit",                  HSS_EMMCInit,                  false },
 #endif

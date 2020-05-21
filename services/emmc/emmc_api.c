@@ -60,7 +60,9 @@ bool HSS_EMMCInit(void)
 
         result = MSS_MMC_init(&g_mmc);
 
-        mHSS_DEBUG_PRINTF("MSS_MMC_init() returned  %d" CRLF, result);
+        if (result != MSS_MMC_INIT_SUCCESS) {
+            mHSS_DEBUG_PRINTF("MSS_MMC_init() returned unexpected %d" CRLF, result);
+        }
         //initialized = true;
     }
 

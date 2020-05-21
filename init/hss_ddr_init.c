@@ -15,9 +15,6 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_debug.h"
-#ifdef CONFIG_MEMTEST
-#    include "hss_memtest.h"
-#endif
 
 #include <assert.h>
 #include "csr_helper.h"
@@ -55,12 +52,6 @@ bool HSS_DDRInit(void)
 {
     //mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
     HSS_DDR_Train();
-
-#ifdef CONFIG_MEMTEST
-    //mHSS_DEBUG_PRINTF("Memory Testing DDR..." CRLF);
-    HSS_MemTestDDRFast();
-#endif
-
 
     return true;
 }

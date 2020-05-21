@@ -614,10 +614,13 @@ uint8_t program_block
     erase_block(page_nb);
 
 #ifdef PAGE_LENGTH_HACK
+    erase_block(page_nb / 4);
+/*
     erase_block(page_nb * 64);
     erase_block((page_nb + 1) * 64);
     erase_block((page_nb + 2) * 64);
     erase_block((page_nb + 3 * 64));
+*/
 #else
     erase_block(page_nb);
 #endif
@@ -653,20 +656,10 @@ void Flash_erase(void)
 {
     uint32_t page_nb;
 
-#ifdef PAGE_LENGTH_HACK
-    for(page_nb = 0; page_nb < 1024; page_nb++)
-    {
-        erase_block(page_nb * 64);
-        erase_block((page_nb + 1) * 64);
-        erase_block((page_nb + 2) * 64);
-        erase_block((page_nb + 3 * 64));
-    }
-#else
     for(page_nb = 0; page_nb < 16384; page_nb++)
     {
         erase_block(page_nb);
     }
-#endif
 }
 
 /*==============================================================================

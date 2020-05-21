@@ -20,8 +20,10 @@
 #include <strings.h>
 
 #include "hss_debug.h"
+#include "hss_init.h"
 #include "hss_tinycli.h"
 #include "hss_memtest.h"
+#include "hss_progress.h"
 #include "hss_version.h"
 #include "uart_helper.h"
 #include "mpfs_reg_map.h"
@@ -68,7 +70,7 @@ static struct {
     { CMD_HELP,   HSS_TinyCLI_CmdHandler, "HELP",    "Display command summary / command help information." },
     { CMD_VERSION,HSS_TinyCLI_CmdHandler, "VERSION", "Display system version information." },
 #ifdef CONFIG_MEMTEST
-    { CMD_MEMTEST,HSS_TinyCLI_CmdHandler, "MEMTEST", "Full DDR memory test. This will take a *long* time to complete." },
+    { CMD_MEMTEST,HSS_TinyCLI_CmdHandler, "MEMTEST", "Full DDR memory test." },
 #endif
 };
 
@@ -93,8 +95,7 @@ static bool HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index)
 
 static void HSS_TinyCLI_PrintVersion(void)
 {
-    mHSS_FANCY_PRINTF("Hart Software Services - TinyCLI Version %d.%d.%d" CRLF, HSS_VERSION_MAJOR, 
-        HSS_VERSION_MINOR, HSS_VERSION_PATCH);
+    (void)HSS_E51_Banner();
 }
 
 #ifdef CONFIG_MEMTEST
@@ -236,25 +237,16 @@ bool HSS_TinyCLI_Parser(void)
     bool keyPressedFlag = false;
     uint8_t rcv_buf;
 
-    mHSS_FANCY_PUTS("Press a key to enter CLI, ESC to skip" CRLF);
-    mHSS_FANCY_PRINTF("Timeout in %d seconds" CRLF, CONFIG_TINYCLI_TIMEOUT);
-    mHSS_PUTC('.');
-
-    if (uart_getchar(&rcv_buf, CONFIG_TINYCLI_TIMEOUT, true)) {
-        mHSS_DEBUG_PRINTF("Character %d pressed " CRLF, rcv_buf);
-
-        if (rcv_buf != 27) { // ESC => done
-            keyPressedFlag = true;
-        }
-    }
-
-    mHSS_PUTS(CRLF);
+    keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip" CRLF,
+        CONFIG_TINYCLI_TIMEOUT, &rcv_buf);
 
     if (!keyPressedFlag) {
         mHSS_FANCY_PUTS("CLI check timeout" CRLF);
     } else {
         static char *pBuffer = NULL;
         static size_t bufLen = 0u;
+
+        mHSS_FANCY_PUTS("Type HELP for list of commands" CRLF);
 
         while (!quitFlag) {
             mHSS_FANCY_PUTS(">> ");
