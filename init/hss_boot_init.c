@@ -261,10 +261,11 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
     size_t srcOffset = 0u; // assuming zero as sector/block offset for now
     HSS_EMMC_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
 
-    result = verifyMagic_(*ppBootImage);
+    result = verifyMagic_(&bootImage);
+    mHSS_DEBUG_PRINTF(" after verify" CRLF);
 
     if (result) {
-        result = copyBootImageToDDR_(*ppBootImage, 
+        result = copyBootImageToDDR_(&bootImage, 
             (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), 
             srcOffset, HSS_EMMC_ReadBlock);
         *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
@@ -291,10 +292,10 @@ static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
     size_t srcOffset = 0u; // assuming zero as sector/block offset for now
     HSS_QSPI_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
 
-    result = verifyMagic_(*ppBootImage);
+    result = verifyMagic_(&bootImage);
 
     if (result) {
-        result = copyBootImageToDDR_(*ppBootImage, 
+        result = copyBootImageToDDR_(&bootImage, 
             (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), 
             srcOffset, HSS_QSPI_ReadBlock);
         *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);

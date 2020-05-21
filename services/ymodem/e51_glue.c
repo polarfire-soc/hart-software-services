@@ -65,15 +65,15 @@
 //
 static void printResult_(uint8_t result, const char *msg);
 #ifdef CONFIG_SERVICE_QSPI
-static void e51_qspi_init(void);
-static void e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
-static void e51_qspi_erase(void);
+static bool e51_qspi_init(void);
+static bool e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
+static bool e51_qspi_erase(void);
 #endif
 
 #ifdef CONFIG_SERVICE_EMMC
-static void e51_emmc_init(void);
-static void e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
-static void e51_emmc_erase(void);
+static bool e51_emmc_init(void);
+static bool e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
+static bool e51_emmc_erase(void);
 #endif
 
 static void printResult_(uint8_t result, const char *msg)
@@ -81,12 +81,8 @@ static void printResult_(uint8_t result, const char *msg)
     static char buffer[256];
 
     static const char *errorTable[] = {
+        "Failure" CRLF,
         "Success" CRLF,
-        "Verify Error" CRLF,
-        "Bounds Check Error" CRLF,
-        "Page Latch Load Error" CRLF,
-        "Startup Failed Previously Error" CRLF,
-        "Sector Outside Bounds Error" CRLF,
     };
 
     mHSS_PRINTF("%s returned - ", msg);
@@ -100,48 +96,63 @@ static void printResult_(uint8_t result, const char *msg)
 }
 
 #ifdef CONFIG_SERVICE_QSPI
-void e51_qspi_init(void)
+static bool e51_qspi_init(void)
 {
     static bool initialized = false;
+    bool result = false;
 
     if (!initialized) {
-        HSS_QSPIInit();
+        result = HSS_QSPIInit();
 
         Flash_init(MSS_QSPI_NORMAL);
         initialized = true;
     }
+    return result;
 }
 
-static void e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
+static bool e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
 {
-    (void)HSS_QSPI_WriteBlock(wrAddr, pBuffer, receivedCount);
+    bool result = HSS_QSPI_WriteBlock(wrAddr, pBuffer, receivedCount);
+    return result;
 }
 
-static void e51_qspi_erase(void)
+static bool e51_qspi_erase(void)
 {
     Flash_erase();
+    return true;
 }
 #endif
 
 #ifdef CONFIG_SERVICE_EMMC
-static void e51_emmc_init(void)
+static bool e51_emmc_init(void)
 {
     //static bool initialized = false;
+    bool result = false;
 
     //if (!initialized) {
-        HSS_EMMCInit();
+        SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK; 
+        SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK; 
+        SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK; 
+
+        //mHSS_PRINTF("SYSREG->SUBBLK_CLOCK_CR is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SUBBLK_CLOCK_CR, SYSREG->SUBBLK_CLOCK_CR & SUBBLK_CLOCK_CR_MMC_MASK);
+        //mHSS_PRINTF("SYSREG->SOFT_RESET_CR   is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SOFT_RESET_CR, SYSREG->SOFT_RESET_CR & SOFT_RESET_CR_MMC_MASK);
+
+        result = HSS_EMMCInit();
     //    initialized = true;
     //}
+    return result;
 }
 
-static void e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
+static bool e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
 {
-    (void)HSS_EMMC_WriteBlock(wrAddr, pBuffer, receivedCount);
+    bool result = HSS_EMMC_WriteBlock(wrAddr, pBuffer, receivedCount);
+    return result;
 }
 
-static void e51_emmc_erase(void)
+static bool e51_emmc_erase(void)
 {
     // dummy
+    return true;
 }
 #endif
 
@@ -149,6 +160,7 @@ void e51_ymodem_loop(void)
 {
     uint8_t rx_byte;
     bool done = false;
+    bool result = false;
 
     uint32_t receivedCount = 0u;
     extern uint64_t __ddr_start;
@@ -190,20 +202,20 @@ void e51_ymodem_loop(void)
 #ifdef CONFIG_SERVICE_QSPI
             case '1':
                 mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
-                e51_qspi_init();
-                printResult_(0, "e51_qspi_init()");
-                e51_qspi_erase();
-                printResult_(0, "e51_qspi_erase()");
+                result = e51_qspi_init();
+                printResult_(result, "e51_qspi_init()");
+                result = e51_qspi_erase();
+                printResult_(result, "e51_qspi_erase()");
                 break;
 #endif
 
 #ifdef CONFIG_SERVICE_EMMC
             case '2':
                 mHSS_PUTS(CRLF "Erasing all of EMMC" CRLF );
-                e51_emmc_init();
-                printResult_(0, "e51_emmc_init()");
-                e51_emmc_erase();
-                printResult_(0, "e51_emmc_erase()");
+                result = e51_emmc_init();
+                printResult_(result, "e51_emmc_init()");
+                result = e51_emmc_erase();
+                printResult_(result, "e51_emmc_erase()");
                 break;
 #endif
             case '3':
@@ -218,20 +230,21 @@ void e51_ymodem_loop(void)
 #ifdef CONFIG_SERVICE_QSPI
             case '4':
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
-                e51_qspi_init();
-                printResult_(0, "e51_emmc_init()");
-                e51_qspi_program((uint8_t *)pBuffer, 0, receivedCount);
-                printResult_(0, "e51_qspi_program()");
+                result = e51_qspi_init();
+                printResult_(result, "e51_emmc_init()");
+                result = e51_qspi_program((uint8_t *)pBuffer, 0, receivedCount);
+                printResult_(result, "e51_qspi_program()");
                 break;
 #endif
 
 #ifdef CONFIG_SERVICE_EMMC
             case '5':
+                if (receivedCount ==0) { receivedCount = 1024; } //EMDALO
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
-                e51_emmc_init();
-                printResult_(0, "e51_emmc_init()");
-                e51_emmc_program((uint8_t *)pBuffer, 0, receivedCount);
-                printResult_(0, "e51_emmc_program()");
+                result = e51_emmc_init();
+                printResult_(result, "e51_emmc_init()");
+                result = e51_emmc_program((uint8_t *)pBuffer, 0, receivedCount);
+                printResult_(result, "e51_emmc_program()");
                 break;
 #endif
 

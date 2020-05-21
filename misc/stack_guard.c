@@ -29,12 +29,13 @@ __attribute__((weak)) void __stack_chk_guard_setup(void)
 
 __attribute__((weak)) void __stack_chk_fail(void)
 {
-#if 0
+    // Print a canary to know that we've had stack corruption...
+    //
+    // to help debug this, it might help to disable the print statement
+    // once stack corruption is detected...
     mHSS_DEBUG_PUTS("__stack_chk_fail(): stack corruption detected!!" CRLF);
-    while (1); // stack has been corrupted
-#else
+
     asm("ebreak");
-#endif
 }
 
 #ifdef __linux

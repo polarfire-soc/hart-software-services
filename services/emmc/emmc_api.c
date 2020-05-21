@@ -47,12 +47,14 @@ bool HSS_EMMCInit(void)
             .clk_rate = MSS_MMC_CLOCK_50MHZ,
             .card_type = MSS_MMC_CARD_TYPE_MMC,
             .bus_speed_mode = MSS_MMC_MODE_SDR,
-            .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT
+            .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
+            .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
 #elif defined(SD_CARD)
             .clk_rate = MSS_MMC_CLOCK_50MHZ,
             .card_type = MSS_MMC_CARD_TYPE_SD,
             .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
-            .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT
+            .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
+            .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
 #endif
         };
 
@@ -71,6 +73,7 @@ bool HSS_EMMCInit(void)
 // HSS_EMMC_ReadBlock will handle reads less than a multiple of the sector
 // size by doing the last transfer into a sector buffer
 //
+static char runtBuffer[HSS_EMMC_SECTOR_SIZE] __attribute__((aligned(sizeof(uint32_t))));
 bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
     // temporary code to bring up Icicle board
@@ -87,9 +90,9 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     uint32_t src_sector_num = (uint32_t)srcOffset / HSS_EMMC_SECTOR_SIZE;
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
-    while ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) {
-        mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_read(%lu, 0x%p) (%lu bytes remaining)" CRLF,
-            src_sector_num, pCDest, byteCount);
+    while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount >= HSS_EMMC_SECTOR_SIZE)) {
+        //mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_read(%lu, 0x%p) (%lu bytes remaining)" CRLF,
+        //    src_sector_num, pCDest, byteCount);
 
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)pCDest);
 
@@ -101,7 +104,7 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
             src_sector_num++;
             pCDest = pCDest + HSS_EMMC_SECTOR_SIZE;
 
-            if (byteCount < MSS_MMC_TRANSFER_SUCCESS) {
+            if (byteCount < HSS_EMMC_SECTOR_SIZE) {
                 ;
             } else {
                 byteCount = byteCount - HSS_EMMC_SECTOR_SIZE;
@@ -111,11 +114,11 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 
     // handle remainder
     if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) { 
-        char runtBuffer[HSS_EMMC_SECTOR_SIZE] __attribute__((aligned(sizeof(uint32_t))));
+        assert(byteCount < HSS_EMMC_SECTOR_SIZE);
 
-        mHSS_DEBUG_PRINTF("Dealing with remainder (less that full sector)" CRLF);
-        mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_read(%lu, 0x%p) (%lu bytes remaining)" CRLF,
-            src_sector_num, runtBuffer, byteCount);
+        //mHSS_DEBUG_PRINTF("Dealing with remainder (less that full sector)" CRLF);
+        //mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_read(%lu, 0x%p) (%lu bytes remaining)" CRLF,
+        //    src_sector_num, runtBuffer, byteCount);
 
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)runtBuffer);
 
