@@ -120,9 +120,19 @@ static void mpfs_console_putc(char ch)
     }
 }
 
+#define BLOCK_FOREVER -1
+#define GETC_EOF -1
 static int mpfs_console_getc(void)
 {
-    return 0; // TBD
+    int result = GETC_EOF;
+    bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick);
+
+    uint8_t rcvBuf;
+    if (uart_getchar(&rcvBuf, BLOCK_FOREVER, FALSE)) {
+        result = rcvBuf;
+    }
+
+    return result;
 }
 
 static int mpfs_console_init(void)
