@@ -46,7 +46,6 @@
 #endif
 
 #include "hss_boot_pmp.h"
-#include "hss_progress.h"
 
 //
 // local module functions
@@ -155,16 +154,6 @@ bool HSS_BootInit(void)
         }
     }
 #endif
-
-    if (!result) {
-        uint8_t rcvBuf;
-
-        bool keyPressedFlag = HSS_ShowTimeout("Boot failed, press a key to prevent restart" CRLF, 5u, &rcvBuf);
-        if (!keyPressedFlag) {
-            void _start(void);
-            _start();
-        }
-    }
 
     return result;
 }

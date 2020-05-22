@@ -68,8 +68,10 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
     //mHSS_FANCY_PRINTF("Walking up address bus, verifying set cells" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         if (baseAddr[offset] != pattern) {
+            mHSS_FANCY_ERROR_TEXT;
             mHSS_FANCY_PRINTF("1: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
                 baseAddr + offset, baseAddr[offset], pattern);
+            mHSS_FANCY_NORMAL_TEXT;
             result = ((uint64_t *)&baseAddr[offset]);
             break;
         }
@@ -84,8 +86,10 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
 
             // ensure that the base isn't affected
             if (baseAddr[0] != pattern) {
+                mHSS_FANCY_ERROR_TEXT;
                 mHSS_FANCY_PRINTF("2: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
                     baseAddr + offset, baseAddr[offset], pattern);
+                mHSS_FANCY_NORMAL_TEXT;
                 result = ((uint64_t *)&baseAddr[testOffset]);
                 break;
             }
@@ -94,8 +98,10 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
                 // walk up the address bus, ensuring that no other address is affected
                 for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
                     if ((baseAddr[offset] != pattern) && (offset != testOffset)) {
+                        mHSS_FANCY_ERROR_TEXT;
                         mHSS_FANCY_PRINTF("3: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
                             baseAddr + offset, baseAddr[offset], pattern);
+                        mHSS_FANCY_NORMAL_TEXT;
                         result = ((uint64_t *)&baseAddr[testOffset]);
                         offset = 0u; testOffset = 0u; // terminate loops
                         break;
@@ -135,6 +141,11 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 
     for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
         if (baseAddr[offset] != pattern) {
+            mHSS_FANCY_ERROR_TEXT;
+            mHSS_FANCY_PRINTF("4: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
+                baseAddr + offset, baseAddr[offset], pattern);
+            mHSS_FANCY_NORMAL_TEXT;
+
             result = ((uint64_t *)&baseAddr[offset]);
             offset = numWords;
             break;
@@ -155,6 +166,10 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
         for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
             antiPattern = ~pattern;
             if (baseAddr[offset] != antiPattern) {
+                mHSS_FANCY_ERROR_TEXT;
+                mHSS_FANCY_PRINTF("5: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF, 
+                    baseAddr + offset, baseAddr[offset], antiPattern);
+                mHSS_FANCY_NORMAL_TEXT;
                 result = ((uint64_t *)&baseAddr[offset]);
                 break;
             }

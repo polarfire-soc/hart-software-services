@@ -17,6 +17,7 @@
 #include "hss_types.h"
 
 #include "hss_state_machine.h"
+#include "hss_progress.h"
 #include "hss_clock.h"
 #include "hss_debug.h"
 #include <assert.h>
@@ -244,6 +245,14 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
 
             if (initFunctions[i].haltOnFailure) {
                 while (true) { ; } // HALT on failure 
+            } else if (initFunctions[i].restartOnFailure) {
+                uint8_t rcvBuf;
+
+                bool keyPressedFlag = HSS_ShowTimeout("Init failed, press a key to prevent restart", 5u, &rcvBuf);
+                if (!keyPressedFlag) {
+                    void _start(void);
+                    _start();
+                }
             }
         }
     }

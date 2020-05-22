@@ -61,7 +61,9 @@ bool HSS_EMMCInit(void)
         result = MSS_MMC_init(&g_mmc);
 
         if (result != MSS_MMC_INIT_SUCCESS) {
+            mHSS_FANCY_ERROR_TEXT;
             mHSS_DEBUG_PRINTF("MSS_MMC_init() returned unexpected %d" CRLF, result);
+            mHSS_FANCY_NORMAL_TEXT;
         }
         //initialized = true;
     }
@@ -99,7 +101,9 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)pCDest);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
+            mHSS_FANCY_ERROR_TEXT;
             mHSS_DEBUG_PRINTF("MSS_MMC_single_block_read() unexpectedly returned %d" CRLF, result);
+            mHSS_FANCY_NORMAL_TEXT;
         }
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
@@ -125,7 +129,9 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)runtBuffer);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
+            mHSS_FANCY_ERROR_TEXT;
             mHSS_DEBUG_PRINTF("MSS_MMC_single_block_read() unexpectedly returned %d" CRLF, result);
+            mHSS_FANCY_NORMAL_TEXT;
         }
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
@@ -170,7 +176,9 @@ bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
         result = MSS_MMC_single_block_write((uint32_t *)pCSrc, dst_sector_num);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
+            mHSS_FANCY_ERROR_TEXT;
             mHSS_DEBUG_PRINTF("MSS_MMC_single_block_write() unexpectedly returned %d" CRLF, result);
+            mHSS_FANCY_NORMAL_TEXT;
         }
 
         dst_sector_num++;

@@ -90,7 +90,9 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine * c
 struct InitFunction {
     const char * const pName;
     bool (*handler)(void);
-    bool haltOnFailure;
+
+    int haltOnFailure:1;
+    int restartOnFailure:1;
 };
 
 /**
