@@ -6,7 +6,6 @@
  * MPFS HAL Embedded Software
  *
  */
-
 /*******************************************************************************
  *
  * Platform definitions
@@ -232,10 +231,27 @@
 #ifdef ICICLE_BOARD
 
 /*
- * over-write value from Libero todo: remove once verifid in Libero design
- */
-
-#define LIBERO_SETTING_DPC_BITS         0x00049432UL
+* over-write value from Libero todo: remove once verified in Libero design
+*/
+ 
+#define LIBERO_SETTING_MSSIO_BANK2_CFG_CR    0x00080907UL
+    /* BANK_PCODE                        [0:6]   RW value= 0x7 */
+    /* RESERVED0                         [6:2]   RW value= 0x00 */
+    /* BANK_NCODE                        [8:6]   RW value= 0x9 */
+    /* RESERVED1                         [14:2]  RW value= 0x0 */
+    /* VS                                [16:4]  RW value= 0x8 */
+    /* RESERVED2                         [20:12] RW value= 0x0 */
+#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR    0x00080907UL
+    /* BANK_PCODE                        [0:6]   RW value= 0x7 */
+    /* RESERVED0                         [6:2]   RW value= 0x00 */
+    /* BANK_NCODE                        [8:6]   RW value= 0x9 */
+    /* RESERVED1                         [14:2]  RW value= 0x0 */
+    /* VS                                [16:4]  RW value= 0x8 */
+    /* RESERVED2                         [20:12] RW value= 0x0 */
+ 
+ 
+//#define LIBERO_SETTING_DPC_BITS         0x00049432UL
+#define LIBERO_SETTING_DPC_BITS         0x00049432UL  // Received from SVG 5/14/2020
 #define LIBERO_SETTING_DDRPHY_MODE      0x00014B24UL
 #define LIBERO_SETTING_DATA_LANES_USED  0x00000004UL
 #define LIBERO_SETTING_CFG_DQ_WIDTH     0x00000000UL
@@ -281,9 +297,9 @@
  */
 #define LIBERO_SETTING_RPC_ODT_ADDCMD           2
 #define LIBERO_SETTING_RPC_ODT_CLK              2
-#define LIBERO_SETTING_RPC_ODT_DQ               6 
-#define LIBERO_SETTING_RPC_ODT_DQS              2 
-
+#define LIBERO_SETTING_RPC_ODT_DQ               6
+#define LIBERO_SETTING_RPC_ODT_DQS              2
+ 
 #endif /* not ICICLE */
 
 /*
