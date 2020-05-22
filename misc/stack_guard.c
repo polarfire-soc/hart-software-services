@@ -43,11 +43,15 @@ __attribute__((weak)) void __stack_chk_fail(void)
 void* __memset_chk(void *dst, int c, size_t len, size_t dstlen);
 __attribute__((weak)) void* __memset_chk(void *dst, int c, size_t len, size_t dstlen)
 {
+    void * result = NULL;
+
     if (dstlen < len) {
         mHSS_DEBUG_PUTS("__memset_chk(): dstlen < len!!" CRLF);
         asm("ebreak");
     } else {
-        return memset(dst, c, len);
+        result = memset(dst, c, len);
     }
+
+    return result;
 }
 #endif
