@@ -84,12 +84,12 @@ bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
 
 #ifdef CONFIG_SERVICE_QSPI_USE_XIP
-    memcpy_via_pdma(pDest, pSrc, byteCount);
+    memcpy_via_pdma(pDest, srcOffset + QSPI_BASE, byteCount);
 #else
     /* temporary code to bring up Icicle board */
     void Flash_read(uint8_t* buf, uint32_t read_addr, uint32_t read_len);
 
-    uint32_t read_addr = (uint32_t)((uint8_t *)pDest - (uint8_t *)QSPI_BASE);
+    uint32_t read_addr = (uint32_t)srcOffset;
     Flash_read((uint8_t *)pDest, read_addr, (uint32_t) byteCount);
 #endif
 
