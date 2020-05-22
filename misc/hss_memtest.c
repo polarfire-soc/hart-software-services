@@ -15,7 +15,7 @@
  *   Barr, Michael. "Software-Based Memory Testing," Embedded Systems Programming, 
  *   July 2000, pp. 28-40.
  *
- * The original source code for these memory tests is in the public domain and is availabe at
+ * The original source code for these memory tests is in the public domain and is available at
  *   https://barrgroup.com/resources/free-source-code-memory-tests-c
  */
 
@@ -54,8 +54,8 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
     size_t testOffset;
     uint64_t* result = NULL;
 
-    const uint64_t pattern = (uint64_t)0xAAAAAAAAu;
-    const uint64_t antiPattern = (uint64_t)0x55555555u;
+    const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
+    const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
 
     //mHSS_FANCY_PRINTF("Walking up address bus, setting cells to pattern" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
