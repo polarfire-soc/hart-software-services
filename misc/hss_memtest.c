@@ -217,8 +217,11 @@ bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    //mHSS_FANCY_PRINTF("DDR size is %lu GiB" CRLF, (uint32_t)(__ddr_size/mGB_IN_BYTES));
-    mHSS_FANCY_PRINTF("DDR size is %lu MiB" CRLF, (uint32_t)(__ddr_size/mMB_IN_BYTES));
+    if (__ddr_size > mGB_IN_BYTES) {
+        mHSS_FANCY_PRINTF("DDR size is %lu GiB" CRLF, (uint32_t)(__ddr_size/mGB_IN_BYTES));
+    } else {
+        mHSS_FANCY_PRINTF("DDR size is %lu MiB" CRLF, (uint32_t)(__ddr_size/mMB_IN_BYTES));
+    }
 
     if ((HSS_MemTestDataBus((uint64_t *)&__ddr_start) != 0u) 
             || (HSS_MemTestAddressBus((uint64_t *)&__ddr_start, __ddr_size) != NULL)) {

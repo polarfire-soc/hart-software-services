@@ -45,7 +45,7 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     { "HSS_Setup_BusErrorUnit", HSS_Setup_BusErrorUnit, false, false },
     { "HSS_Setup_MPU",          HSS_Setup_MPU,          false, false },
     { "HSS_DDRInit",            HSS_DDRInit,            false, false },
-    { "HSS_ZeroDDR",            HSS_ZeroDDR,            false, false },
+    //{ "HSS_ZeroDDR",            HSS_ZeroDDR,            false, false },
 };
 const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 

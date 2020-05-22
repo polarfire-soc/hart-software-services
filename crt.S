@@ -459,8 +459,8 @@ init_memory:
  * a safe copy of HW config data
  */
         // config_copy helper function:
-        //	a0 = src
-        //	a1 = dest
+        //	a0 = dest
+        //	a1 = src
         //	a2 = length
         .globl  config_copy
         .type   config_copy, @function
@@ -476,12 +476,11 @@ config_copy:
         sb      a3,0(a4)                 # *cdest = *csrc
         j       .check_if_config_copy_done
 .config_copy_done:
-        mv      a0,a1                    # return origin dest 
         ret
 
 /***********************************************************************************
  *
- * The following config_copy() symbol overrides the weak symbol in the HAL and does
+ * The following copy_switch_code() symbol overrides the weak symbol in the HAL and does
  * a safe copy of HW config data
  */
 	.globl	copy_switch_code

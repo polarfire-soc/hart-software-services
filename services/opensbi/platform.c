@@ -1,11 +1,39 @@
-/*
- * SPDX-License-Identifier: BSD-2-Clause
+
+/******************************************************************************************
+ * 
+ * MPFS HSS Embedded Software
+ *
+ * Copyright 2019 Microchip Corporation.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * Originally based on code from OpenSBI, which is:
  *
  * Copyright (c) 2019 Western Digital Corporation or its affiliates.
  *
- * Authors:
- *   Atish Patra <atish.patra@wdc.com>
  */
+
+#include <sbi/sbi_types.h>
+#define false FALSE
+#define true TRUE
 
 #include <sbi/riscv_encoding.h>
 #include <sbi/sbi_const.h>
@@ -81,11 +109,15 @@ static int mpfs_pmp_region_info(u32 hartid, u32 index,
     return ret;
 }
 
+static bool console_initialized = false;
+
 static void mpfs_console_putc(char ch)
 {
-    u32 hartid = sbi_current_hartid();
-    int uart_putc(int hartid, const char ch); //TBD
-    uart_putc(hartid, ch);
+    if (console_initialized) {
+        u32 hartid = sbi_current_hartid();
+        int uart_putc(int hartid, const char ch); //TBD
+        uart_putc(hartid, ch);
+    }
 }
 
 static int mpfs_console_getc(void)
@@ -95,6 +127,7 @@ static int mpfs_console_getc(void)
 
 static int mpfs_console_init(void)
 {
+    console_initialized = true;
     return 0;
 }
 
@@ -201,7 +234,8 @@ const struct sbi_platform platform = {
     .opensbi_version = OPENSBI_VERSION,
     .platform_version = SBI_PLATFORM_VERSION(0x0, 0x01),
     .name = "Microchip PolarFire SoC",
-    .features = SBI_PLATFORM_DEFAULT_FEATURES & (~SBI_PLATFORM_HAS_PMP), // already have PMPs setup
+    //.features = SBI_PLATFORM_DEFAULT_FEATURES & (~SBI_PLATFORM_HAS_PMP), // already have PMPs setup
+    .features = SBI_PLATFORM_DEFAULT_FEATURES, // already have PMPs setup
     .hart_count = MPFS_HART_COUNT,
     .disabled_hart_mask = MPFS_HARITD_DISABLED,
     .hart_stack_size = MPFS_HART_STACK_SIZE, //TODO: revisit
