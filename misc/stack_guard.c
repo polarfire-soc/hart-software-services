@@ -17,14 +17,14 @@
 
 #include "hss_debug.h"
 
-unsigned long __stack_chk_guard;
+const unsigned long __stack_chk_guard = 0xDEAD0BAD;
 
 void __stack_chk_guard_setup(void);
 void __stack_chk_fail(void);
 
 __attribute__((weak)) void __stack_chk_guard_setup(void)
 {
-    __stack_chk_guard = 0xDEAD0BAD;
+    //__stack_chk_guard is already set-up as 0xDEAD0BAD
 }
 
 __attribute__((weak)) void __stack_chk_fail(void)
@@ -34,7 +34,6 @@ __attribute__((weak)) void __stack_chk_fail(void)
     // to help debug this, it might help to disable the print statement
     // once stack corruption is detected...
     mHSS_DEBUG_PUTS("__stack_chk_fail(): stack corruption detected!!" CRLF);
-
     asm("ebreak");
 }
 
@@ -46,7 +45,7 @@ __attribute__((weak)) void* __memset_chk(void *dst, int c, size_t len, size_t ds
 {
     if (dstlen < len) {
         mHSS_DEBUG_PUTS("__memset_chk(): dstlen < len!!" CRLF);
-        while (1); // stack has been corrupted
+        asm("ebreak");
     } else {
         return memset(dst, c, len);
     }

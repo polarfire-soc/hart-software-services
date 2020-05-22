@@ -457,12 +457,9 @@ void read_page
 {
     uint32_t length = read_len;
     uint8_t command_buf[4] __attribute__ ((aligned (4))) = {WINBOND_PAGE_DATA_READ};
-//    uint8_t tx_buff[3];
-/*
-    tx_buff[0] = 0;
-    tx_buff[1] = (page >> 8u) & 0xFFu;
-    tx_buff[2] = page & 0xFFu;
-*/
+
+    wait_for_wip();
+
     command_buf[1] = 0;
     command_buf[2] = (page >> 8u) & 0xFFu;
     command_buf[3] = page & 0xFFu;
@@ -481,6 +478,8 @@ void read_page
         length = PAGE_LENGTH;
     }
     MSS_QSPI_polled_transfer_block(0, command_buf, 3, buf, length, 0);
+
+    wait_for_wip();
 }
 
 /*==============================================================================
@@ -552,6 +551,7 @@ uint8_t program_page
     ++status_reg_2;
 
     wait_for_wel();
+    wait_for_wip();
 
     /*
      * Program page buffer
@@ -563,7 +563,8 @@ uint8_t program_page
     for (uint16_t idx=0; idx< wr_len;idx++)
         command_buf[3 + idx] = *(uint8_t*)(buf+idx);
 
-    MSS_QSPI_polled_transfer_block(2, command_buf, wr_len + 2, (uint8_t*)0, 0,0);
+//    MSS_QSPI_polled_transfer_block(2, command_buf, wr_len + 2, (uint8_t*)0, 0,0);
+    MSS_QSPI_polled_transfer_block(2, command_buf, wr_len, (uint8_t*)0, 0,0);
 
     wait_for_wip();
 
@@ -611,10 +612,13 @@ uint8_t program_block
 
     ASSERT(wr_len <= BLOCK_LENGTH);
 
-    erase_block(page_nb);
+//    erase_block(page_nb);
 
 #ifdef PAGE_LENGTH_HACK
     erase_block(page_nb / 4);
+    erase_block((page_nb / 4) + 64);
+    erase_block((page_nb / 4) + 128);
+    erase_block((page_nb / 4) + 192);
 /*
     erase_block(page_nb * 64);
     erase_block((page_nb + 1) * 64);
