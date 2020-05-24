@@ -55,45 +55,17 @@
 #include <string.h>
 
 #define mMEM_SIZE(REGION)      (REGION##_END - REGION##_START + 1u)
-#if 1
-#define E51_DTIM_START         0x01000000u
-#define E51_DTIM_END           0x01001FFFu
+extern const uint64_t __dtim_start,    __dtim_end;
+extern const uint64_t __e51itim_start,    __e51itim_end;
+extern const uint64_t __u54_1_itim_start, __u54_1_itim_end;
+extern const uint64_t __u54_2_itim_start, __u54_2_itim_end;
+extern const uint64_t __u54_3_itim_start, __u54_3_itim_end;
+extern const uint64_t __u54_4_itim_start, __u54_4_itim_end;
+extern const uint64_t __l2lim_start,      __l2lim_end;
+extern const uint64_t __ddr_start,        __ddr_end;
 
-#define E51_ITIM_START         0x01800000u
-#define E51_ITIM_END           0x01801FFFu
-
-#define U54_1_ITIM_START       0x01808000u
-#define U54_1_ITIM_END         0x0180EFFFu
-
-#define U54_2_ITIM_START       0x01810000
-#define U54_2_ITIM_END         0x01816FFFu
-
-#define U54_3_ITIM_START       0x01818000u
-#define U54_3_ITIM_END         0x0181EFFFu
-
-#define U54_4_ITIM_START       0x01820000u
-#define U54_4_ITIM_END         0x01826FFFu
-
-#define L2LIM_START            0x08000000u
-#define L2LIM_END              0x09FFFFFFu
-
-#define L2_ZERO_DEVICE_START   0x0A000000u
-#define L2_ZERO_DEVICE_END     0x0BFFFFFFu
-
-#define DDR_START              0x801F0000u
-#define DDR_END                0x100000000llu
-#else
-extern uint64_t __e51dtim_start,    __e51dtim_end;
-extern uint64_t __e51itim_start,    __e51itim_end;
-extern uint64_t __u54_1_itim_start, __u54_1_itim_end;
-extern uint64_t __u54_2_itim_start, __u54_2_itim_end;
-extern uint64_t __u54_3_itim_start, __u54_3_itim_end;
-extern uint64_t __u54_4_itim_start, __u54_4_itim_end;
-extern uint64_t __l2lim_start,      __l2lim_end;
-extern uint64_t __ddr_start,        __ddr_end;
-
-#define E51_DTIM_START         (&__e51dtim_start)         
-#define E51_DTIM_END           (&__e51dtim_end)
+#define E51_DTIM_START         (&__dtim_start)         
+#define E51_DTIM_END           (&__dtim_end)
 
 #define E51_ITIM_START         (&__e51itim_start)         
 #define E51_ITIM_END           (&__e51itim_end)
@@ -117,8 +89,16 @@ extern uint64_t __ddr_start,        __ddr_end;
 #define L2_ZERO_DEVICE_END     0x0BFFFFFFu
 
 #define DDR_START              (&__ddr_start)
-#define DDR_END                (&__ddr_end)
-#endif
+// can't access DDR_END without getting an error:
+//     R_RISCV_PCREL_HI20 against symbol `__ddr_end' 
+// solution is to use assembler instead as the symbol is constant at link time
+//
+//  #define DDR_END                (&__ddr_end)
+asm(".align 3\n"
+    "hss_init_ddr_end: .quad (__ddr_end)\n"
+    ".globl   my_ddr_end\n");
+extern const uint64_t hss_init_ddr_end;
+#define DDR_END                (&hss_init_ddr_end)
 
 #ifdef CONFIG_PLATFORM_MPFS
 #  include "mss_sysreg.h"
@@ -132,14 +112,14 @@ bool HSS_ZeroDDR(void)
 #  ifdef CONFIG_USE_ZERO_DEVICE
     uint8_t *pChar = (uint8_t *)DDR_START;
 
-    while (pChar < (uint8_t *)DDR_END) {
+    while (pChar < (uint8_t * const)DDR_END) {
         memcpy_via_pdma(pChar, (void *)L2_ZERO_DEVICE_START, CHUNK_SIZE); 
         pChar += CHUNK_SIZE; 
     }
 #  else
     uint64_t volatile *pDWord = (uint64_t volatile *)DDR_START;
 
-    while (pDWord < (uint64_t volatile *)DDR_END) {
+    while (pDWord < (uint64_t volatile const * const)DDR_END) {
         *pDWord = 0llu;
         pDWord++;
     }

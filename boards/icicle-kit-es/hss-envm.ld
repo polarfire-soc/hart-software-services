@@ -121,8 +121,8 @@ SECTIONS
     PROVIDE(__dtim_start       = ORIGIN(dtim));
     PROVIDE(__dtim_end         = ORIGIN(dtim) + LENGTH(dtim));
 
-    PROVIDE(__e51itim_start    = ORIGIN(e51itim));
-    PROVIDE(__e51itim_end      = ORIGIN(e51itim) + LENGTH(e51itim));
+    PROVIDE(__e51itim_start    = ORIGIN(e51_itim));
+    PROVIDE(__e51itim_end      = ORIGIN(e51_itim) + LENGTH(e51_itim));
 
     PROVIDE(__u54_1_itim_start = ORIGIN(u54_1_itim));
     PROVIDE(__u54_1_itim_end   = ORIGIN(u54_1_itim) + LENGTH(u54_1_itim));
@@ -164,6 +164,7 @@ SECTIONS
         KEEP (*crtend.o(.dtors))
 
         *(.rodata .rodata.* .gnu.linkonce.r.*)
+        *(.sdata2.*)
         *(.gcc_except_table)
         *(.eh_frame_hdr)
         *(.eh_frame)
@@ -245,7 +246,7 @@ SECTIONS
         __global_pointer$ = . + 0x800;
         *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2)
         *(.srodata*)
-        *(.sdata .sdata2.* .sdata.* .gnu.linkonce.s.*)
+        *(.sdata .sdata.* .gnu.linkonce.s.*)
         . = ALIGN(0x10);
         __sdata_end = .;
     } >l2lim AT >envm

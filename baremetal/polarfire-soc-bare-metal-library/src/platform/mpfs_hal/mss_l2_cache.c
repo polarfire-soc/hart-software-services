@@ -147,7 +147,7 @@ void config_l2_cache(void)
  *  __l2_scratchpad_vma_end
  *
  *  These linker symbols specify the start address and length of the scratchpad.
- *  The scratchpad must be located within the Sero Device memory range.
+ *  The scratchpad must be located within the Zero Device memory range.
  */
 static void config_l2_scratchpad(void)
 {

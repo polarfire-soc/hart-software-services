@@ -167,8 +167,8 @@
  * If you need to edit this function, make a copy of of the function without the
  * weak declaration in your application code.
  * */
-//#define DEBUG_DDR_INIT
-#define DEBUG_DDR_RD_RW_FAIL
+#define DEBUG_DDR_INIT
+//#define DEBUG_DDR_RD_RW_FAIL
 //#define DEBUG_DDR_RD_RW_PASS
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG

@@ -37,7 +37,6 @@
 
 const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     // Name                     FunctionPointer         Halt   Restart
-    { "HSS_Init_RWDATA_BSS",    HSS_Init_RWDATA_BSS,    false, false },
     { "HSS_Setup_Clocks",       HSS_Setup_Clocks,       false, false },
     { "HSS_Setup_PAD_IO",       HSS_Setup_PAD_IO,       false, false },
     { "HSS_ZeroTIMs",           HSS_ZeroTIMs,           false, false },
@@ -45,9 +44,8 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     { "HSS_Setup_BusErrorUnit", HSS_Setup_BusErrorUnit, false, false },
     { "HSS_Setup_MPU",          HSS_Setup_MPU,          false, false },
     { "HSS_DDRInit",            HSS_DDRInit,            false, false },
-    //{ "HSS_ZeroDDR",            HSS_ZeroDDR,            false, false },
+    { "HSS_ZeroDDR",            HSS_ZeroDDR,            false, false },
 };
-const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 
 
 /******************************************************************************************************/
@@ -64,7 +62,7 @@ const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 #include "mss_sysreg.h"
 bool HSS_BoardInit(void)
 {
-    RunInitFunctions(spanOfBoardInitFunctions, boardInitFunctions);
+    RunInitFunctions(mSPAN_OF(boardInitFunctions), boardInitFunctions);
 
     return true;
 }

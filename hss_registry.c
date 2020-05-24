@@ -239,32 +239,34 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 #endif
 
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
-    // Name                  FunctionPointer     Halt   Restart
-    { "HSS_BoardInit",       HSS_BoardInit,      false, false },
-    { "HSS_UARTInit",        HSS_UARTInit,       false, false },
+    // Name                  FunctionPointer      Halt   Restart
+    { "HSS_Setup_L2Cache",   HSS_Setup_L2Cache,   false, false },
+    { "HSS_Init_RWDATA_BSS", HSS_Init_RWDATA_BSS, false, false },
+    { "HSS_BoardInit",       HSS_BoardInit,       false, false },
+    { "HSS_UARTInit",        HSS_UARTInit,        false, false },
 #ifdef CONFIG_OPENSBI
-    { "HSS_OpenSBIInit",     HSS_OpenSBIInit,    false, false },
+    { "HSS_OpenSBIInit",     HSS_OpenSBIInit,     false, false },
 #endif
 #ifdef CONFIG_USE_LOGO
-    { "HSS_LogoInit",        HSS_LogoInit,       false, false },
+    { "HSS_LogoInit",        HSS_LogoInit,        false, false },
 #endif
-    { "HSS_E51_Banner",      HSS_E51_Banner,     false, false },
+    { "HSS_E51_Banner",      HSS_E51_Banner,      false, false },
 #ifdef CONFIG_MEMTEST
-    { "HSS_MemTestDDRFast",  HSS_MemTestDDRFast, false, false },
+    { "HSS_MemTestDDRFast",  HSS_MemTestDDRFast,  false, false },
 #endif
 #ifdef CONFIG_SERVICE_EMMC
-    { "HSS_EMMCInit",        HSS_EMMCInit,       false, false },
+    { "HSS_EMMCInit",        HSS_EMMCInit,        false, false },
 #endif
 #ifdef CONFIG_SERVICE_QSPI
-    { "HSS_QSPIInit",        HSS_QSPIInit,       false, false },
+    { "HSS_QSPIInit",        HSS_QSPIInit,        false, false },
 #endif
 #ifdef CONFIG_TINYCLI
-    { "HSS_TinyCLI_Parser",  HSS_TinyCLI_Parser, false, false },
+    { "HSS_TinyCLI_Parser",  HSS_TinyCLI_Parser,  false, false },
 #endif
-    { "IPI_QueuesInit",      IPI_QueuesInit,     false, false },
+    { "IPI_QueuesInit",      IPI_QueuesInit,      false, false },
 #ifdef CONFIG_SERVICE_BOOT
-    { "HSS_PMP_Init",        HSS_PMP_Init,       false, false },
-    { "HSS_BootInit",        HSS_BootInit,       false, false },
+    { "HSS_PMP_Init",        HSS_PMP_Init,        false, false },
+    { "HSS_BootInit",        HSS_BootInit,        false, false },
 #endif
 };
 const size_t spanOfGlobalInitFunctions = mSPAN_OF(globalInitFunctions);

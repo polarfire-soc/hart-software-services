@@ -62,7 +62,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine);
-static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine);
+//static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine);
@@ -81,7 +81,6 @@ enum BootStatesEnum {
     BOOT_INITIALIZATION,
     BOOT_SETUP_PMP,
     BOOT_SETUP_PMP_COMPLETE,
-    BOOT_SETUP_L2CACHE,
     BOOT_DOWNLOAD_CHUNKS,
     BOOT_WAIT,
     BOOT_IDLE,
@@ -97,9 +96,6 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_INITIALIZATION,     (const char *)"Init",             NULL,                             NULL,                         &boot_init_handler },
     { (const stateType_t)BOOT_SETUP_PMP,          (const char *)"SetupPMP",         &boot_setup_pmp_onEntry,          NULL,                         &boot_setup_pmp_handler },
     { (const stateType_t)BOOT_SETUP_PMP_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_pmp_complete_onEntry, NULL,                         &boot_setup_pmp_complete_handler },
-    //{ (const stateType_t)BOOT_SETUP_SBI,          (const char *)"SetupSBI",         &boot_setup_sbi_onEntry,          NULL,                         &boot_setup_sbi_handler },
-    //{ (const stateType_t)BOOT_SETUP_SBI_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_sbi_complete_onEntry, NULL,                         &boot_setup_sbi_complete_handler },
-    { (const stateType_t)BOOT_SETUP_L2CACHE,      (const char *)"SetupL2cache",     NULL,                             NULL,                         &boot_setup_l2cache_handler },
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
     { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             NULL,                             NULL,                         &boot_idle_handler },
@@ -325,19 +321,12 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
             mHSS_DEBUG_PRINTF("%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
             mHSS_DEBUG_PRINTF("%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
 
-            //pMyMachine->state = BOOT_SETUP_SBI; // TODO
-            pMyMachine->state = BOOT_SETUP_L2CACHE;
+            pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
         }
     }
 }
 
 /////////////////
-
-static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine)
-{
-    HSS_Setup_L2Cache();
-    pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
-}
 
 static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
 {

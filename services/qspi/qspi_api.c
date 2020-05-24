@@ -62,7 +62,7 @@ bool HSS_QSPIInit(void)
     /* read and output Flash ID as a sanity test */
     uint8_t rd_buf[10] __attribute__ ((aligned(4)));
 
-    Flash_init();
+    Flash_init(MSS_QSPI_NORMAL);
     Flash_readid(rd_buf);
     mHSS_FANCY_PRINTF("JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
 

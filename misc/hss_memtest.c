@@ -54,8 +54,8 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
     size_t testOffset;
     uint64_t* result = NULL;
 
-    const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
-    const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
+    const uint64_t pattern = (uint64_t)0xAAAAAAAAu;
+    const uint64_t antiPattern = (uint64_t)0x55555555u;
 
     //mHSS_FANCY_PRINTF("Walking up address bus, setting cells to pattern" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {

@@ -36,7 +36,6 @@
 #include "hss_board_init.h"
 
 const struct InitFunction /*@null@*/ boardInitFunctions[] = { };
-const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 
 
 /******************************************************************************************************/
@@ -52,7 +51,7 @@ const size_t spanOfBoardInitFunctions = mSPAN_OF(boardInitFunctions);
 
 bool HSS_BoardInit(void)
 {
-    RunInitFunctions(spanOfBoardInitFunctions, boardInitFunctions);
+    RunInitFunctions(mSPAN_OF(boardInitFunctions), boardInitFunctions);
 
     return true;
 }

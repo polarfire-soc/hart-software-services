@@ -282,9 +282,7 @@ bool HSS_Setup_PMP(void)
 bool HSS_Setup_L2Cache(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-#if 0
     config_l2_cache();
-#endif
 #endif
 
     return true;

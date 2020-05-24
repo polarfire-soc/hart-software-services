@@ -121,8 +121,8 @@ SECTIONS
     PROVIDE(__dtim_start       = ORIGIN(dtim));
     PROVIDE(__dtim_end         = ORIGIN(dtim) + LENGTH(dtim));
 
-    PROVIDE(__e51itim_start    = ORIGIN(e51itim));
-    PROVIDE(__e51itim_end      = ORIGIN(e51itim) + LENGTH(e51itim));
+    PROVIDE(__e51itim_start    = ORIGIN(e51_itim));
+    PROVIDE(__e51itim_end      = ORIGIN(e51_itim) + LENGTH(e51_itim));
 
     PROVIDE(__u54_1_itim_start = ORIGIN(u54_1_itim));
     PROVIDE(__u54_1_itim_end   = ORIGIN(u54_1_itim) + LENGTH(u54_1_itim));
