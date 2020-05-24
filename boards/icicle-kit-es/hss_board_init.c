@@ -2,7 +2,7 @@
  * Copyright 2017-2020 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */

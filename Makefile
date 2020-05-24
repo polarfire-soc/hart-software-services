@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -33,9 +33,9 @@ SHELL=/bin/bash
 # To build the HSS under SoftConsole on Windows, we need to spawn the build out to
 # MSYS2. If MSYS2, we need to ensure that the path is correctly setup to find
 # genconfig.exe
-# 
+#
 # Therefore, we need to determine whether we are on Linux, or a Unix-ish environment
-# such as MSYS2 or Cygwin.  
+# such as MSYS2 or Cygwin.
 #
 SYSTEM:=$(shell uname -s)
 ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
@@ -65,7 +65,7 @@ include .config
 ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
   include boards/${BOARD}/Makefile
 else
-  ifndef BOARD 
+  ifndef BOARD
     $(warning BOARD not specified) # default to icicle if nothing found
     BOARD:=icicle-kit-es
     include boards/${BOARD}/Makefile
@@ -147,19 +147,19 @@ hss_state_machine.o: hss_state_machine.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c 
+tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 ifdef CONFIG_USE_MAKEDEP
-  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) 
+  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d)
   .PHONY: dep
   dep: $(DEPENDENCIES)
 
   -include $(DEPENDENCIES)
 endif
 
-$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS) 
+$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS)
 	@$(ECHO) " LD        $@";
 	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=output.map -Wl,--gc-sections -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";

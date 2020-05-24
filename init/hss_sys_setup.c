@@ -11,7 +11,7 @@
  * \file  System Setup Functions
  * \brief Functions for setting up the PMP, MPU, PLIC, IOMUX, PAD I/O, L2 Cache. Clocks
  *
- * These functions are used by the boot service, but they can be replaced by 
+ * These functions are used by the boot service, but they can be replaced by
  * auto-generated code from an external tool, e.g. Libero.
  *
  * What needs to be implemented are the following functions:
@@ -94,21 +94,21 @@ bool HSS_Setup_PAD_IO(void)
 /*!
  * \brief PLIC Setup and Configuration
  *
- * The RISC-V Platform-Level Interrupt Controller (PLIC) allows 
+ * The RISC-V Platform-Level Interrupt Controller (PLIC) allows
  * broadcasting of interrupts to one  or more Harts within a Core Complex.
  *
- * The operation of the PLIC is suited to SMP operation: An interrupt 
- * source occurs to PLIC and then any available processor can conceivable 
+ * The operation of the PLIC is suited to SMP operation: An interrupt
+ * source occurs to PLIC and then any available processor can conceivable
  * claim it unless its configuration is locked down.
  *
- * This obviously doesn't work well if the processors are in AMP 
+ * This obviously doesn't work well if the processors are in AMP
  * configuration and we are trying to * maintain hardware separation.
  * Therefore, PolarFire SoC can secure PLIC configuration through the
  * use of RISC-V PMP registers.
  *
- * Furthermore, MPRs allow assignment of each of 160 interrupts going to 
- * the PLIC to one of two hardware contexts. This assignment can be 
- * configured by E51 at boot time and is then locked until subsequent 
+ * Furthermore, MPRs allow assignment of each of 160 interrupts going to
+ * the PLIC to one of two hardware contexts. This assignment can be
+ * configured by E51 at boot time and is then locked until subsequent
  * reset.
  */
 bool HSS_Setup_PLIC(void)
@@ -203,8 +203,8 @@ bool HSS_Setup_PMP(void)
         uint64_t pmpcfg0;
         uint64_t pmpcfg2;
 
-        // 63:54 WIRI, 53:0 WARL corresponding to bits 55:2 of the address 
-        void *pmpaddr0; 
+        // 63:54 WIRI, 53:0 WARL corresponding to bits 55:2 of the address
+        void *pmpaddr0;
         void *pmpaddr1;
         void *pmpaddr2;
         void *pmpaddr3;
@@ -223,22 +223,22 @@ bool HSS_Setup_PMP(void)
     } hss_PMP_Config[4] = {
         // PMP Configuration for U54_1
         { 0x0u, 0x0u,  // pmpcfg*
-          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, }, // pmpaddr*
 
         // PMP Configuration for U54_2
         { 0x0u, 0x0u,  //pmpcfg*
-          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, }, // pmpaddr*
 
         // PMP Configuration for U54_3
         { 0x0u, 0x0u,  //pmpcfg*
-          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, }, // pmpaddr*
-    
+
         // PMP Configuration for U54_4
         { 0x0u, 0x0u,  //pmpcfg*
-          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, }, // pmpaddr*
     };
 
@@ -246,7 +246,7 @@ bool HSS_Setup_PMP(void)
     //mHSS_DEBUG_PRINTF("myHartId is %d\n", myHartId);
     assert(myHartId <= mSPAN_OF(hss_PMP_Config));
 
-    const struct HSS_PMP_Config *pConfig = &hss_PMP_Config[myHartId]; 
+    const struct HSS_PMP_Config *pConfig = &hss_PMP_Config[myHartId];
 
     mHSS_CSR_WRITE(CSR_PMPCFG0,   pConfig->pmpcfg0);
     mHSS_CSR_WRITE(CSR_PMPCFG2,   pConfig->pmpcfg2);
@@ -298,7 +298,7 @@ bool HSS_Setup_Clocks(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
     static const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
-    const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR & 
+    const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
         ~( SOFT_RESET_CR_ENVM_MASK |
            SOFT_RESET_CR_MAC0_MASK |
            SOFT_RESET_CR_MAC1_MASK |

@@ -119,7 +119,7 @@ struct HSS_Boot_LocalData {
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
 #    define mDEFAULT_MSG_INDEX_AUX 0u
 #else
-#    define mDEFAULT_MSG_INDEX_AUX 
+#    define mDEFAULT_MSG_INDEX_AUX
 #endif
 
 static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
@@ -187,7 +187,7 @@ static void boot_do_download_chunk(enum HSSHartId target, struct HSS_BootChunkDe
     assert(pChunk->size);
 
     if (HSS_PMP_CheckWrite(target, (void *)pChunk->execAddr, pChunk->size)) {
-        memcpy_via_pdma((void *)pChunk->execAddr, 
+        memcpy_via_pdma((void *)pChunk->execAddr,
             (void*)((size_t)pBootImage + (size_t)pChunk->loadAddr), pChunk->size);
     } else {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Target %d is skipping chunk %p due to invalid permissions" CRLF,
@@ -417,13 +417,13 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
                     mb();
                     mb_i();
 
-                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux, peer, 
+                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux, peer,
 #if 0
                         IPI_MSG_GOTO,
 #else
-                        IPI_MSG_OPENSBI_INIT, 
+                        IPI_MSG_OPENSBI_INIT,
 #endif
-                        pBootImage->hart[peer-1].privMode, 
+                        pBootImage->hart[peer-1].privMode,
                         &(pBootImage->hart[peer-1].entryPoint));
                     assert(result);
 
@@ -441,7 +441,7 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
 
             //HSS_SpinDelay_MilliSecs(50); //TBD
 
-            result = IPI_MessageDeliver(pInstanceData->msgIndex, target, 
+            result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
 #if 0
                 IPI_MSG_GOTO,
 #else
@@ -486,7 +486,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
         // need to free as received, not all at once...
         if (check_for_ipi_acks(pMyMachine)) {
 #ifdef CONFIG_PLATFORM_MPFS
-            // turn appropriate bit on in SYSREGSCB:MSS_STATUS:BOOT_STATUS to indicate it is up 
+            // turn appropriate bit on in SYSREGSCB:MSS_STATUS:BOOT_STATUS to indicate it is up
             // note: this bit is a status indicator to SW only, and is not functional/does not have side effects
             mHSS_ReadModWriteRegU32(SYSREGSCB, MSS_STATUS, 0xFFFFu, 1u << (target-1));
 #endif
@@ -540,7 +540,7 @@ bool HSS_Boot_Harts(enum HSSHartId const source)
             if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) { // TBD
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
                result = true;
-            } else 
+            } else
 #endif
             if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;

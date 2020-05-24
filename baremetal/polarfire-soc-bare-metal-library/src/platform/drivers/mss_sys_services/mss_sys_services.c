@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * PSE microcontroller subsystem System Services bare metal driver
  * implementation.
  *
@@ -16,7 +16,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /*******************************************************************************
  * Null buffer constant definition
@@ -1405,7 +1405,7 @@ MSS_SYS_debug_write_mem
 {
     uint16_t status = MSS_SYS_PARAM_ERR;
     uint8_t mb_format[16] = {0};
-  
+
     *(uint16_t*)(mb_format)     = mem_addr;
     *(uint16_t*)(mb_format + 2u) = n_words;
     *(uint64_t*)(mb_format + 8u) = mss_addr;

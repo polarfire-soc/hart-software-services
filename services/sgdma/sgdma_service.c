@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -134,12 +134,12 @@ enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId so
 {
     (void)transaction_id;
     (void)immediate_arg;
-   
+
     // scatter gather DMA IPI received from one of the U54s...
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (sgdma_service.state is %u)" CRLF, sgdma_service.state);
 
 
-    // the following should always be true if we have consumed intents for SGDMA... 
+    // the following should always be true if we have consumed intents for SGDMA...
     assert(p_extended_buffer_in_ddr != NULL);
     assert(sgdma_service.state == SGDMA_IDLE);
 

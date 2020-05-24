@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Crypto types
  *
  */
@@ -80,5 +80,5 @@ _Static_assert(sizeof(struct SNVMWriteAuthCiphertext)==252, "size of struct SNVM
 }
 #endif
 
-    
+
 #endif

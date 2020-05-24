@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -32,7 +32,7 @@ void print_usage(const char *programName)
     printf("Usage: %s <input.bin>\n", programName);
 }
 
-size_t getFileSize(const char *filename) 
+size_t getFileSize(const char *filename)
 {
     struct stat st;
     stat(filename, &st);
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
     struct HSS_BootImage *pBootImage;
 
-    pBootImage = mmap(NULL, fileSize, PROT_READ, 
+    pBootImage = mmap(NULL, fileSize, PROT_READ,
         MAP_PRIVATE | MAP_POPULATE, fdIn, 0);
     assert(pBootImage);
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
         printf("Warning: does not look like a valid boot image"
             " (expected magic %x, got %x)\n", mHSS_BOOT_MAGIC, pBootImage->magic);
     }
-    
+
     printf("magic:              %x\n",     pBootImage->magic);
     printf("headerLength:       %lx\n",    pBootImage->headerLength);
     printf("chunkTableOffset:   %lx\n",    pBootImage->chunkTableOffset);
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
             lastOwner = bootChunk.owner;
         }
 
-        chunkOffset += sizeof(struct HSS_BootChunkDesc); 
+        chunkOffset += sizeof(struct HSS_BootChunkDesc);
         totalChunkCount++;
         if (bootChunk.size==0u) { break;}
     }
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
             lastOwner = ziChunk.owner;
         }
 
-        chunkOffset += sizeof(struct HSS_BootChunkDesc); 
+        chunkOffset += sizeof(struct HSS_BootChunkDesc);
         totalChunkCount++;
         if (ziChunk.size==0u) { break;}
     }

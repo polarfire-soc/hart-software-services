@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         perror("ftello()");
         exit(-3);
     }
-    
+
     fseeko(pFileIn, 0, SEEK_SET);
 
     printf("%s: input size is %lu bytes\n", argv[0], inputSize);
@@ -46,6 +46,6 @@ int main(int argc, char **argv)
     printf("Compressed CRC:          0x%08X\n", imgHdr.compressedCrc);
     printf("Compressed Image Length: 0x%08lX\n", imgHdr.compressedImageLen);
     printf("Original Image Length:   0x%08lX\n", imgHdr.originalImageLen);
-   
+
     return 0;
 }

@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -156,7 +156,7 @@ void HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
 }
 
 enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer)
-{   
+{
     enum IPIStatusCode result = IPI_FAIL;
 
     result = IPI_SUCCESS;
@@ -182,7 +182,7 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
         scratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
         scratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
 
-        scratches[hartid].scratch.next_addr = *(unsigned long*)p_extended_buffer; 
+        scratches[hartid].scratch.next_addr = *(unsigned long*)p_extended_buffer;
         scratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
 
         // set arg1 (A1) to point to device tree blob
@@ -251,5 +251,5 @@ void HSS_SBI_Ecall_Register(void)
     int result = sbi_ecall_register_extension(&ecall_hss);
     //if (result)
     //    sbi_hart_hang();
-    (void)result; 
+    (void)result;
 }

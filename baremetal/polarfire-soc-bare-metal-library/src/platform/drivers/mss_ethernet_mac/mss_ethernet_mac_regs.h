@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  *
  * Register bit offsets and masks definitions for PolarFire SoC MSS MAC.
- * 
+ *
  * SVN $Revision$
  * SVN $Date$
  */
@@ -1049,7 +1049,7 @@ extern "C" {
 #define GEM_INT_RCV_V_ERROR                         BIT_01
 #define GEM_INT_RCV_R_ERROR                         BIT_00
 
-#ifdef __cplusplus                       
+#ifdef __cplusplus
 }
 #endif
 

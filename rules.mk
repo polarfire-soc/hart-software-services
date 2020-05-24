@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -24,7 +24,7 @@
 # IN THE SOFTWARE.
 #
 #
-# Defines Rules such as compiler and tool choice/settings, build flags, and 
+# Defines Rules such as compiler and tool choice/settings, build flags, and
 # basic build rules (.c to .o, etc)
 #
 
@@ -47,7 +47,7 @@ PLATFORM_RISCV_ISA=rv64imac
 CORE_CFLAGS+=$(MCMODEL) -mstrict-align
 
 ifdef CONFIG_WITH_ARCH
-  CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA) 
+  CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 endif
 
 # Debug options
@@ -77,14 +77,14 @@ endif
 # TODO - introduce the following prototype warnings...
 #CORE_CFLAGS+=-Wmissing-prototypes
 # TODO - introduce the following conversion warnings... Currently fails on drivers and OpenSBI
-#CORE_CFLAGS+=-Wconversion 
+#CORE_CFLAGS+=-Wconversion
 # TODO - introduce trapv for integer overflows etc... Currently missing primitives
 #CORE_CFLAGS+=-ftrapv
 
 CFLAGS=-std=c11 $(CORE_CFLAGS) $(PLATFORM_CFLAGS) -Wmissing-prototypes
 
 # separate flags for C files that need GCC Extensions...
-CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS) 
+CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y=-O2
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
 OPT-y+=-Os -fno-strict-aliasing
@@ -96,10 +96,10 @@ endif
 #
 # for some reason, -flto isn't playing nicely currently with -fstack-protector-strong...
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
-# 
+#
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
   $(info Not enabling -flto as stack protector enabled)
-  CORE_CFLAGS+=-fstack-protector-strong 
+  CORE_CFLAGS+=-fstack-protector-strong
   # CORE_CFLAGS+=-fstack-clash-protection  # currently does nothing on RISC-V
 else
   $(info NOTICE: enabling -flto (which means stack protection is disabled))
@@ -162,10 +162,10 @@ endif
 	$(CMD_PREFIX)$(OBJCOPY) -O binary $< $@
 
 #
-%.d: %.c 
+%.d: %.c
 	@$(ECHO) " MAKEDEP   $@";
-	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d 
+	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d
 
-%.d: %.S 
+%.d: %.S
 	@$(ECHO) " MAKEDEP   $@";
-	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d 
+	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d

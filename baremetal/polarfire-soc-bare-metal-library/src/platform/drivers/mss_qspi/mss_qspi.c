@@ -326,7 +326,7 @@ static void qspi_isr(void)
 
             while (0u == (QSPI->STATUS & STTS_RFEMPTY_MASK))
             {
-                /*Make sure that the Receive FIFO is empty and any 
+                /*Make sure that the Receive FIFO is empty and any
                   remaining data is read from it after desired bytes
                   have been received.*/
                 skips = (uint32_t)((QSPI->STATUS & STTS_FLAGSX4_MASK) ?

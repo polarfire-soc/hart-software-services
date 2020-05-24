@@ -27,7 +27,7 @@ extern "C" {
 #define DDR_BASE (0x80000000ul)
 
 /*
- * Useful macros 
+ * Useful macros
  */
 #define WRITE_REG8(x, y) (*((volatile uint8_t *)(x)) = (y))
 #define READ_REG8(x)     (*((volatile uint8_t *)(x)))

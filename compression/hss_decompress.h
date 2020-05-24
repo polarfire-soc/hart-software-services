@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Decompression
  *
  */
@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer); 
+int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer);
 
 #if defined (__cplusplus)
 }

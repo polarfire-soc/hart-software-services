@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -29,7 +29,7 @@ bool HSS_UARTInit(void)
     *(uint32_t volatile *)(pUartBase + 0x08) = 1 | 2;
     *(uint32_t volatile *)(pUartBase + 0x10) = 0; // disable UART interrupts
     *(uint32_t volatile *)(pUartBase + 0x14) = 0; // clear pending UART interrupts
-    
+
     pUartBase = (char *)0x10011000;
     *(uint32_t volatile *)(pUartBase + 0x08) = 1 | 2;
     *(uint32_t volatile *)(pUartBase + 0x10) = 0; // disable UART interrupts

@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -74,27 +74,27 @@ INCLUDES += \
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_uart/mss_uart.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_uart/mss_uart.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/drivers/mss_watchdog/mss_watchdog.o: baremetal/drivers/mss_watchdog/mss_watchdog.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/stubs.o: baremetal/stubs.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/sysreg.o: baremetal/sysreg.c config.h
 	@$(ECHO) " CC        $@";
@@ -102,49 +102,49 @@ baremetal/sysreg.o: baremetal/sysreg.c config.h
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.o: baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<  
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 

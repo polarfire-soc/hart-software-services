@@ -39,10 +39,10 @@
   The PolarFire SoC MSS eMMC SD software driver, provided as C source code,
   supports a set of functions for controlling eMMC/SD as part of a bare-metal
   system where no operating system is available. The driver can be adapted for
-  use as part of an operating system, but the implementation of the adaptation 
+  use as part of an operating system, but the implementation of the adaptation
   layer between the driver and the operating system's driver model is outside
   the scope of the driver.
-    
+
   The PolarFire SoC MSS eMMC SD driver provides the following features:
     - Configuring the eMMC/SD/SDIO
     - Single block read and write without DMA.
@@ -57,14 +57,14 @@
   Theory of Operation
   ==============================================================================
   The PolarFire SoC MSS eMMC SD driver functions allow 512-byte blocks of data
-  to be written to and read from a eMMC/SD device connected to the host 
+  to be written to and read from a eMMC/SD device connected to the host
   controller. The blocks can be read/written singly or using the multi block
-  functions. 
+  functions.
   There are two variants of the single block functions. One set are blocking,
   the other are non-blocking. The multi block functions are non-blocking.
-  
+
   Note: The eMMC/SD device connected to the eMMC/SD host hardware must support
-  a sector size of 512-bytes. This is the default block size for the 
+  a sector size of 512-bytes. This is the default block size for the
   eMMC/SD device > 2GB.
 
   The PolarFire SoC MSS eMMC SD driver functions are grouped into the following
@@ -83,14 +83,14 @@
     - Call the MSS_MMC_init() function.
 
   The configuration data structure mss_mmc_cfg_t should set eMMC/SD/SDIO
-  clock frequency, data width, card type and speed before calling the 
+  clock frequency, data width, card type and speed before calling the
   MSS_MMC_init() function.
-  
+
   The MSS_MMC_init() function takes a pointer to the configuration data
   structure of type mss_mmc_cfg_t.
 
   --------------------------------
-  Block Transfer Control 
+  Block Transfer Control
   --------------------------------
   The following functions are used for block read and write:
     - MSS_MMC_single_block_read()
@@ -101,7 +101,7 @@
     - MSS_MMC_adma2_write()
     - MSS_MMC_sdio_single_block_read()
     - MSS_MMC_sdio_single_block_write()
-  
+
   Write Transfer
 
   To write a single block of data to the eMMC/SD device, a call is made to the
@@ -120,8 +120,8 @@
   made to the MSS_MMC_single_block_read() function.
 
   To read a single block or multiple blocks of data stored within the eMMC/SD
-  device, using DMA, a call is made to the MSS_MMC_sdma_read() or 
-  MSS_MMC_adma2_read() functions. 
+  device, using DMA, a call is made to the MSS_MMC_sdma_read() or
+  MSS_MMC_adma2_read() functions.
 
   To read a single block of data stored within the SDIO device, a call is made
   to the MSS_MMC_sdio_single_block_read() function.
@@ -129,7 +129,7 @@
   --------------------------------
   Block Transfer Status
   --------------------------------
-  The status of the eMMC SD block read or write transfer can be retrieved 
+  The status of the eMMC SD block read or write transfer can be retrieved
   using the MSS_MMC_get_transfer_status() function.
 
   --------------------------------
@@ -161,7 +161,7 @@
   To read a single block or multiple blocks of data stored within the eMMC
   device using a command queue, a call is made to the MSS_MMC_cq_read()
   function. This function supports up to 32 tasks.
-  
+
  *//*=========================================================================*/
 #ifndef __MSS_MMC_H
 #define __MSS_MMC_H
@@ -340,7 +340,7 @@ typedef enum
   the MSS eMMC SD driver. The application need to create a record of this type
   to hold the configuration of the eMMC/SD/SDIO. The MSS_MMC_init() function
   initializes the MSS eMMC SD using this structure. A pointer to an initialized
-  of this structure should be passed as the first parameter to the 
+  of this structure should be passed as the first parameter to the
   MSS_MMC_init() function.
  */
 typedef struct
@@ -351,19 +351,19 @@ typedef struct
      uint8_t card_type;
     /* Specifies the data bus width of the eMMC/SD/SDIO */
      uint8_t data_bus_width;
-    /* Specifies the bus speed mode of the eMMC/SD/SDIO */ 
+    /* Specifies the bus speed mode of the eMMC/SD/SDIO */
      uint8_t bus_speed_mode;
     /* Specifies the bus voltage for eMMC */
-     uint8_t bus_voltage; 
+     uint8_t bus_voltage;
 } mss_mmc_cfg_t;
 
 /*-------------------------------------------------------------------------*//**
-  This type definition specifies the prototype of a function that can be 
+  This type definition specifies the prototype of a function that can be
   registered with this driver as a eMMC/SD transfer completion handler function
   through a call to MSS_MMC_set_handler(). The eMMC/SD transfer completion
   handler will be called by the driver when an eMMC/SD transfer completes. The
-  PolarFire SoC MSS eMMC SD driver passes the outcome of the transfer to the 
-  completion handler in the form of a status parameter indicating if the 
+  PolarFire SoC MSS eMMC SD driver passes the outcome of the transfer to the
+  completion handler in the form of a status parameter indicating if the
   transfer is successful or the type of error that occurred during the transfer.
 */
 typedef void (*mss_mmc_handler_t)(uint32_t status);
@@ -388,7 +388,7 @@ typedef void (*mss_mmc_handler_t)(uint32_t status);
   the configuration data structure parameters before passing it as parameter to
   the call to the MSS_MMC_init() function.
 
-  @return 
+  @return
   This function returns the initialization status of the eMMC/SD/SDIO device as
   a value of type mss_mmc_status_t.
 
@@ -399,13 +399,13 @@ typedef void (*mss_mmc_handler_t)(uint32_t status);
 
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
     g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -428,10 +428,10 @@ MSS_MMC_init
 
   Note: This function is a blocking function and will not return until the
   write operation is successful or an error occurs.
-        
+
   @param src_addr
   This parameter is a pointer to a buffer containing the data to be stored in
-  the eMMC/SD device. The buffer to which this parameter points should be 
+  the eMMC/SD device. The buffer to which this parameter points should be
   declared with a minimum size of 512 bytes.
 
   @param dst_addr
@@ -439,7 +439,7 @@ MSS_MMC_init
   stored.
   Note: For eMMC/SD devices of greater than 2 GB in size, this address refers
   to a 512-byte sector.
-  
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
@@ -448,25 +448,25 @@ MSS_MMC_init
   The following example shows how to initialize the device, perform a single
   block transfer.
   @code
-  
+
     #define SECT_1 0x01u
     #define BUFFER_SIZE 512u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t tx_data_buffer[BUFFER_SIZE] = {0u};
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
     g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         tx_data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -486,12 +486,12 @@ MSS_MMC_single_block_write
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_MMC_single_block_read() function is used to read a single block of 
+  The MSS_MMC_single_block_read() function is used to read a single block of
   data from the eMMC/SD device to the host controller. The size of the block
-  of data read by this function is always 512 bytes, which is the standard 
+  of data read by this function is always 512 bytes, which is the standard
   sector size for all eMMC/SD devices with a capacity of greater than 2 GB.
 
-  Note: This function is a blocking function and will not return until the 
+  Note: This function is a blocking function and will not return until the
   read operation is successful or an error occurs.
 
   @param src_addr
@@ -499,41 +499,41 @@ MSS_MMC_single_block_write
   to be read.
   Note: For eMMC/SD devices of greater than 2 GB in size, this address refers
   to a 512-byte sector.
-  
+
   @param dst_addr
   This parameter is a pointer to a buffer where the data to read from the
   eMMC/SD device will be stored. The buffer to which this parameter points
-  should be declared with a minimum size of 512 bytes.  
+  should be declared with a minimum size of 512 bytes.
 
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
-   
+
   Example:
   The following example shows how to initialize the device, perform a single
-  block transfer and read back the data from the sector written to within 
+  block transfer and read back the data from the sector written to within
   the eMMC device.
   @code
 
     #define SECT_1 0x01u
     #define BUFFER_SIZE 512u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t tx_data_buffer[BUFFER_SIZE] = {0u};
     uint8_t rx_data_buffer[BUFFER_SIZE] = {0u};
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
     g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         tx_data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -563,34 +563,34 @@ MSS_MMC_single_block_read
   bytes or a multiple of 512 bytes. The 512 bytes is the standard sector
   size for all eMMC/SD devices with a capacity of greater than 2 GB.
 
-  Note: A call to MSS_MMC_sdma_write() while a transfer is in progress will not 
-  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function 
+  Note: A call to MSS_MMC_sdma_write() while a transfer is in progress will not
+  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function
   or a completion handler registered by the MSS_MMC_set_handler() function
-  to check the status of the current transfer before calling the 
+  to check the status of the current transfer before calling the
   MSS_MMC_sdma_write() function again.
-  
+
   Note: This function is a non-blocking function and returns immediately after
   initiating the write transfer.
 
   @param src
   This parameter is a pointer to a buffer containing the data to be stored in
-  the eMMC/SD device. The buffer to which this parameter points must be 
+  the eMMC/SD device. The buffer to which this parameter points must be
   declared with a minimum size of 512 bytes.
-  
+
   @param dest
   Specifies the sector address in the eMMC/SD device where the data is to be
   stored.
   Note: For eMMC/SD devices of greater than 2 GB in size, this address refers
   to a 512-byte sector.
-  
+
   @param size
   Specifies the size in bytes of the requested transfer. The value of size must
   be a multiple of 512 but not greater than (32MB - 512).
-    
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
-   
+
   Example:
   The following example shows how to initialize the device, perform a multi
   block write transfer using SDMA.
@@ -598,12 +598,12 @@ MSS_MMC_single_block_read
 
     #define SECT_1 0x01u
     #define BUFFER_SIZE 4096u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
@@ -614,7 +614,7 @@ MSS_MMC_single_block_read
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -640,15 +640,15 @@ MSS_MMC_sdma_write
   a multiple of 512 bytes. The 512 bytes is the standard sector size for all
   eMMC/SD devices with a capacity of greater than 2 GB.
 
-  Note: A call to MSS_MMC_sdma_read() while a transfer is in progress will not 
-  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function 
+  Note: A call to MSS_MMC_sdma_read() while a transfer is in progress will not
+  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function
   or a completion handler registered by the MSS_MMC_set_handler() function
-  to check the status of the current transfer before calling the 
+  to check the status of the current transfer before calling the
   MSS_MMC_sdma_read() function again.
-  
-  Note: This function is a non-blocking function and will return immediately 
+
+  Note: This function is a non-blocking function and will return immediately
   after initiating the read transfer.
-          
+
   @param src
   Specifies the sector address in the eMMC/SD device from where the data is
   to be read.
@@ -656,14 +656,14 @@ MSS_MMC_sdma_write
   to a 512-byte sector.
 
   @param dest
-  This parameter is a pointer to a buffer where the data to read from the 
-  eMMC/SD device will be stored. The buffer to which this parameter points 
+  This parameter is a pointer to a buffer where the data to read from the
+  eMMC/SD device will be stored. The buffer to which this parameter points
   must be declared with a minimum size of 512 bytes.
 
   @param size
-  Specifies the size in bytes of the requested transfer. The value of size 
+  Specifies the size in bytes of the requested transfer. The value of size
   must be a multiple of 512 but not greater than (32MB - 512).
-  
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
@@ -672,15 +672,15 @@ MSS_MMC_sdma_write
   The following example shows how to initialize the device, perform a multi
   block read transfer using SDMA.
   @code
-  
+
     #define SECT_1 0x01u
     #define BUFFER_SIZE 4096u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
@@ -718,58 +718,58 @@ MSS_MMC_sdma_read
   size for all eMMC/SD devices with a capacity of greater than 2 GB.
 
   Note: A call to MSS_MMC_adma2_write() while a transfer is in progress will not
-  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function 
+  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function
   or a completion handler registered by the MSS_MMC_set_handler() function
-  to check the status of the current transfer before calling the 
+  to check the status of the current transfer before calling the
   MSS_MMC_adma2_write() function again.
-  
-  Note: This function is a non-blocking function and returns immediately after 
+
+  Note: This function is a non-blocking function and returns immediately after
   initiating the write transfer.
 
   @param src
   This parameter is a pointer to a buffer containing the data to be stored in
   the eMMC/SD device. The buffer to which this parameter points must be
   declared with a minimum size of 512 bytes.
-  
+
   @param dest
   Specifies the sector address in the eMMC/SD device where the data is
   to be stored.
   Note: For eMMC/SD devices of greater than 2 GB in size, this address refers
   to a 512-byte sector.
-  
+
   @param size
   Specifies the size in bytes of the requested transfer. The value of size must
   be a multiple of 512 but not greater than (32MB - 512).
-    
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
-   
+
   Example:
   The following example shows how to initialize the device, perform a multi
   block transfer using ADMA2.
-  
+
   @code
 
     #define SECT_1 0x01u
     #define BUFFER_SIZE 4096u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
     g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -793,17 +793,17 @@ MSS_MMC_adma2_write
   of data from the eMMC/SD device to the host controller using ADMA2. The size
   of the block of data read by this function must be set to 512 bytes or a
   multiple of 512 bytes. The 512 bytes is the standard sector size for all
-  eMMC/SD devices with a capacity of greater than 2 GB. 
+  eMMC/SD devices with a capacity of greater than 2 GB.
 
   Note: A call to MSS_MMC_adma2_read() while a transfer is in progress will not
-  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function 
+  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function
   or a completion handler registered by the MSS_MMC_set_handler() function
-  to check the status of the current transfer before calling the 
+  to check the status of the current transfer before calling the
   MSS_MMC_adma2_read() function again.
-  
-  Note: This function is a non-blocking function and returns immediately after 
+
+  Note: This function is a non-blocking function and returns immediately after
   initiating the read transfer.
-  
+
   @param src
   Specifies the sector address in the eMMC/SD device from where the data is
   to be read.
@@ -818,7 +818,7 @@ MSS_MMC_adma2_write
   @param size
   Specifies the size in bytes of the requested transfer. The value of size must
   be a multiple of 512 but not greater than (32MB -512).
-  
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
@@ -827,10 +827,10 @@ MSS_MMC_adma2_write
   The following example shows how to initialize the device, perform a multi
   block read transfer using ADMA2.
   @code
-  
+
     #define SECT_1 0x01u
     #define BUFFER_SIZE 4096u
-  
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
@@ -846,7 +846,7 @@ MSS_MMC_adma2_write
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -869,10 +869,10 @@ MSS_MMC_adma2_read
   The MSS_MMC_sdio_single_block_write() function is used to transfer a single
   block of data from the host controller to the SDIO device. The size of the
   block of data transferred by this function is 512 bytes.
-  
+
   Note: This function is a blocking function and will not return until the
   write operation is successful or an error occurs.
-  
+
   @param function_num
   Specifies the SDIO standard function number.
 
@@ -892,29 +892,29 @@ MSS_MMC_adma2_read
   Example:
   The following example shows how to initialize the SDIO device and perform
   single block transfer.
-  
+
   @code
 
     #define BUFFER_SIZE 512u
     #define REG_NUM 0x00000001u
     #define SDIO_FUN_NUM 0x00000001u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
-    
+
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_12MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_SDIO;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_SDCARD_MODE_DEFAULT_SPEED;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -941,7 +941,7 @@ MSS_MMC_sdio_single_block_write
   data transferred by this function is set to 512 bytes.
   Note: This function is a blocking function and will not return until the
   write operation is successful or an error occurs.
-  
+
   @param function_num
   Specifies the SDIO standard function number.
 
@@ -967,16 +967,16 @@ MSS_MMC_sdio_single_block_write
     #define BUFFER_SIZE 512u
     #define REG_NUM 0x00000001u
     #define SDIO_FUN_NUM 0x00000001u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_12MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_SDIO;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_SDCARD_MODE_DEFAULT_SPEED;
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -999,13 +999,13 @@ MSS_MMC_sdio_single_block_read
 
 /*-------------------------------------------------------------------------*//**
   The MSS_MMC_get_transfer_status() function returns the status of the MMC
-  transfer initiated by a call to MSS_MMC_sdma_write(), MSS_MMC_sdma_read(), 
-  MSS_MMC_adma2_write(), MSS_MMC_adma2_read(), MSS_MMC_cq_write(), 
+  transfer initiated by a call to MSS_MMC_sdma_write(), MSS_MMC_sdma_read(),
+  MSS_MMC_adma2_write(), MSS_MMC_adma2_read(), MSS_MMC_cq_write(),
   MSS_MMC_cq_read() functions.
-  
+
   @param
     This function has no parameters.
-    
+
   @return
   This function returns a value of type mss_mmc_status_t. The possible return
   values are:
@@ -1016,16 +1016,16 @@ MSS_MMC_sdio_single_block_read
 
   Example:
   The following example shows the use of MSS_MMC_get_transfer_status() function.
-  
+
   @code
-        
+
         mss_mmc_status_t ret_status;
         ret_status = MSS_MMC_write(data_buffer, SECT_1, BUFFER_SIZE);
         do
         {
             ret_status = MSS_MMC_get_transfer_status();
         }while(ret_status == MSS_MMC_TRANSFER_IN_PROGRESS)
-     
+
   @endcode
  */
 mss_mmc_status_t MSS_MMC_get_transfer_status(void);
@@ -1051,30 +1051,30 @@ mss_mmc_status_t MSS_MMC_get_transfer_status(void);
   The following example shows the use of MSS_MMC_set_handler() function.
 
   @code
-  
+
     #define BLOCK_1 0x00000001u
     #define BUFFER_SIZE 1024
     #define ERROR_INTERRUPT 0x8000
     #define TRANSFER_COMPLETE 0x1
-  
+
     void transfer_complete_handler(uint32_t srs12_status);
     volatile uint32_t g_xfer_in_progress = 0;
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -1088,7 +1088,7 @@ mss_mmc_status_t MSS_MMC_get_transfer_status(void);
             }
         }
     }
-    
+
     void transfer_complete_handler(uint32_t srs12_status)
     {
         g_xfer_in_progress = 0;
@@ -1135,33 +1135,33 @@ void MSS_MMC_set_handler(mss_mmc_handler_t handler);
   devices with a capacity of greater than 2 GB.
 
   Note: A call to MSS_MMC_cq_write() while a transfer is in progress will not
-  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function 
+  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function
   or a completion handler registered by the MSS_MMC_set_handler() function
-  to check the status of the current transfer before calling the 
+  to check the status of the current transfer before calling the
   MSS_MMC_cq_write() function again.
-  
+
   Note: This function is a non-blocking function and returns immediately after
   initiating the write transfer.
-  
+
   @param src
   This parameter is a pointer to a buffer containing the data to be stored
   in the eMMC device. The buffer to which this parameter points must be
   declared with a minimum size of 512 bytes.
-  
+
   @param dest
   Specifies the sector address in the eMMC device where the data is
   to be stored.
-  Note: For eMMC devices of greater than 2 GB in size, this address refers to a 
+  Note: For eMMC devices of greater than 2 GB in size, this address refers to a
   512 byte sector.
 
   @param size
   Specifies the size in bytes of the requested transfer. The value of size must
   be a multiple of 512 but not greater than (1GB - 16KB).
-    
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
-   
+
   Example:
   The following example shows how to initialize the device and perform a multi
   block transfer..
@@ -1169,22 +1169,22 @@ void MSS_MMC_set_handler(mss_mmc_handler_t handler);
 
     #define SECT_1 0x01u
     #define BUFFER_SIZE 4096u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {
@@ -1213,24 +1213,24 @@ MSS_MMC_cq_write
   with single or multiple tasks based on the data size. The size of the block of
   data read by this function must be set to 512 bytes or a multiple of 512 bytes.
   The 512 bytes is the standard sector size for all eMMC devices with a capacity
-  of greater than 2 GB. 
+  of greater than 2 GB.
 
-  Note: A call to MSS_MMC_cq_read() while a transfer is in progress will not 
-  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function 
+  Note: A call to MSS_MMC_cq_read() while a transfer is in progress will not
+  initiate a new transfer. Use the MSS_MMC_get_transfer_status() function
   or a completion handler registered by the MSS_MMC_set_handler() function
-  to check the status of the current transfer before calling the 
+  to check the status of the current transfer before calling the
   MSS_MMC_cq_read() function again.
 
   Note: This function is a non-blocking function and returns immediately after
   initiating the write transfer.
-  
+
   @param src_addr
   Specifies the sector address in the eMMC device from where the datato is
   to be read.
-  
+
   Note: For eMMC devices of greater than 2 GB in size, this address refers
   to a 512-byte sector.
-  
+
   @param dst_addr
   This parameter is a pointer to a buffer where the data to read from the eMMC
   device will be stored. The buffer to which this parameter points must be
@@ -1239,7 +1239,7 @@ MSS_MMC_cq_write
   @param size
   Specifies the size in bytes of the requested transfer. The value of size must
   be a multiple of 512 but not greater than (1GB - 16KB).
-  
+
   @return
   This function returns a value of type mss_mmc_status_t which specifies the
   transfer status of the operation.
@@ -1252,22 +1252,22 @@ MSS_MMC_cq_write
 
     #define SECT_1 0x01u
     #define BUFFER_SIZE 4096u
-    
+
     mss_mmc_cfg_t g_mmc0;
     mss_mmc_status_t ret_status;
     uint8_t data_buffer[BUFFER_SIZE];
     uint32_t loop_count;
-    
+
     g_mmc0.clk_rate = MSS_MMC_CLOCK_25MHZ;
     g_mmc0.card_type = MSS_MMC_CARD_TYPE_MMC;
     g_mmc0.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
     g_mmc0.bus_speed_mode = MSS_MMC_MODE_LEGACY;
-    
+
     for (loop_count = 0; loop_count < (BUFFER_SIZE); loop_count++)
     {
         data_buffer[loop_count] = 0x45 + loop_count;
     }
-    
+
     ret_status = MSS_MMC_init(&g_mmc0);
     if (MSS_MMC_INIT_SUCCESS == ret_status)
     {

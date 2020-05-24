@@ -37,7 +37,7 @@ __attribute__((weak)) size_t strnlen(const char *s, size_t count)
     return result;
 }
 
-__attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict src, size_t n) 
+__attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict src, size_t n)
 {
     // no overlaps allowed!!
     char *cDest = (char*)dest;
@@ -120,7 +120,7 @@ __attribute__((weak)) int strcasecmp(const char *s1, const char *s2)
         //    s1++;
         //    s2++;
         //    continue;
-        //} else 
+        //} else
         if (c1 < c2) {
             result = -1;
             break;
@@ -171,7 +171,7 @@ __attribute__((weak)) char *strtok_r(char *str, const char *delim, char **savept
             *saveptr = *saveptr + 1;
         }
     }
-    
+
     return result;
 }
 

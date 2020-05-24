@@ -52,7 +52,7 @@ static inline bool IsValidState(struct StateMachine *pStateMachine, int state)
  */
 static HSSTicks_t maxLoopTime = 0u;
 static uint64_t loopCount = 0u;
-void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *const pStateMachines[]) 
+void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *const pStateMachines[])
 {
     HSSTicks_t const startTicks = HSS_GetTickCount();
     HSSTicks_t endTicks;
@@ -169,9 +169,9 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
         bool dump_flag = false;
         bool max_exceeded_flag = false;
 
-        if (mUNLIKELY(delta > maxLoopTime)) { 
-            maxLoopTime = delta; 
-            max_exceeded_flag = true; 
+        if (mUNLIKELY(delta > maxLoopTime)) {
+            maxLoopTime = delta;
+            max_exceeded_flag = true;
        }
 
         if (mUNLIKELY((loopCount % (unsigned long)CONFIG_DEBUG_LOOP_TIMES_THRESHOLD) == 0u)) {
@@ -221,7 +221,7 @@ uint64_t GetStateMachinesExecutionCount(void)
 
 
 /**
- * \brief Run through array of InitFunctions 
+ * \brief Run through array of InitFunctions
  */
 void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunction initFunctions[])
 {
@@ -229,7 +229,7 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
     for (i = 0u; i < spanOfInitFunctions; i++) {
         assert(initFunctions[i].handler);
 
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Running %d of %d: %s()" CRLF, i, spanOfInitFunctions, 
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Running %d of %d: %s()" CRLF, i, spanOfInitFunctions,
         //    initFunctions[i].pName);
 
         bool result = (initFunctions[i].handler)();
@@ -238,7 +238,7 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
             mHSS_DEBUG_PRINTF(LOG_ERROR, "%s() returned %d" CRLF, initFunctions[i].pName, result);
 
             if (initFunctions[i].haltOnFailure) {
-                while (true) { ; } // HALT on failure 
+                while (true) { ; } // HALT on failure
             } else if (initFunctions[i].restartOnFailure) {
                 uint8_t rcvBuf;
 

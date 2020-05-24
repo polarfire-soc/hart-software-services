@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - U54 IPI Handler toplevel
  *
  */
@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 /*!
- * \file U54 Handle IPI 
+ * \file U54 Handle IPI
  * \brief U54 Handle IPI
  */
 

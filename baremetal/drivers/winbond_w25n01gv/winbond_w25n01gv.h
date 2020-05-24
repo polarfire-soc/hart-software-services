@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- *  
+ *
  * Driver for MICRON_MT25Q QSPI flash memory.
  * This driver uses the MPFS MSS QSPI driver interface.
  *
@@ -39,7 +39,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 extern mss_qspi_config_t qspi_config;
 

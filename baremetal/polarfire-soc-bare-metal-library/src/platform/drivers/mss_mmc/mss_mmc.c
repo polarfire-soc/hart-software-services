@@ -382,7 +382,7 @@ MSS_MMC_init
             if (ret_status != MSS_MMC_NO_ERROR)
             {
                     ret_status = MSS_MMC_NOT_INITIALISED;
-            }    
+            }
         }
         else if(cfg->bus_voltage == MSS_MMC_3_3V_BUS_VOLTAGE)
         {

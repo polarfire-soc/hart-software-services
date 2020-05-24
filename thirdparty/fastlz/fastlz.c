@@ -1,4 +1,4 @@
-/*  
+/*
   FastLZ - lightning-fast lossless compression library
 
   Copyright (C) 2007 Ariya Hidayat (ariya@kde.org)
@@ -52,7 +52,7 @@
 #define FASTLZ_INLINE inline
 #elif defined(__BORLANDC__) || defined(_MSC_VER) || defined(__LCC__)
 #define FASTLZ_INLINE __inline
-#else 
+#else
 #define FASTLZ_INLINE
 #endif
 
@@ -93,7 +93,7 @@ int fastlz_decompress(const void* input, int length, void* output, int maxout, v
 #define MAX_DISTANCE 8192
 
 #if !defined(FASTLZ_STRICT_ALIGN)
-#define FASTLZ_READU16(p) *((const flzuint16*)(p)) 
+#define FASTLZ_READU16(p) *((const flzuint16*)(p))
 #else
 #define FASTLZ_READU16(p) ((p)[0] | (p)[1]<<8)
 #endif
@@ -183,7 +183,7 @@ static FASTLZ_INLINE int FASTLZ_DECOMPRESSOR(const void* input, int length, void
         ref = op - ofs - MAX_DISTANCE;
       }
 #endif
-      
+
 #ifdef FASTLZ_SAFE
       if (FASTLZ_UNEXPECT_CONDITIONAL(op + len + 3 > op_limit)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "op + len + 3 [%p] > op_limit [%p]" CRLF, op + len + 3, op_limit);

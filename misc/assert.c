@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -23,12 +23,12 @@
  * \brief Local implemention of assert fail
  */
 
-//void __assert_func(const char *__assertion, const char *__file, 
+//void __assert_func(const char *__assertion, const char *__file,
 //        unsigned int __line, const char *__function) //__attribute__ ((__noreturn__))
-void __assert_func(const char *__file, unsigned int __line, 
+void __assert_func(const char *__file, unsigned int __line,
         const char *__function, const char *__assertion) //__attribute__ ((__noreturn__))
 {
-    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s:%d: %s() Assertion failed:" CRLF "\t%s" CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s:%d: %s() Assertion failed:" CRLF "\t%s" CRLF,
         __file, __line, __function, __assertion);
 
 #ifndef __riscv
@@ -38,9 +38,9 @@ void __assert_func(const char *__file, unsigned int __line,
 #endif
 }
 
-//void __assert_fail(const char *__assertion, const char *__file, 
+//void __assert_fail(const char *__assertion, const char *__file,
 //        unsigned int __line, const char *__function) //__attribute__ ((__noreturn__))
-void __assert_fail(const char *__file, unsigned int __line, 
+void __assert_fail(const char *__file, unsigned int __line,
         const char *__function, const char *__assertion) //__attribute__ ((__noreturn__))
 {
    __assert_func(__file, __line, __function, __assertion);

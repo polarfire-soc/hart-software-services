@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software - tools/bin2chunks
  *
  * Helper Utility to take a binary file and convert it into a chunks table for
@@ -93,7 +93,7 @@ void calculateChunkCounts(size_t *binSize, size_t chunkSize)
             if (DEBUG) {
                 printf("%s: skipping core %u as binSize[%u] is %lu\n", __func__, i, i, (unsigned long)binSize[i]);
             }
-            continue; 
+            continue;
         }
 
         size_t idx;
@@ -127,10 +127,10 @@ void calculateChunkCounts(size_t *binSize, size_t chunkSize)
 
             "Number of ZI Chunks:        %lu\n"
             "ZI Chunk Table Size:        %lu\n"
-            "ZI Chunk Table Padded Size: %lu\n\n", 
+            "ZI Chunk Table Padded Size: %lu\n\n",
 
-            (unsigned long)bootImageSize, (unsigned long)bootImagePaddedSize, 
-            (unsigned long)chunkCount, (unsigned long)chunkTableSize, (unsigned long)chunkTablePaddedSize, 
+            (unsigned long)bootImageSize, (unsigned long)bootImagePaddedSize,
+            (unsigned long)chunkCount, (unsigned long)chunkTableSize, (unsigned long)chunkTablePaddedSize,
             (unsigned long)ziChunkCount, (unsigned long)ziChunkTableSize, (unsigned long)ziChunkTablePaddedSize);
 }
 
@@ -146,7 +146,7 @@ void fileOut_WriteBinaryFileArray(FILE *pFileOut, FILE **ppFileIn, size_t *binSi
             if (DEBUG) {
                 printf("%s: skipping core %u as ppFileIn[%u] is NULL or binSize[%u] is %lu\n", __func__, i, i, i, (unsigned long)binSize[i]);
             }
-            continue; 
+            continue;
         }
 
         char byte = fgetc(pFileIn);
@@ -176,7 +176,7 @@ void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSi
         if ((owner == 0) || (binSize[i] == 0)) {
             if (DEBUG) {
                 printf("%s: skipping core %u as binSize[%u] is %lu\n", __func__, i, i, (unsigned long)binSize[i]);
-            } 
+            }
             continue;
         }
 
@@ -191,7 +191,7 @@ void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSi
 
             if (idx == 0) {
                 firstChunkArray[owner-1] = totalChunkCount;
-            }    
+            }
 
             pChunkOffset[idx/chunkSize] = bootChunk.loadAddr;
 
@@ -203,8 +203,8 @@ void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSi
             //bootChunk.crc32 = CRC32_calculate(BLAH, thisChunkSize);
 
 #ifdef DEBUG
-            if (DEBUG) { 
-                printf("%s(): %d: Writing chunk %8lu: %lx->%lx (payload of %lu bytes)\n", 
+            if (DEBUG) {
+                printf("%s(): %d: Writing chunk %8lu: %lx->%lx (payload of %lu bytes)\n",
                     __func__, bootChunk.owner, idx/chunkSize, bootChunk.loadAddr + DEBUG_MEM_OFFSET, bootChunk.execAddr, (unsigned long)bootChunk.size);
             }
 #endif
@@ -221,8 +221,8 @@ void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSi
     fwrite((char *)&bootChunk, sizeof(struct HSS_BootChunkDesc), 1, pFileOut);
 
 #ifdef DEBUG
-    if (DEBUG) { 
-        printf("%s(): %d: Writing chunk %8lu: %lx->%lx (%lu bytes)\n", 
+    if (DEBUG) {
+        printf("%s(): %d: Writing chunk %8lu: %lx->%lx (%lu bytes)\n",
             __func__, bootChunk.owner, (unsigned long)idx/chunkSize, bootChunk.loadAddr + DEBUG_MEM_OFFSET, bootChunk.execAddr, (unsigned long)bootChunk.size);
     }
 #endif
@@ -250,7 +250,7 @@ void fileOut_WriteBootZIChunkTable(FILE *pFileOut, int *pOwnerArray)
 /*****************************************************************************************/
 /*! \brief Generate the boot image data structure
  */
-uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * pName, char ** pFileNameArray, 
+uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * pName, char ** pFileNameArray,
     size_t *pNumChunksArray, size_t numZIChunks, size_t bootImageLength, uint32_t headerCrc)
 {
 
@@ -277,7 +277,7 @@ uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * p
         .bootImageLength = bootImageLength,
     };
 
-    strncat(bootImage.set_name, pName, BOOT_IMAGE_MAX_NAME_LEN-1); 
+    strncat(bootImage.set_name, pName, BOOT_IMAGE_MAX_NAME_LEN-1);
 
     for (int i = 0; i < 4; i++) {
         if (pFileNameArray[i]) {
@@ -296,7 +296,7 @@ uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * p
     }
 #endif
 
-    fwrite((char *)&bootImage, sizeof(struct HSS_BootImage), 1, pFileOut); 
+    fwrite((char *)&bootImage, sizeof(struct HSS_BootImage), 1, pFileOut);
     fileOut_WritePad(pFileOut, bootImagePaddedSize - bootImageSize);
 
     return CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
@@ -372,12 +372,12 @@ int main(int argc, char **argv)
 
         pFileNameArray[i] = argv[argIndex++];
         printf(" - input file is >>%s<<\n", pFileNameArray[i]);
-        
+
 
         if (strlen(imageNameBuf)) {
-            strncat(imageNameBuf, "+", BOOT_IMAGE_MAX_NAME_LEN-1); 
+            strncat(imageNameBuf, "+", BOOT_IMAGE_MAX_NAME_LEN-1);
         }
-        strncat(imageNameBuf, pFileNameArray[i], BOOT_IMAGE_MAX_NAME_LEN-1); 
+        strncat(imageNameBuf, pFileNameArray[i], BOOT_IMAGE_MAX_NAME_LEN-1);
 
         execAddr[i] = strtoul(argv[argIndex++], NULL, 16);
         printf("execAddr[%u] set to %lx\n", i, execAddr[i]);
@@ -412,7 +412,7 @@ int main(int argc, char **argv)
     // correct image length...
 
     fclose(pFileOut);
-    for (unsigned int i = 0u; i < NR_CPUs; i++) { 
+    for (unsigned int i = 0u; i < NR_CPUs; i++) {
         if (ppFileIn[i]) { fclose(ppFileIn[i]); }
     }
 

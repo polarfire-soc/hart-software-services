@@ -123,15 +123,15 @@ void IPI_DebugDumpStats(void)
 {
     enum HSSHartId myHartId = current_hartid();
 
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 CRLF,
         mIPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 CRLF,
         mIPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 CRLF,
         mIPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 CRLF,
         mIPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 CRLF,
         mIPI_DATA.mpfs_ipi_privateData[myHartId].ipi_sends);
 }
 #endif
@@ -178,7 +178,7 @@ uint32_t IPI_GetQueuePendingCount(uint32_t queueIndex)
 
 //
 // @brief Set the MSIP of a particular target hart
-// @param target [in] target hart to set 
+// @param target [in] target hart to set
 // @param val [in] is the value to set the MSIP to
 // @return bool indicating success
 //
@@ -251,7 +251,7 @@ void CLINT_Clear_MSIP(enum HSSHartId const target)
 // @param target [in] target hart to where the traffic will be sent
 // @return IPI_Outbox_Msg * pointer to first message in the queue
 //
-inline struct IPI_Outbox_Msg *IPI_DirectionToFirstMsgInQueue(enum HSSHartId source, 
+inline struct IPI_Outbox_Msg *IPI_DirectionToFirstMsgInQueue(enum HSSHartId source,
         enum HSSHartId target)
 {
     assert(target < HSS_HART_NUM_PEERS);
@@ -296,8 +296,8 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
             space_available = true;
             break;
         } else {
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "pMsg: %p, index: %u, msg_type: %u" CRLF, pMsg, i, 
-            //    pMsg->msg_type); 
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "pMsg: %p, index: %u, msg_type: %u" CRLF, pMsg, i,
+            //    pMsg->msg_type);
         }
         pMsg++;
     }
@@ -346,7 +346,7 @@ bool IPI_PollReceive(union HSSHartBitmask hartMask)
 
     for (i = 0u; i < MAX_NUM_HARTS; i++) {
         if (i == myHartId) { continue; } // don't handle messages if to my own hartid
-        if (!((1u << i) & hartMask.uint)) { continue; } // only look at selected harts 
+        if (!((1u << i) & hartMask.uint)) { continue; } // only look at selected harts
 
         // myHartId => target, i => source
         uint32_t const index = IPI_CalculateQueueIndex(i, myHartId);
@@ -400,7 +400,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
         // to make this safer, we'll ensure its within range, and we'll also
         // assert that it is the correct handler type...
         {
-            assert(msg_type < spanOfIpiRegistry); 
+            assert(msg_type < spanOfIpiRegistry);
             assert(msg_type == ipiRegistry[msg_type].msg_type);
 
             if ((msg_type < spanOfIpiRegistry) && (msg_type == ipiRegistry[msg_type].msg_type)) {
@@ -484,7 +484,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
 extern unsigned long _hss_start, _hss_end;
 static bool check_if_ipi_queues_overlap_hss(void)
 {
-    return (((char *)CONFIG_IPI_BASE_ADDR + mIPI_SIZE) >= (char *)&_hss_start) 
+    return (((char *)CONFIG_IPI_BASE_ADDR + mIPI_SIZE) >= (char *)&_hss_start)
         && ((char *)CONFIG_IPI_BASE_ADDR <= (char *)&_hss_end);
 }
 #endif
@@ -502,10 +502,10 @@ bool IPI_QueuesInit(void)
     assert(check_if_ipi_queues_overlap_hss() == false);
 #endif
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing IPI Queues (%lu bytes @ %p)..." CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing IPI Queues (%lu bytes @ %p)..." CRLF,
         sizeof(struct IPI_Data), (void *)&mIPI_DATA);
 
-    memset((void *)ipi_data, 0, sizeof(struct IPI_Data)); 
+    memset((void *)ipi_data, 0, sizeof(struct IPI_Data));
 
     for (unsigned int i = 0u; i < MAX_NUM_HARTS; i++) {
         mIPI_DATA.my_transaction_id[i] = 1u;
@@ -619,7 +619,7 @@ void IPI_MessageFree(uint32_t index)
 
     mIPI_DATA.mpfs_ipi_privateData[current_hartid()].message_frees++;
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u" CRLF, index, 
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u" CRLF, index,
     //    mIPI_DATA.ipi_completes[index].transaction_id);
 }
 

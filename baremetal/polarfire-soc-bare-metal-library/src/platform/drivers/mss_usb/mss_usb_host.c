@@ -145,7 +145,7 @@ mss_usb_ep_t gh_tx_ep[5];                               /*[0] ==> Control EP*/
 mss_usb_ep_t gh_rx_ep[5];                               /*[0] ==> Empty*/
 
 /* Use this at time of class allocation after device is enumerated
- * Currently we support only one device.Hence one Class allocation, still an 
+ * Currently we support only one device.Hence one Class allocation, still an
  * array is used so that future support for multiple devices would be easy.*/
 /* MPH:Number of registered classes */
 static class_driver_info_t g_rcd[1];
@@ -155,8 +155,8 @@ static volatile uint8_t g_cep_xfr_result = MSS_USB_EP_XFR_SUCCESS;
 /* User application call-back handler */
 static mss_usbh_user_cb_t* g_user_cb;
 
-/* Apart from this driver, Class drivers can also do a CEP transfers as per 
- * need. This variable is to differentiate between transfers started by this 
+/* Apart from this driver, Class drivers can also do a CEP transfers as per
+ * need. This variable is to differentiate between transfers started by this
  * driver and CRP transfers started by Class driver.
  */
 static volatile uint8_t g_internal_cep_xfr = 0u;
@@ -233,7 +233,7 @@ MSS_USBH_init
     g_tdev[TDEV_R].tdev_maxpktsz0 = CEP_MAX_PKT_SIZE;
     g_tdev[TDEV_R].class_handle = 0u;
     g_user_cb = app_cb;
-    
+
     /* Initialize host core interface layer */
     MSS_USBH_CIF_init();
     MSS_USBH_configure_control_pipe(TDEV_R);
@@ -335,7 +335,7 @@ MSS_USBH_configure_out_pipe
 
     tid = (tdev_id_t)(target_addr & 0x03u);
     txep_ptr->tdev_idx = tid;
-    
+
     txep_ptr->num = (mss_usb_ep_num_t)outpipe_num;
     txep_ptr->dpb_enable = DPB_DISABLE;
     txep_ptr->fifo_size = fifo_size;
@@ -349,7 +349,7 @@ MSS_USBH_configure_out_pipe
     txep_ptr->add_zlp = add_zlp;
     txep_ptr->num_usb_pkt = 1u;
     txep_ptr->buf_addr = 0u;
-    
+
     txep_ptr->xfr_length = 0u;
     txep_ptr->xfr_count = 0u;
     txep_ptr->txn_length = 0u;
@@ -436,9 +436,9 @@ MSS_USBH_configure_in_pipe
                                     g_tdev[tid].speed,
                                     interval,
                                     xfr_type);
-    
+
     MSS_USBH_CIF_rx_ep_configure(rxep_ptr);
-    
+
     return (0);
 }
 
@@ -520,7 +520,7 @@ MSS_USBH_read_in_pipe
 )
 {
     mss_usb_ep_t* rxep_ptr = &gh_rx_ep[inpipe_num];
-    
+
     /* TODO: Error check for all the parameters. */
     tdev_id_t tid = (tdev_id_t)0u;
 
@@ -551,7 +551,7 @@ MSS_USBH_read_in_pipe
         rxep_ptr->txn_count = 0u;
         rxep_ptr->buf_addr = buf;
 
-        if ((DMA_ENABLE == rxep_ptr->dma_enable) && 
+        if ((DMA_ENABLE == rxep_ptr->dma_enable) &&
                                        (MSS_USB_XFR_BULK == rxep_ptr->xfr_type))
         {
             if (rxep_ptr->xfr_length >= rxep_ptr->max_pkt_size)
@@ -685,10 +685,10 @@ MSS_USBH_construct_get_descr_command
 {
     /* bmRequestType */
     buf[0] = (xfr_dir| req_type| recip_type);
-    
+
     /* bRequest */
     buf[1] = request;
-    
+
     /* wValue-MSB = desc_type */
     buf[3] = desc_type;
 
@@ -706,12 +706,12 @@ MSS_USBH_construct_get_descr_command
         /*
          * wValue-LSB = Conf_idx, Field should be used only for Conf_desc or
          * String Desc.
-         * Since we support only one configuration, we set it to zero for 
+         * Since we support only one configuration, we set it to zero for
          * Conf_desc. For all other descriptors this field must be zero
          */
         buf[2] = 0x00U;
 
-        /* wIndex-LSB and MSB => other than String Desc, these values must be 
+        /* wIndex-LSB and MSB => other than String Desc, these values must be
          * zero */
         buf[4] = 0x00U;
         buf[5] = 0x00U;
@@ -1041,17 +1041,17 @@ mss_usbh_fsm
                 g_user_cb->usbh_tdev_not_supported(g_tdev_error_code);
             }
             g_host_state = HOST_IDLE;
-            
+
             /*
              * Clear Enum-FSM
              * Clear Target_info for all targets.
              * Clear EP0 config
              * Give Visual Err Indication and remain in this state,
-             * till Disconnect Interrupt occurs or USER wants to give a retry 
+             * till Disconnect Interrupt occurs or USER wants to give a retry
              * command.
              */
         break;
-        
+
         default:
             /* Empty default */
         break;
@@ -1151,7 +1151,7 @@ mss_usbh_enum_fsm
                                       USB_STD_REQ_DATA_DIR_OUT,
                                       0u);
         break;
-        
+
         case ENUM_WAIT_SET_TDEV_ADDR:
             if (g_cep_xfr_result)
             {
@@ -1165,8 +1165,8 @@ mss_usbh_enum_fsm
                         g_tdev[TDEV_R].addr = 0x10U;         /* New non-zero ADDR */
                         MSS_USBH_CIF_tx_ep_set_target_func_addr(gh_tx_ep[MSS_USB_CEP].num,
                                                                 g_tdev[TDEV_R].addr);
-                        
-                        /* Validate DevDescriptor. Take exception for FS LS 
+
+                        /* Validate DevDescriptor. Take exception for FS LS
                          * devices */
                         res = validate_dev_desc((dev_desc_t*)&g_tdev_desc[tdev_idx].dev_desc);
                         g_tdev_desc[tdev_idx].desc_err_code = res;
@@ -1188,7 +1188,7 @@ mss_usbh_enum_fsm
                 }
             }
         break;
-        
+
         case ENUM_GET_FUL_DEV_DESC:
             MSS_USBH_construct_get_descr_command(command_buf,
                                                  USB_STD_REQ_DATA_DIR_IN,
@@ -1391,11 +1391,11 @@ mss_usbh_control_xfr_fsm
 {
     volatile mss_usb_ep_state_t cep_event_st = MSS_USB_EP_VALID;
     uint32_t rem_length = 0u;
-    
+
     mss_usb_ep_t* cep_ptr = &gh_tx_ep[MSS_USB_CEP];
 
     MSS_USB_CIF_cep_disable_irq();
-    
+
     /* gh_cep_cb_event is critical */
     cep_event_st = (mss_usb_ep_state_t)gh_cep_cb_event;
     gh_cep_cb_event = 0u;
@@ -1407,7 +1407,7 @@ mss_usbh_control_xfr_fsm
         case MSS_USB_CEP_IDLE:
             /* do nothing. Free running CEP-FSM hits here when doing no transfers */
         break;
-        
+
         case MSS_USB_CEP_SETUP:
             if (cep_event_st)
             {
@@ -1683,7 +1683,7 @@ mss_usbh_ep_tx_complete_cb
 {
     uint8_t this_tdev = 0u;
     uint8_t transfer_complete = 0u;
-    
+
     mss_usb_ep_t* txep_ptr = &gh_tx_ep[ep_num];
 
     /* retrieve tdev_idx which transmitted data. */
@@ -1835,7 +1835,7 @@ mss_usbh_ep_rx_cb
     uint32_t received_count = 0u;
 
     mss_usb_ep_t* rxep_ptr = &gh_rx_ep[ep_num];
-    
+
     /* Retrieve tdev_idx which received data. */
     this_tdev = gh_rx_ep[ep_num].tdev_idx;
 
@@ -1854,7 +1854,7 @@ mss_usbh_ep_rx_cb
                 if (MSS_USB_DMA_MODE1 == (MSS_USB_CIF_rx_ep_get_dma_mode((mss_usb_ep_num_t)ep_num)))
                 {
                     uint32_t increamented_addr;
-                    
+
                     /*
                      * This means we are in BULK transfer with DMA mode1.
                      * all the rxmaxP size pkts are received and last short pkt
@@ -2182,9 +2182,9 @@ validate_dev_desc
     {
         result = FS_DEV_NOT_SUPPORTED;
     }
-    
-    /* Need to comment the below section for keyboard and mouse are low speed 
-     * device 
+
+    /* Need to comment the below section for keyboard and mouse are low speed
+     * device
      */
 #if 0
     if ((MSS_USB_DEVICE_LS == g_tdev[TDEV_R].speed))
@@ -2292,7 +2292,7 @@ host_enum_check_class_support
         }
 
         /* Comparing assigned class driver with the interface descriptor's
-         * bInterfaceClass, bInterfaceSubClass  and bInterfaceProtocol 
+         * bInterfaceClass, bInterfaceSubClass  and bInterfaceProtocol
          * fields*/
         if (((uint8_t)(g_rcd[i].class_handle->class_id>>16u) ==
              g_tdev_desc[tid].conf_desc.cs.upended_desc[5]) &&
@@ -2302,7 +2302,7 @@ host_enum_check_class_support
              g_tdev_desc[tid].conf_desc.cs.upended_desc[7]))
         {
             /* Class driver is matched and available. */
-            if (g_rcd[i].alloc_state == 0u) 
+            if (g_rcd[i].alloc_state == 0u)
             {
                 /* Allocation successful */
                 return (i);

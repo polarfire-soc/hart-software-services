@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -34,4 +34,4 @@ INCLUDES +=\
 
 services/goto/goto_service.o: services/goto/goto_service.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

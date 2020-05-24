@@ -38,7 +38,7 @@ uint32_t sgmii_setup(void)
 	/*
 	 * Check if any tx/Rx channels enabled
 	 */
-    if((mode & (TX_RX_CH_EN_MASK<<TX_RX_CH_EN_OFFSET)) != 0U)   
+    if((mode & (TX_RX_CH_EN_MASK<<TX_RX_CH_EN_OFFSET)) != 0U)
     {
         sgmii_channel_setup();
     }

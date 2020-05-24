@@ -1,5 +1,5 @@
 /******************************************************************************************
- * 
+ *
  * MPFS HSS Embedded Software
  *
  * Copyright 2019 Microchip Corporation.
@@ -130,9 +130,9 @@ static bool e51_emmc_init(void)
     bool result = false;
 
     //if (!initialized) {
-        SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK; 
-        SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK; 
-        SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK; 
+        SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
+        SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
+        SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
 
         //mHSS_PRINTF("SYSREG->SUBBLK_CLOCK_CR is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SUBBLK_CLOCK_CR, SYSREG->SUBBLK_CLOCK_CR & SUBBLK_CLOCK_CR_MMC_MASK);
         //mHSS_PRINTF("SYSREG->SOFT_RESET_CR   is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SOFT_RESET_CR, SYSREG->SOFT_RESET_CR & SOFT_RESET_CR_MMC_MASK);
@@ -219,7 +219,7 @@ void e51_ymodem_loop(void)
                 break;
 #endif
             case '3':
-                mHSS_PUTS(CRLF "Attempting to receive .bin file using YMODEM (CTRL-C to cancel)" 
+                mHSS_PUTS(CRLF "Attempting to receive .bin file using YMODEM (CTRL-C to cancel)"
                     CRLF);
                 receivedCount = ymodem_receive(pBuffer, g_rx_size);
                 if (receivedCount == 0) {
@@ -255,6 +255,6 @@ void e51_ymodem_loop(void)
             default: // ignore
                 break;
 	    }
-        } 
+        }
     }
 }

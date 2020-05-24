@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         perror("ftello()");
         exit(-3);
     }
-    
+
     fseeko(pFileIn, 0, SEEK_SET);
 
     printf("%s: input size is %lu bytes\n", argv[0], inputSize);
@@ -72,14 +72,14 @@ int main(int argc, char **argv)
     struct HSS_CompressedImage imgHdr = {
         .magic= HSS_COMPRESSED_MAGIC,
         .headerLength = sizeof(struct HSS_CompressedImage),
-        .headerCrc = 0u, 
+        .headerCrc = 0u,
         .compressedCrc = 0u,
         .compressedImageLen = outputSize,
         .originalImageLen = inputSize,
     };
 
     imgHdr.headerCrc = CRC32_calculate((const uint8_t *)&imgHdr, sizeof(struct HSS_CompressedImage));
-   
+
 
     bytesProcessed = fwrite((const void*)&imgHdr, 1, sizeof(struct HSS_CompressedImage), pFileOut);
     if (bytesProcessed != (size_t)sizeof(struct HSS_CompressedImage)) {

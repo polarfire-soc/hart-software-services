@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -39,7 +39,7 @@ all: bin2chunks dump_header
 bin2chunks: bin2chunks.c ../../misc/hss_crc32.c
 	$(CC) $(CFLAGS) -o bin2chunks bin2chunks.c ../../misc/hss_crc32.c -I../../include -I../../ssmb/ipi/ -I../../ -I../../thirdparty/opensbi/include -D__riscv_xlen=64
 
-dump_header: dump_header.c 
+dump_header: dump_header.c
 	$(CC) $(CFLAGS) -o dump_header dump_header.c -I../../include -I../../ssmb/ipi/ -I../..  -I../../thirdparty/opensbi/include -D__riscv_xlen=64
 clean:
 	-$(RM) bin2chunks dump_header

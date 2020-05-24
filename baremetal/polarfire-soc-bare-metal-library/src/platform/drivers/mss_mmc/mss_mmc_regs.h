@@ -167,8 +167,8 @@ typedef struct {
 #define SRS3_RESP_LENGTH_48         (0x2u << 16)
 /* response type - response length 48 and check Busy after response */
 #define SRS3_RESP_LENGTH_48B        (0x3u << 16)
-/* RID - Response Interrupt Disable 
-   When set to 1, the Command Complete Interrupt (SRS12.CC) 
+/* RID - Response Interrupt Disable
+   When set to 1, the Command Complete Interrupt (SRS12.CC)
    will be disabled */
 #define SRS3_RESP_INTER_DISABLE     0x00000100u
 /* RECE - Response Error Check Enable.
@@ -315,7 +315,7 @@ typedef struct {
 #define SRS12_ADMA_ERROR            0x02000000u
 /* Auto CMD (CMD12 or CMD23) error */
 #define SRS12_AUTO_CMD_ERROR        0x01000000u
-/* Current limit error host controller is not supplying power to SD card 
+/* Current limit error host controller is not supplying power to SD card
    due some failure. */
 #define SRS12_CURRENT_LIMIT_ERROR   0x00800000u
 /* Data end bit error */
@@ -499,7 +499,7 @@ typedef struct {
 #define SRS15_ASYNCHRONOUS_INT_EN       (0x1u << 30)
 /* 64-bit Addressing Specifies the addressing mode for DMA ending. */
 #define SRS15_64_BIT_ADDRESSING         0x20000000u
-/* Host Version 4.00 Enable 
+/* Host Version 4.00 Enable
 * Selects backward (SD Host 3.00 Version) compatibility mode
 * or SD Host 4.00 Version mode
 */
@@ -765,7 +765,7 @@ static inline uint32_t SDCARD_REG_GET_EXT_SECURITY(uint32_t x)
     @name SD card function register bits, masks and macros definitions
  ----------------------------------------------------------------------------
 */
-/* Check function mode - is used to query if the card supports a specific 
+/* Check function mode - is used to query if the card supports a specific
    function or functions. */
 #define SDCARD_SWITCH_FUNC_MODE_SWITCH          (0x1u << 31)
 /* Set function mode  - is used to switch the functionality of the card.*/
@@ -879,7 +879,7 @@ static inline uint8_t SDCARD_SWICH_FUNC_GET_BUSY_STAT(const uint8_t* val, uint8_
 */
 /* The card is in idle state and running the initializing process. */
 #define SDCARD_RESP_R1_IDLE                 0x01u
-/* An erase sequence was cleared before executing because an out of 
+/* An erase sequence was cleared before executing because an out of
   erase sequence command was received. */
 #define SDCARD_RESP_R1_ERASE_RESET          0x02u
 /* An illegal command code was detected. */

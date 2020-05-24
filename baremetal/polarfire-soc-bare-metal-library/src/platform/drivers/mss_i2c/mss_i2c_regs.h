@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * Register bit offsets and masks definitions for PolarFire SoC(PSE) MSS I2C.
  *
  * SVN $Revision$

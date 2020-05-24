@@ -1,6 +1,6 @@
 
 /******************************************************************************************
- * 
+ *
  * MPFS HSS Embedded Software
  *
  * Copyright 2019 Microchip Corporation.

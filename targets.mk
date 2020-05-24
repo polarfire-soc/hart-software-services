@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -42,7 +42,7 @@ config:
 	$(CMD_PREFIX)menuconfig
 	@$(ECHO) " MENUCONFIG"
 
-.config: 
+.config:
 	$(CMD_PREFIX)menuconfig
 	@$(ECHO) " MENUCONFIG"
 
@@ -111,7 +111,7 @@ sparse: MCMODEL:=
 sparse: CC=cgcc
 sparse: clean $(TARGET)
 
-smatch: $(SRCS-y) $(EXTRA_SRCS-y) $(TEST_SRCS) 
+smatch: $(SRCS-y) $(EXTRA_SRCS-y) $(TEST_SRCS)
 	smatch $(INCLUDES) $(SRCS-y) $(EXTRA_SRCS-y) $(TEST_SRCS)
 
 splint: $(SRCS-y)
@@ -158,8 +158,8 @@ showsize:
 
 showfullsize: hss.elf
 	@echo
-	@$(NM) --print-size --size-sort --radix=x hss.elf 
-	@$(READELF) -e hss.elf 
+	@$(NM) --print-size --size-sort --radix=x hss.elf
+	@$(READELF) -e hss.elf
 
 ifdef CONFIG_CC_DUMP_STACKSIZE
 showstack: hss.elf
@@ -191,7 +191,7 @@ help:
 	@$(ECHO) "	$ make lcov 		# Rebuild instrumented binaries and run lcov"
 	@$(ECHO) "	$ make valgrind		# Run valgrind on binary"
 	@$(ECHO) "	$ make flawfinder		# Run flawfinder on this directory"
-	 
+	
 	@$(ECHO) ""
 	@$(ECHO) "	$ make showloc		# Print number of lines of code"
 	@$(ECHO) "	$ make showsize		# Print information about binary size"

@@ -2,9 +2,9 @@
  * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * Register bit offsets and masks definitions for PolarFire SoC(MPFS) MSS QSPI.
- * 
+ *
  *
  */
 #ifndef MSS_QSPI_REGS_H_
@@ -135,7 +135,7 @@ extern "C" {
 #define UADDAR                                  0u
 #define UADDAR_MASK                             0xFFu
 
-#ifdef __cplusplus                       
+#ifdef __cplusplus
 }
 #endif
 

@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -19,7 +19,7 @@
 
 #include "ssmb_ipi.h"
 #include <string.h> //memset
-#include <assert.h> 
+#include <assert.h>
 
 #include "mpfs_reg_map.h"
 #include "csr_helper.h"
@@ -127,5 +127,5 @@ void HSS_IpiPoll_Enable(enum HSSHartId target)
        assert(1 == 0); // should never reach here!! LCOV_EXCL_LINE
        break;
    }
-   ipi_poll_service.state = IPI_POLL_MONITORING; 
+   ipi_poll_service.state = IPI_POLL_MONITORING;
 }

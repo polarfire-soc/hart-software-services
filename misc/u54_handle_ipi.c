@@ -2,13 +2,13 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
 
 /*!
- * \file U54 Handle IPI 
+ * \file U54 Handle IPI
  * \brief U54 Handle IPI
  */
 
@@ -49,7 +49,7 @@ bool HSS_U54_HandleIPI(void)
     mb();
 
 #ifdef CONFIG_SERVICE_BOOT
-    /*if (!intentFound)*/ 
+    /*if (!intentFound)*/
     { intentFound = IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_PMP_SETUP); }
 #endif
 
@@ -66,7 +66,7 @@ bool HSS_U54_HandleIPI(void)
 #ifdef CONFIG_DEBUG_IPI_STATS
     {
         enum HSSHartId myHartId = current_hartid();
-        static size_t count[5]; count[myHartId]++; 
+        static size_t count[5]; count[myHartId]++;
 
         mHSS_DEBUG_PRINTF(LOG_STATUS, " ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId],
             intentFound);
@@ -80,7 +80,7 @@ bool HSS_U54_HandleIPI(void)
 
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "<<" CRLF);
 
-    return intentFound; 
+    return intentFound;
 }
 
 void HSS_U54_Banner(void)

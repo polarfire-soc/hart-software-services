@@ -8,7 +8,7 @@
 
 #include "mss_sysreg.h"
 
-mss_sysreg_t * const SYSREG = (mss_sysreg_t * const)BASE32_ADDR_MSS_SYSREG; 
+mss_sysreg_t * const SYSREG = (mss_sysreg_t * const)BASE32_ADDR_MSS_SYSREG;
 
 #if 0
 /*==============================================================================

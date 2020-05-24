@@ -78,9 +78,9 @@ _start:
 	la	tp, scratches
 	mul	a5, s7, s8
 	add	tp, tp, a5
-	add	t3, tp, zero // Keep a copy of tp 
-	li	t2, 1 // Counter 
-	li	t1, 0 // hartid 0 is mandated by ISA 
+	add	t3, tp, zero // Keep a copy of tp
+	li	t2, 1 // Counter
+	li	t1, 0 // hartid 0 is mandated by ISA
 
 .disable_and_clear_interrupts:
 	// Disable and clear all interrupts
@@ -129,7 +129,7 @@ _start:
         call	.set_trap_handler
 
         //
-        // Clear the E51 DTIM to prevent any memory errors on initial access 
+        // Clear the E51 DTIM to prevent any memory errors on initial access
         // to the cache
         //
         la	a4, __dtim_start
@@ -139,7 +139,7 @@ _start:
 	add	a4, a4, __SIZEOF_POINTER__
 	blt	a4, a5, 1b
 
-        li	a2, MIP_MSIP 
+        li	a2, MIP_MSIP
 	csrc	CSR_MSTATUS, a2
         j main
 
@@ -179,7 +179,7 @@ _trap_handler:
 
 	// We came from S-mode or U-mode
 _trap_handler_s_mode:
-	// Set T0 to original SP 
+	// Set T0 to original SP
 	add	t0, sp, zero
 
 	// Setup exception stack
@@ -250,7 +250,7 @@ _trap_handler_all_mode:
 
 	LOAD_GP
 
-	// Call C routine 
+	// Call C routine
 	add	a0, sp, zero
 	csrr	a1, CSR_MSCRATCH
 	call	sbi_trap_handler
@@ -399,7 +399,7 @@ hss_u54_trap_handler:
 	.globl	copy_section
 	.type	copy_section, @function
 copy_section:
-        beq     a1, a0, .copy_section_done // if load_addr == exec_start_addr, goto copy_section_done 
+        beq     a1, a0, .copy_section_done // if load_addr == exec_start_addr, goto copy_section_done
 .check_if_copy_section_done:
 	beq	a1, a2, .copy_section_done // if offset != length, goto keep_copying
 .keep_copying:

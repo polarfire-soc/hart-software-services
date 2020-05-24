@@ -13,7 +13,7 @@
  * @file mss_sysreg.h
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Hardware register definitions.
-    
+
  *
  */
 #ifndef MSS_SYSREG_H
@@ -31,7 +31,7 @@ extern "C" {
      <strong>IO Type Qualifiers</strong> are used
      \li to specify the access to peripheral variables.
      \li for automatic generation of peripheral register debug information.
-    
+
  */
 #ifndef __I
  #ifdef __cplusplus
@@ -101,7 +101,7 @@ extern "C" {
 
 /*RTC clock divider*/
 #define RTC_CLOCK_CR_OFFSET                                      0xC
-    /* "Sets the  division ratio to create the internal RTC clock from the 
+    /* "Sets the  division ratio to create the internal RTC clock from the
     reference clock. The defaults sets the reference clock to 1MHz assuming the
      reference clock is 100Mhz.If the reference clock is 125MHz then 125 will c
     reate a 1MHz clockMax divider value is 4095 and value must be an integer.RT
@@ -122,8 +122,8 @@ extern "C" {
 
 /**/
 #define BOOT_FAIL_CR_OFFSET                                      0x14
-    /* Written by firmware to indicate that the boot process failed drives 
-    the fab_boot_fail signal to the fabric. Is cleared by the fabric asserting 
+    /* Written by firmware to indicate that the boot process failed drives
+    the fab_boot_fail signal to the fabric. Is cleared by the fabric asserting
     fab_boot_fail_clear*/
     #define BOOT_FAIL_CR_BOOT_OFFSET                             0x0
     #define BOOT_FAIL_CR_BOOT_MASK                               (0x01 << 0x0)
@@ -136,7 +136,7 @@ extern "C" {
     #define CONFIG_LOCK_CR_LOCK_MASK                             (0x01 << 0x0)
 
 /*Indicates which reset caused the last reset. After a reset occurs registe
-    r should be read and then zero written to allow the next reset event to be 
+    r should be read and then zero written to allow the next reset event to be
     correctly captured.*/
 #define RESET_SR_OFFSET                                          0x20
     /* Reset was caused by the SCB periphery reset signal*/
@@ -175,7 +175,7 @@ extern "C" {
     #define DEVICE_STATUS_LP_STATE_OFFSET                        0x1
     #define DEVICE_STATUS_LP_STATE_MASK                          (0x01 << 0x1)
     /* Indicates the status of the ff_in_progress input from G5 Control.*/
-    
+
     #define DEVICE_STATUS_FF_IN_PROGRESS_OFFSET                  0x2
     #define DEVICE_STATUS_FF_IN_PROGRESS_MASK                    (0x01 << 0x2)
     /* Indicates the status of the flash_valid input from G5 Control.*/
@@ -245,8 +245,8 @@ extern "C" {
 #define GPIO_INTERRUPT_FAB_CR_OFFSET                             0x54
     /* Setting these  bits will disable the Pad interrupt and enable the fa
     bric GPIO interrupt for bits 31:0. When the bit is set the Pad interrupt wi
-    ll be ORED into the GPIO0 & GPIO1  non-direct  interrupts. When the bit is 
-    not set the Fabric interrupt is ORED into the GPIO2  non-direct interrupt. 
+    ll be ORED into the GPIO0 & GPIO1  non-direct  interrupts. When the bit is
+    not set the Fabric interrupt is ORED into the GPIO2  non-direct interrupt.
     To prevent ORING then the interrupt should not be enabled in the GPIO block
     */
     #define GPIO_INTERRUPT_FAB_CR_SELECT_OFFSET                  0x0
@@ -426,8 +426,8 @@ extern "C" {
     #define SUBBLK_CLOCK_CR_CFM_OFFSET                           0x1D
     #define SUBBLK_CLOCK_CR_CFM_MASK                             (0x01 << 0x1D)
 
-/*"Holds the MSS peripherals in reset. Whenin reset the peripheral  should 
-    not be accessed the acess may be ignored return unspecified data or result 
+/*"Holds the MSS peripherals in reset. Whenin reset the peripheral  should
+    not be accessed the acess may be ignored return unspecified data or result
     in bus response error."*/
 #define SOFT_RESET_CR_OFFSET                                     0x88
     /* */
@@ -561,7 +561,7 @@ extern "C" {
     #define DFIAPB_CR_CLOCKON_OFFSET                             0x0
     #define DFIAPB_CR_CLOCKON_MASK                               (0x01 << 0x0)
     /* Asserts the APB reset to the MSS corner is asserted at MSS reset.*/
-    
+
     #define DFIAPB_CR_RESET_OFFSET                               0x1
     #define DFIAPB_CR_RESET_MASK                                 (0x01 << 0x1)
 
@@ -570,7 +570,7 @@ extern "C" {
     /* "This signal selects whether the associated byte is reset by soft re
     set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
     lues are:• 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.• 1
-    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0 
+    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
     controls GPIO0 [7:0]  and bit  1 GPIO[15:8]The master MSS reset will also r
     eset the GPIO register if not configured to use fabric reset."*/
     #define GPIO_CR_GPIO0_SOFT_RESET_SELECT_OFFSET               0x0
@@ -582,8 +582,8 @@ extern "C" {
     /* "This signal selects whether the associated byte is reset by soft re
     set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
     lues are:• 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.• 1
-    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0 
-    controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 2 GPIO[23:16]The master MSS 
+    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
+    controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 2 GPIO[23:16]The master MSS
     reset will also reset the GPIO register if not configured to use fabric res
     et."*/
     #define GPIO_CR_GPIO1_SOFT_RESET_SELECT_OFFSET               0x8
@@ -595,7 +595,7 @@ extern "C" {
     /* "This signal selects whether the associated byte is reset by soft re
     set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
     lues are:• 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.• 1
-    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0 
+    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
     controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 1 GPIO[23:16] and bit 3 GPIO
     [31:24]The master MSS reset will also reset the GPIO register if not config
     ured to use fabric reset."*/
@@ -625,7 +625,7 @@ extern "C" {
     n G5 or G5)"*/
     #define USB_CR_DDR_SELECT_OFFSET                             0x0
     #define USB_CR_DDR_SELECT_MASK                               (0x01 << 0x0)
-    /* When '1' will stops the clock to the USB core when the core asserts 
+    /* When '1' will stops the clock to the USB core when the core asserts
     its POWERDOWN output. For G4 compatibility this bit defaults to 0.*/
     #define USB_CR_POWERDOWN_ENABLE_OFFSET                       0x1
     #define USB_CR_POWERDOWN_ENABLE_MASK                         (0x01 << 0x1)
@@ -677,8 +677,8 @@ extern "C" {
 /*ENVM AHB Controller setup*/
 #define ENVM_CR_OFFSET                                           0xB8
     /* "Sets the number of  AHB cycles used to generate the PNVM clockClock
-      period = (Value+1) * (1000/AHBFREQMHZ)         Value must be 1 to 63  (0 
-    defaults to 15)e.g.11  will generate a 40ns period  25MHz clock if the AHB 
+      period = (Value+1) * (1000/AHBFREQMHZ)         Value must be 1 to 63  (0
+    defaults to 15)e.g.11  will generate a 40ns period  25MHz clock if the AHB
     clock is 250MHz15  will generate a 40ns period  25MHz clock if the AHB cloc
     k is 400MHz"*/
     #define ENVM_CR_CLOCK_PERIOD_OFFSET                          0x0
@@ -695,8 +695,8 @@ extern "C" {
     hey appear as consecutive access cycles.*/
     #define ENVM_CR_CLOCK_SUPPRESS_OFFSET                        0x9
     #define ENVM_CR_CLOCK_SUPPRESS_MASK                          (0x01 << 0x9)
-    /* "Enables ""read-ahead"" on the ENVM controller. The controller will 
-    automatically read the next PNVM location as soon as possible ahead of the 
+    /* "Enables ""read-ahead"" on the ENVM controller. The controller will
+    automatically read the next PNVM location as soon as possible ahead of the
     AHB request. This will improve read performance when incrementing though me
     mory as the NVM reads and AHB cycles are pipelined. When set  non increment
     ing accesses will take longer as the controller may be in the process of re
@@ -714,7 +714,7 @@ extern "C" {
     #define ENVM_CR_INTERRUPT_ENABLE_OFFSET                      0x12
     #define ENVM_CR_INTERRUPT_ENABLE_MASK                        (0x01 << 0x12)
     /* "Sets the duration of the timer used to detect a non response of slo
-    w response from the PNVM on C and R bus accesses.Timer Duration = Value *  
+    w response from the PNVM on C and R bus accesses.Timer Duration = Value *
     (1000/AHBFREQMHZ)   0x00: Timer disabled. If the timer expires the AHB cycl
     e is terminates using the HRESP protocol"*/
     #define ENVM_CR_TIMER_OFFSET                                 0x18
@@ -1066,7 +1066,7 @@ extern "C" {
 
 /*Maintenance Interrupt Enable.*/
 #define MAINTENANCE_INTEN_CR_OFFSET                              0x140
-    /* Enables interrupt on a PLL event PLL_STATUS_INTEN_CR should also be 
+    /* Enables interrupt on a PLL event PLL_STATUS_INTEN_CR should also be
     set*/
     #define MAINTENANCE_INTEN_CR_PLL_OFFSET                      0x0
     #define MAINTENANCE_INTEN_CR_PLL_MASK                        (0x01 << 0x0)
@@ -1127,7 +1127,7 @@ extern "C" {
     /* Enables interrupt on bank6 powered off*/
     #define MAINTENANCE_INTEN_CR_IO_BANK_B6_OFF_OFFSET           0x13
     #define MAINTENANCE_INTEN_CR_IO_BANK_B6_OFF_MASK             (0x01 << 0x13)
-    /* Enables interrupt on a DLL event DLL_STATUS_INTEN_CR should also be 
+    /* Enables interrupt on a DLL event DLL_STATUS_INTEN_CR should also be
     set*/
     #define MAINTENANCE_INTEN_CR_DLL_OFFSET                      0x14
     #define MAINTENANCE_INTEN_CR_DLL_MASK                        (0x01 << 0x14)
@@ -1175,7 +1175,7 @@ extern "C" {
     ting '1'*/
     #define MAINTENANCE_INT_SR_LP_STATE_EXIT_OFFSET              0x4
     #define MAINTENANCE_INT_SR_LP_STATE_EXIT_MASK                (0x01 << 0x4)
-    /* Indicates the device has entered the flash freezer state cleared by 
+    /* Indicates the device has entered the flash freezer state cleared by
     writing '1'*/
     #define MAINTENANCE_INT_SR_FF_START_OFFSET                   0x5
     #define MAINTENANCE_INT_SR_FF_START_MASK                     (0x01 << 0x5)
@@ -1183,7 +1183,7 @@ extern "C" {
     riting '1'*/
     #define MAINTENANCE_INT_SR_FF_END_OFFSET                     0x6
     #define MAINTENANCE_INT_SR_FF_END_MASK                       (0x01 << 0x6)
-    /* Indicates that the FPGA array has been turned on cleared by writing 
+    /* Indicates that the FPGA array has been turned on cleared by writing
     a '1'*/
     #define MAINTENANCE_INT_SR_FPGA_ON_OFFSET                    0x7
     #define MAINTENANCE_INT_SR_FPGA_ON_MASK                      (0x01 << 0x7)
@@ -1222,15 +1222,15 @@ extern "C" {
     #define MAINTENANCE_INT_SR_IO_BANK_B4_OFF_OFFSET             0x11
     #define MAINTENANCE_INT_SR_IO_BANK_B4_OFF_MASK               (0x01 << 0x11)
     /* Indicates that IO bank 5  has turned off cleared by writing a '1'*/
-    
+
     #define MAINTENANCE_INT_SR_IO_BANK_B5_OFF_OFFSET             0x12
     #define MAINTENANCE_INT_SR_IO_BANK_B5_OFF_MASK               (0x01 << 0x12)
-    /* Indicates that one off the DLLs when into the lock or unlock state. 
+    /* Indicates that one off the DLLs when into the lock or unlock state.
     Cleared via DLL status register*/
     #define MAINTENANCE_INT_SR_IO_BANK_B6_OFF_OFFSET             0x13
     #define MAINTENANCE_INT_SR_IO_BANK_B6_OFF_MASK               (0x01 << 0x13)
     /* Indicates that IO bank 6  has turned off cleared by writing a '1'*/
-    
+
     #define MAINTENANCE_INT_SR_DLL_OFFSET                        0x14
     #define MAINTENANCE_INT_SR_DLL_MASK                          (0x01 << 0x14)
 
@@ -1252,7 +1252,7 @@ extern "C" {
     #define PLL_STATUS_SR_DFI_UNLOCK_OFFSET                      0x5
     #define PLL_STATUS_SR_DFI_UNLOCK_MASK                        (0x01 << 0x5)
     /* Indicates that the SGMII PLL has unlocked cleared by writing a '1'*/
-    
+
     #define PLL_STATUS_SR_SGMII_UNLOCK_OFFSET                    0x6
     #define PLL_STATUS_SR_SGMII_UNLOCK_MASK                      (0x01 << 0x6)
     /* Current state off CPU PLL locked signal*/
@@ -1336,19 +1336,19 @@ extern "C" {
     #define DLL_STATUS_SR_FIC4_LOCK_OFFSET                       0x5
     #define DLL_STATUS_SR_FIC4_LOCK_MASK                         (0x01 << 0x5)
     /* Indicates that the FIC0 DLL has unlocked cleared by writing a '1'*/
-    
+
     #define DLL_STATUS_SR_FIC0_UNLOCK_OFFSET                     0x8
     #define DLL_STATUS_SR_FIC0_UNLOCK_MASK                       (0x01 << 0x8)
     /* Indicates that the FIC1 DLL has unlocked cleared by writing a '1'*/
-    
+
     #define DLL_STATUS_SR_FIC1_UNLOCK_OFFSET                     0x9
     #define DLL_STATUS_SR_FIC1_UNLOCK_MASK                       (0x01 << 0x9)
     /* Indicates that the FIC2 DLL has unlocked cleared by writing a '1'*/
-    
+
     #define DLL_STATUS_SR_FIC2_UNLOCK_OFFSET                     0xA
     #define DLL_STATUS_SR_FIC2_UNLOCK_MASK                       (0x01 << 0xA)
     /* Indicates that the FIC3 DLL has unlocked cleared by writing a '1'*/
-    
+
     #define DLL_STATUS_SR_FIC3_UNLOCK_OFFSET                     0xB
     #define DLL_STATUS_SR_FIC3_UNLOCK_MASK                       (0x01 << 0xB)
     /* Indicates that the FIC4 (Crypto) DLL has unlocked cleared by writing
@@ -3691,7 +3691,7 @@ typedef struct _mss_sysreg
      __IO uint32_t APBBUS_CR;
 
     /*"Enables the clock to the MSS peripheral. By turning clocks off dynam
-    ic power can be saved. When the clock is off the peripheral  should not be 
+    ic power can be saved. When the clock is off the peripheral  should not be
     accessed*/
      __IO uint32_t SUBBLK_CLOCK_CR;
 
@@ -3700,7 +3700,7 @@ typedef struct _mss_sysreg
      __IO uint32_t SOFT_RESET_CR;
 
     /*Configures how many outstanding transfers the AXI-AHB bridges in fron
-    t off the USB and Crypto blocks should allow. (See Synopsys AXI-AHB bridge 
+    t off the USB and Crypto blocks should allow. (See Synopsys AXI-AHB bridge
     documentation)*/
      __IO uint32_t AHBAXI_CR;
 
@@ -3853,7 +3853,7 @@ typedef struct _mss_sysreg
      preserved.  Powers down the RAM and periphery circuits.*/
      __IO uint32_t RAM_SHUTDOWN_CR;
 
-    /*Allows each bank of the L2 Cache to be powered down ORed with global 
+    /*Allows each bank of the L2 Cache to be powered down ORed with global
     shutdown */
      __IO uint32_t L2_SHUTDOWN_CR;
 

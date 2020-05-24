@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -22,14 +22,14 @@
 /*!
  * \brief DDR Training
  *
- * The E51 ensures that DDR is setup prior to code download, 
+ * The E51 ensures that DDR is setup prior to code download,
  * and thus perform an DDR training and configuration required to achieve this.
  *
- * The intention is to allow as much flexibility as possible in DDR training, 
- * so it is driven by MPFS HSS Embedded Software, with hardware hooks to 
- * perform real-time critical functions. 
+ * The intention is to allow as much flexibility as possible in DDR training,
+ * so it is driven by MPFS HSS Embedded Software, with hardware hooks to
+ * perform real-time critical functions.
  *
- * TBD: is periodic re-calibration required during operation (e.g. temperature induced 
+ * TBD: is periodic re-calibration required during operation (e.g. temperature induced
  * or other)
  */
 #ifdef CONFIG_PLATFORM_MPFS

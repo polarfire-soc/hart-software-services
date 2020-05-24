@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * Implementation of uart_putstring/g(). 
+ * Implementation of uart_putstring/g().
  * This is function is intended to be used from ee_printf().
  */
 
@@ -53,7 +53,7 @@ int uart_putstring(int hartid, char *p)
     const uint32_t len = (uint32_t)strlen(p);
 
     mss_uart_instance_t *pUart = get_uart_instance(hartid);
-    MSS_UART_polled_tx_string(pUart, (const uint8_t *)p); 
+    MSS_UART_polled_tx_string(pUart, (const uint8_t *)p);
     // TODO: if hartId is zero (i.e., E51), replace this with non-blocking
     // queue implementation, with HSS_UART state machine consuming from queues...
     return len;

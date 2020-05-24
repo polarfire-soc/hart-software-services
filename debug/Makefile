@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -28,7 +28,7 @@
 #
 
 EXTRA_SRCS-y += \
-        debug/hss_debug.c 
+        debug/hss_debug.c
 
 EXTRA_SRCS-$(CONFIG_DEBUG_PROFILING_SUPPORT) += \
         debug/profiling.c \

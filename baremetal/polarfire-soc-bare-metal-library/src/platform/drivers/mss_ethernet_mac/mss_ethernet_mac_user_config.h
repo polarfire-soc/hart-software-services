@@ -5,7 +5,7 @@
  *
  * This file contains system specific definitions for the PolarFire SoC MSS
  * Ethernet MAC device driver.
- * 
+ *
  * SVN $Revision$
  * SVN $Date$
  *

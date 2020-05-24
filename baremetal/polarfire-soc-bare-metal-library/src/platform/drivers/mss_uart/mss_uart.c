@@ -2,7 +2,7 @@
  * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * PolarFire SoC Microprocessor Subsystem MMUART bare metal software driver
  * implementation.
  *
@@ -94,7 +94,7 @@ static uint8_t g_uart_axi_pos = 0x0u;
 /*******************************************************************************
  * Local functions.
  */
-static void global_init(mss_uart_instance_t * this_uart, uint32_t baud_rate, 
+static void global_init(mss_uart_instance_t * this_uart, uint32_t baud_rate,
                                                          uint8_t line_config);
 static void uart_isr(mss_uart_instance_t * this_uart);
 static void default_tx_handler(mss_uart_instance_t * this_uart);
@@ -103,7 +103,7 @@ static void disable_irq(const mss_uart_instance_t * this_uart);
 static void config_baud_divisors
 (
     mss_uart_instance_t * this_uart,
-    uint32_t baudrate    
+    uint32_t baudrate
 );
 
 /*******************************************************************************
@@ -112,10 +112,10 @@ static void config_baud_divisors
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_init
 (
-    mss_uart_instance_t* this_uart, 
+    mss_uart_instance_t* this_uart,
     uint32_t baud_rate,
     uint8_t line_config
 )
@@ -138,7 +138,7 @@ MSS_UART_init
  */
 void MSS_UART_lin_init
 (
-    mss_uart_instance_t* this_uart, 
+    mss_uart_instance_t* this_uart,
     uint32_t baud_rate,
     uint8_t line_config
 )
@@ -159,10 +159,10 @@ void MSS_UART_lin_init
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_irda_init
 (
-    mss_uart_instance_t* this_uart, 
+    mss_uart_instance_t* this_uart,
     uint32_t baud_rate,
     uint8_t line_config,
     mss_uart_rzi_polarity_t rxpol,
@@ -181,10 +181,10 @@ MSS_UART_irda_init
 
     ((rxpol == MSS_UART_ACTIVE_LOW) ? (this_uart->hw_reg->MM1 &= ~EIRX_MASK) :
                                       (this_uart->hw_reg->MM1 |= EIRX_MASK));
-                                      
+
     ((txpol == MSS_UART_ACTIVE_LOW) ? (this_uart->hw_reg->MM1 &= ~EITX_MASK) :
                                       (this_uart->hw_reg->MM1 |= EITX_MASK));
-                                      
+
     ((pw == MSS_UART_3_BY_16) ? (this_uart->hw_reg->MM1 &= ~EITP_MASK) :
                                       (this_uart->hw_reg->MM1 |= EITP_MASK));
     /* Disable SmartCard Mode */
@@ -194,17 +194,17 @@ MSS_UART_irda_init
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_smartcard_init
 (
-    mss_uart_instance_t* this_uart, 
+    mss_uart_instance_t* this_uart,
     uint32_t baud_rate,
     uint8_t line_config
 )
 {
     /* Perform generic initialization */
     global_init(this_uart, baud_rate, line_config);
-    
+
     /* Disable LIN mode */
     this_uart->hw_reg->MM0 &= ~ELIN_MASK;
 
@@ -446,10 +446,10 @@ MSS_UART_enable_irq
                                                             (uint32_t)IIRF_MASK)));
 
 
-        /* 
+        /*
          * bit 4 - Receiver time-out interrupt
          * bit 5 - NACK / ERR signal interrupt
-         * bit 6 - PID parity error interrupt 
+         * bit 6 - PID parity error interrupt
          * bit 7 - LIN break detection interrupt
          * bit 8 - LIN Sync detection interrupt
          */
@@ -541,28 +541,28 @@ MSS_UART_set_loopback
                 /* Disable local loopback */
                 this_uart->hw_reg->MCR &= ~LOOP_MASK;
             break;
-                
+
             case MSS_UART_LOCAL_LOOPBACK_ON:
                 /* Enable local loopback */
                 this_uart->hw_reg->MCR |= LOOP_MASK;
             break;
-            
+
             case MSS_UART_REMOTE_LOOPBACK_OFF:
             case MSS_UART_AUTO_ECHO_OFF:
                 /* Disable remote loopback & automatic echo*/
                 this_uart->hw_reg->MCR &= ~(RLOOP_MASK|ECHO_MASK);
             break;
-            
+
             case MSS_UART_REMOTE_LOOPBACK_ON:
                 /* Enable remote loopback */
                 this_uart->hw_reg->MCR |= (1u << RLOOP);
                 break;
-                
+
             case MSS_UART_AUTO_ECHO_ON:
                 /* Enable automatic echo */
                 this_uart->hw_reg->MCR |= (1u << ECHO);
             break;
-                
+
             case MSS_UART_INVALID_LOOPBACK:
                 /* Fall through to default. */
             default:
@@ -900,12 +900,12 @@ MSS_UART_get_tx_status
     /* Read the Line Status Register and update the sticky record. */
     status = this_uart->hw_reg->LSR;
     this_uart->status |= status;
-    
+
     /*
      * Extract the transmit status bits from the UART's Line Status Register.
-     * Bit 5 - Transmitter Holding Register/FIFO Empty (THRE) status. 
+     * Bit 5 - Transmitter Holding Register/FIFO Empty (THRE) status.
                (If = 1, TX FIFO is empty)
-     * Bit 6 - Transmitter Empty (TEMT) status. 
+     * Bit 6 - Transmitter Empty (TEMT) status.
                (If = 1, both TX FIFO and shift register are empty)
      */
     status &= (MSS_UART_THRE | MSS_UART_TEMT);
@@ -1052,7 +1052,7 @@ MSS_UART_set_rx_timeout_handler
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_enable_half_duplex
 (
     mss_uart_instance_t * this_uart
@@ -1065,7 +1065,7 @@ MSS_UART_enable_half_duplex
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_disable_half_duplex
 (
     mss_uart_instance_t * this_uart
@@ -1082,7 +1082,7 @@ void
 MSS_UART_set_rx_endian
 (
     mss_uart_instance_t * this_uart,
-    mss_uart_endian_t endian    
+    mss_uart_endian_t endian
 )
 {
     ASSERT(MSS_UART_INVALID_ENDIAN > endian);
@@ -1102,7 +1102,7 @@ void
 MSS_UART_set_tx_endian
 (
     mss_uart_instance_t * this_uart,
-    mss_uart_endian_t endian    
+    mss_uart_endian_t endian
 )
 {
     ASSERT(MSS_UART_INVALID_ENDIAN > endian);
@@ -1126,7 +1126,7 @@ MSS_UART_set_filter_length
 )
 {
     ASSERT(MSS_UART_INVALID_FILTER_LENGTH > length);
-    
+
     if (MSS_UART_INVALID_FILTER_LENGTH > length)
     {
         /* Configure glitch filter length */
@@ -1192,7 +1192,7 @@ MSS_UART_disable_afclear
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_enable_rx_timeout
 (
     mss_uart_instance_t * this_uart,
@@ -1209,7 +1209,7 @@ MSS_UART_enable_rx_timeout
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_disable_rx_timeout
 (
     mss_uart_instance_t * this_uart
@@ -1222,7 +1222,7 @@ MSS_UART_disable_rx_timeout
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_enable_tx_time_guard
 (
     mss_uart_instance_t * this_uart,
@@ -1239,7 +1239,7 @@ MSS_UART_enable_tx_time_guard
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_disable_tx_time_guard
 (
     mss_uart_instance_t * this_uart
@@ -1265,11 +1265,11 @@ MSS_UART_set_address
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_set_ready_mode
 (
     mss_uart_instance_t * this_uart,
-    mss_uart_ready_mode_t mode    
+    mss_uart_ready_mode_t mode
 )
 {
     ASSERT(MSS_UART_INVALID_READY_MODE > mode);
@@ -1285,7 +1285,7 @@ MSS_UART_set_ready_mode
 /***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
-void 
+void
 MSS_UART_set_usart_mode
 (
     mss_uart_instance_t * this_uart,
@@ -1296,7 +1296,7 @@ MSS_UART_set_usart_mode
 
     if (MSS_UART_INVALID_SYNC_MODE > mode)
     {
-        /* Nothing to do for the baudrate: 
+        /* Nothing to do for the baudrate:
                                 operates at PCLK / 2 + glitch filter length */
         /* Clear the ESYN bits 2:0 */
         this_uart->hw_reg->MM0 &= ~SYNC_ASYNC_MODE_MASK;
@@ -1453,8 +1453,8 @@ static void global_init
 
     /* set default RX timeout */
     this_uart->hw_reg->RTO = 0u;
-    
-    /* 
+
+    /*
      * Configure baud rate divisors. This uses the fractional baud rate divisor
      * where possible to provide the most accurate baud rat possible.
      */
@@ -1475,11 +1475,11 @@ static void global_init
     this_uart->tx_handler       = NULL_HANDLER;
     this_uart->linests_handler  = NULL_HANDLER;
     this_uart->modemsts_handler = NULL_HANDLER;
-    this_uart->rto_handler      = NULL_HANDLER;    
-    this_uart->nack_handler     = NULL_HANDLER;   
+    this_uart->rto_handler      = NULL_HANDLER;
+    this_uart->nack_handler     = NULL_HANDLER;
     this_uart->pid_pei_handler  = NULL_HANDLER;
-    this_uart->break_handler    = NULL_HANDLER;    
-    this_uart->sync_handler     = NULL_HANDLER;   
+    this_uart->break_handler    = NULL_HANDLER;
+    this_uart->sync_handler     = NULL_HANDLER;
 
     /* Initialize the sticky status */
     this_uart->status = 0u;

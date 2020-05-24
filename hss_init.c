@@ -2,7 +2,7 @@
  * Copyright 2017-2020 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -64,25 +64,25 @@ extern const uint64_t __u54_4_itim_start, __u54_4_itim_end;
 extern const uint64_t __l2lim_start,      __l2lim_end;
 extern const uint64_t __ddr_start,        __ddr_end;
 
-#define E51_DTIM_START         (&__dtim_start)         
+#define E51_DTIM_START         (&__dtim_start)
 #define E51_DTIM_END           (&__dtim_end)
 
-#define E51_ITIM_START         (&__e51itim_start)         
+#define E51_ITIM_START         (&__e51itim_start)
 #define E51_ITIM_END           (&__e51itim_end)
 
-#define U54_1_ITIM_START       (&__u54_1_itim_start)         
+#define U54_1_ITIM_START       (&__u54_1_itim_start)
 #define U54_1_ITIM_END         (&__u54_1_itim_end)
 
-#define U54_2_ITIM_START       (&__u54_2_itim_start)         
+#define U54_2_ITIM_START       (&__u54_2_itim_start)
 #define U54_2_ITIM_END         (&__u54_2_itim_end)
 
-#define U54_3_ITIM_START       (&__u54_3_itim_start)         
+#define U54_3_ITIM_START       (&__u54_3_itim_start)
 #define U54_3_ITIM_END         (&__u54_3_itim_end)
 
-#define U54_4_ITIM_START       (&__u54_4_itim_start)         
+#define U54_4_ITIM_START       (&__u54_4_itim_start)
 #define U54_4_ITIM_END         (&__u54_4_itim_end)
 
-#define L2LIM_START            (&__l2lim_start)         
+#define L2LIM_START            (&__l2lim_start)
 #define L2LIM_END              (&__l2lim_end)
 
 #define L2_ZERO_DEVICE_START   0x0A000000u
@@ -90,7 +90,7 @@ extern const uint64_t __ddr_start,        __ddr_end;
 
 #define DDR_START              (&__ddr_start)
 // can't access DDR_END without getting an error:
-//     R_RISCV_PCREL_HI20 against symbol `__ddr_end' 
+//     R_RISCV_PCREL_HI20 against symbol `__ddr_end'
 // solution is to use assembler instead as the symbol is constant at link time
 //
 //  #define DDR_END                (&__ddr_end)
@@ -113,8 +113,8 @@ bool HSS_ZeroDDR(void)
     uint8_t *pChar = (uint8_t *)DDR_START;
 
     while (pChar < (uint8_t * const)DDR_END) {
-        memcpy_via_pdma(pChar, (void *)L2_ZERO_DEVICE_START, CHUNK_SIZE); 
-        pChar += CHUNK_SIZE; 
+        memcpy_via_pdma(pChar, (void *)L2_ZERO_DEVICE_START, CHUNK_SIZE);
+        pChar += CHUNK_SIZE;
     }
 #  else
     uint64_t volatile *pDWord = (uint64_t volatile *)DDR_START;

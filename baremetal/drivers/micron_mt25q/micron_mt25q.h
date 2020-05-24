@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * (c) Copyright 2018 Microsemi SoC Products Group.  All rights reserved.
- * 
+ *
  * Driver for MICRON_MT25Q QSPI flash memory on Xilinx Emulation board.
  * This dirver uses the PSE MSS QSPI driver interface.
  *
@@ -18,7 +18,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 extern mss_qspi_config_t qspi_config;
 

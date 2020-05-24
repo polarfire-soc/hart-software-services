@@ -33,9 +33,9 @@ extern "C" {
 #if MSS_MAC_USE_PHY_NULL
 
 /**************************************************************************//**
- * 
+ *
  */
- 
+
 
 void MSS_MAC_NULL_phy_init(/* mss_mac_instance_t*/ const void *v_this_mac, uint8_t phy_addr)
 {
@@ -45,7 +45,7 @@ void MSS_MAC_NULL_phy_init(/* mss_mac_instance_t*/ const void *v_this_mac, uint8
 }
 
 /**************************************************************************//**
- * 
+ *
  */
 void MSS_MAC_NULL_phy_set_link_speed(/* mss_mac_instance_t*/ const void *v_this_mac, uint32_t speed_duplex_select)
 {
@@ -55,7 +55,7 @@ void MSS_MAC_NULL_phy_set_link_speed(/* mss_mac_instance_t*/ const void *v_this_
 }
 
 /**************************************************************************//**
- * 
+ *
  */
 void MSS_MAC_NULL_phy_autonegotiate(/* mss_mac_instance_t*/ const void *v_this_mac)
 {
@@ -64,7 +64,7 @@ void MSS_MAC_NULL_phy_autonegotiate(/* mss_mac_instance_t*/ const void *v_this_m
 }
 
 /**************************************************************************//**
- * 
+ *
  */
 uint8_t MSS_MAC_NULL_phy_get_link_status
 (
@@ -80,7 +80,7 @@ uint8_t MSS_MAC_NULL_phy_get_link_status
     link_status = MSS_MAC_LINK_UP;
 
     /* Pick fastest for now... */
-    
+
     *fullduplex = MSS_MAC_FULL_DUPLEX;
     *speed = MSS_MAC_1000MBPS;
 

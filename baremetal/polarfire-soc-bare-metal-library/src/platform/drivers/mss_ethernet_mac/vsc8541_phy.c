@@ -34,7 +34,7 @@ extern "C" {
 #define BMSR_AUTO_NEGOTIATION_COMPLETE  (0x0020U)
 
 /**************************************************************************//**
- * 
+ *
  */
 
 typedef struct
@@ -64,11 +64,11 @@ void MSS_MAC_VSC8541_phy_init(/* mss_mac_instance_t*/ const void *v_this_mac, ui
 #if defined(TARGET_ALOE)
     volatile uint32_t loop;
     AloeGPIO_TypeDef *g_aloe_gpio = (AloeGPIO_TypeDef *)0x10060000UL;
-    
+
     (void)v_this_mac;
     (void)phy_addr;
 /*
- * Init includes toggling the reset line which is connected to GPIO 0 pin 12. 
+ * Init includes toggling the reset line which is connected to GPIO 0 pin 12.
  * This is the only pin I can see on the 16 GPIO which is currently set as an.
  * output. We will hard code the setup here to avoid having to have a GPIO
  * driver as well...
@@ -106,7 +106,7 @@ void MSS_MAC_VSC8541_phy_init(/* mss_mac_instance_t*/ const void *v_this_mac, ui
 }
 
 /**************************************************************************//**
- * 
+ *
  */
 void MSS_MAC_VSC8541_phy_set_link_speed(/* mss_mac_instance_t*/ const void *v_this_mac, uint32_t speed_duplex_select)
 {
@@ -116,14 +116,14 @@ void MSS_MAC_VSC8541_phy_set_link_speed(/* mss_mac_instance_t*/ const void *v_th
     uint32_t speed_select;
     const uint16_t mii_advertise_bits[4] = {ADVERTISE_10FULL, ADVERTISE_10HALF,
                                             ADVERTISE_100FULL, ADVERTISE_100HALF};
-    
+
     /* Set auto-negotiation advertisement. */
-    
+
     /* Set 10Mbps and 100Mbps advertisement. */
     phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_ADVERTISE);
     phy_reg &= (uint16_t)(~(ADVERTISE_10HALF | ADVERTISE_10FULL |
                  ADVERTISE_100HALF | ADVERTISE_100FULL));
-                 
+
     speed_select = speed_duplex_select;
     for(inc = 0U; inc < 4U; ++inc)
     {
@@ -135,28 +135,28 @@ void MSS_MAC_VSC8541_phy_set_link_speed(/* mss_mac_instance_t*/ const void *v_th
         }
         speed_select = speed_select >> 1U;
     }
-    
+
     MSS_MAC_write_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_ADVERTISE, phy_reg);
 
     /* Set 1000Mbps advertisement. */
     phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_CTRL1000);
     phy_reg &= (uint16_t)(~(ADVERTISE_1000FULL | ADVERTISE_1000HALF));
-    
+
     if((speed_duplex_select & MSS_MAC_ANEG_1000M_FD) != 0U)
     {
         phy_reg |= ADVERTISE_1000FULL;
     }
-    
+
     if((speed_duplex_select & MSS_MAC_ANEG_1000M_HD) != 0U)
     {
         phy_reg |= ADVERTISE_1000HALF;
     }
-    
+
     MSS_MAC_write_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_CTRL1000, phy_reg);
 }
 
 /**************************************************************************//**
- * 
+ *
  */
 void MSS_MAC_VSC8541_phy_autonegotiate(/* mss_mac_instance_t*/ const void *v_this_mac)
 {
@@ -164,14 +164,14 @@ void MSS_MAC_VSC8541_phy_autonegotiate(/* mss_mac_instance_t*/ const void *v_thi
     volatile uint16_t phy_reg;
     uint16_t autoneg_complete;
     volatile uint32_t copper_aneg_timeout = 1000000U;
-    
+
     phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, 2U);
     phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, 3U);
 
     /* Enable auto-negotiation. */
     phy_reg = 0x1340U;
     MSS_MAC_write_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_BMCR, phy_reg);
-    
+
     /* Wait for copper auto-negotiation to complete. */
     do {
         phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_BMSR);
@@ -182,7 +182,7 @@ void MSS_MAC_VSC8541_phy_autonegotiate(/* mss_mac_instance_t*/ const void *v_thi
 
 
 /**************************************************************************//**
- * 
+ *
  */
 uint8_t MSS_MAC_VSC8541_phy_get_link_status
 (
@@ -198,19 +198,19 @@ uint8_t MSS_MAC_VSC8541_phy_get_link_status
 
     phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, MII_BMSR);
     link_up = phy_reg & BMSR_LSTATUS;
-    
+
     if(link_up != MSS_MAC_LINK_DOWN)
     {
         uint16_t duplex;
         uint16_t speed_field;
-        
+
         /* Link is up. */
         link_status = MSS_MAC_LINK_UP;
-        
+
         phy_reg = MSS_MAC_read_phy_reg(this_mac, (uint8_t)this_mac->phy_addr, 0x1CU); /* Device Auxillary Control and Status */
         duplex = phy_reg & 0x0020U;
         speed_field = phy_reg & 0x0018U;
-        
+
         if(MSS_MAC_HALF_DUPLEX == duplex)
         {
             *fullduplex = MSS_MAC_HALF_DUPLEX;
@@ -219,21 +219,21 @@ uint8_t MSS_MAC_VSC8541_phy_get_link_status
         {
             *fullduplex = MSS_MAC_FULL_DUPLEX;
         }
-        
+
         switch(speed_field >> 3)
         {
             case 0U:
                 *speed = MSS_MAC_10MBPS;
             break;
-            
+
             case 1U:
                 *speed = MSS_MAC_100MBPS;
             break;
-            
+
             case 2U:
                 *speed = MSS_MAC_1000MBPS;
             break;
-            
+
             default:
                 link_status = (uint8_t)MSS_MAC_LINK_DOWN;
             break;

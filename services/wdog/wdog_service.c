@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -19,7 +19,7 @@
 
 #include "ssmb_ipi.h"
 #include <string.h> //memset
-#include <assert.h> 
+#include <assert.h>
 
 #include "wdog_service.h"
 #include "mpfs_reg_map.h"
@@ -78,7 +78,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
 
     if (hartBitmask.uint) {
         //mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%X" CRLF, hartBitmask.uint);
-        wdog_service.state = WDOG_MONITORING; 
+        wdog_service.state = WDOG_MONITORING;
     }
 
     // nothing to do in this state

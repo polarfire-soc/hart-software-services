@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -39,7 +39,7 @@ HSSTicks_t HSS_GetTickCount(void)
     return tickCount;
 }
 
-bool HSS_Timer_IsElapsed(HSSTicks_t startTick, HSSTicks_t durationInTicks) 
+bool HSS_Timer_IsElapsed(HSSTicks_t startTick, HSSTicks_t durationInTicks)
 {
     return (HSS_GetTime() > (startTick + durationInTicks));
 }

@@ -1284,7 +1284,7 @@ static int32_t ddr_setup(void)
 					error =\
                             write_calibration_using_mtc(\
                                                   number_of_lanes_to_calibrate);
-#endif               
+#endif
 				}
                 else
                 {
@@ -1628,8 +1628,8 @@ static void set_ddr_mode_reg_and_vs_bits(uint32_t dpc_bits)
          * Will be reverted to Libero setting once training complete
          * in the DDR_TRAINING_SET_FINAL_MODE state
 		 * fixme: setting mode reg here does not work, regs not updated
-         * Will remove this code as do not think required, wwas only in nplace for 
-         * for ddr3 when using ECC and data mask, but no requirement for data mask 
+         * Will remove this code as do not think required, wwas only in nplace for
+         * for ddr3 when using ECC and data mask, but no requirement for data mask
          * in this configuration. Libero may need to be updated to remove data mask
          * for this config (using ECC).
          */
@@ -1706,7 +1706,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
                 {
                     CFG_DDR_SGMII_PHY->spio253.spio253 = 1U;
                 }
-           
+
                 {
                     /*
                      * firmware set this to 3'b100 for all cases except when we
@@ -1818,7 +1818,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
                         /* todo: need to verify this setting with verification */
                         CFG_DDR_SGMII_PHY->spio253.spio253 = 1;
                     }
-                    
+
                     {
                         /*
                          * SAR 108218
@@ -2726,8 +2726,8 @@ static uint8_t \
         for (laneToTest = 0x00U; laneToTest<number_of_lanes_to_calibrate;\
                                                                 laneToTest++)
         {
-            /* 
-             * read once to flush MTC. During write calibration the first MTC read 
+            /*
+             * read once to flush MTC. During write calibration the first MTC read
              * must be discarded as it is unreliable after a series of bad writes.
              */
             result = MTC_test(1U<<laneToTest, start_address, size);

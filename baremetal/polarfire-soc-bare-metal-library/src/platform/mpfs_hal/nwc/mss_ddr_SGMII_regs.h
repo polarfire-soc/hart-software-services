@@ -4958,7 +4958,7 @@ typedef union{                                                         /*!< MSSI
 } g5_mss_top_scb_regs_MSSIO_CONTROL_CR_TypeDef;
 
 typedef union{                                                         /*!< MSS_IO_LOCKDOWN_CR register definition*/
-  __I   uint32_t                       MSS_IO_LOCKDOWN_CR;                               
+  __I   uint32_t                       MSS_IO_LOCKDOWN_CR;
   struct
   {
     __I   uint32_t                       mssio_b2_lockdn_en   :1;
@@ -4970,7 +4970,7 @@ typedef union{                                                         /*!< MSS_
 } g5_mss_top_scb_regs_MSS_IO_LOCKDOWN_CR_TypeDef;
 
 typedef union{                                                         /*!< MSSIO_BANK2_CFG_CR register definition*/
-  __IO  uint32_t                       MSSIO_BANK2_CFG_CR;                               
+  __IO  uint32_t                       MSSIO_BANK2_CFG_CR;
   struct
   {
     __IO  uint32_t                       bank_pcode           :6;
@@ -4983,7 +4983,7 @@ typedef union{                                                         /*!< MSSI
 } g5_mss_top_scb_regs_MSSIO_BANK2_CFG_CR_TypeDef;
 
 typedef union{                                                         /*!< MSSIO_BANK4_CFG_CR register definition*/
-  __IO  uint32_t                       MSSIO_BANK4_CFG_CR;                               
+  __IO  uint32_t                       MSSIO_BANK4_CFG_CR;
   struct
   {
     __IO  uint32_t                       bank_pcode           :6;
@@ -5505,9 +5505,9 @@ typedef struct
   __IO  g5_mss_top_scb_regs_RAM_MARGIN_CR_TypeDef RAM_MARGIN_CR;                                      /*!< Offset: 0x1b4  */
   __IO  g5_mss_top_scb_regs_TRACE_CR_TypeDef TRACE_CR;                                           /*!< Offset: 0x1b8  */
   __IO  g5_mss_top_scb_regs_MSSIO_CONTROL_CR_TypeDef MSSIO_CONTROL_CR;                                   /*!< Offset: 0x1bc  */
-  __I   g5_mss_top_scb_regs_MSS_IO_LOCKDOWN_CR_TypeDef MSS_IO_LOCKDOWN_CR;                                 /*!< Offset: 0x1c0  */    
-  __IO  g5_mss_top_scb_regs_MSSIO_BANK2_CFG_CR_TypeDef MSSIO_BANK2_CFG_CR;                                 /*!< Offset: 0x1c4  */    
-  __IO  g5_mss_top_scb_regs_MSSIO_BANK4_CFG_CR_TypeDef MSSIO_BANK4_CFG_CR;                                 /*!< Offset: 0x1c8  */    
+  __I   g5_mss_top_scb_regs_MSS_IO_LOCKDOWN_CR_TypeDef MSS_IO_LOCKDOWN_CR;                                 /*!< Offset: 0x1c0  */
+  __IO  g5_mss_top_scb_regs_MSSIO_BANK2_CFG_CR_TypeDef MSSIO_BANK2_CFG_CR;                                 /*!< Offset: 0x1c4  */
+  __IO  g5_mss_top_scb_regs_MSSIO_BANK4_CFG_CR_TypeDef MSSIO_BANK4_CFG_CR;                                 /*!< Offset: 0x1c8  */
   __I   uint32_t                       UNUSED_SPACE5[13];                                  /*!< Offset: 0x1cc */
   __IO  g5_mss_top_scb_regs_DLL0_CTRL0_TypeDef DLL0_CTRL0;                                         /*!< Offset: 0x200  */
   __IO  g5_mss_top_scb_regs_DLL0_CTRL1_TypeDef DLL0_CTRL1;                                         /*!< Offset: 0x204  */

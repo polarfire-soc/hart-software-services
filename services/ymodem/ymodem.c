@@ -452,9 +452,9 @@ size_t ymodem_receive(uint8_t *buffer, size_t bufferSize)
 
     if (result != 0) {
         uint32_t crc32 = CRC32_calculate((const unsigned char *)buffer, result);
-        mHSS_PRINTF(CRLF CRLF "Received %lu bytes from %s (CRC32 is 0x%08X)" CRLF, result, 
+        mHSS_PRINTF(CRLF CRLF "Received %lu bytes from %s (CRC32 is 0x%08X)" CRLF, result,
             state.filename, crc32);
-        //mHSS_PRINTF(CRLF CRLF "Expected %lu bytes in %lu packets (%lu NAKs)" CRLF, state.expectedSize, 
+        //mHSS_PRINTF(CRLF CRLF "Expected %lu bytes in %lu packets (%lu NAKs)" CRLF, state.expectedSize,
         //    state.numReceivedPackets, state.numNAKs);
     }
 

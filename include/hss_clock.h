@@ -48,8 +48,8 @@ extern "C" {
 #endif
 
 #ifdef CONFIG_PLATFORM_FU540
-#  define TICKS_PER_MILLISEC    1000llu 
-#  define TICKS_PER_SEC         (1000llu * TICKS_PER_MILLISEC) 
+#  define TICKS_PER_MILLISEC    1000llu
+#  define TICKS_PER_SEC         (1000llu * TICKS_PER_MILLISEC)
 #  define ONE_SEC               (1llu * TICKS_PER_SEC)
 #  define ONE_MILLISEC          (1llu * TICKS_PER_MILLISEC)
 #endif

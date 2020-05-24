@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * Implementation of uart_putstring/g(). 
+ * Implementation of uart_putstring/g().
  * This is function is intended to be used from ee_printf().
  */
 
@@ -119,7 +119,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
     memset(myBuffer, 0, bufferLen);
 
     void sbi_gets(char *s, int maxwidth, char endchar);
- 
+
     sbi_gets(myBuffer, bufferLen, '\n');
 
     if (result > 0) {

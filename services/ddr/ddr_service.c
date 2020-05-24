@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -82,7 +82,7 @@ static void ddr_retrain_handler(struct StateMachine * const pMyMachine)
 {
     (void) pMyMachine;
 
-    HSS_DDR_Train();  
+    HSS_DDR_Train();
     pMyMachine->state = DDR_IDLE;
 }
 

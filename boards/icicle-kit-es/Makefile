@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -47,7 +47,7 @@ EXTRA_SRCS-y += \
 
 boards/icicle-kit-es/hss_uart_init.o: boards/icicle-kit-es/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 
 ################################################################################################
@@ -61,18 +61,18 @@ INCLUDES += \
 
 EXTRA_SRCS-$(CONFIG_SERVICE_YMODEM) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c \
-	baremetal/drivers/mss_envm/mss_envm.c 
+	baremetal/drivers/mss_envm/mss_envm.c
 
 #	baremetal/drivers/micron_mt25q/micron_mt25q.c \
 
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c config.h
 	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-baremetal/drivers/micron_mt25q/micron_mt25q.o: baremetal/drivers/micron_mt25q/micron_mt25q.c config.h 
+baremetal/drivers/micron_mt25q/micron_mt25q.o: baremetal/drivers/micron_mt25q/micron_mt25q.c config.h
 	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 baremetal/drivers/mss_envm/mss_envm.o: baremetal/drivers/mss_envm/mss_envm.c config.h
 	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

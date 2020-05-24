@@ -14,7 +14,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /* MACRO to set the correct channel memory offset for the memory mapped
  * configuration register.

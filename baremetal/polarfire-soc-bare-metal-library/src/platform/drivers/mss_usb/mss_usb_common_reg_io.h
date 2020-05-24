@@ -357,7 +357,7 @@ MSS_USB_CIF_tx_ep_set_max_pkt
     uint8_t num_usb_pkt
 )
 {
-    /* TODO:make sure that there is no data in FIFO before writing into the maxP 
+    /* TODO:make sure that there is no data in FIFO before writing into the maxP
        reg
      */
     if ((ep_num > MSS_USB_CEP) && ((max_pkt_size % 8) == 0u) && (num_usb_pkt > 0u))
@@ -633,8 +633,8 @@ MSS_USB_CIF_rx_ep_set_max_pkt
     uint8_t num_usb_pkt
 )
 {
-    /* TODO:make sure that there is no data in FIFO before writing into the 
-       maxP reg 
+    /* TODO:make sure that there is no data in FIFO before writing into the
+       maxP reg
      */
     if ((ep_num > MSS_USB_CEP) && (max_pkt_size > 0u) && ((max_pkt_size % 8) == 0u))
     {
@@ -713,7 +713,7 @@ MSS_USB_CIF_rx_ep_set_send_stall_bit
     mss_usb_ep_num_t ep_num
 )
 {
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_SEND_STALL_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_SEND_STALL_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -760,7 +760,7 @@ MSS_USB_CIF_rx_ep_clr_data_tog
 )
 {
     /* setting CLR_DAT_TOG bit clears USB Data toggle bit */
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_CLR_DAT_TOG_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_CLR_DAT_TOG_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -793,7 +793,7 @@ MSS_USB_CIF_rx_ep_set_dma_mode1
     mss_usb_ep_num_t ep_num
 )
 {
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_DMA_MODE_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_DMA_MODE_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -816,7 +816,7 @@ MSS_USB_CIF_rx_ep_enable_dma
     mss_usb_ep_num_t ep_num
 )
 {
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_ENABLE_DMA_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_ENABLE_DMA_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -860,7 +860,7 @@ MSS_USB_CIF_rx_ep_disable_nyet
 )
 {
     /* Setting BI_DIS_NYET mask disables NYET */
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_BI_DIS_NYET_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_BI_DIS_NYET_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -896,7 +896,7 @@ MSS_USB_CIF_rx_ep_enable_iso
     mss_usb_ep_num_t ep_num
 )
 {
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_ENABLE_ISO_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_ENABLE_ISO_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -906,7 +906,7 @@ MSS_USB_CIF_rx_ep_set_autoclr
     mss_usb_ep_num_t ep_num
 )
 {
-    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_ENABLE_AUTOCLR_MASK | 
+    USB->ENDPOINT[ep_num].RX_CSR |= (RxCSRL_REG_EPN_ENABLE_AUTOCLR_MASK |
                                                RxCSRL_REG_EPN_RX_PKT_RDY_MASK);
 }
 
@@ -1270,8 +1270,8 @@ MSS_USB_CIF_dma_assign_to_epnum
     mss_usb_ep_num_t ep_num
 )
 {
-    USB->DMA_CHANNEL[dma_channel].CNTL |= 
-                                  ((ep_num << DMA_CNTL_REG_DMA_EP_NUM_SHIFT) & 
+    USB->DMA_CHANNEL[dma_channel].CNTL |=
+                                  ((ep_num << DMA_CNTL_REG_DMA_EP_NUM_SHIFT) &
                                     DMA_CNTL_REG_DMA_EP_NUM_MASK);
 }
 
@@ -1282,14 +1282,14 @@ MSS_USB_CIF_dma_get_epnum
 )
 {
     /*
-      This API will return numbers from 0 to 15, mss_usb_ep_num_t maps it to TX 
-      EP numbers. Using DMA DIR, CIF driver should correctly map it as TX EP or 
+      This API will return numbers from 0 to 15, mss_usb_ep_num_t maps it to TX
+      EP numbers. Using DMA DIR, CIF driver should correctly map it as TX EP or
       RX EP.
      */
     volatile uint8_t ep_num;
 
     ep_num = (USB->DMA_CHANNEL[dma_channel].CNTL  & DMA_CNTL_REG_DMA_EP_NUM_MASK);
-    
+
     return (mss_usb_ep_num_t)(ep_num >> DMA_CNTL_REG_DMA_EP_NUM_SHIFT);
 }
 
@@ -1320,7 +1320,7 @@ MSS_USB_CIF_dma_set_burst_mode
     burst_mode
 )
 {
-    USB->DMA_CHANNEL[dma_channel].CNTL |= 
+    USB->DMA_CHANNEL[dma_channel].CNTL |=
                        ((burst_mode << DMA_CNTL_REG_DMA_BURST_MODE_SHIFT) &
                        DMA_CNTL_REG_DMA_BURST_MODE_MASK);
 }
@@ -1333,9 +1333,9 @@ MSS_USB_CIF_dma_get_burst_mode
 )
 {
     uint8_t mode;
-    mode = (USB->DMA_CHANNEL[dma_channel].CNTL  & 
+    mode = (USB->DMA_CHANNEL[dma_channel].CNTL  &
                                              DMA_CNTL_REG_DMA_BURST_MODE_MASK);
-                                             
+
     return (mss_usb_dma_burst_mode_t)(mode >> DMA_CNTL_REG_DMA_BURST_MODE_SHIFT);
 }
 

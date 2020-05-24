@@ -6,7 +6,7 @@
  * PolarFire SoC MSS eNVM bare metal software driver implementation.
  *
  */
- 
+
 #include "drivers/mss_envm/envm.h"
 #include "drivers/mss_envm/mss_envm.h"
 #include "mpfs_hal/mss_sysreg.h"
@@ -450,7 +450,7 @@ void Enter_C_Bus_Mode(void)
   registers and performs the HV Cycle Sequencing with required delays.
 *           ***
 *
-* Parameters: 
+* Parameters:
 
   @param cMode Holds the high voltage mode, and three control bits for vctat ,
   pwall mode, and non-blocking
@@ -468,7 +468,7 @@ void Enter_C_Bus_Mode(void)
     in REG_IF during sequence 2 of the High voltage operation
 *
 * Return Values: NONE
-  
+
 ******************************************************************************************/
 void HvCycles(uint8_t cMode, uint8_t timerHiByte, uint8_t timerLoByte)
 {
@@ -482,7 +482,7 @@ void HvCycles(uint8_t cMode, uint8_t timerHiByte, uint8_t timerLoByte)
         /* Set BDAC trim (leave ITIM alone) */
         REG_ITIM_BDAC  = (uint8_t)((REG_ITIM_BDAC & 0xF0) |
                          (envmTrims.PREPGM_BDAC & 0x0F));
-      
+
         REG_FM_MODE = PREPRG_MODE;
         REG_FM_SEQ  = SEQ_0;
         StrobeAclk();
@@ -592,7 +592,7 @@ void HvCycles(uint8_t cMode, uint8_t timerHiByte, uint8_t timerLoByte)
 * Function Name: Hv Cycles Exit
 ******************************************************************************
 * Summary: Called after pulse is done or from handler routine
-*         
+*
 * Called By: None
 *
 * Calls: HvCycles
@@ -665,7 +665,7 @@ void HvCyclesExit(void)
 *                invalid.
 *****************************************************************************/
 uint8_t LoadPageLatch(void)
-{ 
+{
     uint8_t  iByteAddr     = pageLatchData.iByteAddr; /* PL Byte Address */
     uint8_t  iLoadSize     = pageLatchData.iLoadSize; /* PL Load Size */
     uint8_t  iFinalAddress = (uint8_t)(iByteAddr + iLoadSize);
@@ -677,7 +677,7 @@ uint8_t LoadPageLatch(void)
     if(iFinalAddress < lRowSize)
     {
         REG_PA = pageLatchData.iByteAddr; /* 2048 bits in a row / 32 bits at a time. 64 possible addresses in REG_PA[5:0] */
-    
+
         /* No longer need lByteAddr param - use as interation variable.
          * for a loop of start=0 to lLoadSize (lLoadSize=0 for 1 byte) */
         for(iByteAddr = pageLatchData.iByteAddr; iByteAddr <= iFinalAddress; iByteAddr++)
@@ -709,7 +709,7 @@ uint8_t LoadPageLatch(void)
 *
 * Calls: HvCycles
 *
-* Parameters: 
+* Parameters:
 *
 * Return Values: STATUS
 *
@@ -734,17 +734,17 @@ void SectorPrePgm(void)
 *          ***
 * Called By: None
 *
-* Calls: 
+* Calls:
 *
-* Parameters: 
+* Parameters:
 *
 * Return Values: None
 *
-* Return Status: 
+* Return Status:
 *
 *****************************************************************************/
 void SubSectorErase(void)
-{ 
+{
     Enter_C_Bus_Mode();
 
     /* Set the Sector to work on */
@@ -763,13 +763,13 @@ void SubSectorErase(void)
 *          ***
 * Called By: None
 *
-* Calls: 
+* Calls:
 *
-* Parameters: 
+* Parameters:
 *
 * Return Values: None
 *
-* Return Status: 
+* Return Status:
 *
 *****************************************************************************/
 void SectorErase(void)
@@ -813,7 +813,7 @@ void BulkErase(void)
 
 
 /*****************************************************************************
-* Function Name: Sector Program 
+* Function Name: Sector Program
 ******************************************************************************
 * Summary: Programs all of the rows in a sector
 *          ***
@@ -954,8 +954,8 @@ void BulkPrePgm(void)
 /*****************************************************************************
 * Function Name: Erase Row
 ******************************************************************************
-* Summary: Erase data in a row. Expects SetWriteRowParams() to have already been 
-            called to identify which row to erase. 
+* Summary: Erase data in a row. Expects SetWriteRowParams() to have already been
+            called to identify which row to erase.
 *          ***
 * Called By: None
 *
@@ -982,7 +982,7 @@ void EraseRow(void)
 /*****************************************************************************
 * Function Name: Program Row
 ******************************************************************************
-* Summary: Programs a row without folling through with erase or program 
+* Summary: Programs a row without folling through with erase or program
             operations. Expects Row data to be set in SRAM using the SetWriteRowParams()
             function
 *          ***
@@ -1013,9 +1013,9 @@ void ProgramRow(void)
 ******************************************************************************
 * Summary:  Verifies that the data from the page latch was written to the addressed
             row as expected using the cmpr test mode.The cmpr test mode checks 64-bits
-            at a time, so to check an entire row, the column address is swept. 
+            at a time, so to check an entire row, the column address is swept.
 *
-* Paramaters: 
+* Paramaters:
 
 * Called By: None
 *
@@ -1110,7 +1110,7 @@ void SetReadRowParams(uint8_t iPageAddress, uint8_t iAXA, uint8_t iBA, uint8_t i
  *
  ******************************************************************************************/
 void SectorChkPrePgm(void)
-{ 
+{
     Enter_C_Bus_Mode();
 
     REG_RA    = writeRowData.iPageAddress;

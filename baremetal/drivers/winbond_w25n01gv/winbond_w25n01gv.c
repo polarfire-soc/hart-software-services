@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * Driver for MICRON_MT25Q QSPI flash memory.
  * This driver uses the MPFS MSS QSPI driver interface.
  *
@@ -19,7 +19,7 @@
 
 #include "hss_debug.h"
 
-/*Following constant must be defined if you want to use the interrupt mode 
+/*Following constant must be defined if you want to use the interrupt mode
   transfers provided by the MSS QSPI driver. Comment this out to use the polling
   mode transfers.*/
 /* #define USE_QSPI_INTERRUPT      1u */

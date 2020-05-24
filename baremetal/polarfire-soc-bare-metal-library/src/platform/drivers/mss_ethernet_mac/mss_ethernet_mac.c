@@ -64,7 +64,7 @@ extern "C" {
 #define PHY_ADDRESS_MAX                 (31U)
 
 /*
- * Defines for determining DMA descriptor sizes 
+ * Defines for determining DMA descriptor sizes
  */
 #if 0
  #if !defined(MSS_MAC_TIME_STAMPED_MODE)
@@ -159,9 +159,9 @@ static void msgmii_autonegotiate(const mss_mac_instance_t *this_mac);
 /******************************************************************************
  * See mss_ethernet_mac.h for details of how to use this function.
  */
-void 
+void
 MSS_MAC_init
-( 
+(
     mss_mac_instance_t *this_mac,
     mss_mac_cfg_t      *cfg
 )
@@ -172,7 +172,7 @@ MSS_MAC_init
     HAL_ASSERT(this_mac == &g_mac0);
 
     instances_init(this_mac, cfg);
-    
+
     if((cfg != NULL_POINTER) && (this_mac == &g_mac0))
 #endif
 #if defined(TARGET_G5_SOC)
@@ -281,16 +281,16 @@ MSS_MAC_init
 #endif
         }
         mac_reset();
-        
+
         config_mac_hw(this_mac, cfg);
-        
+
         /* Assign MAC station address */
         assign_station_addr(this_mac, cfg->mac_addr);
-        
+
         /* Intialize Tx & Rx descriptor rings */
         tx_desc_ring_init(this_mac);
         rx_desc_ring_init(this_mac);
-        
+
         this_mac->rx_discard = 0U; /* Ensure normal RX operation */
 
         for(queue_no = 0; queue_no < MSS_MAC_QUEUE_COUNT; queue_no++)
@@ -315,7 +315,7 @@ MSS_MAC_init
             this_mac->queue[queue_no].hresp_error = 0U;
             this_mac->queue[queue_no].rx_restart  = 0U;
         }
-#if 0        
+#if 0
         /* Initialize PHY interface */
         if(MSS_MAC_AUTO_DETECT_PHY_ADDRESS == cfg->phy_addr)
         {
@@ -421,7 +421,7 @@ MSS_MAC_update_hw_address
 
 
 /******************************************************************************
- * 
+ *
  */
 static void update_mac_cfg(const mss_mac_instance_t *this_mac)
 {
@@ -429,7 +429,7 @@ static void update_mac_cfg(const mss_mac_instance_t *this_mac)
     uint8_t fullduplex;
     uint8_t link_up;
     uint32_t temp_cr;
-    
+
     link_up = this_mac->phy_get_link_status(this_mac, &speed, &fullduplex);
 
     if(link_up != MSS_MAC_LINK_DOWN)
@@ -442,7 +442,7 @@ static void update_mac_cfg(const mss_mac_instance_t *this_mac)
         {
             temp_cr = this_mac->mac_base->NETWORK_CONFIG;
         }
-        
+
         temp_cr &= ~(GEM_GIGABIT_MODE_ENABLE | GEM_SPEED | GEM_FULL_DUPLEX);
 
         if(MSS_MAC_1000MBPS == speed)
@@ -454,7 +454,7 @@ static void update_mac_cfg(const mss_mac_instance_t *this_mac)
             temp_cr |= GEM_GIGABIT_MODE_ENABLE;
         }
         else
-        {            
+        {
             if(MSS_MAC_100MBPS == speed)
             {
 #if defined(TARGET_ALOE)
@@ -476,7 +476,7 @@ static void update_mac_cfg(const mss_mac_instance_t *this_mac)
         {
             temp_cr |= GEM_FULL_DUPLEX;
         }
-        
+
         if(0U != this_mac->is_emac)
         {
             this_mac->emac_base->NETWORK_CONFIG = temp_cr;
@@ -505,9 +505,9 @@ uint8_t MSS_MAC_get_link_status
     mss_mac_speed_t link_speed;
     uint8_t link_fullduplex;
     uint8_t link_up;
-    
+
     link_up = MSS_MAC_LINK_DOWN; /* Default condition in case we are not active yet */
-    
+
     if(MSS_MAC_AVAILABLE == this_mac->mac_available)
     {
         link_up = this_mac->phy_get_link_status(this_mac, &link_speed, &link_fullduplex);
@@ -529,7 +529,7 @@ uint8_t MSS_MAC_get_link_status
                 {
                     temp_cr = this_mac->mac_base->NETWORK_CONFIG;
                 }
-                
+
                 temp_cr &= ~(GEM_GIGABIT_MODE_ENABLE | GEM_SPEED | GEM_FULL_DUPLEX);
 
                 if(MSS_MAC_1000MBPS == link_speed)
@@ -541,7 +541,7 @@ uint8_t MSS_MAC_get_link_status
                     temp_cr |= GEM_GIGABIT_MODE_ENABLE;
                 }
                 else
-                {                
+                {
                     if(MSS_MAC_100MBPS == link_speed)
                     {
     #if defined(TARGET_ALOE)
@@ -563,7 +563,7 @@ uint8_t MSS_MAC_get_link_status
                 {
                     temp_cr |= GEM_FULL_DUPLEX;
                 }
-                
+
                 if(0U != this_mac->is_emac)
                 {
                     this_mac->emac_base->NETWORK_CONFIG = temp_cr;
@@ -576,7 +576,7 @@ uint8_t MSS_MAC_get_link_status
 
             previous_speed = link_speed;
             previous_duplex = link_fullduplex;
-            
+
             /*----------------------------------------------------------------------
              * Return current link speed and duplex mode.
              */
@@ -584,7 +584,7 @@ uint8_t MSS_MAC_get_link_status
             {
                 *speed = link_speed;
             }
-            
+
             if(fullduplex != NULL_POINTER)
             {
                 *fullduplex = link_fullduplex;
@@ -628,7 +628,7 @@ uint8_t MSS_MAC_get_link_status
 
 #if (MSS_MAC_PHY_INTERFACE == SGMII)
 /*----------------------------------------------------------------------
- * Make sure SGMII/1000baseX interface link is up. if interface is 
+ * Make sure SGMII/1000baseX interface link is up. if interface is
  * SGMII/1000baseX
  */
 #define MDIO_PHY_ADDR   MSS_MAC_INTERFACE_MDIO_ADDR
@@ -637,11 +637,11 @@ uint8_t MSS_MAC_get_link_status
         {
             uint16_t phy_reg;
             uint16_t sgmii_link_up;
-            
+
             /* Find out if link is up on SGMII link between MAC and external PHY. */
             phy_reg = MSS_MAC_read_phy_reg(MDIO_PHY_ADDR, MII_BMSR);
             sgmii_link_up = phy_reg & BMSR_LSTATUS;
-            
+
             if(0U == sgmii_link_up)
             {
                 /* Initiate auto-negotiation on the SGMII link. */
@@ -652,11 +652,11 @@ uint8_t MSS_MAC_get_link_status
                 MSS_MAC_write_phy_reg(MDIO_PHY_ADDR, MII_BMCR, phy_reg);
             }
          }
-#endif 
+#endif
 #endif
         }
     }
-    
+
     return link_up;
 }
 
@@ -664,7 +664,7 @@ uint8_t MSS_MAC_get_link_status
 /******************************************************************************
  * See mss_ethernet_mac.h for details of how to use this function.
  */
-void 
+void
 MSS_MAC_cfg_struct_def_init
 (
     mss_mac_cfg_t * cfg
@@ -725,9 +725,9 @@ MSS_MAC_cfg_struct_def_init
 
 
 /******************************************************************************
- * 
+ *
  */
-static void 
+static void
 mac_reset
 (
     void
@@ -746,7 +746,7 @@ mac_reset
  * 10000020  00000000  00000001  00000000  00000004
  *
  * PLL and Reset registers after Linux boot.
- * 
+ *
  * 0x10000000 : 0x10000000 <Hex Integer>
  * Address   0 - 3     4 - 7     8 - B     C - F
  * 10000000  C0000000  82110EC0  00000000  82110DC0
@@ -945,7 +945,7 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
     uint32_t temp_net_config = 0U;
     uint32_t temp_net_control = 0U;
     uint32_t temp_length;
-    
+
     /* Check for validity of configuration parameters */
     HAL_ASSERT( IS_STATE(cfg->tx_edc_enable) );
     HAL_ASSERT( IS_STATE(cfg->rx_edc_enable) );
@@ -956,7 +956,7 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
     HAL_ASSERT( IS_STATE(cfg->loopback) );
     HAL_ASSERT( IS_STATE(cfg->rx_flow_ctrl) );
     HAL_ASSERT( IS_STATE(cfg->tx_flow_ctrl) );
-    
+
 #if defined(TARGET_ALOE)
     config_mac_pll_and_reset();
 #endif
@@ -975,7 +975,7 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
 #if defined(MSS_MAC_TIME_STAMPED_MODE)
     temp_net_control |= GEM_PTP_UNICAST_ENA;
 #endif
-    
+
     /*
      *  eMAC has to be configured as external TSU although it is actually using
      *  the pMAC TSU. There is only really 1 TSU per GEM instance and all
@@ -988,7 +988,7 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
     /*--------------------------------------------------------------------------
      * Configure MAC Network Config and Network Control registers
      */
-     
+
 #if defined(TARGET_G5_SOC)
     if(TBI == this_mac->interface_type)
     {
@@ -1013,12 +1013,12 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
     {
         temp_net_config |= GEM_FCS_REMOVE | GEM_DISABLE_COPY_OF_PAUSE_FRAMES | GEM_RECEIVE_1536_BYTE_FRAMES | GEM_FULL_DUPLEX | GEM_GIGABIT_MODE_ENABLE;
     }
-    
+
     if(MSS_MAC_ENABLE == cfg->length_field_check)
     {
         temp_net_config |= GEM_LENGTH_FIELD_ERROR_FRAME_DISCARD;
     }
-    
+
     if(MSS_MAC_IPG_DEFVAL != cfg->ipg_multiplier) /* If we have a non zero value here then enable IPG stretching */
     {
         uint32_t stretch;
@@ -1166,7 +1166,7 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
 void
 MSS_MAC_write_phy_reg
 (
-    const mss_mac_instance_t *this_mac, 
+    const mss_mac_instance_t *this_mac,
     uint8_t phyaddr,
     uint8_t regaddr,
     uint16_t regval
@@ -1177,13 +1177,13 @@ MSS_MAC_write_phy_reg
 
     HAL_ASSERT(MSS_MAC_PHYADDR_MAXVAL >= phyaddr);
     HAL_ASSERT(MSS_MAC_PHYREGADDR_MAXVAL >= regaddr);
-    /* 
+    /*
      * Write PHY address in MII Mgmt address register.
      * Makes previous register address 0 & invalid.
      *
      * Don't check mac_available flag here as we may be called in the MAC init
      * phase before everything else is in place...
-     */ 
+     */
     if((MSS_MAC_PHYADDR_MAXVAL >= phyaddr) &&
        (MSS_MAC_PHYREGADDR_MAXVAL >= regaddr))
     {
@@ -1215,7 +1215,7 @@ MSS_MAC_write_phy_reg
 uint16_t
 MSS_MAC_read_phy_reg
 (
-    const mss_mac_instance_t *this_mac, 
+    const mss_mac_instance_t *this_mac,
     uint8_t phyaddr,
     uint8_t regaddr
 )
@@ -1225,20 +1225,20 @@ MSS_MAC_read_phy_reg
 
     HAL_ASSERT(MSS_MAC_PHYADDR_MAXVAL >= phyaddr);
     HAL_ASSERT(MSS_MAC_PHYREGADDR_MAXVAL >= regaddr);
-    /* 
+    /*
      * Write PHY address in MII Mgmt address register.
      * Makes previous register address 0 & invalid.
      *
      * Don't check mac_available flag here as we may be called in the MAC init
      * phase before everything else is in place...
-     */ 
+     */
     if((MSS_MAC_PHYADDR_MAXVAL >= phyaddr) &&
        (MSS_MAC_PHYREGADDR_MAXVAL >= regaddr))
     {
         phy_op = GEM_WRITE1 | (GEM_PHY_OP_CL22_READ << GEM_OPERATION_SHIFT) | (((uint32_t)(2UL)) << GEM_WRITE10_SHIFT);
         phy_op |= ((uint32_t)phyaddr << GEM_PHY_ADDRESS_SHIFT) & GEM_PHY_ADDRESS;
         phy_op |= ((uint32_t)regaddr << GEM_REGISTER_ADDRESS_SHIFT) & GEM_REGISTER_ADDRESS;
-        
+
         /*
          * Always use the pMAC for this as the eMAC MDIO interface is not
          * connected to the outside world...
@@ -1278,10 +1278,10 @@ MSS_MAC_read_phy_reg
 /* Divide by 4 as offset is in bytes but pointer is 4 bytes */
 #define GEM_REG_OFFSET(x) (offsetof(MAC_TypeDef, x) / 4)
 
-uint32_t 
+uint32_t
 MSS_MAC_read_stat
 (
-    const mss_mac_instance_t *this_mac, 
+    const mss_mac_instance_t *this_mac,
     mss_mac_stat_t stat
 )
 {
@@ -1336,9 +1336,9 @@ MSS_MAC_read_stat
         GEM_REG_OFFSET(RX_UDP_CK_ERRORS),
         GEM_REG_OFFSET(AUTO_FLUSHED_PKTS)
     };
-    
+
     ASSERT(MSS_MAC_LAST_STAT > stat);
-    
+
     if((MSS_MAC_LAST_STAT > stat) && (MSS_MAC_AVAILABLE == this_mac->mac_available))
     {
         if(0U != this_mac->is_emac)
@@ -1407,11 +1407,11 @@ MSS_MAC_receive_pkt
 
         HAL_ASSERT(NULL_POINTER != rx_pkt_buffer);
         HAL_ASSERT(IS_WORD_ALIGNED(rx_pkt_buffer));
-        
+
         if(this_mac->queue[queue_no].nb_available_rx_desc > 0U)
         {
             uint32_t next_rx_desc_index;
-            
+
             if(MSS_MAC_INT_DISABLE == enable)
             {
                 /*
@@ -1430,7 +1430,7 @@ MSS_MAC_receive_pkt
 
             --this_mac->queue[queue_no].nb_available_rx_desc;
             next_rx_desc_index = this_mac->queue[queue_no].next_free_rx_desc_index;
-            
+
             if((MSS_MAC_RX_RING_SIZE - 1U) == next_rx_desc_index)
             {
                 this_mac->queue[queue_no].rx_desc_tab[next_rx_desc_index].addr_low = (uint32_t)((uint64_t)rx_pkt_buffer | 2UL);  /* Set wrap bit */
@@ -1439,15 +1439,15 @@ MSS_MAC_receive_pkt
             {
                 this_mac->queue[queue_no].rx_desc_tab[next_rx_desc_index].addr_low = (uint32_t)((uint64_t)rx_pkt_buffer);
             }
-               
+
 #if defined(MSS_MAC_64_BIT_ADDRESS_MODE)
             this_mac->queue[queue_no].rx_desc_tab[next_rx_desc_index].addr_high = (uint32_t)((uint64_t)rx_pkt_buffer >> 32);
 #endif
             this_mac->queue[queue_no].rx_caller_info[next_rx_desc_index] = p_user_data;
 
-            /* 
+            /*
                If the RX is found disabled, then it might be because this is the
-               first time a packet is scheduled for reception or the RX ENABLE is 
+               first time a packet is scheduled for reception or the RX ENABLE is
                made zero by RX overflow or RX bus error. In either case, this
                function tries to schedule the current packet for reception.
 
@@ -1458,7 +1458,7 @@ MSS_MAC_receive_pkt
                 /*
                  * Starting receive operations off with a chain of buffers set up.
                  */
-                
+
                 if(0U != this_mac->is_emac)
                 {
                     this_mac->emac_base->NETWORK_CONTROL &= ~GEM_ENABLE_RECEIVE;
@@ -1483,7 +1483,7 @@ MSS_MAC_receive_pkt
                 if(MSS_MAC_INT_DISABLE != enable)
                 {
                     uint32_t temp_cr;
-                    
+
                     if(0U != this_mac->is_emac)
                     {
                         temp_cr = this_mac->emac_base->NETWORK_CONFIG;
@@ -1511,7 +1511,7 @@ MSS_MAC_receive_pkt
             /* Wrap around in case next descriptor is pointing to last in the ring */
             ++this_mac->queue[queue_no].next_free_rx_desc_index;
             this_mac->queue[queue_no].next_free_rx_desc_index %= MSS_MAC_RX_RING_SIZE;
-            
+
         }
 
         /*
@@ -1538,7 +1538,7 @@ MSS_MAC_receive_pkt
 /*******************************************************************************
  * See mss_ethernet_mac.h for details of how to use this function.
  */
-uint8_t 
+uint8_t
 MSS_MAC_send_pkt
 (
     mss_mac_instance_t *this_mac,
@@ -1550,7 +1550,7 @@ MSS_MAC_send_pkt
 {
     /*
      * Simplified transmit operation which depends on the following assumptions:
-     * 
+     *
      * 1. The TX DMA buffer size is big enough to contain a full packet.
      * 2. We will only transmit one packet at a time.
      *
@@ -1602,7 +1602,7 @@ MSS_MAC_send_pkt
         HAL_ASSERT(NULL_POINTER != tx_buffer);
         HAL_ASSERT(0U != tx_length);
         HAL_ASSERT(IS_WORD_ALIGNED(tx_buffer));
-        
+
 #if defined(MSS_MAC_SIMPLE_TX_QUEUE)
         if(this_mac->queue[queue_no].nb_available_tx_desc == (uint32_t)MSS_MAC_TX_RING_SIZE)
         {
@@ -1661,7 +1661,7 @@ MSS_MAC_send_pkt
 
 
 /******************************************************************************
- * 
+ *
  */
 #if defined(USING_LWIP)
 extern BaseType_t g_mac_context_switch;
@@ -1687,7 +1687,7 @@ uint8_t  MAC0_plic_53_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac0_int_plic_IRQHandler(void)
 {
@@ -1704,7 +1704,7 @@ uint8_t mac0_int_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac0_queue1_plic_IRQHandler(void)
 {
@@ -1720,7 +1720,7 @@ uint8_t mac0_queue1_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac0_queue2_plic_IRQHandler(void)
 {
@@ -1736,7 +1736,7 @@ uint8_t mac0_queue2_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac0_queue3_plic_IRQHandler(void)
 {
@@ -1752,7 +1752,7 @@ uint8_t mac0_queue3_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac0_emac_plic_IRQHandler(void)
 {
@@ -1768,7 +1768,7 @@ uint8_t mac0_emac_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac0_mmsl_plic_IRQHandler(void)
 {
@@ -1777,7 +1777,7 @@ uint8_t mac0_mmsl_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac1_int_plic_IRQHandler(void)
 {
@@ -1793,7 +1793,7 @@ uint8_t mac1_int_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac1_queue1_plic_IRQHandler(void)
 {
@@ -1809,7 +1809,7 @@ uint8_t mac1_queue1_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac1_queue2_plic_IRQHandler(void)
 {
@@ -1825,7 +1825,7 @@ uint8_t mac1_queue2_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac1_queue3_plic_IRQHandler(void)
 {
@@ -1841,7 +1841,7 @@ uint8_t mac1_queue3_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac1_emac_plic_IRQHandler(void)
 {
@@ -1857,7 +1857,7 @@ uint8_t mac1_emac_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 uint8_t mac1_mmsl_plic_IRQHandler(void)
 {
@@ -1866,7 +1866,7 @@ uint8_t mac1_mmsl_plic_IRQHandler(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 /* U54 1 */
 void mac_mmsl_u54_1_local_IRQHandler_3(void)
@@ -1875,7 +1875,7 @@ void mac_mmsl_u54_1_local_IRQHandler_3(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_emac_u54_1_local_IRQHandler_4(void)
 {
@@ -1897,7 +1897,7 @@ void mac_emac_u54_1_local_IRQHandler_4(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue3_u54_1_local_IRQHandler_5(void)
 {
@@ -1919,7 +1919,7 @@ void mac_queue3_u54_1_local_IRQHandler_5(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue2_u54_1_local_IRQHandler_6(void)
 {
@@ -1941,7 +1941,7 @@ void mac_queue2_u54_1_local_IRQHandler_6(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue1_u54_1_local_IRQHandler_7(void)
 {
@@ -1963,7 +1963,7 @@ void mac_queue1_u54_1_local_IRQHandler_7(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_int_u54_1_local_IRQHandler_8(void)
 {
@@ -1985,7 +1985,7 @@ void mac_int_u54_1_local_IRQHandler_8(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 /* U54 2 */
 void mac_mmsl_u54_2_local_IRQHandler_3(void)
@@ -1994,7 +1994,7 @@ void mac_mmsl_u54_2_local_IRQHandler_3(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_emac_u54_2_local_IRQHandler_4(void)
 {
@@ -2016,7 +2016,7 @@ void mac_emac_u54_2_local_IRQHandler_4(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue3_u54_2_local_IRQHandler_5(void)
 {
@@ -2038,7 +2038,7 @@ void mac_queue3_u54_2_local_IRQHandler_5(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue2_u54_2_local_IRQHandler_6(void)
 {
@@ -2060,7 +2060,7 @@ void mac_queue2_u54_2_local_IRQHandler_6(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue1_u54_2_local_IRQHandler_7(void)
 {
@@ -2082,7 +2082,7 @@ void mac_queue1_u54_2_local_IRQHandler_7(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_int_u54_2_local_IRQHandler_8(void)
 {
@@ -2104,7 +2104,7 @@ void mac_int_u54_2_local_IRQHandler_8(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 /* U54 3 */
 void mac_mmsl_u54_3_local_IRQHandler_3(void)
@@ -2113,7 +2113,7 @@ void mac_mmsl_u54_3_local_IRQHandler_3(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_emac_u54_3_local_IRQHandler_4(void)
 {
@@ -2135,7 +2135,7 @@ void mac_emac_u54_3_local_IRQHandler_4(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue3_u54_3_local_IRQHandler_5(void)
 {
@@ -2157,7 +2157,7 @@ void mac_queue3_u54_3_local_IRQHandler_5(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue2_u54_3_local_IRQHandler_6(void)
 {
@@ -2179,7 +2179,7 @@ void mac_queue2_u54_3_local_IRQHandler_6(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue1_u54_3_local_IRQHandler_7(void)
 {
@@ -2201,7 +2201,7 @@ void mac_queue1_u54_3_local_IRQHandler_7(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_int_u54_3_local_IRQHandler_8(void)
 {
@@ -2223,7 +2223,7 @@ void mac_int_u54_3_local_IRQHandler_8(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 /* U54 4 */
 void mac_mmsl_u54_4_local_IRQHandler_3(void)
@@ -2232,7 +2232,7 @@ void mac_mmsl_u54_4_local_IRQHandler_3(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_emac_u54_4_local_IRQHandler_4(void)
 {
@@ -2254,7 +2254,7 @@ void mac_emac_u54_4_local_IRQHandler_4(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue3_u54_4_local_IRQHandler_5(void)
 {
@@ -2276,7 +2276,7 @@ void mac_queue3_u54_4_local_IRQHandler_5(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue2_u54_4_local_IRQHandler_6(void)
 {
@@ -2298,7 +2298,7 @@ void mac_queue2_u54_4_local_IRQHandler_6(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_queue1_u54_4_local_IRQHandler_7(void)
 {
@@ -2320,7 +2320,7 @@ void mac_queue1_u54_4_local_IRQHandler_7(void)
 
 
 /******************************************************************************
- * 
+ *
  */
 void mac_int_u54_4_local_IRQHandler_8(void)
 {
@@ -2355,7 +2355,7 @@ static void generic_mac_irq_handler(mss_mac_instance_t *this_mac, uint32_t queue
     volatile uint32_t *rx_status;   /* Address of receive status register */
     volatile uint32_t *tx_status;   /* Address of transmit status register */
     volatile uint32_t *int_status;  /* Address of interrupt status register */
-    
+
     this_mac->queue[queue_no].in_isr = 1U;
     int_status  = this_mac->queue[queue_no].int_status;
     int_pending =  *int_status & ~(*this_mac->queue[queue_no].int_mask);
@@ -2370,7 +2370,7 @@ static void generic_mac_irq_handler(mss_mac_instance_t *this_mac, uint32_t queue
         rx_status   = &this_mac->mac_base->RECEIVE_STATUS;
         tx_status   = &this_mac->mac_base->TRANSMIT_STATUS;
     }
-    
+
     /*
      * Note, in the following code we generally clear any flags first and then
      * handle the condition as this allows any new events which occur in the
@@ -2465,7 +2465,7 @@ static void generic_mac_irq_handler(mss_mac_instance_t *this_mac, uint32_t queue
         this_mac->queue[queue_no].nb_available_rx_desc = MSS_MAC_RX_RING_SIZE;
         this_mac->queue[queue_no].next_free_rx_desc_index = 0U;
         this_mac->queue[queue_no].first_rx_desc_index = 0U;
-        
+
         for(descriptor = 0U; descriptor < MSS_MAC_RX_RING_SIZE; descriptor++) /* Discard everything */
         {
             this_mac->queue[queue_no].rx_desc_tab[descriptor].addr_low &= GEM_RX_DMA_USED;
@@ -2729,7 +2729,7 @@ mss_mac_tsu_mode_t MSS_MAC_get_TSU_tx_mode(const mss_mac_instance_t *this_mac)
             ret_val = (mss_mac_tsu_mode_t)((this_mac->mac_base->TX_BD_CONTROL & GEM_BD_TS_MODE) >> GEM_BD_TS_MODE_SHIFT);
         }
     }
-    
+
     return(ret_val);
 }
 
@@ -2774,7 +2774,7 @@ void MSS_MAC_set_TSU_oss_mode(const mss_mac_instance_t *this_mac, mss_mac_oss_mo
                 temp_control &= ~GEM_ONE_STEP_SYNC_MODE;
             }
         }
-        
+
         if(0U != this_mac->is_emac)
         {
             this_mac->emac_base->NETWORK_CONTROL = temp_control;
@@ -2828,7 +2828,7 @@ mss_mac_oss_mode_t MSS_MAC_get_TSU_oss_mode(const mss_mac_instance_t *this_mac)
             ret_val = MSS_MAC_OSS_MODE_DISABLED;
         }
     }
-    
+
     return(ret_val);
 }
 
@@ -3034,7 +3034,7 @@ uint16_t MSS_MAC_get_stacked_VLAN(const mss_mac_instance_t *this_mac)
 void MSS_MAC_set_hash(const mss_mac_instance_t *this_mac, uint64_t hash_in)
 {
     uint64_t hash = hash_in; /* Avoids warning about modifying fn parameter passed by value */
-    
+
     if(MSS_MAC_AVAILABLE == this_mac->mac_available)
     {
         if(0U != this_mac->is_emac)
@@ -3086,7 +3086,7 @@ uint64_t MSS_MAC_get_hash(const mss_mac_instance_t *this_mac)
             ret_val  |= (uint64_t)this_mac->mac_base->HASH_BOTTOM;
         }
     }
-    
+
     return(ret_val);
 }
 
@@ -3383,7 +3383,7 @@ void MSS_MAC_get_type_1_filter(const mss_mac_instance_t *this_mac, uint32_t filt
         uint32_t temp_reg;
 
         (void)memset(filter, 0, sizeof(mss_mac_type_1_filter_t)); /* Blank canvass to start */
-        
+
         if(0U != this_mac->is_emac)
         {
             p_reg = &this_mac->emac_base->SCREENING_TYPE_1_REGISTER_0;
@@ -3457,7 +3457,7 @@ uint16_t MSS_MAC_get_type_2_ethertype(const mss_mac_instance_t *this_mac, uint32
             }
         }
     }
-    
+
     return(temp_reg);
 }
 
@@ -4151,14 +4151,14 @@ bool MSS_MAC_get_pause_frame_copy_to_mem(const mss_mac_instance_t *this_mac)
          */
         ret_val = 0U == (*p_reg & GEM_DISABLE_COPY_OF_PAUSE_FRAMES);
     }
-    
+
     return(ret_val);
 }
 
 
 /**************************************************************************/
 /* Private Function definitions                                           */
-/**************************************************************************/  
+/**************************************************************************/
 
 /******************************************************************************
  * This is default "Receive packet interrupt handler. This function finds the
@@ -4166,7 +4166,7 @@ bool MSS_MAC_get_pause_frame_copy_to_mem(const mss_mac_instance_t *this_mac)
  * This informs the received packet size to the application and
  * relinquishes the packet buffer from the associated DMA descriptor.
  */
-static void 
+static void
 rxpkt_handler
 (
     mss_mac_instance_t *this_mac, uint32_t queue_no
@@ -4174,7 +4174,7 @@ rxpkt_handler
 {
     mss_mac_queue_t *this_queue = &this_mac->queue[queue_no];
     mss_mac_rx_desc_t * cdesc = &this_queue->rx_desc_tab[this_queue->first_rx_desc_index];
-    
+
     if(0U != (cdesc->addr_low & GEM_RX_DMA_USED)) /* Check in case we already got it... */
     {
         /* Execution comes here because at-least one packet is received. */
@@ -4197,7 +4197,7 @@ rxpkt_handler
 #endif
             p_rx_packet = (uint8_t *)addr_temp;
             /*
-             * Pass received packet up to application layer - if enabled... 
+             * Pass received packet up to application layer - if enabled...
              *
              * Note if rx_packet comes back as 0 we can't recover and will leave a
              * used packet stuck in the queue...
@@ -4236,7 +4236,7 @@ rxpkt_handler
  * descriptor that transmitted the packet and caused the interrupt.
  * This relinquishes the packet buffer from the associated DMA descriptor.
  */
-static void 
+static void
 txpkt_handler
 (
         mss_mac_instance_t *this_mac, uint32_t queue_no
@@ -4256,7 +4256,7 @@ txpkt_handler
 
     this_queue->nb_available_tx_desc = MSS_MAC_TX_RING_SIZE; /* Release transmit queue... */
 
-#else    
+#else
     uint32_t empty_flag;
     uint32_t index;
     uint32_t completed = 0U;
@@ -4272,7 +4272,7 @@ txpkt_handler
         {
             g_mac.pckt_tx_callback(g_mac.tx_desc_tab[index].caller_info);
         }
-        
+
         if(index == g_mac.last_tx_index)
         {
             /* all pending tx packets sent. */
@@ -4293,8 +4293,8 @@ txpkt_handler
                 completed = 1U;
             }
         }
-        
-        
+
+
         /* Clear the tx packet sent interrupt. Please note that this must be
          * done for every packet sent as it decrements the TXPKTCOUNT. */
         set_bit_reg32(&MAC->DMA_TX_STATUS, DMA_TXPKTSENT);
@@ -4304,13 +4304,13 @@ txpkt_handler
 
 
 /******************************************************************************
- * 
+ *
  */
 static void tx_desc_ring_init(mss_mac_instance_t *this_mac)
 {
     int32_t inc;
     int32_t queue_no;
-    
+
     for(queue_no = 0; queue_no < MSS_MAC_QUEUE_COUNT; queue_no++)
     {
 #if defined(MSS_MAC_USE_DDR)
@@ -4333,13 +4333,13 @@ static void tx_desc_ring_init(mss_mac_instance_t *this_mac)
 
 
 /******************************************************************************
- * 
+ *
  */
 static void rx_desc_ring_init(mss_mac_instance_t *this_mac)
 {
     uint32_t inc;
     int32_t queue_no;
-    
+
     for(queue_no = 0; queue_no < MSS_MAC_QUEUE_COUNT; queue_no++)
     {
 #if defined(MSS_MAC_USE_DDR)
@@ -4363,7 +4363,7 @@ static void rx_desc_ring_init(mss_mac_instance_t *this_mac)
 
 
 /******************************************************************************
- * 
+ *
  */
 static void assign_station_addr
 (
@@ -4432,11 +4432,11 @@ static uint8_t probe_phy(const mss_mac_instance_t *this_mac)
     const uint16_t ALL_BITS_HIGH = 0xFFFFU;
     const uint8_t PHYREG_PHYID1R = 0x02U;   /* PHY Identifier 1 register address. */
     uint32_t found;
-    
+
     do
     {
         uint16_t reg;
-        
+
         reg = MSS_MAC_read_phy_reg(this_mac, phy_address, PHYREG_PHYID1R);
         if (reg != ALL_BITS_HIGH)
         {
@@ -4448,8 +4448,8 @@ static uint8_t probe_phy(const mss_mac_instance_t *this_mac)
             ++phy_address;
         }
     }
-    while ((phy_address <= PHY_ADDRESS_MAX) && (0U == found));    
-    
+    while ((phy_address <= PHY_ADDRESS_MAX) && (0U == found));
+
     return phy_address;
 }
 
@@ -4487,11 +4487,11 @@ static void msgmii_init(const mss_mac_instance_t *this_mac)
     uint8_t link_fullduplex;
     mss_mac_speed_t link_speed;
     uint8_t copper_link_up;
-    
+
     volatile uint32_t sgmii_aneg_timeout = 100000U;
 
     copper_link_up = this_mac->phy_get_link_status(this_mac, &link_speed, &link_fullduplex);
-    
+
     if(MSS_MAC_LINK_UP == copper_link_up)
     {
         /* Initiate auto-negotiation on the TBI SGMII link. */
@@ -4528,7 +4528,7 @@ static void msgmii_init(const mss_mac_instance_t *this_mac)
 static void coresgmii_init(void)
 {
     uint16_t phy_reg;
-    
+
     /* Reset C-SGMII. */
     MSS_MAC_write_phy_reg(CORE_SGMII_PHY_ADDR, 0x00U, 0x9000U);
     /* Register 0x04 of C-SGMII must be always be set to 0x0001. */
@@ -4543,23 +4543,23 @@ static void coresgmii_init(void)
 
 /*******************************************************************************
  *
- */ 
+ */
 static void coresgmii_autonegotiate(void)
 {
     uint16_t phy_reg;
     uint16_t autoneg_complete;
     volatile uint32_t sgmii_aneg_timeout = 1000000U;
-    
+
     uint8_t link_fullduplex;
     mss_mac_speed_t link_speed;
     uint8_t copper_link_up;
-     
+
     copper_link_up = MSS_MAC_phy_get_link_status(&link_speed, &link_fullduplex);
-    
+
     if(MSS_MAC_LINK_UP == copper_link_up)
     {
         SYSREG->MAC_CR = (SYSREG->MAC_CR & ~MAC_CONFIG_SPEED_MASK) | link_speed;
-        
+
         /* Configure duplex mode */
         if(MSS_MAC_HALF_DUPLEX == link_fullduplex)
         {
@@ -4570,14 +4570,14 @@ static void coresgmii_autonegotiate(void)
         {
             /* full duplex */
             MAC->CFG2 |= CFG2_FDX_MASK;
-        }  
+        }
         /* Initiate auto-negotiation on the SGMII link. */
         phy_reg = MSS_MAC_read_phy_reg(CORE_SGMII_PHY_ADDR, 0x00U);
         phy_reg |= 0x1000U;
         MSS_MAC_write_phy_reg(CORE_SGMII_PHY_ADDR, 0x00U, phy_reg);
         phy_reg |= 0x0200U;
         MSS_MAC_write_phy_reg(CORE_SGMII_PHY_ADDR, 0x00U, phy_reg);
-    
+
         /* Wait for SGMII auto-negotiation to complete. */
         do {
             phy_reg = MSS_MAC_read_phy_reg(CORE_SGMII_PHY_ADDR, MII_BMSR);

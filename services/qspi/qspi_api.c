@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -35,7 +35,7 @@ bool HSS_QSPIInit(void)
 {
 #ifdef CONFIG_SERVICE_QSPI_USE_XIP
     static mss_qspi_config_t qspiConfig =
-    { 
+    {
         .xip = 1,
         .xip_addr = 4, //num_bytes_in_XIP_mode
         .spi_mode = MSS_QSPI_MODE0,

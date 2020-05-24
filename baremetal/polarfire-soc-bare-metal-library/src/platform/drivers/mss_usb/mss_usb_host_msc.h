@@ -100,7 +100,7 @@
   error/status messages to the user. A type mss_usbh_msc_user_cb_t is provided
   by this driver which has all these call-back functions as its elements.
   Implementing these call-back functions is optional.
-  
+
   |           Element                      |     Call-back Event               |
   |----------------------------------------|-----------------------------------|
   | void (*msch_valid_config)(void)        | Called to indicate that a valid   |
@@ -121,7 +121,7 @@
   |                                        | released by the USBH driver       |
   |                                        |                                   |
   | void (*msch_error)(int8_t error_code)  | Called to indicate that there was |
-  |                                        | an error while retrieving the     | 
+  |                                        | an error while retrieving the     |
   |                                        | class specific descriptor         |
   |                                        | information from the attached MSC |
   |                                        | class device.                     |
@@ -195,7 +195,7 @@ extern "C" {
   |                              |                                              |
   | USBH_MSC_SECTOR_SIZE_NOT_    | Indicates that the attached device sector    |
   | SUPPORTED                    | size is not supported by this driver.        |
-  
+
  */
 typedef enum {
     USBH_MSC_NO_ERROR = 0,
@@ -317,9 +317,9 @@ typedef struct mss_usbh_msc_user_cb
 
   bCBWFlags
   The bits of this field are defined as follows:
-  
+
     | Bit        | Description                                                 |
-    |------------|-------------------------------------------------------------| 
+    |------------|-------------------------------------------------------------|
     | Bit 7      | Direction- the device shall ignore this bit if the          |
     |            | dCBWDataTransferLengthfield is zero, otherwise:             |
     |            | 0 = Data-Out from host to the device,                       |
@@ -413,9 +413,9 @@ typedef struct {
 
   @param user_cb
     The user_cb parameter provides a pointer to the structure of type
-    mss_usbh_msc_user_cb_t. This pointer is used to call the application 
+    mss_usbh_msc_user_cb_t. This pointer is used to call the application
     call-back functions by the USBH-MSC driver. These call-back functions can be
-    used by the application to provide error/status messages to the user or for 
+    used by the application to provide error/status messages to the user or for
     performing the application specific handling of the events.
 
   @return
@@ -627,7 +627,7 @@ MSS_USBH_MSC_read
       {
           if (0u != pdrv)
               return(RES_ERROR);
-          
+
           if (USBH_MSC_DEVICE_READY < MSS_USBH_MSC_get_state())
           {
               return(RES_NOTRDY);
@@ -764,19 +764,19 @@ MSS_USBH_MSC_get_sector_size
     The command_opcode parameter provides the transparent SCSI command code.
 
   @param lun
-    The lun parameter indicates the logical unit number on the attached MSC 
+    The lun parameter indicates the logical unit number on the attached MSC
     class device.
 
   @param lb_addr
-    The lb_addr parameter provides the logical block address on which the 
+    The lb_addr parameter provides the logical block address on which the
     operation indicated by the command_opcode parameter is applicable. For the
-    commands where logical block address is not applicable, a zero value must 
+    commands where logical block address is not applicable, a zero value must
     be provided.
 
   @param num_of_lb
-    The num_of_addr parameter provides the number of logical blocks on which 
-    the operation indicated by the command_opcode parameter is applicable. For 
-    the commands where logical block address is not applicable, a zero value 
+    The num_of_addr parameter provides the number of logical blocks on which
+    the operation indicated by the command_opcode parameter is applicable. For
+    the commands where logical block address is not applicable, a zero value
     must be provided.
 
   @param lb_size
@@ -831,11 +831,11 @@ MSS_USBH_MSC_construct_cbw_cb10byte
     The command_opcode parameter provides the transparent SCSI command code.
 
   @param xfr_length
-    The xfr_length parameter provides the number of bytes to be transferred in 
+    The xfr_length parameter provides the number of bytes to be transferred in
     the data phase of the command.
 
   @param buf
-    The buf parameter provides the pointer to the buffer where the formatted 
+    The buf parameter provides the pointer to the buffer where the formatted
     SCSI command is to be stored.
 
   @return
@@ -879,15 +879,15 @@ MSS_USBH_MSC_construct_cbw_cb6byte
     command (CBW format) to be executed is stored.
 
   @param data_buf
-    The data_buf parameter provides the pointer to the data buffer which is to 
-    be used in the data phase of the command. This parameter is the source of 
-    the data when the data direction is from the host to the device. This 
-    parameter is the destination for the data when the data direction is from 
-    the device to the host. This function extracts the data direction from the 
+    The data_buf parameter provides the pointer to the data buffer which is to
+    be used in the data phase of the command. This parameter is the source of
+    the data when the data direction is from the host to the device. This
+    parameter is the destination for the data when the data direction is from
+    the device to the host. This function extracts the data direction from the
     CBW format command provided using command_buf parameter.
 
   @param data_buf_len
-    The data_buf_len parameter indicates the number of bytes to be transferred 
+    The data_buf_len parameter indicates the number of bytes to be transferred
     in the data phase of the current command.
 
   @param status_buf

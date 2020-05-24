@@ -2,7 +2,7 @@
  * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * PSE microcontroller subsystem GPIO bare metal driver implementation.
  *
  * This driver is based on SmartFusion2 MSS GPIO driver v2.1.102
@@ -17,7 +17,7 @@
 #if !defined(TARGET_ALOE)
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /*-------------------------------------------------------------------------*//**
  * Defines.
@@ -124,7 +124,7 @@ static uint8_t gpio_number_validate(GPIO_TypeDef * gpio, mss_gpio_id_t gpio_idx)
 void MSS_GPIO_init( GPIO_TypeDef * gpio )
 {
     uint32_t inc;
-    
+
     /* reset appropriate MSS GPIO hardware block*/
     if((GPIO0_LO == gpio) || (GPIO0_HI == gpio))
     {
@@ -186,7 +186,7 @@ void MSS_GPIO_set_output
 )
 {
     uint32_t gpio_setting;
-    
+
     if(0 == gpio_number_validate(gpio, port_id))
     {
         /* Setting the bit in GPIO_SET_BITS (offset 0xA4) sets the corresponding
@@ -214,7 +214,7 @@ void MSS_GPIO_drive_inout
 {
     uint32_t outputs_state;
     uint32_t config;
-    
+
     if(0 == gpio_number_validate(gpio, port_id))
     {
         switch(inout_state)
@@ -307,7 +307,7 @@ void MSS_GPIO_disable_irq
 )
 {
     uint32_t cfg_value;
-    
+
     if(0 == gpio_number_validate(gpio, port_id))
     {
         cfg_value = gpio->GPIO_CFG[(uint8_t)port_id];

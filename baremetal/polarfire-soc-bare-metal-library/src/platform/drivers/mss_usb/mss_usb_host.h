@@ -105,9 +105,9 @@
   elements. The function MSS_USBH_register_class_driver() must be used to inform
   the USBH driver about this call-back interface and the supported USB Class
   information
-  The table below lists the prototypes of the call-back functions which are part 
+  The table below lists the prototypes of the call-back functions which are part
   of the mss_usbh_class_cb_t   type and the event in which they are called.
-  
+
   | Call-back Element      | Event                                             |
   |------------------------|---------------------------------------------------|
   | usbh_class_allocate    | Called when a match is found between the class    |
@@ -124,7 +124,7 @@
   |                        | this USBH-Class driver is complete                |
   | usbh_class_sof         | The function pointed by the usbh_class_sof element|
   |                        | will be called when a new (micro) frame starts    |
-  
+
   --------------------------------
   Application Call-back Interface
   --------------------------------
@@ -135,10 +135,10 @@
   application about the events on the USB bus as they happen. The application
   may implement these call-back functions to take application specific action
   on each event or to provide error/status messages to the user.
-  
-  The table below lists the prototypes of the call-back functions which are 
+
+  The table below lists the prototypes of the call-back functions which are
   part of the mss_usbh_user_cb_t type and the event in which they are called.
-  
+
   | Element                         | Call-back Event                          |
   |---------------------------------|------------------------------------------|
   | usbh_tdev_attached              | Called when a device-attach event is     |
@@ -157,7 +157,7 @@
   | usbh_tdev_permanent_error       | Called if there was error during data    |
   |                                 | transfer operations with the attached    |
   |                                 | device                                   |
-  
+
   --------------------------------
   Data transfer
   --------------------------------
@@ -181,11 +181,11 @@
   receive data from the attached device. However, actual data transfer happens
   depending on the transfer type and the selected interval. This function is
   non-blocking. On receiving data or in case of errors during this operation
-  the USBH-Class driver will be informed about it by calling a call-back 
+  the USBH-Class driver will be informed about it by calling a call-back
   function. Please refer the USBH-Class Interface section above for more
   details.
 
-  This driver supports multi-packet Bulk transfer (both IN and OUT), to make 
+  This driver supports multi-packet Bulk transfer (both IN and OUT), to make
   sure that it is able to use the full bandwidth offered by USB Bulk transfers.
   When a transfer size of more than wMaxPktSize is provided to this driver using
   MSS_USBH_write_out_pipe() function or MSS_USBH_read_in_pipe() function, this
@@ -228,10 +228,10 @@
   USB2.0 specification. The USBH driver provides the MSS_USBH_suspend() function
   to suspend the MSS USB. The  MSS_USBH_resume() function must be used to
   resume the normal operations.
-  
+
   The table below provides the list of all the functions provided by USBH
   driver.
-  
+
   | function                     | Description                                 |
   |------------------------------|---------------------------------------------|
   | MSS_USBH_init()              | Initialize the MSS USB to operate in the    |
@@ -286,9 +286,9 @@
   |                              |                                             |
   | MSS_USBH_test_mode()         | Initiates compliance test mode as specified |
   |                              | by the parameter.                           |
-  
+
  *//*=========================================================================*/
-   
+
 #ifndef __MSS_USB_HOST_H_
 #define __MSS_USB_HOST_H_
 
@@ -432,7 +432,7 @@ extern "C" {
   |  D15 - D8     |                  USB Std sub-class code                    |
   |  D23 - D16    |                  USB Std class code                        |
   |  D31 - D24    |                            0x00                            |
-  
+
   usbh_class_allocate
   The function pointed by the usbh_class_allocate element will be called when a
   match is found between the class code, sub-class code and protocol code of the
@@ -548,7 +548,7 @@ typedef struct mss_usbh_class_cb {
   using MSS_USBH_register_class_driver() function. This handle is used by the
   USBH driver to call the call-back functions implemented by the USBH-Class
   driver.
-  
+
  */
 typedef struct mss_usbh_target_info {
     uint8_t addr;
@@ -802,9 +802,9 @@ typedef struct {
 
   @param app_cb
     The app_cb parameter provides the pointer to the structure of type
-    mss_usbh_user_cb_t. This structure is used to call the user call-back 
-    functions by the USBH driver. These call-back functions can be used to 
-    provide error/status messages to the user for the application specific 
+    mss_usbh_user_cb_t. This structure is used to call the user call-back
+    functions by the USBH driver. These call-back functions can be used to
+    provide error/status messages to the user for the application specific
     handling of the events.
 
   @return
@@ -822,7 +822,7 @@ typedef struct {
           USB_DEV_not_supported,
           USB_DEV_permanent_erro
       };
-      
+
       MSS_USBH_init(&MSS_USBH_user_cb);
       MSS_USBH_register_class_driver(MSS_USBH_HID_get_handle());
   @endcode
@@ -904,7 +904,7 @@ MSS_USBH_task
           USB_DEV_not_supported,
           USB_DEV_permanent_erro
       };
-      
+
       MSS_USBH_init(&MSS_USBH_user_cb);
       MSS_USBH_register_class_driver(MSS_USBH_HID_get_handle());
   @endcode
@@ -967,10 +967,10 @@ MSS_USBH_configure_control_pipe
     device with which MSS USB needs to communicate.
 
   @param fifo_addr
-    The fifo_addr parameter is the address of the FIFO in the MSS USB internal 
+    The fifo_addr parameter is the address of the FIFO in the MSS USB internal
     RAM. The valid FIFO address values are from 0x00 to 0xFFF8. The FIFO Address
-    must be a multiple of 8. If the value provided is not a multiple of 8, then 
-    the immediate lower value which is a multiple of 8 is taken as the FIFO 
+    must be a multiple of 8. If the value provided is not a multiple of 8, then
+    the immediate lower value which is a multiple of 8 is taken as the FIFO
     address.
     E.g. If the provided value is 0x09, the actual value taken by the driver is
     0x08. If the provided value is less than 0x08 then the FIFO address is taken
@@ -995,7 +995,7 @@ MSS_USBH_configure_control_pipe
     transfers.
 
     Low bandwidth ISO/interrupt transfers - This parameter must always be 1u.
-    This parameter represents the number of packets transferred in one (micro) 
+    This parameter represents the number of packets transferred in one (micro)
     frame.
 
     High bandwidth ISO transfers - This parameter represents the number of
@@ -1114,7 +1114,7 @@ MSS_USBH_configure_in_pipe
     MSS USB needs to communicate.
 
   @param outpipe_num
-    The outpipe_num parameter indicates the OUT pipe number (endpoint) on MSS 
+    The outpipe_num parameter indicates the OUT pipe number (endpoint) on MSS
     USB which must be used for OUT transfers with the attached device.
 
   @param target_ep
@@ -1125,7 +1125,7 @@ MSS_USBH_configure_in_pipe
     The fifo_addr parameter is the address of the FIFO in the MSS USB internal
     ram. The valid FIFO address values are from 0x00 to 0xFFF8. The FIFO address
     must be a multiple of 8. If the value provided is not a multiple of 8, then
-    the immediate lower value which is a multiple of 8 is taken as the FIFO 
+    the immediate lower value which is a multiple of 8 is taken as the FIFO
     address.
     E.g. If the provided value is 0x09, the actual value taken by the driver is
     0x08. If the provided value is less than 0x08 then the  FIFO address is
@@ -1139,7 +1139,7 @@ MSS_USBH_configure_in_pipe
 
   @param max_pkt_size
     The max_pkt_size parameter provides the maximum packet size of the USB
-    transfer. This value must be equal to the maximum packet size as mentioned 
+    transfer. This value must be equal to the maximum packet size as mentioned
     in the endpoint descriptor which is used during enumeration process.
 
     Note: This value must be less than or equal to the FIFO size value.
@@ -1152,15 +1152,15 @@ MSS_USBH_configure_in_pipe
     This parameter represents the number of packets transferred in one (micro)
     frame.
 
-    High bandwidth ISO transfers - This parameter represents the number of 
-    packets transferred in one (Micro) frame. In this case, this parameter can 
-    have a value of 1 2 or 3. High bandwidth ISO transfers are not yet 
+    High bandwidth ISO transfers - This parameter represents the number of
+    packets transferred in one (Micro) frame. In this case, this parameter can
+    have a value of 1 2 or 3. High bandwidth ISO transfers are not yet
     implemented.
 
     Bulk transfers. - For Bulk transfer this value must always be '1u'. This
-    parameter will be used with the auto-amalgamation/auto-split feature where 
-    it indicates the number of bulk packets to be auto-amalgamated/auto-split 
-    in bulk transfer. The auto-amalgamation/auto-split feature is implemented 
+    parameter will be used with the auto-amalgamation/auto-split feature where
+    it indicates the number of bulk packets to be auto-amalgamated/auto-split
+    in bulk transfer. The auto-amalgamation/auto-split feature is implemented
     but not yet tested.
 
   @param dma_enable
@@ -1267,11 +1267,11 @@ MSS_USBH_configure_out_pipe
   complete.
 
   @param target_addr
-    The target_addr parameter is the address of the attached device with which 
+    The target_addr parameter is the address of the attached device with which
     the MSS USB needs to communicate.
 
   @param outpipe_num
-    The outpipe_num parameter indicates the OUT pipe number (endpoint) on the 
+    The outpipe_num parameter indicates the OUT pipe number (endpoint) on the
     MSS USB which must be used for the OUT transfers with the attached device.
 
   @param target_ep
@@ -1280,11 +1280,11 @@ MSS_USBH_configure_out_pipe
 
   @param max_pkt_size
     The max_pkt_size parameter provides the maximum packet size of the USB
-    transfer. This value must be equal to the maximum packet size as mentioned 
+    transfer. This value must be equal to the maximum packet size as mentioned
     in the endpoint descriptor which is used during enumeration process.
 
   @param buf
-    The buf parameter is the address of the buffer provided by the user from 
+    The buf parameter is the address of the buffer provided by the user from
     which the data is copied to the selected pipe buffer.
 
   @param length
@@ -1333,11 +1333,11 @@ MSS_USBH_write_out_pipe
   complete.
 
   @param target_addr
-    The target_addr parameter is the address of the attached device with which 
+    The target_addr parameter is the address of the attached device with which
     the MSS USB needs to communicate.
 
   @param outpipe_num
-    The outpipe_num parameter indicates the OUT pipe number (endpoint) on MSS 
+    The outpipe_num parameter indicates the OUT pipe number (endpoint) on MSS
     USB which must be used for the OUT transfers with the attached device.
 
   @param target_ep
@@ -1346,11 +1346,11 @@ MSS_USBH_write_out_pipe
 
   @param max_pkt_size
     The max_pkt_size parameter provides the maximum packet size of the USB
-    transfer. This value must be equal to the maximum packet size as mentioned 
+    transfer. This value must be equal to the maximum packet size as mentioned
     in the endpoint descriptor which is used during enumeration process.
 
   @param buf
-    The buf parameter is the address of the buffer provided by the user from 
+    The buf parameter is the address of the buffer provided by the user from
     which the data is copied to the selected pipe buffer.
 
   @param length
@@ -1389,7 +1389,7 @@ MSS_USBH_read_in_pipe
 
 /*-------------------------------------------------------------------------*//**
   The MSS_USBH_get_tdev_state() function can be used to find out the current
-  state of the attached device. E.g. ADDRESS, CONFIGURED etc. (as defined by 
+  state of the attached device. E.g. ADDRESS, CONFIGURED etc. (as defined by
   USB2.0).
 
   @param target_addr
@@ -1534,8 +1534,8 @@ MSS_USBH_get_milis
     GET_DESCRIPTOR request is stored.
 
   @param xfr_dir
-    The xfr_dir parameter indicates the direction of the data transfer on the 
-    USB bus. The value USB_STD_REQ_DATA_DIR_IN indicates that the direction of 
+    The xfr_dir parameter indicates the direction of the data transfer on the
+    USB bus. The value USB_STD_REQ_DATA_DIR_IN indicates that the direction of
     the data transfer is from the USB device to USB host (USB IN transaction).
     The value USB_STD_REQ_DATA_DIR_OUT indicates that the direction of the data
     transfer is from the USB host to the USB device (USB OUT transaction).
@@ -1558,11 +1558,11 @@ MSS_USBH_get_milis
     requested from the attached device.
 
   @param strng_idx
-    The strng_idx parameter indicates the index of the string descriptor when 
+    The strng_idx parameter indicates the index of the string descriptor when
     the desc_type parameter indicates STRING TYPE.
 
   @param length
-    The length parameter indicates the number of bytes to be received from 
+    The length parameter indicates the number of bytes to be received from
     attached device as part of the requested descriptor.
 
   @return
@@ -1614,20 +1614,20 @@ MSS_USBH_construct_get_descr_command
 
   @param dbuf_addr
     The dbuf_addf parameter is the address of the buffer for the data phase of
-    the control transfer. The USBD driver will put the data received from 
+    the control transfer. The USBD driver will put the data received from
     attached device in this buffer for the USB IN transfers. The data from this
     buffer will be sent to the attached device for the USB OUT transfers.
 
   @param data_dir
     The data_dir parameter indicates the direction of the data flow in the data
     phase of the control transfer. The value USB_STD_REQ_DATA_DIR_IN indicates
-    that the direction of the data transfer is from the USB device to the USB 
-    host (USB IN transaction). The value USB_STD_REQ_DATA_DIR_OUT indicates 
-    that the direction of the data transfer is from the USB host to the USB 
+    that the direction of the data transfer is from the USB device to the USB
+    host (USB IN transaction). The value USB_STD_REQ_DATA_DIR_OUT indicates
+    that the direction of the data transfer is from the USB host to the USB
     device (USB OUT transaction).
 
   @param data_len
-    The data_len parameter indicates the number of bytes to be transferred 
+    The data_len parameter indicates the number of bytes to be transferred
     during the data phase of the control transfer.
 
   @return
@@ -1643,7 +1643,7 @@ MSS_USBH_construct_get_descr_command
                                            USB_STD_REQ_RECIPIENT_DEVICE,
                                            USB_STD_REQ_GET_DESCRIPTOR,
                                            USB_CONFIGURATION_DESCRIPTOR_TYPE,
-                                           0, 
+                                           0,
                                            32u);
 
       g_msc_state = USBH_MSC_WAIT_GET_CLASS_DESCR;
@@ -1671,7 +1671,7 @@ MSS_USBH_start_control_xfr
     This function does not take any parameters.
 
   @return
-    This function returns a value of type mss_usb_ep_state_t indicating the 
+    This function returns a value of type mss_usb_ep_state_t indicating the
     current state of the control pipe.
 
   Example:
@@ -1713,7 +1713,7 @@ MSS_USBH_get_cep_state
   operations.
 
   @param test_case
-    The test_case parameter indicates the compliance test that need to be 
+    The test_case parameter indicates the compliance test that need to be
     executed.The compliance tests could be one of the following:
         Test-J (USB_TEST_MODE_SELECTOR_TEST_J),
         Test-K (USB_TEST_MODE_SELECTOR_TEST_K),
@@ -1722,7 +1722,7 @@ MSS_USBH_get_cep_state
 
   @return
     This function does not return any value.
-    
+
   Example:
   @code
       case '1':

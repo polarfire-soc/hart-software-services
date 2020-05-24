@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -109,7 +109,7 @@ static void HSS_TinyCLI_MemTest(void)
         mHSS_FANCY_PRINTF(LOG_STATUS, "Passed!" CRLF);
     }
 }
-#endif    
+#endif
 
 static void HSS_TinyCLI_PrintHelp(void)
 {
@@ -127,7 +127,7 @@ static void HSS_TinyCLI_PrintHelp(void)
         mHSS_PUTS("Supported Commands:" CRLF "\t");
 
         for (size_t i = 0u; i < mSPAN_OF(commands); i++) {
-            mHSS_PUTS(commands[i].name); 
+            mHSS_PUTS(commands[i].name);
             mHSS_PUTC(' ');
         }
         mHSS_PUTS("" CRLF);
@@ -164,7 +164,7 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
     case CMD_QUIT:
         quitFlag = true;
         break;
-        
+
     case CMD_BOOT:
         quitFlag = true;
         break;

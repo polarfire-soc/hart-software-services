@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -38,8 +38,8 @@ bool HSS_EMMCInit(void)
 {
     //static bool initialized = false;
     mss_mmc_status_t result = MSS_MMC_INIT_SUCCESS;
-  
-    //if (!initialized) { 
+
+    //if (!initialized) {
     {
         static mss_mmc_cfg_t g_mmc =
         {
@@ -84,7 +84,7 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     // source and byteCount must be multiples of the sector size
     //
     // The MSS MMC driver uses uint32_t* as its pointer type
-    // To ensure alignment, would rather tramp through void* and 
+    // To ensure alignment, would rather tramp through void* and
     // assert check here
     assert(((size_t)srcOffset & (HSS_EMMC_SECTOR_SIZE-1)) == 0u);
     assert(((size_t)pCDest & (sizeof(uint32_t)-1)) == 0u);
@@ -116,7 +116,7 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     }
 
     // handle remainder
-    if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) { 
+    if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) {
         assert(byteCount < HSS_EMMC_SECTOR_SIZE);
 
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)" CRLF);
@@ -131,7 +131,7 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         }
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
-            memcpy(pCDest, runtBuffer, byteCount);            
+            memcpy(pCDest, runtBuffer, byteCount);
         }
     }
 
@@ -156,7 +156,7 @@ bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     // source and byteCount must be multiples of the sector size
     //
     // The MSS MMC driver uses uint32_t* as its pointer type
-    // To ensure alignment, would rather tramp through void* and 
+    // To ensure alignment, would rather tramp through void* and
     // assert check here
     assert(((size_t)dstOffset & (HSS_EMMC_SECTOR_SIZE-1)) == 0u);
     assert(((size_t)pCSrc & (sizeof(uint32_t)-1)) == 0u);

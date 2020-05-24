@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Registry of Tables (State Machines, IPI handlers, Init
  * Functions)
  *
@@ -32,7 +32,7 @@
 
 /*!
  * \file HSS Registry
- * \brief Initalization for any registered tables. 
+ * \brief Initalization for any registered tables.
  */
 
 #ifdef __cplusplus

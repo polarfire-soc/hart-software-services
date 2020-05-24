@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - State Machine Defines/Types/Declarations
  *
  */
@@ -48,7 +48,7 @@ typedef int stateType_t;
 /**
  * \brief State Descriptor Structure
  *
- * A State Descriptor contains all information about a particular state 
+ * A State Descriptor contains all information about a particular state
  * within a state machine
  */
 struct StateDesc {
@@ -77,7 +77,7 @@ struct StateMachine {
     bool debugFlag;
     uint8_t priority;
     void *pInstanceData;
-}; 
+};
 
 #define SM_INVALID_STATE ((stateType_t)-1)
 

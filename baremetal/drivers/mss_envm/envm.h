@@ -281,20 +281,20 @@ extern "C" {
 #define SW2FM_SEQ1                         0xB2
 #define SW2FM_SEQ2                         0x99
 
-typedef struct 
+typedef struct
 {
     uint8_t iByteAddr;
     uint8_t iLoadSize;
     uint32_t pageData[64];
 } PageLatchData;
 
-typedef struct 
+typedef struct
 {
     uint8_t iPageAddress;
     uint8_t iSector; /* b'XXXXXX[AXA][BA] (X is don't care) */
 } WriteRowData;
 
-typedef struct 
+typedef struct
 {
     uint8_t iPageAddress;
     uint8_t iSector; /* b'XXXXXX[AXA][BA] */
