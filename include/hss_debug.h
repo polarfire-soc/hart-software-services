@@ -56,33 +56,56 @@ extern "C" {
 #define CRLF "\r\n"
 #define CR   "\r"
 
-#ifdef CONFIG_COLOR_OUTPUT
-#    define mHSS_FANCY_ERROR_TEXT            mHSS_FANCY_PRINTF_EX("\033[1;31m")
-#    define mHSS_FANCY_WARN_TEXT             mHSS_FANCY_PRINTF_EX("\033[1;33m")
-#    define mHSS_FANCY_STATUS_TEXT           mHSS_FANCY_PRINTF_EX("\033[1;32m")
-#    define mHSS_FANCY_NORMAL_TEXT           mHSS_FANCY_PRINTF_EX("\033[0m");
-#    define mHSS_FANCY_STATE_TRANSITION_TEXT mHSS_FANCY_PRINTF_EX("\033[1;34m");
-#else
-#  define mHSS_FANCY_ERROR_TEXT
-#  define mHSS_FANCY_WARN_TEXT
-#  define mHSS_FANCY_STATUS_TEXT
-#  define mHSS_FANCY_NORMAL_TEXT
-#  define mHSS_FANCY_STATE_TRANSITION_TEXT
-#endif
+typedef enum {
+    HSS_DEBUG_LOG_NORMAL,
+    HSS_DEBUG_LOG_FUNCTION,
+    HSS_DEBUG_LOG_TIMESTAMP,
+    HSS_DEBUG_LOG_ERROR,
+    HSS_DEBUG_LOG_WARN,
+    HSS_DEBUG_LOG_STATUS,
+    HSS_DEBUG_LOG_STATE_TRANSITION,
+} HSS_Debug_LogLevel_t;
+
+void HSS_Debug_Highlight(HSS_Debug_LogLevel_t logLevel);
 
 int sbi_printf(const char *fmt, ...);
 void sbi_puts(const char *buf);
 void sbi_putc(char c);
 #    define mHSS_PUTS sbi_puts
 #    define mHSS_PUTC sbi_putc
-#    define mHSS_FANCY_PRINTF (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
+#    define mHSS_FANCY_PRINTF(logLevel, ...) { \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP); \
+         (void)sbi_printf("[%" PRIu64 "]", HSS_GetTime()); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+         (void)sbi_printf(" %s(): ", __func__); \
+         HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
+         sbi_printf(__VA_ARGS__); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
+     }
+#    define mHSS_FANCY_PUTS(logLevel, ...) { \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP); \
+         (void)sbi_printf("[%" PRIu64 "]", HSS_GetTime()); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+         (void)sbi_printf(" %s(): ", __func__); \
+         HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
+         sbi_puts(__VA_ARGS__); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
+     }
+
 #    define mHSS_PRINTF sbi_printf
 #    define mHSS_FANCY_PRINTF_EX sbi_printf
-#    define mHSS_FANCY_PUTS (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_puts
 
 #ifndef mHSS_DEBUG_PRINTF
 #  ifdef DEBUG
-#      define mHSS_DEBUG_PRINTF (void)sbi_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), sbi_printf
+#    define mHSS_DEBUG_PRINTF(logLevel, ...) { \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP); \
+         (void)sbi_printf("[%" PRIu64 "]", HSS_GetTime()); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+         (void)sbi_printf(" %s(): ", __func__); \
+         HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
+         sbi_printf(__VA_ARGS__); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
+     }
 #      define mHSS_DEBUG_PRINTF_EX sbi_printf
 #      define mHSS_DEBUG_PUTS sbi_puts
 #  else

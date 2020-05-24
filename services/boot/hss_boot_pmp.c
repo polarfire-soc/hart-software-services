@@ -47,7 +47,7 @@ bool HSS_PMP_Init(void)
     enum HSSHartId target;
     unsigned int pmpIndex;
 
-    mHSS_DEBUG_PRINTF("Initializing PMPs" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing PMPs" CRLF);
 
     for (target = HSS_HART_U54_1; target <HSS_HART_NUM_PEERS; target++) {
         for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {

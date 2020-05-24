@@ -28,7 +28,7 @@
 void __assert_func(const char *__file, unsigned int __line, 
         const char *__function, const char *__assertion) //__attribute__ ((__noreturn__))
 {
-    mHSS_DEBUG_PRINTF("%s:%d: %s() Assertion failed:" CRLF "\t%s" CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s:%d: %s() Assertion failed:" CRLF "\t%s" CRLF, 
         __file, __line, __function, __assertion);
 
 #ifndef __riscv

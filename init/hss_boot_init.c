@@ -76,7 +76,7 @@ bool HSS_BootInit(void)
     bool decompressedFlag = false;
     struct HSS_BootImage *pBootImage = NULL;
 
-    mHSS_DEBUG_PRINTF("Initializing Boot Image.." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image.." CRLF);
 
 #ifdef CONFIG_SERVICE_BOOT
 #  if defined(CONFIG_SERVICE_QSPI)
@@ -98,17 +98,17 @@ bool HSS_BootInit(void)
     if (result && pBootImage->magic = mHSS_COMPRESSED_MAGIC) {
         decompressedFlag = true;
         if (!result) {
-            mHSS_DEBUG_PRINTF("Failed to get boot image, cannot decompress" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Failed to get boot image, cannot decompress" CRLF);
         } else if (!pBootImage) {
-            mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image NULL, ignoring" CRLF);
             result = false;
         } else {
-            mHSS_DEBUG_PRINTF("Preparing to decompress to DDR..." CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to decompress to DDR..." CRLF);
             void* const pInput = (void*)pBootImage;
             void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
             int outputSize = HSS_Decompress(pInput, pOutputInDDR);
-            mHSS_DEBUG_PRINTF("decompressed %d bytes..." CRLF, outputSize);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "decompressed %d bytes..." CRLF, outputSize);
 
             if (outputSize) {
                 pBootImage = (struct HSS_BootImage *)pOutputInDDR;
@@ -124,13 +124,13 @@ bool HSS_BootInit(void)
     //
     {
         if (!pBootImage) {
-            mHSS_DEBUG_PRINTF("Boot Image NULL, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image NULL, ignoring" CRLF);
             result = false;
         } else if (pBootImage->magic != mHSS_BOOT_MAGIC) { 
-            mHSS_DEBUG_PRINTF("Boot Image magic invalid, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image magic invalid, ignoring" CRLF);
             result = false;
         } else if (validateCrc_(pBootImage)) {
-            mHSS_DEBUG_PRINTF("%s boot image passed CRC" CRLF, 
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s boot image passed CRC" CRLF, 
                 decompressedFlag ? "decompressed":"");
 
         // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the 
@@ -138,10 +138,10 @@ bool HSS_BootInit(void)
         // this print...
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
-            mHSS_DEBUG_PRINTF("Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
 #pragma GCC diagnostic pop
             HSS_Register_Boot_Image(pBootImage); 
-            mHSS_DEBUG_PRINTF("Boot Image registered..." CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered..." CRLF);
 
             if (HSS_Boot_RestartCore(HSS_HART_ALL) == IPI_SUCCESS) {
                 result = true;
@@ -149,7 +149,7 @@ bool HSS_BootInit(void)
                 result = false;
 	    }
         } else {
-            mHSS_DEBUG_PRINTF("%s boot image failed CRC" CRLF, 
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s boot image failed CRC" CRLF, 
                 decompressedFlag ? "decompressed":"");
         }
     }
@@ -182,9 +182,9 @@ static bool validateCrc_(struct HSS_BootImage *pImageHdr)
 
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage)
 {
-    mHSS_DEBUG_PRINTF(" - set name is >>%s<<" CRLF, pBootImage->set_name);
-    mHSS_DEBUG_PRINTF(" - magic is    %08X" CRLF, pBootImage->magic);
-    mHSS_DEBUG_PRINTF(" - length is   %08X" CRLF, pBootImage->bootImageLength);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - set name is >>%s<<" CRLF, pBootImage->set_name);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - magic is    %08X" CRLF, pBootImage->magic);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - length is   %08X" CRLF, pBootImage->bootImageLength);
 }
 
 #ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD
@@ -198,7 +198,7 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
 
     // TODO: quickly validate boot image header before a needless copy is 
     // performed
-    mHSS_DEBUG_PRINTF("Copying %lu bytes to 0x%X" CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copying %lu bytes to 0x%X" CRLF, 
         pBootImage->bootImageLength, pDest);
 
     const size_t maxChunkSize = 512u;
@@ -254,15 +254,15 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
 
     // if we are using EMMC, then we need to do an initial copy of the
     // boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF("Preparing to copy from EMMC to DDR ..." CRLF);
-    mHSS_DEBUG_PRINTF("Attempting to read image header (%d bytes) ..." CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from EMMC to DDR ..." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF, 
         sizeof(struct HSS_BootImage));
 
     size_t srcOffset = 0u; // assuming zero as sector/block offset for now
     HSS_EMMC_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
 
     result = verifyMagic_(&bootImage);
-    mHSS_DEBUG_PRINTF(" after verify" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, " after verify" CRLF);
 
     if (result) {
         result = copyBootImageToDDR_(&bootImage, 
@@ -285,8 +285,8 @@ static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
 #  ifndef CONFIG_SERVICE_QSPI_USE_XIP
     // if we are not using XIP, then we need to do an initial copy of the
     // boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF("Preparing to copy from QSPI to DDR ..." CRLF);
-    mHSS_DEBUG_PRINTF("Attempting to read image header (%d bytes) ..." CRLF, 
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI to DDR ..." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF, 
         sizeof(struct HSS_BootImage));
 
     size_t srcOffset = 0u; // assuming zero as sector/block offset for now

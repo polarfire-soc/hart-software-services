@@ -102,7 +102,7 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
     if ((status & mask) != 0u) {
         // watchdog timer has triggered for a monitored hart..
-        mHSS_DEBUG_PRINTF("Watchdog has triggered" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog has triggered" CRLF);
 
         if (hartBitmask.s.u54_1) {
             HSS_Boot_RestartCore(HSS_HART_U54_1);
@@ -127,7 +127,7 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target)
 {
-    mHSS_DEBUG_PRINTF("called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
 
     switch (target) {
     case HSS_HART_U54_1:

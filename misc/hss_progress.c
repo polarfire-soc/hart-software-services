@@ -42,7 +42,7 @@ bool HSS_ShowTimeout(char const * const msg, uint32_t timeout_sec, uint8_t *pRcv
     mHSS_PUTC('.');
 
     if (uart_getchar(pRcvBuf, timeout_sec, true)) {
-        mHSS_DEBUG_PRINTF("Character %u pressed " CRLF, *pRcvBuf);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Character %u pressed " CRLF, *pRcvBuf);
 
         if (*pRcvBuf != 27) { // ESC => done
             keyPressedFlag = true;

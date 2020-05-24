@@ -61,9 +61,7 @@ bool HSS_EMMCInit(void)
         result = MSS_MMC_init(&g_mmc);
 
         if (result != MSS_MMC_INIT_SUCCESS) {
-            mHSS_FANCY_ERROR_TEXT;
-            mHSS_DEBUG_PRINTF("MSS_MMC_init() returned unexpected %d" CRLF, result);
-            mHSS_FANCY_NORMAL_TEXT;
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, result);
         }
         //initialized = true;
     }
@@ -95,15 +93,14 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount >= HSS_EMMC_SECTOR_SIZE)) {
-        //mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_read(%lu, 0x%p) (%lu bytes remaining)" CRLF,
-        //    src_sector_num, pCDest, byteCount);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, 0x%p) "
+        //    "(%lu bytes remaining)" CRLF, src_sector_num, pCDest, byteCount);
 
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)pCDest);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_FANCY_ERROR_TEXT;
-            mHSS_DEBUG_PRINTF("MSS_MMC_single_block_read() unexpectedly returned %d" CRLF, result);
-            mHSS_FANCY_NORMAL_TEXT;
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
+                result);
         }
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
@@ -122,16 +119,15 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) { 
         assert(byteCount < HSS_EMMC_SECTOR_SIZE);
 
-        //mHSS_DEBUG_PRINTF("Dealing with remainder (less that full sector)" CRLF);
-        //mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_read(%lu, 0x%p) (%lu bytes remaining)" CRLF,
-        //    src_sector_num, runtBuffer, byteCount);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)" CRLF);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, 0x%p) "
+        //    "(%lu bytes remaining)" CRLF, src_sector_num, runtBuffer, byteCount);
 
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)runtBuffer);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_FANCY_ERROR_TEXT;
-            mHSS_DEBUG_PRINTF("MSS_MMC_single_block_read() unexpectedly returned %d" CRLF, result);
-            mHSS_FANCY_NORMAL_TEXT;
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
+                result);
         }
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
@@ -170,15 +166,14 @@ bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount)) {
-        mHSS_DEBUG_PRINTF("Calling MSS_MMC_single_block_write(0x%p, %lu) (%lu bytes remaining)" CRLF,
-            pCSrc, dst_sector_num, byteCount);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_write(0x%p, %lu) "
+            "(%lu bytes remaining)" CRLF, pCSrc, dst_sector_num, byteCount);
 
         result = MSS_MMC_single_block_write((uint32_t *)pCSrc, dst_sector_num);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_FANCY_ERROR_TEXT;
-            mHSS_DEBUG_PRINTF("MSS_MMC_single_block_write() unexpectedly returned %d" CRLF, result);
-            mHSS_FANCY_NORMAL_TEXT;
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_write() unexpectedly returned %d" CRLF,
+                result);
         }
 
         dst_sector_num++;

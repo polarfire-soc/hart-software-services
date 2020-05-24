@@ -92,7 +92,7 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
                 pMachineName = (const char *)pCurrentMachine->pMachineName;
             }
 
-            //mHSS_DEBUG_PRINTF("running machine %s" CRLF, pMachineName);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "running machine %s" CRLF, pMachineName);
             {
                 stateType_t prevState = pCurrentMachine->prevState;
                 stateType_t currentState = pCurrentMachine->state;
@@ -148,12 +148,8 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
                             (pCurrentMachine->pStateDescs[currentState]).pStateName;
 
                         if (prevState != currentState) {
-                            mHSS_FANCY_STATE_TRANSITION_TEXT;
-
-                            mHSS_DEBUG_PRINTF("%s::%s -> %s::%s" CRLF, pMachineName,
+                            mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s::%s -> %s::%s" CRLF, pMachineName,
                                 pLastStateName, pMachineName, pCurrentStateName);
-
-                            mHSS_FANCY_NORMAL_TEXT;
                         }
                     }
                 }
@@ -186,25 +182,25 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
 #ifdef    CONFIG_DEBUG_PROFILING_SUPPORT
             dump_profile();
 #endif
-            if (dump_flag) {
-                mHSS_FANCY_STATUS_TEXT;
-            } else /* if (max_exceeded_flag) */ {
-                mHSS_FANCY_WARN_TEXT;
-            }
-
 #ifdef   CONFIG_DEBUG_IPI_STATS
             IPI_DebugDumpStats();
 #endif
+
 #ifdef   CONFIG_DEBUG_LOOP_TIMES
-            mHSS_DEBUG_PRINTF(" loop %" PRIu64
-                " took %" PRIu64 " tick%s"
-                " (max %" PRIu64 " tick%s)" CRLF, loopCount,
-                delta, delta == 1u ? "" : "s",
-                maxLoopTime, maxLoopTime == 1u ? "" : "s");
+            if (dump_flag) {
+                mHSS_DEBUG_PRINTF(LOG_STATUS, " loop %" PRIu64
+                    " took %" PRIu64 " tick%s"
+                    " (max %" PRIu64 " tick%s)" CRLF, loopCount,
+                    delta, delta == 1u ? "" : "s",
+                    maxLoopTime, maxLoopTime == 1u ? "" : "s");
+            } else /* if (max_exceeded_flag) */ {
+                mHSS_DEBUG_PRINTF(LOG_WARN, " loop %" PRIu64
+                    " took %" PRIu64 " tick%s"
+                    " (max %" PRIu64 " tick%s)" CRLF, loopCount,
+                    delta, delta == 1u ? "" : "s",
+                    maxLoopTime, maxLoopTime == 1u ? "" : "s");
+            }
 #endif
-
-            mHSS_FANCY_NORMAL_TEXT;
-
         }
     }
 #else
@@ -233,15 +229,13 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
     for (i = 0u; i < spanOfInitFunctions; i++) {
         assert(initFunctions[i].handler);
 
-        //mHSS_DEBUG_PRINTF("Running %d of %d: %s()" CRLF, i, spanOfInitFunctions, 
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Running %d of %d: %s()" CRLF, i, spanOfInitFunctions, 
         //    initFunctions[i].pName);
 
         bool result = (initFunctions[i].handler)();
 
         if (!result) {
-            mHSS_FANCY_ERROR_TEXT;
-            mHSS_DEBUG_PRINTF("%s() returned %d" CRLF, initFunctions[i].pName, result);
-            mHSS_FANCY_NORMAL_TEXT;
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s() returned %d" CRLF, initFunctions[i].pName, result);
 
             if (initFunctions[i].haltOnFailure) {
                 while (true) { ; } // HALT on failure 

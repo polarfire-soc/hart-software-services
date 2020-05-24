@@ -472,7 +472,7 @@ static int32_t ddr_setup(void)
                         sweep_count_dpc_h_bits = 0U;
                         sweep_count_dpc_vs_bits = 0U;
                         sweep_state = ADDR_CMD_OFFSET_SWEEP;
-                        __attribute__((fallthrough)); /* deliberately fall through */
+                        __attribute__((fallthrough)); // deliberately fall through
                     case ADDR_CMD_OFFSET_SWEEP:
                         /*
                          * Record sweep result

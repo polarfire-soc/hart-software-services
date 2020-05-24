@@ -68,18 +68,17 @@ bool HSS_U54_HandleIPI(void)
         enum HSSHartId myHartId = current_hartid();
         static size_t count[5]; count[myHartId]++; 
 
-        mHSS_FANCY_STATUS_TEXT;
-        mHSS_DEBUG_PRINTF(" ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId], intentFound);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, " ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId],
+            intentFound);
         IPI_DebugDumpStats();
-        mHSS_FANCY_NORMAL_TEXT;
     }
 #endif
 
     //mb();
     // if not for me, pass to S-mode ...
-    //mHSS_DEBUG_PRINTF("MTVEC is now %p" CRLF, mHSS_CSR_READ(mtvec));
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "MTVEC is now %p" CRLF, mHSS_CSR_READ(mtvec));
 
-    //mHSS_DEBUG_PRINTF("<<" CRLF);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "<<" CRLF);
 
     return intentFound; 
 }
@@ -87,5 +86,5 @@ bool HSS_U54_HandleIPI(void)
 void HSS_U54_Banner(void)
 {
     // wait for E51 to setup BSS...
-    mHSS_DEBUG_PRINTF("u54_%d: Waiting for E51 instruction" CRLF, current_hartid());
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%d: Waiting for E51 instruction" CRLF, current_hartid());
 }

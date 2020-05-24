@@ -178,7 +178,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
                 result = true;
                 break;
             } else {
-                mHSS_DEBUG_PRINTF("UART error" CRLF);
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "UART error" CRLF);
             }
         }
 

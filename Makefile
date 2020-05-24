@@ -111,9 +111,8 @@ include misc/Makefile
 include baremetal/Makefile
 include ssmb/Makefile
 include services/Makefile
-ifdef CONFIG_COMPRESSION
-  include compression/Makefile
-endif
+include debug/Makefile
+include compression/Makefile
 
 LIBS = $(OPENSBI_LIBS)
 

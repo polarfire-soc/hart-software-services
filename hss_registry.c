@@ -63,7 +63,7 @@ static enum IPIStatusCode HSS_Null_IPIHandler(TxId_t transaction_id, enum HSSHar
     (void)immediate_arg;
     (void)p_extended_buffer_in_ddr;
 
-    mHSS_DEBUG_PRINTF("%s() called -- ignoring" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s() called -- ignoring" CRLF);
     return IPI_SUCCESS;
 }
 

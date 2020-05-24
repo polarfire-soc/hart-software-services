@@ -69,7 +69,7 @@ struct StateMachine goto_service = {
 //
 static void goto_init_handler(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_PRINTF("called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
     pMyMachine->state++;
 }
 
@@ -77,7 +77,7 @@ static void goto_init_handler(struct StateMachine * const pMyMachine)
 static void goto_idle_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine; // unused
-    mHSS_DEBUG_PRINTF("called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
 }
 
 
@@ -88,10 +88,10 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     enum IPIStatusCode result = IPI_FAIL;
 
     // goto IPI received from E51
-    //mHSS_DEBUG_PRINTF("called (goto_service.state is %u)" CRLF, goto_service.state);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (goto_service.state is %u)" CRLF, goto_service.state);
 
     if (source != HSS_HART_E51) {
-        mHSS_DEBUG_PRINTF("security policy prevented GOTO request from hart %d" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from hart %d" CRLF, source);
         result = IPI_FAIL;
     } else {
         // the following should always be true if we have consumed intents for GOTO...
@@ -99,7 +99,8 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
         // we ain't coming back from the GOTO, so need to ACK here...
 #if __riscv //TODO
-        //mHSS_DEBUG_PRINTF("Source is %d, transaction_id is %u" CRLF, source, transaction_id);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Source is %d, transaction_id is %u" CRLF, source,
+        //    transaction_id);
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
@@ -117,7 +118,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         if (pMsg->transaction_id == transaction_id) {
             pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
-            mHSS_DEBUG_PRINTF("Address to execute is %p" CRLF, *(void **)p_extended_buffer);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p" CRLF, *(void **)p_extended_buffer);
 
             enum HSSHartId myHartId = current_hartid();
 
@@ -143,7 +144,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
                 break;
 
             default:
-                mHSS_DEBUG_PRINTF("Unknown hart ID %u" CRLF, myHartId);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown hart ID %u" CRLF, myHartId);
                 result = IPI_FAIL;
                 break;
             }
@@ -167,11 +168,11 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
             // next_mode stores the desired privilege mode to return to..
             // typically PRV_S
-            //mHSS_DEBUG_PRINTF("Setting priv mode to %d" CRLF, next_mode);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Setting priv mode to %d" CRLF, next_mode);
             mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPP, next_mode);
 
             if (next_mode == PRV_M) {
-                mHSS_DEBUG_PRINTF("Booting into M-Mode so clearing MSTATUS:MIE" CRLF);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Booting into M-Mode so clearing MSTATUS:MIE" CRLF);
                 mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPIE, 0);
                 mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MIE, 0);
             } else {
@@ -220,7 +221,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             break;
 
         default:
-            mHSS_DEBUG_PRINTF("Unknown or unexpected hart ID %u" CRLF, myHartId);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown or unexpected hart ID %u" CRLF, myHartId);
             result = IPI_FAIL;
             break;
         }

@@ -186,12 +186,12 @@ static FASTLZ_INLINE int FASTLZ_DECOMPRESSOR(const void* input, int length, void
       
 #ifdef FASTLZ_SAFE
       if (FASTLZ_UNEXPECT_CONDITIONAL(op + len + 3 > op_limit)) {
-        mHSS_DEBUG_PRINTF("op + len + 3 [%p] > op_limit [%p]" CRLF, op + len + 3, op_limit);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "op + len + 3 [%p] > op_limit [%p]" CRLF, op + len + 3, op_limit);
         return 0;
       }
 
       if (FASTLZ_UNEXPECT_CONDITIONAL(ref-1 < (flzuint8 *)output)) {
-        mHSS_DEBUG_PRINTF("ref-1 [%p] < output [%p]" CRLF, output);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "ref-1 [%p] < output [%p]" CRLF, output);
         return 0;
       }
 #endif
@@ -255,11 +255,11 @@ static FASTLZ_INLINE int FASTLZ_DECOMPRESSOR(const void* input, int length, void
       ctrl++;
 #ifdef FASTLZ_SAFE
       if (FASTLZ_UNEXPECT_CONDITIONAL(op + ctrl > op_limit)) {
-        mHSS_DEBUG_PRINTF("op + ctrl [%p] > op_limit [%p]" CRLF, op + ctrl, op_limit);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "op + ctrl [%p] > op_limit [%p]" CRLF, op + ctrl, op_limit);
         return 0;
       }
       if (FASTLZ_UNEXPECT_CONDITIONAL(ip + ctrl > ip_limit)) {
-        mHSS_DEBUG_PRINTF("ip + ctrl [%p] > ip_limit [%p]" CRLF, ip + ctrl, ip_limit);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "ip + ctrl [%p] > ip_limit [%p]" CRLF, ip + ctrl, ip_limit);
         return 0;
       }
 #endif

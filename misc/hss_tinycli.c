@@ -104,9 +104,9 @@ static void HSS_TinyCLI_MemTest(void)
     bool status = HSS_MemTestDDRFull();
 
     if (!status) {
-        mHSS_FANCY_PRINTF("Failed!" CRLF);
+        mHSS_FANCY_PRINTF(LOG_ERROR, "Failed!" CRLF);
     } else {
-        mHSS_FANCY_PRINTF("Passed!" CRLF);
+        mHSS_FANCY_PRINTF(LOG_STATUS, "Passed!" CRLF);
     }
 }
 #endif    
@@ -118,9 +118,9 @@ static void HSS_TinyCLI_PrintHelp(void)
 
         for (index = 1; index < numTokens; index++) {
             size_t i = 0u;
-            //mHSS_DEBUG_PRINTF("Argument: %s" CRLF, tokenArray[index]);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s" CRLF, tokenArray[index]);
             if (HSS_TinyCLI_GetCmdIndex(tokenArray[index], &i)) {
-                mHSS_FANCY_PRINTF("%s: %s" CRLF, commands[i].name, commands[i].helpString);
+                mHSS_FANCY_PRINTF(LOG_NORMAL, "%s: %s" CRLF, commands[i].name, commands[i].helpString);
             }
         }
     } else {
@@ -176,9 +176,9 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
 #endif
 
     default:
-        mHSS_DEBUG_PRINTF("Unknown command %d (%lu tokens)" CRLF, cmdIndex, numTokens);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command %d (%lu tokens)" CRLF, cmdIndex, numTokens);
         for (index = 1; index < numTokens; index++) {
-            mHSS_DEBUG_PRINTF("Argument: %s" CRLF, tokenArray[index]);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s" CRLF, tokenArray[index]);
         }
         break;
     }
@@ -194,7 +194,7 @@ static bool HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen)
     status = uart_getline(pBuffer, pBufLen);
 
     if (status < 0) {
-        mHSS_DEBUG_PRINTF("Problem reading input" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Problem reading input" CRLF);
         // result = false;
     } else {
         result = true;
@@ -228,7 +228,7 @@ static void HSS_TinyCLI_Execute(void)
     if (matchFoundFlag) {
         commands[i].handler(i);
     } else {
-        mHSS_DEBUG_PRINTF("Unknown command >>%s<<." CRLF CRLF, tokenArray[0]);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command >>%s<<." CRLF CRLF, tokenArray[0]);
     }
 }
 
@@ -241,15 +241,15 @@ bool HSS_TinyCLI_Parser(void)
         CONFIG_TINYCLI_TIMEOUT, &rcv_buf);
 
     if (!keyPressedFlag) {
-        mHSS_FANCY_PUTS("CLI check timeout" CRLF);
+        mHSS_FANCY_PUTS(LOG_NORMAL, "CLI check timeout" CRLF);
     } else {
         static char *pBuffer = NULL;
         static size_t bufLen = 0u;
 
-        mHSS_FANCY_PUTS("Type HELP for list of commands" CRLF);
+        mHSS_FANCY_PUTS(LOG_NORMAL, "Type HELP for list of commands" CRLF);
 
         while (!quitFlag) {
-            mHSS_FANCY_PUTS(">> ");
+            mHSS_FANCY_PUTS(LOG_NORMAL, ">> ");
             bool result = HSS_TinyCLI_Getline(&pBuffer, &bufLen);
 
             if (result && (pBuffer != NULL)) {

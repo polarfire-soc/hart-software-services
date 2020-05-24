@@ -50,7 +50,7 @@ void *memcpy_via_pdma(void *dest, void *src, size_t num_bytes)
         }
     }
 
-    //mHSS_DEBUG_PRINTF("Copy from %p to %p (%x bytes)" CRLF, src, dest, num_bytes);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copy from %p to %p (%x bytes)" CRLF, src, dest, num_bytes);
 
 
 #ifdef CONFIG_USE_PDMA
@@ -80,7 +80,7 @@ void *memcpy_via_pdma(void *dest, void *src, size_t num_bytes)
 
         if (pdma_error_code != 0) {
             if (pdma_error_code < mSPAN_OF(pdmaErrorTable)) {
-                mHSS_DEBUG_PRINTF("PDMA Error: %s" CRLF, pdmaErrorTable[pdma_error_code]);
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "PDMA Error: %s" CRLF, pdmaErrorTable[pdma_error_code]);
             }
             // fall back to traditional memcpy()
             result = memcpy(dest, src, num_bytes);

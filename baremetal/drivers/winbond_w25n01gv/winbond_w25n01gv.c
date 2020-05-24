@@ -676,7 +676,8 @@ uint8_t Flash_program
     uint32_t wr_len
 )
 {
-    mHSS_DEBUG_PRINTF("called: buf = %p, wr_addr = %u, wr_len = %u" CRLF, buf, wr_addr, wr_len);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called: buf = %p, wr_addr = %u, wr_len = %u" CRLF, buf,
+        wr_addr, wr_len);
 
     int32_t remaining_length = (int32_t)wr_len;
     uint32_t target_offset = wr_addr;

@@ -8,8 +8,8 @@
  */
 
 /**
- * \file CSR Helper
- * \brief CSR Helper
+ * \file Code Profiling
+ * \brief Code Profiling
  */
 
 #include "config.h"

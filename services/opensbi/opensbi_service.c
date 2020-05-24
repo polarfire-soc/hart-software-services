@@ -163,9 +163,9 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     int hartid = current_hartid();
 
     if (source != HSS_HART_E51) { // prohibited by policy
-        mHSS_DEBUG_PRINTF("request from source %d prohibited by policy" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "request from source %d prohibited by policy" CRLF, source);
     } else if (hartid == HSS_HART_E51) { // prohibited by policy
-        mHSS_DEBUG_PRINTF("request to %d prohibited by policy" CRLF, HSS_HART_E51);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "request to %d prohibited by policy" CRLF, HSS_HART_E51);
     } else {
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
