@@ -79,18 +79,23 @@ static inline uint32_t CRC32_updateByte(uint32_t crc32, const uint8_t byte)
     return crc32 & CRC32_MASK;
 }
 
-uint32_t CRC32_calculate(uint8_t const *input, size_t numBytes)
+uint32_t CRC32_calculate(uint8_t const *pInput, size_t numBytes)
 {
-    uint32_t crc32 = CRC32_SEED;
+    uint32_t crc32 = 0u;
 
-    if (input != NULL) {
+    return CRC32_calculate_ex(crc32, pInput, numBytes);
+}
+
+uint32_t CRC32_calculate_ex(uint32_t seed, uint8_t const *pInput, size_t numBytes)
+{
+    uint32_t crc32 = ~seed;
+
+    if (pInput != NULL) {
         while (numBytes--) {
-            crc32 = CRC32_updateByte(crc32, *input);
-            input++;
+            crc32 = CRC32_updateByte(crc32, *pInput);
+            ++pInput;
         }
     }
 
-    crc32 ^= CRC32_MASK;
-    return crc32 & CRC32_MASK;
-
+    return ~crc32;
 }

@@ -35,7 +35,7 @@ extern "C" {
 
 #include <stdint.h>
 
-uint16_t CRC16_calculate(const uint8_t *input, size_t numBytes);
+uint16_t CRC16_calculate(const uint8_t *pInput, size_t numBytes);
 
 #ifdef __cplusplus
 }

@@ -29,6 +29,7 @@
 SRCS-$(CONFIG_SERVICE_BOOT) += \
 	services/boot/hss_boot_service.c \
 	services/boot/hss_boot_pmp.c \
+	services/boot/gpt.c \
 
 INCLUDES +=\
 	-I./services/boot \
