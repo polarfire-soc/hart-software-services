@@ -126,6 +126,9 @@ bool HSS_ZeroDDR(void)
 #  endif
 #endif
 
+    mb();
+    mb_i();
+
     return true;
 }
 
@@ -184,13 +187,24 @@ void HSS_PrintBuildId(void)
     const size_t offset = (gnu_build_id.namesz + padding) & ~padding;
     const uint8_t *pBuildId = (const uint8_t *)&(gnu_build_id.data[offset]);
 
-    mHSS_FANCY_PRINTF("Build ID: ");
+    mHSS_FANCY_PUTS(LOG_STATUS, "Build ID: ");
 
     for (int i = 0; i < gnu_build_id.descsz; ++i) {
         mHSS_PRINTF("%02x", pBuildId[i]);
     }
 
     mHSS_PRINTF(CRLF);
+}
+#endif
+
+#ifdef CONFIG_DISPLAY_TOOL_VERSIONS
+#include "tool_versions.h"
+void HSS_PrintToolVersions(void)
+{
+    mHSS_FANCY_PUTS(LOG_NORMAL, "Built with the following tools: " CRLF);
+
+    mHSS_PUTS(" - " CC_VERSION_STRING CRLF);
+    mHSS_PUTS(" - " LD_VERSION_STRING CRLF CRLF);
 }
 #endif
 
@@ -203,6 +217,10 @@ bool HSS_E51_Banner(void)
 
 #ifdef CONFIG_USE_GNU_BUILD_ID
     HSS_PrintBuildId();
+#endif
+
+#ifdef CONFIG_DISPLAY_TOOL_VERSIONS
+    HSS_PrintToolVersions();
 #endif
 
     return true;

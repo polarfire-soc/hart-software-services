@@ -139,7 +139,7 @@ hss_main.o: hss_main.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-hss_init.o: hss_init.c config.h
+hss_init.o: hss_init.c include/tool_versions.h config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
@@ -157,6 +157,14 @@ ifdef CONFIG_USE_MAKEDEP
   dep: $(DEPENDENCIES)
 
   -include $(DEPENDENCIES)
+endif
+
+ifdef CONFIG_DISPLAY_TOOL_VERSIONS
+include/tool_versions.h:
+	$(CMD_PREFIX)echo \#define CC_VERSION_STRING \"`$(CC) --version | head -n 1`\" > include/tool_versions.h
+	$(CMD_PREFIX)echo \#define LD_VERSION_STRING \"`$(LD) --version | head -n 1`\" >> include/tool_versions.h
+
+DEPENDENCIES+=include/tool_versions.h
 endif
 
 $(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS)

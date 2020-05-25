@@ -77,4 +77,12 @@ config HAS_INTTYPES
 
 		If the toolchain does not provide inttypes.h, say N here.
 
+config DISPLAY_TOOL_VERSIONS
+	bool "Display Compiler and Linker tool version information at startup."
+	default y
+	help
+		This features displays compiler and linker tool version information at startup.
+
+		If you do not know what to do here, say Y.
+
 endmenu
