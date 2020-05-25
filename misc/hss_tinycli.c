@@ -105,7 +105,7 @@ static bool HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index)
     for (i = 0u; i < mSPAN_OF(commands); i++) {
         if (strcasecmp(commands[i].name, pCmdToken) == 0) {
             result = true;
-            *index = i;
+            *index = commands[i].cmdIndex;
             break;
         }
     }
