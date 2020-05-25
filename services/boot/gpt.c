@@ -22,7 +22,37 @@
 #include <string.h>
 #include <assert.h>
 
-static bool (*readBlockFnPtr)(void *pDest, size_t srcOffset, size_t byteCount) = NULL;
+
+//
+// local modules function pointer types
+typedef bool (*ReadBlockFnPtr_t)(void *pDest, size_t srcOffset, size_t byteCount);
+typedef bool (*CheckIfGUIDMatchFnPtr_t)(HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry,
+    HSS_GPT_GUID_t const * const pGUID2);
+
+static ReadBlockFnPtr_t readBlockFnPtr;
+
+static const HSS_GPT_GUID_t nullGUID = {
+    .data1 = 0u,
+    .data2 = 0u,
+    .data3 = 0u,
+    .data4 = 0u
+};
+
+//
+// local module function prototypes
+static bool CheckIfGUIDMatch_(HSS_GPT_GUID_t const * const pGUID1,
+    HSS_GPT_GUID_t const * const pGUID2);
+static bool CheckIfTypeIdMatch_(HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry,
+    HSS_GPT_GUID_t const * const pGUID);
+static bool CheckIfUniqueIdMatch_(HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry,
+    HSS_GPT_GUID_t const * const pGUID);
+static bool FindPartitionById_(HSS_GPT_Header_t const * const pGptHeader,
+    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
+    size_t * const pFirstLBA, size_t * const pLastLBA,
+    CheckIfGUIDMatchFnPtr_t checkIfMatchFunc);
+
+//
+//
 
 void GPT_RegisterReadBlockFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, size_t byteCount))
 {
@@ -36,8 +66,11 @@ void GPT_RegisterReadBlockFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, 
 // Debug Routines
 //
 
-//#define GPT_DEBUG
+#define GPT_DEBUG
 
+//
+//
+//
 void GPT_DumpHeaderInfo(HSS_GPT_Header_t *pGptHeader)
 {
 #ifdef GPT_DEBUG
@@ -56,7 +89,7 @@ void GPT_DumpHeaderInfo(HSS_GPT_Header_t *pGptHeader)
     mHSS_DEBUG_PRINTF(LOG_STATUS, "Last Usable LBA:       0x%016lx" CRLF, pGptHeader->lastUsableLBA);
     mHSS_DEBUG_PRINTF(LOG_STATUS, "Disk GUID:             %08x-%04x-%04x-%016lx" CRLF,
         pGptHeader->diskGUID.data1, pGptHeader->diskGUID.data2,
-        pGptHeader->diskGUID.data3, pGptHeader->diskGUID.data4);
+        pGptHeader->diskGUID.data3, __builtin_bswap64(pGptHeader->diskGUID.data4));
     mHSS_DEBUG_PRINTF(LOG_STATUS, "Starting LBA:          0x%016lx" CRLF,
         pGptHeader->partitionEntriesStartingLBA);
     mHSS_DEBUG_PRINTF(LOG_STATUS, "Num. Partitions:       0x%08x" CRLF, pGptHeader->numPartitions);
@@ -69,6 +102,9 @@ void GPT_DumpHeaderInfo(HSS_GPT_Header_t *pGptHeader)
 #endif
 }
 
+//
+//
+//
 void GPT_DumpPartitionInfo(HSS_GPT_Header_t const * const pGptHeader,
     HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry)
 {
@@ -91,6 +127,9 @@ void GPT_DumpPartitionInfo(HSS_GPT_Header_t const * const pGptHeader,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//
+//
+//
 bool GPT_ValidateHeader(HSS_GPT_Header_t *pGptHeader)
 {
     bool result = true;
@@ -98,49 +137,52 @@ bool GPT_ValidateHeader(HSS_GPT_Header_t *pGptHeader)
     assert(pGptHeader != NULL);
 
     result = (!strncmp(pGptHeader->s.c, (char *)GPT_EXPECTED_SIGNATURE, 8));
-    
-    if (result) {
-        result = (pGptHeader->revision == GPT_EXPECTED_REVISION);
+    if (!result) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT signature not as expected" CRLF);
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x" CRLF, 
-            pGptHeader->revision, GPT_EXPECTED_REVISION);
-    }
-
-    if (result) {
-        uint32_t origChecksum = pGptHeader->headerCrc32;
-        pGptHeader->headerCrc32 = 0u;
-        uint32_t checksum = CRC32_calculate((const uint8_t *)pGptHeader, pGptHeader->headerSize);
-        pGptHeader->headerCrc32 = origChecksum;
-
-        result = (checksum == origChecksum);
+        result = (pGptHeader->revision == GPT_EXPECTED_REVISION);
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header CRC32 is %08x vs expected %08x" CRLF,
-                checksum, origChecksum);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x" CRLF,
+                pGptHeader->revision, GPT_EXPECTED_REVISION);
+        } else {
+            uint32_t origChecksum = pGptHeader->headerCrc32;
+            pGptHeader->headerCrc32 = 0u;
+            uint32_t checksum = CRC32_calculate((const uint8_t *)pGptHeader, pGptHeader->headerSize);
+            pGptHeader->headerCrc32 = origChecksum;
+
+            result = (checksum == origChecksum);
+
+            if (!result) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header CRC32 is %08x vs expected %08x" CRLF,
+                    checksum, origChecksum);
+            } else {
+                result = (pGptHeader->currentLBA == 1u);
+
+                if (!result) {
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT current LBA is %lu vs expected %u" CRLF,
+                        pGptHeader->currentLBA, 1u);
+                } else {
+                    result = (pGptHeader->partitionEntriesStartingLBA == 2u);
+
+                    if (!result) {
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT starting LBA of array of partition entries is %lu"
+                            " vs expected %u" CRLF, pGptHeader->currentLBA, 2u);
+                    }
+                }
+            }
         }
     }
 
     if (result) {
-        result = (pGptHeader->currentLBA == 1u);
-
-        if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT current LBA is %lu vs expected %u" CRLF,
-                pGptHeader->currentLBA, 1u);
-        }
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Validated GPT Header ..." CRLF);
     }
-
-    if (result) {
-        result = (pGptHeader->partitionEntriesStartingLBA == 2u);
-
-        if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT starting LBA of array of partition entries is %lu"
-                " vs expected %u" CRLF, pGptHeader->currentLBA, 2u);
-        }
-    }
-
     return result;
 }
 
+//
+//
+//
 bool GPT_ReadHeader(HSS_GPT_Header_t *pGptHeader)
 {
     assert(pGptHeader != NULL);
@@ -156,7 +198,12 @@ bool GPT_ReadHeader(HSS_GPT_Header_t *pGptHeader)
     return result;
 }
 
-static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(HSS_GPT_Header_t const * const pGptHeader, uint8_t *pLBABuffer, size_t lbaIndex, size_t partitionIndex)
+//
+//
+//
+static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(
+    HSS_GPT_Header_t const * const pGptHeader, uint8_t *pLBABuffer, size_t lbaIndex,
+    size_t partitionIndex)
 {
     assert(readBlockFnPtr != NULL);
     assert(pGptHeader != NULL);
@@ -176,7 +223,8 @@ static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(HSS_GPT_He
                 ((lbaIndex - pGptHeader->partitionEntriesStartingLBA) * GPT_LBA_SIZE);
 
         if (offset >= GPT_LBA_SIZE) {
-            retVal = readBlockFnPtr(pLBABuffer + GPT_LBA_SIZE, (lbaIndex + 1u) * GPT_LBA_SIZE, GPT_LBA_SIZE);
+            retVal = readBlockFnPtr(pLBABuffer + GPT_LBA_SIZE,
+                (lbaIndex + 1u) * GPT_LBA_SIZE, GPT_LBA_SIZE);
             if (!retVal) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR,
                     "Unable to read block for LBA %lu (partition entry %lu)" CRLF,
@@ -192,35 +240,79 @@ static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(HSS_GPT_He
     return pResult;;
 }
 
-bool GPT_FindPartitionByUniqueId(HSS_GPT_Header_t const * const pGptHeader, 
-    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
-    size_t * const pFirstLBA, size_t * const pLastLBA)
+//
+//
+//
+static bool CheckIfGUIDMatch_(HSS_GPT_GUID_t const * const pGUID1,
+    HSS_GPT_GUID_t const * const pGUID2)
 {
     bool result = false;
 
+    result = ((pGUID1->data1 == pGUID2->data1)
+        && (pGUID1->data2 == pGUID2->data2)
+        && (pGUID1->data3 == pGUID2->data3)
+        && (pGUID1->data4 == pGUID2->data4));
+
+    return result;
+}
+
+//
+//
+//
+static bool CheckIfTypeIdMatch_(HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry,
+    HSS_GPT_GUID_t const * const pGUID)
+{
+    bool result = false;
+
+    result = CheckIfGUIDMatch_(&(pGptPartitionEntry->partitionTypeGUID), pGUID);
+    return result;
+}
+
+//
+//
+//
+static bool CheckIfUniqueIdMatch_(HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry,
+    HSS_GPT_GUID_t const * const pGUID)
+{
+    bool result = false;
+
+    result = CheckIfGUIDMatch_(&(pGptPartitionEntry->uniquePartitionGUID), pGUID);
+    return result;
+}
+
+//
+//
+//
+static bool FindPartitionById_(HSS_GPT_Header_t const * const pGptHeader,
+    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
+    size_t * const pFirstLBA, size_t * const pLastLBA,
+    CheckIfGUIDMatchFnPtr_t checkIfMatchFunc)
+{
     assert(pGptHeader != NULL);
     assert(pGUID != NULL);
     assert(pLBABuffer != NULL);
     assert(pFirstLBA != NULL);
     assert(pLastLBA != NULL);
 
+    bool result = false;
+
     // Read Partition Entries
     for (size_t partitionIndex = 0u; partitionIndex < pGptHeader->numPartitions;
         partitionIndex++) {
-        const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA + 
+        const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA +
             ((partitionIndex * pGptHeader->sizeOfPartitionEntry) / GPT_LBA_SIZE);
 
-       HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry = 
+       HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry =
            ReadPartitionEntryIntoBuffer_(pGptHeader, pLBABuffer, lbaIndex, partitionIndex);
 
-       result = ((pGptPartitionEntry->uniquePartitionGUID.data1 == pGUID->data1) 
-           && (pGptPartitionEntry->uniquePartitionGUID.data2 == pGUID->data2) 
-           && (pGptPartitionEntry->uniquePartitionGUID.data3 == pGUID->data3) 
-           && (pGptPartitionEntry->uniquePartitionGUID.data4 == pGUID->data4));
+       result = checkIfMatchFunc(pGptPartitionEntry, pGUID);
 
        if (result) {
-           //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found parition for GUID %08x-%04x-%04x-%016lx" CRLF,
-           //    pGUID->data1, pGUID->data2, pGUID->data3, pGUID->data4);
+#ifdef GPT_DEBUG
+           mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found parition for GUID %08x-%04x-%04x-%016lx" CRLF,
+               pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
+#endif
+
            *pFirstLBA = pGptPartitionEntry->firstLBA;
            *pLastLBA = pGptPartitionEntry->lastLBA;
            break;
@@ -229,12 +321,36 @@ bool GPT_FindPartitionByUniqueId(HSS_GPT_Header_t const * const pGptHeader,
 
     if (!result) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to find parition for GUID %08x-%04x-%04x-%016lx" CRLF,
-            pGUID->data1, pGUID->data2, pGUID->data3, pGUID->data4);
+            pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
     }
 
     return result;
 }
 
+//
+//
+//
+bool GPT_FindPartitionByTypeId(HSS_GPT_Header_t const * const pGptHeader,
+    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
+    size_t * const pFirstLBA, size_t * const pLastLBA)
+{
+    return FindPartitionById_(pGptHeader, pGUID, pLBABuffer, pFirstLBA, pLastLBA, CheckIfTypeIdMatch_);
+}
+
+//
+//
+//
+bool GPT_FindPartitionByUniqueId(HSS_GPT_Header_t const * const pGptHeader,
+    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
+    size_t * const pFirstLBA, size_t * const pLastLBA)
+{
+    return FindPartitionById_(pGptHeader, pGUID, pLBABuffer, pFirstLBA, pLastLBA,
+        CheckIfUniqueIdMatch_);
+}
+
+//
+//
+//
 bool GPT_ValidatePartitionEntries(HSS_GPT_Header_t *pGptHeader, uint8_t *pLBABuffer)
 {
     bool result = true;
@@ -247,24 +363,44 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_Header_t *pGptHeader, uint8_t *pLBABuf
     // Read Partition Entries
     for (size_t partitionIndex = 0; partitionIndex < pGptHeader->numPartitions;
         partitionIndex++) {
-        const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA + 
+        const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA +
             ((partitionIndex * pGptHeader->sizeOfPartitionEntry) / GPT_LBA_SIZE);
 
-        HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry = 
+        HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry =
             ReadPartitionEntryIntoBuffer_(pGptHeader, pLBABuffer, lbaIndex, partitionIndex);
         if (!pGptPartitionEntry) {
             result = false;
             break;
         }
 
+        if ((CheckIfGUIDMatch_(&nullGUID, &(pGptPartitionEntry->uniquePartitionGUID)))
+            || (CheckIfGUIDMatch_(&nullGUID, &(pGptPartitionEntry->uniquePartitionGUID)))) {
+            continue;
+        }
+
+#ifdef GPT_DEBUG
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found partition:" CRLF);
+        HSS_GPT_GUID_t const * pGUID = &(pGptPartitionEntry->uniquePartitionGUID);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique Partition GUID: %08x-%04x-%04x-%016lx" CRLF,
+            pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
+
+        pGUID = &(pGptPartitionEntry->partitionTypeGUID);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Partition Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+            pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
+#endif
         rollingCrc = CRC32_calculate_ex(rollingCrc, (uint8_t const *)pGptPartitionEntry,
             pGptHeader->sizeOfPartitionEntry);
     }
 
     if (result) {
         result = (rollingCrc == pGptHeader->partitionEntriesArrayCrc32);
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "CRC32 of partition entries is %08x, vs expected %08x" CRLF,
-            rollingCrc, pGptHeader->partitionEntriesArrayCrc32);
+
+        if (!result) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "CRC32 of partition entries is %08x, vs expected %08x" CRLF,
+                rollingCrc, pGptHeader->partitionEntriesArrayCrc32);
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Validated GPT Partition Entries ..." CRLF);
+        }
     }
 
     return result;

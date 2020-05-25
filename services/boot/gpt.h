@@ -89,7 +89,11 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_Header_t *pGptHeader, uint8_t *pLBABuf
 void GPT_DumpPartitionInfo(HSS_GPT_Header_t const * const pGptHeader,
     HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry);
 
-bool GPT_FindPartitionByUniqueId(HSS_GPT_Header_t const * const pGptHeader,  
+bool GPT_FindPartitionByTypeId(HSS_GPT_Header_t const * const pGptHeader,
+    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
+    size_t * const pFirstLBA, size_t * const pLastLBA);
+
+bool GPT_FindPartitionByUniqueId(HSS_GPT_Header_t const * const pGptHeader,
     HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
     size_t * const pFirstLBA, size_t * const pLastLBA);
 

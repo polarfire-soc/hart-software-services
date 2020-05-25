@@ -230,6 +230,7 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
  */
 
 #include "hss_init.h"
+#include "hss_boot_init.h"
 #include "hss_tinycli.h"
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"

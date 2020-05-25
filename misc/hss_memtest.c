@@ -131,6 +131,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
         baseAddr[offset] = pattern;
         HSS_ShowProgress(numWords, numWords - offset);
     }
+    HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
     // check each location for pass, and ...
     mHSS_FANCY_PRINTF(LOG_NORMAL, "First Pass: Check each location" CRLF);
@@ -153,6 +154,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 
         HSS_ShowProgress(numWords, numWords - offset);
     }
+    HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
     // check each location for the inverted pattern
     mHSS_FANCY_PRINTF(LOG_NORMAL, "Second Pass: Check each location" CRLF);
@@ -169,6 +171,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
             HSS_ShowProgress(numWords, numWords - offset);
         }
     }
+    HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
     return result;
 }

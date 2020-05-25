@@ -19,6 +19,7 @@
 #include <string.h> // strcasecmp(), strtok(), strtok_r()
 #include <strings.h>
 
+#include "hss_boot_init.h"
 #include "hss_debug.h"
 #include "hss_init.h"
 #include "hss_tinycli.h"
@@ -41,20 +42,29 @@ enum CmdIndex {
     CMD_HELP,
     CMD_VERSION,
 #ifdef CONFIG_MEMTEST
-    CMD_MEMTEST
+    CMD_MEMTEST,
+#endif
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_PAYLOAD))
+    CMD_QSPI,
+#endif
+#if defined(CONFIG_SERVICE_EMMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    CMD_EMMC,
+#endif
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI))
+    CMD_PAYLOAD,
 #endif
 };
 
 static void   HSS_TinyCLI_CmdHandler(int cmdIndex);
 static bool   HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index);
 static void   HSS_TinyCLI_PrintVersion(void);
-#ifdef CONFIG_MEMTEST
-static void   HSS_TinyCLI_MemTest(void);
-#endif
 static void   HSS_TinyCLI_PrintHelp(void);
 static bool   HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen);
 static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer);
 static void   HSS_TinyCLI_Execute(void);
+#ifdef CONFIG_MEMTEST
+static void   HSS_TinyCLI_MemTest(void);
+#endif
 
 
 static struct {
@@ -63,14 +73,24 @@ static struct {
     const char * const name;
     const char * const helpString;
 } commands[] = {
-    { CMD_YMODEM, HSS_TinyCLI_CmdHandler, "YMODEM",  "Run YMODEM utility to update image in QSPI." },
-    { CMD_QUIT,   HSS_TinyCLI_CmdHandler, "QUIT",    "Quit TinyCLI and return to regular boot process." },
-    { CMD_BOOT,   HSS_TinyCLI_CmdHandler, "BOOT",    "Quit TinyCLI and return to regular boot process." },
-    { CMD_RESET,  HSS_TinyCLI_CmdHandler, "RESET",   "Reset the E51." },
-    { CMD_HELP,   HSS_TinyCLI_CmdHandler, "HELP",    "Display command summary / command help information." },
-    { CMD_VERSION,HSS_TinyCLI_CmdHandler, "VERSION", "Display system version information." },
+    { CMD_YMODEM,  HSS_TinyCLI_CmdHandler, "YMODEM",  "Run YMODEM utility to download an image to DDR." },
+    { CMD_QUIT,    HSS_TinyCLI_CmdHandler, "QUIT",    "Quit TinyCLI and return to regular boot process." },
+    { CMD_BOOT,    HSS_TinyCLI_CmdHandler, "BOOT",    "Quit TinyCLI and return to regular boot process." },
+    { CMD_RESET,   HSS_TinyCLI_CmdHandler, "RESET",   "Reset the E51." },
+    { CMD_HELP,    HSS_TinyCLI_CmdHandler, "HELP",    "Display command summary / command help information." },
+    { CMD_VERSION, HSS_TinyCLI_CmdHandler, "VERSION", "Display system version information." },
 #ifdef CONFIG_MEMTEST
-    { CMD_MEMTEST,HSS_TinyCLI_CmdHandler, "MEMTEST", "Full DDR memory test." },
+    { CMD_MEMTEST, HSS_TinyCLI_CmdHandler, "MEMTEST", "Full DDR memory test." },
+#endif
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_PAYLOAD))
+    { CMD_QSPI,    HSS_TinyCLI_CmdHandler, "QSPI",    "Select boot via QSPI." },
+#endif
+#if defined(CONFIG_SERVICE_EMMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    { CMD_EMMC,    HSS_TinyCLI_CmdHandler, "EMMC",    "Select boot via EMMC." },
+    { CMD_EMMC,    HSS_TinyCLI_CmdHandler, "MMC",     "Select boot via EMMC." },
+#endif
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI))
+    { CMD_PAYLOAD, HSS_TinyCLI_CmdHandler, "PAYLOAD", "Select boot via payload." },
 #endif
 };
 
@@ -172,6 +192,24 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
 #ifdef CONFIG_MEMTEST
     case CMD_MEMTEST:
         HSS_TinyCLI_MemTest();
+        break;
+#endif
+
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_PAYLOAD))
+    case CMD_QSPI:
+        HSS_BootSelectQSPI();
+        break;
+#endif
+
+#if defined(CONFIG_SERVICE_EMMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    case CMD_EMMC:
+        HSS_BootSelectEMMC();
+        break;
+#endif
+
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI))
+    case CMD_PAYLOAD:
+        HSS_BootSelectPayload();
         break;
 #endif
 

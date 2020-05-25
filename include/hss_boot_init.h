@@ -1,5 +1,5 @@
-#ifndef HSS_INIT_H
-#define HSS_INIT_H
+#ifndef HSS_BOOT_INIT_H
+#define HSS_BOOT_INIT_H
 
 /*******************************************************************************
  * Copyright 2019-2020 Microchip Corporation.
@@ -25,7 +25,7 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Toplevel Init Routines
+ * Hart Software Services - Boot Init Routines
  *
  */
 
@@ -33,32 +33,18 @@
 extern "C" {
 #endif
 
-void HSS_Init(void);
+#if defined(CONFIG_SERVICE_BOOT)
+bool HSS_BootInit(void);
 
-bool HSS_ZeroTIMs(void);
-bool HSS_ZeroDDR(void);
-bool HSS_Init_RWDATA_BSS(void);
-bool HSS_WakeSleepingHarts(void);
-bool HSS_E51_Banner(void);
-
-bool HSS_QueuesInit(void);
-
-#ifdef CONFIG_SERVICE_QSPI
-bool HSS_QSPIInit(void);
+#  if defined(CONFIG_SERVICE_QSPI)
+void HSS_BootSelectQSPI(void);
 #endif
-
-#ifdef CONFIG_SERVICE_EMMC
-bool HSS_EMMCInit(void);
+#  if defined(CONFIG_SERVICE_EMMC)
+void HSS_BootSelectEMMC(void);
 #endif
-
-#ifdef CONFIG_OPENSBI
-bool HSS_OpenSBIInit(void);
+#  if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+void HSS_BootSelectPayload(void);
 #endif
-
-bool HSS_DDRInit(void);
-bool HSS_UARTInit(void);
-#ifdef CONFIG_USE_LOGO
-bool HSS_LogoInit(void);
 #endif
 
 

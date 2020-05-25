@@ -175,3 +175,48 @@ __attribute__((weak)) char *strtok_r(char *str, const char *delim, char **savept
     return result;
 }
 
+
+__attribute__((weak)) int strncmp(const char *s1, const char *s2, size_t n)
+{
+    int result = 0;
+
+    assert(s1);
+    assert(s2);
+
+    for (size_t i = 0u; i < n; i++) {
+        if ((*s1 == '\0') || (*s2 == '\0')) {
+            break;
+        } else if (*s1 < *s2) {
+            result = -1;
+            break;
+        } else if (*s1 > *s2) {
+            result = 1;
+            break;
+        } else /* if (*s1 == *s2) */ {
+            result = 0;
+        }
+
+        s1++;
+        s2++;
+    }
+
+    return result;
+}
+
+
+__attribute__((weak)) int64_t __bswapdi2(int64_t a)
+{
+    int64_t result;
+
+    result =
+          ((a & 0xFF) << 56)
+        | ((a & 0xFF00) << 40)
+        | ((a & 0xFF0000) << 24)
+        | ((a & 0xFF000000) << 8)
+        | ((a & 0xFF00000000) >> 8)
+        | ((a & 0xFF0000000000) >> 24)
+        | ((a & 0xFF000000000000) >> 40)
+        | ((a & 0xFF00000000000000) >> 56);
+
+    return result;
+}

@@ -15,10 +15,9 @@
 #include "config.h"
 #include "hss_types.h"
 
-#ifdef CONFIG_SERVICE_BOOT
-#  include "hss_boot_service.h"
-#endif
-#  include "hss_sys_setup.h"
+#include "hss_boot_service.h"
+#include "hss_boot_init.h"
+#include "hss_sys_setup.h"
 
 #ifdef CONFIG_SERVICE_OPENSBI
 #  include "opensbi_service.h"
@@ -26,12 +25,13 @@
 
 #ifdef CONFIG_SERVICE_QSPI
 //#  include "encoding.h"
-#  include "qspi_service.h"
 //#  include <mss_qspi.h>
+#  include "qspi_service.h"
 #endif
 
 #ifdef CONFIG_SERVICE_EMMC
 #  include "emmc_service.h"
+#  include "gpt.h"
 #endif
 
 #include "hss_state_machine.h"
@@ -49,12 +49,16 @@
 
 //
 // local module functions
-#ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD
-static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
-    size_t srcOffset,
-    bool (*pCopyFunction)(void *pDest, size_t srcOffset, size_t byteCount));
-#endif
+
+
 static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage);
+
+#ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD
+typedef bool (*HSS_BootImageCopyFnPtr_t)(void *pDest, size_t srcOffset, size_t byteCount);
+static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
+    size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction);
+#endif
+
 #if defined(CONFIG_SERVICE_QSPI)
 static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage);
 #endif
@@ -64,11 +68,25 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage);
 #if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage);
 #endif
+
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
 static bool validateCrc_(struct HSS_BootImage *pImage);
 
 //
 //
+
+typedef bool (*HSS_GetBootImageFnPtr_t)(struct HSS_BootImage **ppBootImage);
+
+static HSS_GetBootImageFnPtr_t getBootImageFunction =
+#if defined(CONFIG_SERVICE_EMMC)
+    getBootImageFromEMMC_;
+#elif defined(CONFIG_SERVICE_QSPI)
+    getBootImageFromQSPI_;
+#elif defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+    getBootImageFromPayload_;
+#  else
+#    error Unable to determine boot mechanism
+#endif
 
 bool HSS_BootInit(void)
 {
@@ -79,6 +97,8 @@ bool HSS_BootInit(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image.." CRLF);
 
 #ifdef CONFIG_SERVICE_BOOT
+    result = getBootImageFunction(&pBootImage);
+#if 0
 #  if defined(CONFIG_SERVICE_QSPI)
     result = getBootImageFromQSPI_(&pBootImage);
 #  elif defined(CONFIG_SERVICE_EMMC)
@@ -87,6 +107,7 @@ bool HSS_BootInit(void)
     result = getBootImageFromPayload_(&pBootImage);
 #  else
 #    error Unable to determine boot mechanism
+#  endif
 #  endif
 
     //
@@ -98,9 +119,9 @@ bool HSS_BootInit(void)
     if (result && pBootImage->magic = mHSS_COMPRESSED_MAGIC) {
         decompressedFlag = true;
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Failed to get boot image, cannot decompress" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to get boot image, cannot decompress" CRLF);
         } else if (!pBootImage) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image NULL, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring" CRLF);
             result = false;
         } else {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to decompress to DDR..." CRLF);
@@ -124,10 +145,10 @@ bool HSS_BootInit(void)
     //
     {
         if (!pBootImage) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image NULL, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring" CRLF);
             result = false;
         } else if (pBootImage->magic != mHSS_BOOT_MAGIC) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image magic invalid, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
             result = false;
         } else if (validateCrc_(pBootImage)) {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s boot image passed CRC" CRLF,
@@ -149,7 +170,7 @@ bool HSS_BootInit(void)
                 result = false;
 	    }
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s boot image failed CRC" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s boot image failed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");
         }
     }
@@ -189,8 +210,7 @@ static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage
 
 #ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
-    size_t srcOffset,
-    bool (*pCopyFunction)(void *pDest, size_t srcOffset, size_t count))
+    size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction)
 {
     bool result = true;
 
@@ -258,20 +278,64 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
         sizeof(struct HSS_BootImage));
 
-    size_t srcOffset = 0u; // assuming zero as sector/block offset for now
-    HSS_EMMC_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
+    // For now, GPT needs a 3-sector buffer (~1.5KB) - one for GPT header,
+    // and two for partition entity
+    char lbaBuffer[3][GPT_LBA_SIZE] __attribute__((aligned(8)));
+    HSS_GPT_Header_t *pGptHeader = (HSS_GPT_Header_t *)lbaBuffer[0];
 
-    result = verifyMagic_(&bootImage);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, " after verify" CRLF);
+    GPT_RegisterReadBlockFunction(HSS_EMMC_ReadBlock);
+
+    result = GPT_ReadHeader(pGptHeader);
 
     if (result) {
-        result = copyBootImageToDDR_(&bootImage,
-            (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR),
-            srcOffset, HSS_EMMC_ReadBlock);
-        *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+        result = GPT_ValidateHeader(pGptHeader);
+
+        if (result) {
+            result = GPT_ValidatePartitionEntries(pGptHeader, (uint8_t *)lbaBuffer[1]);
+
+            if (!result) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_ValidatePartitionEntries() failed" CRLF);
+            }
+        }
+    }
+
+    if (result) {
+        const HSS_GPT_GUID_t diskGUID = {
+            .data1 = 0x845E3D31u,
+            .data2 = 0xC63Bu,
+            .data3 = 0x4CB5u,
+            .data4 = 0x4F78C3A627ED7587u
+        };
+
+        size_t firstLBA, lastLBA;
+        result = GPT_FindPartitionByUniqueId(pGptHeader, &diskGUID, (uint8_t *)lbaBuffer[1],
+            &firstLBA, &lastLBA);
+
+        if (!result) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_EMMC_ReadBlock() failed" CRLF);
+        } else {
+            HSS_EMMC_ReadBlock(&bootImage, firstLBA, sizeof(struct HSS_BootImage));
+
+            result = verifyMagic_(&bootImage);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " after verify" CRLF);
+
+            if (!result) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_EMMC_ReadBlock() failed" CRLF);
+            } else {
+                result = copyBootImageToDDR_(&bootImage,
+                    (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), firstLBA, HSS_EMMC_ReadBlock);
+               *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+            }
+        }
     }
 
     return result;
+}
+
+void HSS_BootSelectEMMC(void)
+{
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting EMMC as boot source ..." CRLF);
+    getBootImageFunction = getBootImageFromEMMC_;
 }
 #endif
 
@@ -308,6 +372,12 @@ static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
 
     return result;
 }
+
+void HSS_BootSelectQSPI(void) 
+{
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting QSPI as boot source ..." CRLF);
+    getBootImageFunction = getBootImageFromQSPI_;
+}
 #endif
 
 #ifdef CONFIG_SERVICE_BOOT_USE_PAYLOAD
@@ -324,5 +394,11 @@ static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage)
     printBootImageDetails_(*ppBootImage);
 
     return result;
+}
+
+void HSS_BootSelectPayload(void);
+{
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting Payload as boot source ..." CRLF);
+    getBootImageFunction = getBootImageFromPayload_;
 }
 #endif

@@ -44,13 +44,13 @@ bool HSS_QSPIInit(void)
         .sample = 0
     };
 
-    mHSS_FANCY_PRINTF("Initializing QSPI" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing QSPI" CRLF);
     MSS_QSPI_init();
 
-    mHSS_FANCY_PRINTF("Enabling QSPI" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Enabling QSPI" CRLF);
     MSS_QSPI_enable();
 
-    mHSS_FANCY_PRINTF("Configuring" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Configuring" CRLF);
     MSS_QSPI_configure(&qspiConfig);
 #else
     /* temporary code for Icicle board bringup */
@@ -64,11 +64,11 @@ bool HSS_QSPIInit(void)
 
     Flash_init(MSS_QSPI_NORMAL);
     Flash_readid(rd_buf);
-    mHSS_FANCY_PRINTF("JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
 
     if (((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2])) == 0xEFAA21) {
         // EFh => Winbond, AA21h => W25N01GV
-        mHSS_FANCY_PRINTF("Winbond W25N01GV detected" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Winbond W25N01GV detected" CRLF);
     }
 #endif
 
@@ -87,8 +87,6 @@ bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     memcpy_via_pdma(pDest, srcOffset + QSPI_BASE, byteCount);
 #else
     /* temporary code to bring up Icicle board */
-    void Flash_read(uint8_t* buf, uint32_t read_addr, uint32_t read_len);
-
     uint32_t read_addr = (uint32_t)srcOffset;
     Flash_read((uint8_t *)pDest, read_addr, (uint32_t) byteCount);
 #endif
@@ -102,8 +100,6 @@ bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 
     // Temporary code for ICICLE Bringup
     if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
-
-    uint8_t Flash_program(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len);
 
     Flash_program((uint8_t *)pSrc, (uint32_t)dstOffset, (uint32_t)byteCount);
     return result;

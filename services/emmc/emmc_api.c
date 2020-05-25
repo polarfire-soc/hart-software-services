@@ -99,7 +99,7 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)pCDest);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
                 result);
         }
 
@@ -166,8 +166,8 @@ bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount)) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_write(0x%p, %lu) "
-            "(%lu bytes remaining)" CRLF, pCSrc, dst_sector_num, byteCount);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_write(0x%p, %lu) "
+        //  "(%lu bytes remaining)" CRLF, pCSrc, dst_sector_num, byteCount);
 
         result = MSS_MMC_single_block_write((uint32_t *)pCSrc, dst_sector_num);
 
