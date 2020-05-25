@@ -85,7 +85,7 @@ Verbose builds (which show each individual command) are possible by adding V=1 t
 The `debug/` subdirectory contains code to enable a number of debug features, including:
 
  * Logging all state machine transitions to the serial console (MMUART0);
- * Periodic loggin of super loop timings to the serial console;
+ * Periodic logging of super loop timings to the serial console;
  * Logging of IPI statistics to the serial console;
  * Logging all IPI messages for MSC traces;
  * Function profiling.
