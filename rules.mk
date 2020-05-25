@@ -87,7 +87,7 @@ CFLAGS=-std=c11 $(CORE_CFLAGS) $(PLATFORM_CFLAGS) -Wmissing-prototypes
 CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y=-O2
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
-OPT-y+=-Os -fno-strict-aliasing
+OPT-y+=-O1 -fno-strict-aliasing
 
 ifndef CONFIG_LD_RELAX
 OPT-y+=-Wl,--no-relax
