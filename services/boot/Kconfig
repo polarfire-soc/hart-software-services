@@ -1,0 +1,53 @@
+config SERVICE_BOOT
+	def_bool y
+	select SERVICE_GOTO
+	help
+                This feature enables support for bootstrapping the U54 application harts. This
+                is enabled by default.
+
+menu "Boot Service"
+
+config SERVICE_BOOT_SETS_SUPPORT
+        def_bool y
+        depends on SERVICE_BOOT
+	help
+                This feature enables support for bootstrapping the U54 application harts in groups.
+                This helps prevent boot races by starting secondary processors before the primary
+                process in a group, to ensure they are ready and waiting for a wake-up signal from
+                the primary.
+
+                This setting is is enabled by default.
+
+config SERVICE_BOOT_DDR_TARGET_ADDR
+	hex "Target Base address for EMMC/QSPI/Decompressor"
+	default 0xB0000000
+	depends on SERVICE_BOOT 
+        help
+                This feature specifies a scratch address for EMMC/QSPI decompression
+
+config SERVICE_BOOT_USE_PAYLOAD
+        bool "Use Payload file"
+        default  y
+        depends on SERVICE_BOOT 
+        help
+                This feature enables booting a directly contained payload.
+
+config SERVICE_BOOT_DDR_TARGET_ADDR
+	hex "Target Base address for BOOT to DDR copy"
+	default 0xB0000000
+	depends on SERVICE_QSPI_COPY_TO_DDR
+	help
+		If CONFIG_SERVICE_QSPI_COPY_TO_DDR is enabled, specify the
+                target base address for the boot image from QSPI to be 
+                cached in main system memory.
+
+config SERVICE_BOOT_EMMC_USE_GPT
+        bool "Use GPT with EMMC"
+        default y
+	depends on SERVICE_EMMC
+	help
+		If CONFIG_SERVICE_EMMC is enabled, then for EMMC boots this option enables 
+                parsing of a GUID Partition Table (GPT) in search of the boot image starting
+                sector..
+
+endmenu

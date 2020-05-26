@@ -1,0 +1,8 @@
+config SERVICE_WDOG
+	bool "Virtual watchdog support"
+	default n
+	help
+                This feature enables support for E51-delegated virtual watchdog monitoring of the
+                U54 application harts.
+
+		If you do not know what to do here, say Y.

@@ -1,0 +1,7 @@
+config SERVICE_SPI
+	bool "SPI support"
+	default n
+	help
+                This feature enables support for virtual SPI.
+
+		If you do not know what to do here, say Y.

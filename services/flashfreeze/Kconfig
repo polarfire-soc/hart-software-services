@@ -1,0 +1,7 @@
+config SERVICE_FLASHFREEZE
+	bool "Flash*Freeze support*"
+	default n
+	help
+                This feature enables support for Flash*Freeze.
+
+		If you do not know what to do here, say Y.

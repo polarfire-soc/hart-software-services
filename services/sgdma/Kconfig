@@ -1,0 +1,7 @@
+config SERVICE_SGDMA
+	bool "SGDMA support"
+	default n
+	help
+                This feature enables support for E51-delegated Scatter-Gather DMA.
+
+		If you do not know what to do here, say Y.

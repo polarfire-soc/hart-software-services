@@ -1,0 +1,7 @@
+config SERVICE_OPENSBI
+	def_bool y
+	depends on OPENSBI
+	help
+                This feature enables support for OPENSBI.
+                
+		If you do not know what to do here, say Y.

@@ -331,7 +331,7 @@ static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
     assert(pBootImage != NULL);
 
     if (pBootImage->hart[target-1].numChunks) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image: \"%s\"" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image:" CRLF "  \"%s\"" CRLF,
             pMyMachine->pMachineName, pBootImage->hart[target-1].name);
         pInstanceData->pChunk =
             (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);

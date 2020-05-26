@@ -1,0 +1,7 @@
+config SERVICE_POWERMODE
+	bool "Low Power Mode support"
+	default n
+	help
+                This feature enables support for Low Power Mode operation.
+
+		If you do not know what to do here, say Y.

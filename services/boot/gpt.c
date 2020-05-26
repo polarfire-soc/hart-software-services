@@ -38,6 +38,7 @@ static const HSS_GPT_GUID_t nullGUID = {
     .data4 = 0u
 };
 
+
 //
 // local module function prototypes
 static bool CheckIfGUIDMatch_(HSS_GPT_GUID_t const * const pGUID1,
@@ -373,20 +374,20 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_Header_t *pGptHeader, uint8_t *pLBABuf
             break;
         }
 
+#ifdef GPT_DEBUG
         if ((CheckIfGUIDMatch_(&nullGUID, &(pGptPartitionEntry->uniquePartitionGUID)))
             || (CheckIfGUIDMatch_(&nullGUID, &(pGptPartitionEntry->uniquePartitionGUID)))) {
-            continue;
+            // skip debug output if null
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found partition:" CRLF);
+            HSS_GPT_GUID_t const * pGUID = &(pGptPartitionEntry->uniquePartitionGUID);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique Partition GUID: %08x-%04x-%04x-%016lx" CRLF,
+                pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
+
+            pGUID = &(pGptPartitionEntry->partitionTypeGUID);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Partition Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+                pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
         }
-
-#ifdef GPT_DEBUG
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found partition:" CRLF);
-        HSS_GPT_GUID_t const * pGUID = &(pGptPartitionEntry->uniquePartitionGUID);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique Partition GUID: %08x-%04x-%04x-%016lx" CRLF,
-            pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
-
-        pGUID = &(pGptPartitionEntry->partitionTypeGUID);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Partition Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
-            pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
 #endif
         rollingCrc = CRC32_calculate_ex(rollingCrc, (uint8_t const *)pGptPartitionEntry,
             pGptHeader->sizeOfPartitionEntry);
