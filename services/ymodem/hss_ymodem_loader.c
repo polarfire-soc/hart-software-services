@@ -33,6 +33,7 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_debug.h"
+#include "ddr_service.h"
 
 #include <string.h>
 #include <sys/types.h>
@@ -165,7 +166,7 @@ void e51_ymodem_loop(void)
     uint32_t receivedCount = 0u;
     extern uint64_t __ddr_start;
     uint8_t *pBuffer = (uint8_t *)&__ddr_start;
-    uint32_t g_rx_size = 1024 * 1024 * 10u;
+    uint32_t g_rx_size = HSS_DDR_GetSize();
 
     while (!done) {
         static const char menuText[] = CRLF

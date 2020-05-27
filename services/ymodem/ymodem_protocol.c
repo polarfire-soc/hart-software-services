@@ -128,7 +128,7 @@ struct XYModem_State {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*static*/ void XYMODEM_SendReadyChar(struct XYModem_State *pState)
+static void XYMODEM_SendReadyChar(struct XYModem_State *pState)
 {
     if (pState->protocol == HSS_XYMODEM_PROTOCOL_YMODEM) {
         putchar_(XYMODEM_C); // explicitly request CRC16 mode
@@ -308,7 +308,7 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
     return result;
 }
 
-size_t XYMODEM_GetFileSize(char *pStart, char *pEnd)
+static size_t XYMODEM_GetFileSize(char *pStart, char *pEnd)
 {
     char *pChar = pStart;
     bool hunting = true;
@@ -438,6 +438,14 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
         result = pState->totalReceivedSize;
     }
 
+    XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
+
+    if (retries >= HSS_XYMODEM_BAD_PACKET_RETRIES) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "maximum retries exceeded" CRLF);
+    }
+    if (pState->status.s.abort) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Transfer aborted" CRLF);
+    }
     return result;
 }
 
@@ -448,7 +456,6 @@ size_t ymodem_receive(uint8_t *buffer, size_t bufferSize)
     memset(state.filename, 0, HSS_XYMODEM_MAX_FILENAME_LENGTH);
 
     result = XYMODEM_Receive(HSS_XYMODEM_PROTOCOL_YMODEM, &state, (char *)buffer, bufferSize);
-    XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
 
     if (result != 0) {
         uint32_t crc32 = CRC32_calculate((const unsigned char *)buffer, result);

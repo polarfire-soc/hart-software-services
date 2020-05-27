@@ -46,7 +46,7 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
 }
 
 // Walking Ones test of the Address Bus wiring
-/*static*/ uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t numBytes)
+static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t numBytes)
 {
     const size_t numWords = numBytes / sizeof(uint64_t);
     const size_t addrMask = numWords - 1u;
@@ -54,10 +54,10 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
     size_t testOffset;
     uint64_t* result = NULL;
 
-    //const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
-    //const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
-    const uint64_t pattern = (uint64_t)0xAAAAAAAAu;
-    const uint64_t antiPattern = (uint64_t)0x55555555u;
+    const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
+    const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
+    //const uint64_t pattern = (uint64_t)0xAAAAAAAAu;
+    //const uint64_t antiPattern = (uint64_t)0x55555555u;
 
     //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to pattern" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
@@ -180,46 +180,25 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 //
 //
 //
-extern const uint64_t __ddr_start;
-extern const uint64_t __ddr_end;
-
 #define mGB_IN_BYTES (1024llu * 1024llu * 1024llu)
 #define mMB_IN_BYTES (1024llu * 1024llu)
 
-//
-// We only want to specify the DDR location and size in one place - the linker script
-//
-// ddr_end is too high for the RV64 toolchain, sadly.  We get an error message concerning
-// "relocation truncated to fit: R_RISCV_PCREL_HI20 against symbol `__ddr_end' defined in
-//  .text.init section" as it is above 4GiB away from eNVM.
-//
-// See https://github.com/riscv/riscv-gnu-toolchain/issues/103 for background.
-//
-// So we can't easily do ...
-//
-//     extern uint64_t __ddr_end;
-//     const ptrdiff_t ddr_size = (size_t)((char *)&__ddr_end - (char *)&__ddr_start);
-//
-// However, we can workaround by using the GNU assembler to store the DDR size into a 64-bit memory
-// location and use this size in our C code
-//
-asm(".align 3\n"
-    "__ddr_size: .quad (__ddr_end-__ddr_start)\n"
-    ".globl   __ddr_size\n");
-extern const size_t __ddr_size;
+#include "ddr_service.h"
 
 bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    if (__ddr_size > mGB_IN_BYTES) {
-        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR size is %lu GiB" CRLF, (uint32_t)(__ddr_size/mGB_IN_BYTES));
+    if (HSS_DDR_GetSize() > mGB_IN_BYTES) {
+        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR size is %lu GiB" CRLF,
+            (uint32_t)(HSS_DDR_GetSize()/mGB_IN_BYTES));
     } else {
-        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR size is %lu MiB" CRLF, (uint32_t)(__ddr_size/mMB_IN_BYTES));
+        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR size is %lu MiB" CRLF,
+            (uint32_t)(HSS_DDR_GetSize()/mMB_IN_BYTES));
     }
 
-    if ((HSS_MemTestDataBus((uint64_t *)&__ddr_start) != 0u)
-            || (HSS_MemTestAddressBus((uint64_t *)&__ddr_start, __ddr_size) != NULL)) {
+    if ((HSS_MemTestDataBus((uint64_t *)HSS_DDR_GetStart()) != 0u)
+            || (HSS_MemTestAddressBus((uint64_t *)HSS_DDR_GetStart(), HSS_DDR_GetSize()) != NULL)) {
         result = false;
     }
 
@@ -231,7 +210,7 @@ bool HSS_MemTestDDRFull(void)
     bool result = HSS_MemTestDDRFast();
 
     if (result) {
-        if (HSS_MemTestDevice((uint64_t *)&__ddr_start, __ddr_size) != NULL) {
+        if (HSS_MemTestDevice((uint64_t *)HSS_DDR_GetStart(), HSS_DDR_GetSize()) != NULL) {
             mHSS_FANCY_PRINTF(LOG_ERROR, "FAILED!" CRLF);
             result = false;
         }

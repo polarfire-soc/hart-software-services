@@ -42,6 +42,10 @@ extern "C" {
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 
+size_t HSS_DDR_GetSize(void);
+void *HSS_DDR_GetStart(void);
+void HSS_DDR_Train(void);
+
 #ifdef __cplusplus
 }
 #endif
