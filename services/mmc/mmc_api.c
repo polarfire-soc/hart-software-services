@@ -8,8 +8,8 @@
  */
 
 /*!
- * \file EMMC (null) Service
- * \brief Setup EMMC
+ * \file MMC (null) Service
+ * \brief Setup MMC
  */
 
 #include "config.h"
@@ -21,21 +21,25 @@
 #include <assert.h>
 #include <string.h>
 
-#include "emmc_service.h"
+#include "mmc_service.h"
 #include "encoding.h"
 #include "mss_mmc.h"
 
 /*
- * EMMC doesn't need a "service" to run every super-loop, but it does need to be
+ * MMC doesn't need a "service" to run every super-loop, but it does need to be
  * initialized early...
  */
 
-#ifndef MMC_CARD
-#  define MMC_CARD
+
+#if defined(CONFIG_SERVICE_MMC_MODE_EMMC) && defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+#  error Both MMC Modes defined! These are mutually exclusive.
 #endif
 
-#define MMC_CARD
-bool HSS_EMMCInit(void)
+#if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8) && defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
+#  error Both MMC Bus Voltages defined! These are mutually exclusive.
+#endif
+
+bool HSS_MMCInit(void)
 {
     //static bool initialized = false;
     mss_mmc_status_t result = MSS_MMC_INIT_SUCCESS;
@@ -44,18 +48,23 @@ bool HSS_EMMCInit(void)
     {
         static mss_mmc_cfg_t g_mmc =
         {
-#if defined(MMC_CARD)
             .clk_rate = MSS_MMC_CLOCK_50MHZ,
+#if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
             .card_type = MSS_MMC_CARD_TYPE_MMC,
             .bus_speed_mode = MSS_MMC_MODE_SDR,
-            .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
-            .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
-#elif defined(SD_CARD)
-            .clk_rate = MSS_MMC_CLOCK_50MHZ,
+#elif defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
             .card_type = MSS_MMC_CARD_TYPE_SD,
             .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
+#else
+#  error Unknown MMC mode (eMMC or SDcard)
+#endif
             .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
+#if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
             .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
+#elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
+            .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE
+#else
+#  error Unknown MMC Bus Voltage
 #endif
         };
 
@@ -70,14 +79,14 @@ bool HSS_EMMCInit(void)
     return (result == MSS_MMC_INIT_SUCCESS);
 }
 
-#define HSS_EMMC_SECTOR_SIZE (512u)
+#define HSS_MMC_SECTOR_SIZE (512u)
 
 //
-// HSS_EMMC_ReadBlock will handle reads less than a multiple of the sector
+// HSS_MMC_ReadBlock will handle reads less than a multiple of the sector
 // size by doing the last transfer into a sector buffer
 //
-static char runtBuffer[HSS_EMMC_SECTOR_SIZE] __attribute__((aligned(sizeof(uint32_t))));
-bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
+static char runtBuffer[HSS_MMC_SECTOR_SIZE] __attribute__((aligned(sizeof(uint32_t))));
+bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
     // temporary code to bring up Icicle board
     char *pCDest = (char *)pDest;
@@ -87,13 +96,13 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     // The MSS MMC driver uses uint32_t* as its pointer type
     // To ensure alignment, would rather tramp through void* and
     // assert check here
-    assert(((size_t)srcOffset & (HSS_EMMC_SECTOR_SIZE-1)) == 0u);
+    assert(((size_t)srcOffset & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
     assert(((size_t)pCDest & (sizeof(uint32_t)-1)) == 0u);
 
-    uint32_t src_sector_num = (uint32_t)srcOffset / HSS_EMMC_SECTOR_SIZE;
+    uint32_t src_sector_num = (uint32_t)srcOffset / HSS_MMC_SECTOR_SIZE;
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
-    while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount >= HSS_EMMC_SECTOR_SIZE)) {
+    while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount >= HSS_MMC_SECTOR_SIZE)) {
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, 0x%p) "
         //    "(%lu bytes remaining)" CRLF, src_sector_num, pCDest, byteCount);
 
@@ -106,19 +115,19 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
             src_sector_num++;
-            pCDest = pCDest + HSS_EMMC_SECTOR_SIZE;
+            pCDest = pCDest + HSS_MMC_SECTOR_SIZE;
 
-            if (byteCount < HSS_EMMC_SECTOR_SIZE) {
+            if (byteCount < HSS_MMC_SECTOR_SIZE) {
                 ;
             } else {
-                byteCount = byteCount - HSS_EMMC_SECTOR_SIZE;
+                byteCount = byteCount - HSS_MMC_SECTOR_SIZE;
             }
         }
     }
 
     // handle remainder
     if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) {
-        assert(byteCount < HSS_EMMC_SECTOR_SIZE);
+        assert(byteCount < HSS_MMC_SECTOR_SIZE);
 
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)" CRLF);
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, 0x%p) "
@@ -140,18 +149,18 @@ bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 }
 
 //
-// HSS_EMMC_WriteBlock will handle requested writes of less than a multiple of the sector
+// HSS_MMC_WriteBlock will handle requested writes of less than a multiple of the sector
 // size by rounding up to the next full sector worth
 //
-bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
+bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 {
     // temporary code to bring up Icicle board
     char *pCSrc = (char *)pSrc;
 
     // TODO: for now, if byte count is not a multiple of the sector size, round it up...
-    if (byteCount & (HSS_EMMC_SECTOR_SIZE-1)) {
-        byteCount = byteCount + HSS_EMMC_SECTOR_SIZE;
-        byteCount &= ~(HSS_EMMC_SECTOR_SIZE-1);
+    if (byteCount & (HSS_MMC_SECTOR_SIZE-1)) {
+        byteCount = byteCount + HSS_MMC_SECTOR_SIZE;
+        byteCount &= ~(HSS_MMC_SECTOR_SIZE-1);
     }
 
     // source and byteCount must be multiples of the sector size
@@ -159,11 +168,11 @@ bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     // The MSS MMC driver uses uint32_t* as its pointer type
     // To ensure alignment, would rather tramp through void* and
     // assert check here
-    assert(((size_t)dstOffset & (HSS_EMMC_SECTOR_SIZE-1)) == 0u);
+    assert(((size_t)dstOffset & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
     assert(((size_t)pCSrc & (sizeof(uint32_t)-1)) == 0u);
-    assert((byteCount & (HSS_EMMC_SECTOR_SIZE-1)) == 0u);
+    assert((byteCount & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
 
-    uint32_t dst_sector_num = (uint32_t)dstOffset / HSS_EMMC_SECTOR_SIZE;
+    uint32_t dst_sector_num = (uint32_t)dstOffset / HSS_MMC_SECTOR_SIZE;
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     size_t origByteCount = byteCount;
@@ -180,8 +189,8 @@ bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
         }
 
         dst_sector_num++;
-        byteCount = byteCount - HSS_EMMC_SECTOR_SIZE;
-        pCSrc = pCSrc + HSS_EMMC_SECTOR_SIZE;
+        byteCount = byteCount - HSS_MMC_SECTOR_SIZE;
+        pCSrc = pCSrc + HSS_MMC_SECTOR_SIZE;
     }
 
     HSS_ShowProgress(origByteCount, 0u);

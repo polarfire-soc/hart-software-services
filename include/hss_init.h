@@ -47,8 +47,8 @@ bool HSS_QueuesInit(void);
 bool HSS_QSPIInit(void);
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
-bool HSS_EMMCInit(void);
+#ifdef CONFIG_SERVICE_MMC
+#  include "mmc_service.h"
 #endif
 
 #ifdef CONFIG_OPENSBI

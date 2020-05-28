@@ -44,26 +44,26 @@ enum CmdIndex {
 #ifdef CONFIG_MEMTEST
     CMD_MEMTEST,
 #endif
-#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
     CMD_QSPI,
 #endif
-#if defined(CONFIG_SERVICE_EMMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
-    CMD_EMMC,
+#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    CMD_MMC,
 #endif
-#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI))
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
     CMD_PAYLOAD,
 #endif
 };
 
-static void   HSS_TinyCLI_CmdHandler(int cmdIndex);
-static bool   HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index);
-static void   HSS_TinyCLI_PrintVersion(void);
-static void   HSS_TinyCLI_PrintHelp(void);
-static bool   HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen);
-static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer);
-static void   HSS_TinyCLI_Execute(void);
+static void   tinyCLI_CmdHandler_(int cmdIndex);
+static bool   tinyCLI_GetCmdIndex_(char *pCmdToken, size_t *index);
+static void   tinyCLI_PrintVersion_(void);
+static void   tinyCLI_PrintHelp_(void);
+static bool   tinyCLI_Getline_(char **pBuffer, size_t *pBufLen);
+static size_t tinyCLI_ParseIntoTokens_(char *buffer);
+static void   tinyCLI_Execute_(void);
 #ifdef CONFIG_MEMTEST
-static void   HSS_TinyCLI_MemTest(void);
+static void   tinyCLI_MemTest_(void);
 #endif
 
 
@@ -73,31 +73,31 @@ static struct {
     const char * const name;
     const char * const helpString;
 } commands[] = {
-    { CMD_YMODEM,  HSS_TinyCLI_CmdHandler, "YMODEM",  "Run YMODEM utility to download an image to DDR." },
-    { CMD_QUIT,    HSS_TinyCLI_CmdHandler, "QUIT",    "Quit TinyCLI and return to regular boot process." },
-    { CMD_BOOT,    HSS_TinyCLI_CmdHandler, "BOOT",    "Quit TinyCLI and return to regular boot process." },
-    { CMD_RESET,   HSS_TinyCLI_CmdHandler, "RESET",   "Reset the E51." },
-    { CMD_HELP,    HSS_TinyCLI_CmdHandler, "HELP",    "Display command summary / command help information." },
-    { CMD_VERSION, HSS_TinyCLI_CmdHandler, "VERSION", "Display system version information." },
+    { CMD_YMODEM,  tinyCLI_CmdHandler_, "YMODEM",  "Run YMODEM utility to download an image to DDR." },
+    { CMD_QUIT,    tinyCLI_CmdHandler_, "QUIT",    "Quit TinyCLI and return to regular boot process." },
+    { CMD_BOOT,    tinyCLI_CmdHandler_, "BOOT",    "Quit TinyCLI and return to regular boot process." },
+    { CMD_RESET,   tinyCLI_CmdHandler_, "RESET",   "Reset the E51." },
+    { CMD_HELP,    tinyCLI_CmdHandler_, "HELP",    "Display command summary / command help information." },
+    { CMD_VERSION, tinyCLI_CmdHandler_, "VERSION", "Display system version information." },
 #ifdef CONFIG_MEMTEST
-    { CMD_MEMTEST, HSS_TinyCLI_CmdHandler, "MEMTEST", "Full DDR memory test." },
+    { CMD_MEMTEST, tinyCLI_CmdHandler_, "MEMTEST", "Full DDR memory test." },
 #endif
-#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_PAYLOAD))
-    { CMD_QSPI,    HSS_TinyCLI_CmdHandler, "QSPI",    "Select boot via QSPI." },
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
+    { CMD_QSPI,    tinyCLI_CmdHandler_, "QSPI",    "Select boot via QSPI." },
 #endif
-#if defined(CONFIG_SERVICE_EMMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
-    { CMD_EMMC,    HSS_TinyCLI_CmdHandler, "EMMC",    "Select boot via EMMC." },
-    { CMD_EMMC,    HSS_TinyCLI_CmdHandler, "MMC",     "Select boot via EMMC." },
+#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    { CMD_EMMC,    tinyCLI_CmdHandler_, "EMMC",    "Select boot via MMC." },
+    { CMD_MMC,     tinyCLI_CmdHandler_, "MMC",     "Select boot via MMC." },
 #endif
-#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI))
-    { CMD_PAYLOAD, HSS_TinyCLI_CmdHandler, "PAYLOAD", "Select boot via payload." },
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
+    { CMD_PAYLOAD, tinyCLI_CmdHandler_, "PAYLOAD", "Select boot via payload." },
 #endif
 };
 
 
 /***********************************************************************/
 
-static bool HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index)
+static bool tinyCLI_GetCmdIndex_(char *pCmdToken, size_t *index)
 {
     bool result = false;
     size_t i;
@@ -113,13 +113,13 @@ static bool HSS_TinyCLI_GetCmdIndex(char *pCmdToken, size_t *index)
     return result;
 }
 
-static void HSS_TinyCLI_PrintVersion(void)
+static void tinyCLI_PrintVersion_(void)
 {
     (void)HSS_E51_Banner();
 }
 
 #ifdef CONFIG_MEMTEST
-static void HSS_TinyCLI_MemTest(void)
+static void tinyCLI_MemTest_(void)
 {
     bool status = HSS_MemTestDDRFull();
 
@@ -131,7 +131,7 @@ static void HSS_TinyCLI_MemTest(void)
 }
 #endif
 
-static void HSS_TinyCLI_PrintHelp(void)
+static void tinyCLI_PrintHelp_(void)
 {
     if (numTokens > 1) {
         int index;
@@ -139,7 +139,7 @@ static void HSS_TinyCLI_PrintHelp(void)
         for (index = 1; index < numTokens; index++) {
             size_t i = 0u;
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s" CRLF, tokenArray[index]);
-            if (HSS_TinyCLI_GetCmdIndex(tokenArray[index], &i)) {
+            if (tinyCLI_GetCmdIndex_(tokenArray[index], &i)) {
                 mHSS_FANCY_PRINTF(LOG_NORMAL, "%s: %s" CRLF, commands[i].name, commands[i].helpString);
             }
         }
@@ -154,26 +154,26 @@ static void HSS_TinyCLI_PrintHelp(void)
     }
 }
 
-static void HSS_TinyCLI_CmdHandler(int cmdIndex)
+static void tinyCLI_CmdHandler_(int cmdIndex)
 {
 #ifdef CONFIG_SERVICE_YMODEM
-    void e51_ymodem_loop(void);
+    void hss_loader_ymodem_loop(void);
 #endif
     void _start(void);
 
     size_t index;
     switch (cmdIndex) {
     case CMD_HELP:
-        HSS_TinyCLI_PrintHelp();
+        tinyCLI_PrintHelp_();
         break;
 
     case CMD_VERSION:
-        HSS_TinyCLI_PrintVersion();
+        tinyCLI_PrintVersion_();
         break;
 
     case CMD_YMODEM:
 #ifdef CONFIG_SERVICE_YMODEM
-        e51_ymodem_loop();
+        hss_loader_ymodem_loop();
 #endif
         break;
 
@@ -191,23 +191,23 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
 
 #ifdef CONFIG_MEMTEST
     case CMD_MEMTEST:
-        HSS_TinyCLI_MemTest();
+        tinyCLI_MemTest_();
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
     case CMD_QSPI:
         HSS_BootSelectQSPI();
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_EMMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
-    case CMD_EMMC:
-        HSS_BootSelectEMMC();
+#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    case CMD_MMC:
+        HSS_BootSelectMMC();
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI))
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
     case CMD_PAYLOAD:
         HSS_BootSelectPayload();
         break;
@@ -224,7 +224,7 @@ static void HSS_TinyCLI_CmdHandler(int cmdIndex)
     mHSS_PUTS("" CRLF);
 }
 
-static bool HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen)
+static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen)
 {
     bool result = false;
     ssize_t status = 0;
@@ -241,7 +241,7 @@ static bool HSS_TinyCLI_Getline(char **pBuffer, size_t *pBufLen)
     return result;
 }
 
-static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer)
+static size_t tinyCLI_ParseIntoTokens_(char *buffer)
 {
     size_t i = 0u;
     static char *strtok_string = NULL;
@@ -249,7 +249,7 @@ static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer)
     char *strtok_r(char *str, const char *delim, char **saveptr);
 
     char *pToken = strtok_r(buffer, "\n ", &strtok_string);
-    while (pToken != NULL) {
+    while ((pToken != NULL) && (i < mMAX_NUM_TOKENS))  {
         tokenArray[i] = pToken;
         i++;
         pToken = strtok_r(NULL, "\n ", &strtok_string);
@@ -258,10 +258,10 @@ static size_t HSS_TinyCLI_ParseIntoTokens(char *buffer)
     return i;
 }
 
-static void HSS_TinyCLI_Execute(void)
+static void tinyCLI_Execute_(void)
 {
     size_t i = 0u;
-    bool matchFoundFlag = HSS_TinyCLI_GetCmdIndex(tokenArray[0], &i);
+    bool matchFoundFlag = tinyCLI_GetCmdIndex_(tokenArray[0], &i);
 
     if (matchFoundFlag) {
         commands[i].handler(i);
@@ -288,13 +288,13 @@ bool HSS_TinyCLI_Parser(void)
 
         while (!quitFlag) {
             mHSS_FANCY_PUTS(LOG_NORMAL, ">> ");
-            bool result = HSS_TinyCLI_Getline(&pBuffer, &bufLen);
+            bool result = tinyCLI_Getline_(&pBuffer, &bufLen);
 
             if (result && (pBuffer != NULL)) {
-                numTokens = HSS_TinyCLI_ParseIntoTokens(pBuffer);
+                numTokens = tinyCLI_ParseIntoTokens_(pBuffer);
 
                 if (numTokens) {
-                   HSS_TinyCLI_Execute();
+                   tinyCLI_Execute_();
                 }
             }
         }

@@ -87,7 +87,7 @@ CFLAGS=-std=c11 $(CORE_CFLAGS) $(PLATFORM_CFLAGS) -Wmissing-prototypes
 CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y=-O2
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
-OPT-y+=-Os -fno-strict-aliasing
+OPT-y+=-Os -fno-strict-aliasing -fgcse-las -fgcse-after-reload -fipa-pta
 
 ifndef CONFIG_LD_RELAX
 OPT-y+=-Wl,--no-relax
@@ -133,7 +133,7 @@ OBJS = $(SRCS-y:.c=.o)
 #	@$(ECHO) " DOT       $@";
 #	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -fdump-tree-all-graph -o $@ $<
 
-ifdef CONFIG_USE_MAKEDEP
+ifdef CONFIG_CC_USE_MAKEDEP
   %.o: %.c config.h %.d
 else
   %.o: %.c config.h

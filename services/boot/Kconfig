@@ -8,7 +8,7 @@ config SERVICE_BOOT
 menu "Boot Service"
 
 config SERVICE_BOOT_SETS_SUPPORT
-        def_bool y
+        def_bool SERVICE_BOOT && y
         depends on SERVICE_BOOT
 	help
                 This feature enables support for bootstrapping the U54 application harts in groups.
@@ -41,12 +41,12 @@ config SERVICE_BOOT_DDR_TARGET_ADDR
                 target base address for the boot image from QSPI to be 
                 cached in main system memory.
 
-config SERVICE_BOOT_EMMC_USE_GPT
-        bool "Use GPT with EMMC"
-        default y
-	depends on SERVICE_EMMC
+config SERVICE_BOOT_MMC_USE_GPT
+        bool "Use GPT with MMC"
+        default SERVICE_BOOT && SERVICE_MMC && y
+	depends on SERVICE_MMC
 	help
-		If CONFIG_SERVICE_EMMC is enabled, then for EMMC boots this option enables 
+		If CONFIG_SERVICE_MMC is enabled, then for MMC boots this option enables 
                 parsing of a GUID Partition Table (GPT) in search of the boot image starting
                 sector..
 

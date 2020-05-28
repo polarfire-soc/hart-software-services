@@ -24,14 +24,14 @@
 # IN THE SOFTWARE.
 #
 #
-# EMMC Service (NOTE: not a traditional super-loop service)
+# MMC Service (NOTE: not a traditional super-loop service)
 
-EXTRA_SRCS-$(CONFIG_SERVICE_EMMC) += \
-	services/emmc/emmc_api.c \
+EXTRA_SRCS-$(CONFIG_SERVICE_MMC) += \
+	services/mmc/mmc_api.c \
 
 INCLUDES +=\
-	-Iservices/emmc \
+	-Iservices/mmc \
 
-services/emmc/emmc_api.o: services/emmc/emmc_api.c config.h
+services/mmc/mmc_api.o: services/mmc/mmc_api.c config.h
 	@$(ECHO) " CC        $@";
 	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

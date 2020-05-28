@@ -40,7 +40,7 @@ extern "C" {
 
 #include "hss_types.h"
 
-#ifdef CONFIG_HAS_INTTYPES
+#ifdef CONFIG_CC_HAS_INTTYPES
 #    include "inttypes.h"
 #    ifndef PRIu64
 #        define PRIu64 "llu"

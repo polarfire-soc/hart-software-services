@@ -17,7 +17,6 @@
 #include "hss_debug.h"
 #include "hss_crc32.h"
 #include "gpt.h"
-#include "emmc_service.h"
 
 #include <string.h>
 #include <assert.h>

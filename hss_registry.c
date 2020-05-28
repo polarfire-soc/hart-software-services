@@ -255,8 +255,8 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #ifdef CONFIG_MEMTEST
     { "HSS_MemTestDDRFast",  HSS_MemTestDDRFast,  false, false },
 #endif
-#ifdef CONFIG_SERVICE_EMMC
-    { "HSS_EMMCInit",        HSS_EMMCInit,        false, false },
+#ifdef CONFIG_SERVICE_MMC
+    { "HSS_MMCInit",         HSS_MMCInit,         false, false },
 #endif
 #ifdef CONFIG_SERVICE_QSPI
     { "HSS_QSPIInit",        HSS_QSPIInit,        false, false },

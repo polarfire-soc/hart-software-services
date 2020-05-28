@@ -33,7 +33,7 @@ ifdef CONFIG_PLATFORM_MPFS
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.c \
 
-EXTRA_SRCS-$(CONFIG_SERVICE_EMMC) += \
+EXTRA_SRCS-$(CONFIG_SERVICE_MMC) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc_if.c \
 

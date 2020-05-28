@@ -1,0 +1,52 @@
+config SERVICE_MMC
+	bool "MMC support"
+	default n
+	help
+                This feature enables support for booting via MMC.
+
+		If you do not know what to do here, say Y.
+
+menu "MMC Mode"
+config SERVICE_MMC_MODE_EMMC
+	bool "Use eMMC"
+	default y
+        depends on SERVICE_MMC 
+	help
+                This feature sets the MMC system to use eMMC.
+                This option is mutually exclusive with SERVICE_MMC_MODE_SDCARD.
+
+		If you do not know what to do here, say Y.
+
+config SERVICE_MMC_MODE_SDCARD
+	bool "Use SDCard"
+	default n
+        depends on SERVICE_MMC
+	help
+                This feature sets the MMC system to use SDCard.
+                This option is mutually exclusive with SERVICE_MMC_MODE_EMMC.
+
+		If you do not know what to do here, say N.
+
+endmenu
+
+menu "MMC Voltage"
+config SERVICE_MMC_BUS_VOLTAGE_1V8
+	bool "Use 1.8V Bus Voltage with MMC"
+	default n
+        depends on SERVICE_MMC
+	help
+                This feature sets the bus voltage for MMC to 1.8V.
+                This option is mutually exclusive with SERVICE_MMC_BUS_VOLTAGE_3V3.
+
+		If you do not know what to do here, say N.
+
+config SERVICE_MMC_BUS_VOLTAGE_3V3
+	bool "Use 3.3V Bus Voltage with MMC"
+	default y
+        depends on SERVICE_MMC
+	help
+                This feature sets the bus voltage for MMC to 3.3V.
+                This option is mutually exclusive with SERVICE_MMC_BUS_VOLTAGE_1V8..
+
+		If you do not know what to do here, say Y.
+endmenu

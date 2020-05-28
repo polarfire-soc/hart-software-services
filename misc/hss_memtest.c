@@ -189,7 +189,7 @@ bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    if (HSS_DDR_GetSize() > mGB_IN_BYTES) {
+    if (HSS_DDR_GetSize() >= mGB_IN_BYTES) {
         mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR size is %lu GiB" CRLF,
             (uint32_t)(HSS_DDR_GetSize()/mGB_IN_BYTES));
     } else {

@@ -18,6 +18,7 @@
 #include "hss_boot_service.h"
 #include "hss_boot_init.h"
 #include "hss_sys_setup.h"
+#include "hss_progress.h"
 
 #ifdef CONFIG_SERVICE_OPENSBI
 #  include "opensbi_service.h"
@@ -29,8 +30,8 @@
 #  include "qspi_service.h"
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
-#  include "emmc_service.h"
+#ifdef CONFIG_SERVICE_MMC
+#  include "mmc_service.h"
 #  include "gpt.h"
 #endif
 
@@ -62,8 +63,8 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
 #if defined(CONFIG_SERVICE_QSPI)
 static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage);
 #endif
-#if defined(CONFIG_SERVICE_EMMC)
-static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage);
+#if defined(CONFIG_SERVICE_MMC)
+static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage);
 #endif
 #if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage);
@@ -78,8 +79,8 @@ static bool validateCrc_(struct HSS_BootImage *pImage);
 typedef bool (*HSS_GetBootImageFnPtr_t)(struct HSS_BootImage **ppBootImage);
 
 static HSS_GetBootImageFnPtr_t getBootImageFunction =
-#if defined(CONFIG_SERVICE_EMMC)
-    getBootImageFromEMMC_;
+#if defined(CONFIG_SERVICE_MMC)
+    getBootImageFromMMC_;
 #elif defined(CONFIG_SERVICE_QSPI)
     getBootImageFromQSPI_;
 #elif defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
@@ -215,12 +216,18 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t bytesLeft = pBootImage->bootImageLength;
     size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
 
+#ifdef DEBUG_COPY
     const char throbber[] = { '|', '/', '-', '\\' };
     unsigned int state = 0u;
+#endif
     while (bytesLeft) {
+#ifdef DEBUG_COPY
         state++; state %= 4;
         mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) to 0x%X\r",
             throbber[state], chunkSize, bytesLeft, pDest);
+#else
+        HSS_ShowProgress(pBootImage->bootImageLength, bytesLeft);
+#endif
 
         result = pCopyFunction(pDest, srcOffset, chunkSize);
 
@@ -233,8 +240,12 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
         chunkSize = mMIN(bytesLeft, maxChunkSize);
     }
 
+#ifdef DEBUG_COPY
     // clear copy output to console by printing an empty string
     mHSS_DEBUG_PRINTF_EX("                                                                      \r");
+#else
+    HSS_ShowProgress(pBootImage->bootImageLength, 0u);
+#endif
 
     return result;
 }
@@ -254,32 +265,32 @@ static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
     return result;
 }
 
-#if defined(CONFIG_SERVICE_EMMC) || defined(CONFIG_SERVICE_QSPI)
+#if defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI)
 struct HSS_BootImage bootImage __attribute__((aligned(8)));
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
-static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
+#ifdef CONFIG_SERVICE_MMC
+static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
 {
     bool result = true;
 
     assert(ppBootImage);
 
-    // if we are using EMMC, then we need to do an initial copy of the
+    // if we are using MMC, then we need to do an initial copy of the
     // boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from EMMC to DDR ..." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from MMC to DDR ..." CRLF);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
         sizeof(struct HSS_BootImage));
 
     size_t srcOffset = 0u;
 
-#ifdef CONFIG_SERVICE_BOOT_EMMC_USE_GPT
+#ifdef CONFIG_SERVICE_BOOT_MMC_USE_GPT
     // For now, GPT needs a 3-sector buffer (~1.5KB) - one for GPT header,
     // and two for partition entity
     char lbaBuffer[3][GPT_LBA_SIZE] __attribute__((aligned(8)));
     HSS_GPT_Header_t *pGptHeader = (HSS_GPT_Header_t *)lbaBuffer[0];
 
-    GPT_RegisterReadBlockFunction(HSS_EMMC_ReadBlock);
+    GPT_RegisterReadBlockFunction(HSS_MMC_ReadBlock);
 
     result = GPT_ReadHeader(pGptHeader);
 
@@ -318,11 +329,11 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
     //
     //
     if (result) {
-        result = HSS_EMMC_ReadBlock(&bootImage, srcOffset * GPT_LBA_SIZE,
+        result = HSS_MMC_ReadBlock(&bootImage, srcOffset * GPT_LBA_SIZE,
             sizeof(struct HSS_BootImage));
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_EMMC_ReadBlock() failed" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_MMC_ReadBlock() failed" CRLF);
         } else {
             result = verifyMagic_(&bootImage);
 
@@ -331,7 +342,7 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
             } else {
                 result = copyBootImageToDDR_(&bootImage,
                     (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), srcOffset * GPT_LBA_SIZE,
-                    HSS_EMMC_ReadBlock);
+                    HSS_MMC_ReadBlock);
                 *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
                if (!result) {
@@ -344,10 +355,10 @@ static bool getBootImageFromEMMC_(struct HSS_BootImage **ppBootImage)
     return result;
 }
 
-void HSS_BootSelectEMMC(void)
+void HSS_BootSelectMMC(void)
 {
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting EMMC as boot source ..." CRLF);
-    getBootImageFunction = getBootImageFromEMMC_;
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting MMC as boot source ..." CRLF);
+    getBootImageFunction = getBootImageFromMMC_;
 }
 #endif
 

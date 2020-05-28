@@ -151,7 +151,7 @@ tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-ifdef CONFIG_USE_MAKEDEP
+ifdef CONFIG_CC_USE_MAKEDEP
   DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d)
   .PHONY: dep
   dep: $(DEPENDENCIES)

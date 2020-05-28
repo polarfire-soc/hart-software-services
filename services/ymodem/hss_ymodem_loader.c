@@ -55,8 +55,8 @@
 #  include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
-#  include "emmc_service.h"
+#ifdef CONFIG_SERVICE_MMC
+#  include "mmc_service.h"
 #  include "mss_mmc.h"
 #endif
 
@@ -64,40 +64,19 @@
 //
 // Local prototypes
 //
-static void printResult_(uint8_t result, const char *msg);
 #ifdef CONFIG_SERVICE_QSPI
-static bool e51_qspi_init(void);
-static bool e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
-static bool e51_qspi_erase(void);
+static bool hss_loader_qspi_init(void);
+static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
+static bool hss_loader_qspi_erase(void);
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
-static bool e51_emmc_init(void);
-static bool e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
-static bool e51_emmc_erase(void);
+#ifdef CONFIG_SERVICE_MMC
+static bool hss_loader_mmc_init(void);
+static bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
 #endif
 
-static void printResult_(uint8_t result, const char *msg)
-{
-    static char buffer[256];
-
-    static const char *errorTable[] = {
-        "Failure" CRLF,
-        "Success" CRLF,
-    };
-
-    mHSS_PRINTF("%s returned - ", msg);
-
-    if (result < mSPAN_OF(errorTable)) {
-        mHSS_PRINTF(errorTable[result]);
-    } else {
-        mHSS_PRINTF(buffer, (const char * const)"Unknown Error (%u)" CRLF,
-                (unsigned int) result);
-    }
-}
-
 #ifdef CONFIG_SERVICE_QSPI
-static bool e51_qspi_init(void)
+static bool hss_loader_qspi_init(void)
 {
     static bool initialized = false;
     bool result = false;
@@ -111,21 +90,21 @@ static bool e51_qspi_init(void)
     return result;
 }
 
-static bool e51_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
+static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
 {
     bool result = HSS_QSPI_WriteBlock(wrAddr, pBuffer, receivedCount);
     return result;
 }
 
-static bool e51_qspi_erase(void)
+static bool hss_loader_qspi_erase(void)
 {
     Flash_erase();
     return true;
 }
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
-static bool e51_emmc_init(void)
+#ifdef CONFIG_SERVICE_MMC
+bool hss_loader_mmc_init(void)
 {
     //static bool initialized = false;
     bool result = false;
@@ -138,34 +117,27 @@ static bool e51_emmc_init(void)
         //mHSS_PRINTF("SYSREG->SUBBLK_CLOCK_CR is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SUBBLK_CLOCK_CR, SYSREG->SUBBLK_CLOCK_CR & SUBBLK_CLOCK_CR_MMC_MASK);
         //mHSS_PRINTF("SYSREG->SOFT_RESET_CR   is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SOFT_RESET_CR, SYSREG->SOFT_RESET_CR & SOFT_RESET_CR_MMC_MASK);
 
-        result = HSS_EMMCInit();
+        result = HSS_MMCInit();
     //    initialized = true;
     //}
     return result;
 }
 
-static bool e51_emmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
+bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
 {
-    bool result = HSS_EMMC_WriteBlock(wrAddr, pBuffer, receivedCount);
+    bool result = HSS_MMC_WriteBlock(wrAddr, pBuffer, receivedCount);
     return result;
-}
-
-static bool e51_emmc_erase(void)
-{
-    // dummy
-    return true;
 }
 #endif
 
-void e51_ymodem_loop(void)
+void hss_loader_ymodem_loop(void)
 {
     uint8_t rx_byte;
     bool done = false;
     bool result = false;
 
     uint32_t receivedCount = 0u;
-    extern uint64_t __ddr_start;
-    uint8_t *pBuffer = (uint8_t *)&__ddr_start;
+    uint8_t *pBuffer = (uint8_t *)HSS_DDR_GetStart();
     uint32_t g_rx_size = HSS_DDR_GetSize();
 
     while (!done) {
@@ -173,25 +145,25 @@ void e51_ymodem_loop(void)
 #ifdef CONFIG_SERVICE_QSPI
             "QSPI"
 #endif
-#if defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_EMMC)
+#if defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_MMC)
            "/"
 #endif
-#ifdef CONFIG_SERVICE_EMMC
-           "EMMC"
+#ifdef CONFIG_SERVICE_MMC
+           "MMC"
 #endif
            " Utility" CRLF
 #ifdef CONFIG_SERVICE_QSPI
             " 1. QSPI Erase Bulk -- erase all sectors" CRLF
 #endif
-#ifdef CONFIG_SERVICE_EMMC
-            " 2. EMMC Erase Bulk -- erase all sectors" CRLF
+#ifdef CONFIG_SERVICE_MMC
+            " 2. MMC Init -- initialize MMC driver" CRLF
 #endif
             " 3. YMODEM Receive -- receive application file" CRLF
 #ifdef CONFIG_SERVICE_QSPI
             " 4. QSPI Write -- write application file to the Device" CRLF
 #endif
-#ifdef CONFIG_SERVICE_EMMC
-            " 5. EMMC Write -- write application file to the Device" CRLF
+#ifdef CONFIG_SERVICE_MMC
+            " 5. MMC Write -- write application file to the Device" CRLF
 #endif
             " 6. Quit -- quit QSPI Utility " CRLF CRLF
             " Select a number:" CRLF;
@@ -202,21 +174,42 @@ void e51_ymodem_loop(void)
             switch (rx_byte) {
 #ifdef CONFIG_SERVICE_QSPI
             case '1':
-                mHSS_PUTS(CRLF "Erasing all of QSPI" CRLF );
-                result = e51_qspi_init();
-                printResult_(result, "e51_qspi_init()");
-                result = e51_qspi_erase();
-                printResult_(result, "e51_qspi_erase()");
+                mHSS_PUTS(CRLF "Initializing QSPI ... ");
+                result = hss_loader_qspi_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+
+                    mHSS_PUTS(CRLF "Erasing all of QSPI ... ");
+                    result = hss_loader_qspi_erase();
+
+                    if (result) {
+                        mHSS_PUTS(" Success" CRLF);
+                    }
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
                 break;
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
+#ifdef CONFIG_SERVICE_MMC
             case '2':
-                mHSS_PUTS(CRLF "Erasing all of EMMC" CRLF );
-                result = e51_emmc_init();
-                printResult_(result, "e51_emmc_init()");
-                result = e51_emmc_erase();
-                printResult_(result, "e51_emmc_erase()");
+                mHSS_PUTS(CRLF "Initializing MMC ... ");
+                result = hss_loader_mmc_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
                 break;
 #endif
             case '3':
@@ -224,28 +217,59 @@ void e51_ymodem_loop(void)
                     CRLF);
                 receivedCount = ymodem_receive(pBuffer, g_rx_size);
                 if (receivedCount == 0) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
                     mHSS_PUTS(CRLF "YMODEM failed to receive file successfully" CRLF CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
                 }
                 break;
 
 #ifdef CONFIG_SERVICE_QSPI
             case '4':
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
-                result = e51_qspi_init();
-                printResult_(result, "e51_emmc_init()");
-                result = e51_qspi_program((uint8_t *)pBuffer, 0, receivedCount);
-                printResult_(result, "e51_qspi_program()");
+                mHSS_PUTS(CRLF "Initializing QSPI ... ");
+                result = hss_loader_qspi_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+
+                    mHSS_PUTS(CRLF "Programming QSPI ... ");
+                    result = hss_loader_qspi_program((uint8_t *)pBuffer, 0u, receivedCount);
+
+                    if (result) {
+                        mHSS_PUTS(" Success" CRLF);
+                    }
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
                 break;
 #endif
 
-#ifdef CONFIG_SERVICE_EMMC
+#ifdef CONFIG_SERVICE_MMC
             case '5':
-                if (receivedCount ==0) { receivedCount = 1024; } //EMDALO
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
-                result = e51_emmc_init();
-                printResult_(result, "e51_emmc_init()");
-                result = e51_emmc_program((uint8_t *)pBuffer, 0, receivedCount);
-                printResult_(result, "e51_emmc_program()");
+                mHSS_PUTS(CRLF "Initializing MMC ... ");
+                result = hss_loader_mmc_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+
+                    mHSS_PUTS(CRLF "Programming MMC ... ");
+                    result = hss_loader_mmc_program((uint8_t *)pBuffer, 0u, receivedCount);
+
+                    if (result) {
+                        mHSS_PUTS(" Success" CRLF);
+                    }
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
                 break;
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef HSS_EMMC_DRIVER_H
-#define HSS_EMMC_DRIVER_H
+#ifndef HSS_MMC_SERVICE_H
+#define HSS_MMC_SERVICE_H
 
 
 /*******************************************************************************
@@ -31,8 +31,8 @@
  */
 
 /*!
- * \file EMMC API
- * \brief EMMC (null) Service API
+ * \file MMC API
+ * \brief MMC (null) Service API
  */
 
 #ifdef __cplusplus
@@ -41,9 +41,9 @@ extern "C" {
 
 #include "hss_types.h"
 
-bool HSS_EMMCInit(void);
-bool HSS_EMMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
-bool HSS_EMMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
+bool HSS_MMCInit(void);
+bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
+bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
 
 #ifdef __cplusplus
 }
