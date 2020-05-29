@@ -2956,7 +2956,7 @@ static mss_mmc_status_t  set_sdhost_power(uint32_t voltage)
 /******************************************************************************/
 static void mmc_delay(uint32_t value)
 {
-    while (value--);
+    while (value--) asm volatile("");
 }
 /******************************************************************************/
 static mss_mmc_status_t cmd6_single_block_read

@@ -309,7 +309,7 @@ static bool FindPartitionById_(HSS_GPT_Header_t const * const pGptHeader,
 
        if (result) {
 #ifdef GPT_DEBUG
-           mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found parition for GUID %08x-%04x-%04x-%016lx" CRLF,
+           mHSS_DEBUG_PRINTF(LOG_NORMAL, "Located partition for GUID %08x-%04x-%04x-%016lx" CRLF,
                pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
 #endif
 
@@ -320,7 +320,7 @@ static bool FindPartitionById_(HSS_GPT_Header_t const * const pGptHeader,
     }
 
     if (!result) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to find parition for GUID %08x-%04x-%04x-%016lx" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to find partition for GUID %08x-%04x-%04x-%016lx" CRLF,
             pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
     }
 

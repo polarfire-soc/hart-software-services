@@ -204,6 +204,7 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction)
 {
     bool result = true;
+    char *pOrigDest = pDest;
 
     printBootImageDetails_(pBootImage);
 
@@ -246,6 +247,9 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
 #else
     HSS_ShowProgress(pBootImage->bootImageLength, 0u);
 #endif
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calculated CRC32 of image in DDR is %08x" CRLF,
+        CRC32_calculate((const uint8_t *)pOrigDest, pBootImage->bootImageLength));
 
     return result;
 }
@@ -326,9 +330,9 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
     }
 #endif
     //
-    //
-    //
-    if (result) {
+    // Even if we have GPT enabled and it fails to find a GPT parttion, we'll still
+    // try to boot
+    /*if (result)*/ {
         result = HSS_MMC_ReadBlock(&bootImage, srcOffset * GPT_LBA_SIZE,
             sizeof(struct HSS_BootImage));
 

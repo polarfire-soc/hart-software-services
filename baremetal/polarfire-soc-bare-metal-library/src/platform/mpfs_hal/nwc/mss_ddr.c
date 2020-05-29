@@ -2267,7 +2267,7 @@ static uint8_t read_back_sanity_check(uint64_t * address, uint32_t count)
 #ifdef DDR_SANITY_CHECKS_EN
 static uint8_t mtc_sanity_check(uint64_t start_address)
 {
-    volatile uint32_t *DDR_word_ptr;
+    //volatile uint32_t *DDR_word_ptr; //unused
     uint8_t result;
     uint64_t size = 4U;
     result = MTC_test((0xFU), start_address, size );

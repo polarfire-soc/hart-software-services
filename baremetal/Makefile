@@ -110,11 +110,11 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_ini
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -DDDR_SANITY_CHECKS_EN -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -DDDR_SANITY_CHECKS_EN -c -o $@ $<
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.o: baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c config.h
 	@$(ECHO) " CC        $@";
