@@ -18,6 +18,15 @@
 #ifndef MSS_HAL_H
 #define MSS_HAL_H
 
+#ifndef CONFIG_OPENSBI
+#  include <stddef.h>  // for size_t
+#  include <stdbool.h> // for bool, true, false
+#  include <stdint.h>
+#  ifndef ssize_t
+typedef long            ssize_t;
+#  endif
+#endif
+
 #include "mpfs_hal/nwc/mss_ddr.h"
 #include "mpfs_hal/nwc/mss_ddr_SGMII_regs.h"
 #include "mpfs_hal/nwc/mss_io_config.h"

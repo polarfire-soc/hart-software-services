@@ -24,7 +24,8 @@
  * Local Defines
  */
 /* This string is updated if any change to ddr driver */
-#define DDR_DRIVER_VERSION_STRING   "0.0.001"
+#define DDR_DRIVER_VERSION_STRING   "0.0.003"
+
 
 /*
  * Calibration data records calculated write calibration values during training
@@ -47,6 +48,7 @@ static const uint32_t test_string[] = {
  * external functions
  */
 #ifdef DEBUG_DDR_INIT
+extern mss_uart_instance_t *g_debug_uart;
 extern uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt);
 #endif
 
@@ -104,11 +106,14 @@ extern void ddr_pvt_calibration(void);
 extern void ddr_pvt_recalibration(void);
 extern void delay(uint32_t n);
 #ifdef DDR_FULL_32BIT_NC_CHECK_EN
-//extern uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access,
-//                                                              uint32_t pattern);
+#  ifndef HSS
+extern uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access, uint32_t pattern);
+#  endif
 #endif
 #ifdef DEBUG_DDR_INIT
-extern mss_uart_instance_t *g_debug_uart;
+#  ifdef DEBUG_DDR_DDRCFG
+void debug_read_ddrcfg(void);
+#  endif
 #endif
 
 /*******************************************************************************
@@ -393,7 +398,6 @@ static int32_t ddr_setup(void)
                         tip_cfg_params = ((tip_cfg_params &\
                             (~BCLK_SCLK_OFFSET_MASK))|\
                              (bclk_sclk_offset_value<<BCLK_SCLK_OFFSET_SHIFT));
-                        //addr_cmd_value = 4;
                         tip_cfg_params = ((tip_cfg_params &\
                                  (~ADDRESS_CMD_OFFSETT_MASK))|(addr_cmd_value));
                         dpc_bits = ((dpc_bits &\
@@ -472,7 +476,7 @@ static int32_t ddr_setup(void)
                         sweep_count_dpc_h_bits = 0U;
                         sweep_count_dpc_vs_bits = 0U;
                         sweep_state = ADDR_CMD_OFFSET_SWEEP;
-                        __attribute__((fallthrough)); // deliberately fall through
+                        __attribute__((fallthrough)); /* deliberately fall through */
                     case ADDR_CMD_OFFSET_SWEEP:
                         /*
                          * Record sweep result
@@ -762,7 +766,29 @@ static int32_t ddr_setup(void)
              * and load skip setting
              */
             /* leave in reset */
+/* To verify if separate rest required for DDR4 */
+#ifndef DDR4__CODE_TAG_0_2
             CFG_DDR_SGMII_PHY->training_reset.training_reset    = 0x00000002U;
+
+#else
+            /* Disable CKE */
+            DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;
+
+            /* Assert FORCE_RESET */
+            DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x1;
+            delay(100);
+            /* release reset to memory here, set INIT_FORCE_RESET to 0 */
+            DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x0;
+            delay(500000);
+
+            /* Enable CKE */
+            DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x0;
+            delay(1000);
+
+            /* reset pin is bit [1] */
+            CFG_DDR_SGMII_PHY->training_reset.training_reset    = 0x00000002U;
+
+#endif
             ddr_training_state = DDR_TRAINING_ROTATE_CLK;
             break;
         case DDR_TRAINING_ROTATE_CLK:
@@ -781,8 +807,7 @@ static int32_t ddr_setup(void)
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x4;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x64;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66; // increment
-            for (uint32_t d=0;d< \
-                LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET;d++)
+            for (uint32_t d=0; d< LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET;d++)
             {
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x67;
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66;
@@ -872,7 +897,7 @@ static int32_t ddr_setup(void)
                 CFG_DDR_SGMII_PHY->tip_cfg_params.tip_cfg_params =\
                                                                 tip_cfg_params;
                 timeout = 0xFFFF;
-                //if(LIBERO_SETTING_TRAINING_SKIP_SETTING & BCLK_SCLK_BIT)
+
                 if(USE_SW_BCLK_SCK_TRAINING)
                 {
                     /*
@@ -888,8 +913,10 @@ static int32_t ddr_setup(void)
                      * Initiate IP training and wait for dfi_init_complete
                      */
                     /*asserting training_reset */
+
                     CFG_DDR_SGMII_PHY->training_reset.training_reset =\
                             0x00000000U;
+
                     ddr_training_state = DDR_TRAINING_IP_SM_START;
                 }
             }
@@ -971,13 +998,20 @@ static int32_t ddr_setup(void)
             }
             break;
         case DDR_TRAINING_IP_SM_START:
+
             {
                 CFG_DDR_SGMII_PHY->training_skip.training_skip      =\
                                         LIBERO_SETTING_TRAINING_SKIP_SETTING;
+                if (ddr_type == DDR3)
+                {
+                    /* RX_MD_CLKN */
+                    CFG_DDR_SGMII_PHY->rpc168.rpc168 = 0x0U;
+                    delay(100);
+                }
 #ifdef DDR_TRAINING_IP_SM_START_DELAY
-				delay(100);
+                delay(100);
 #endif
-				/* release reset to training */
+                /* release reset to training */
                 CFG_DDR_SGMII_PHY->training_reset.training_reset    = 0x00000000U;
 #ifdef IP_SM_START_TRAINING_PAUSE
                 /* todo: pause removed at Alister's request for test. Will
@@ -1016,6 +1050,17 @@ static int32_t ddr_setup(void)
                 CFG_DDR_SGMII_PHY->lane_alignment_fifo_control.lane_alignment_fifo_control = 0x00;
                 CFG_DDR_SGMII_PHY->lane_alignment_fifo_control.lane_alignment_fifo_control = 0x02;
 #endif
+#ifdef DDR4__CODE_TAG_0_2
+#ifdef DEBUG_DDR_INIT
+                (void)uprint32(g_debug_uart, \
+                        "\n\r\n\r pll_phadj_after_hw_training ",\
+                                        MSS_SCB_DDR_PLL->PLL_DIV_2_3);
+                (void)uprint32(g_debug_uart, \
+                        "\n\r\n\r pll_phadj_after_hw_training ",\
+                                        MSS_SCB_DDR_PLL->PLL_DIV_0_1);
+#endif
+                CFG_DDR_SGMII_PHY->rpc168.rpc168 = 0x0U;  /* RX_MD_CLKN */
+#endif /* DDR4_V2 */
                 if(LIBERO_SETTING_TRAINING_SKIP_SETTING & BCLK_SCLK_BIT)
                 {
                     ddr_training_state = DDR_TRAINING_IP_SM_ADDCMD;
@@ -1190,8 +1235,7 @@ static int32_t ddr_setup(void)
                          t_status = t_status | 0x01U;
                      }
                      /* Check that DQ/DQS calculated window is above 5 taps. */
-                     if(CFG_DDR_SGMII_PHY->dqdqs_status1.dqdqs_status1 < \
-																		DQ_DQS_NUM_TAPS)
+                     if(CFG_DDR_SGMII_PHY->dqdqs_status1.dqdqs_status1 < DQ_DQS_NUM_TAPS)
                      {
                          t_status = t_status | 0x01U;
                      }
@@ -1206,16 +1250,15 @@ static int32_t ddr_setup(void)
                      /*
                       * We can now set vref on the memory
                       * mode register for lpddr4
-					  * May include other modes, and include a sweep
-					  * Alister looking into this and will revert.
+                      * May include other modes, and include a sweep
+                      * Alister looking into this and will revert.
                       */
                      if (ddr_type == LPDDR4)
-					 {
+                     {
 #ifdef SET_VREF_LPDDR4_MODE_REGS
-                     	mode_register_write(DDR_MODE_REG_VREF,\
-                             DDR_MODE_REG_VREF_VALUE);
+                         mode_register_write(DDR_MODE_REG_VREF, DDR_MODE_REG_VREF_VALUE);
 #endif
-					 }
+                     }
                      ddr_training_state = DDR_TRAINING_SET_FINAL_MODE;
                  }
                  else /* fail, try again */
@@ -1229,6 +1272,7 @@ static int32_t ddr_setup(void)
                 ddr_training_state = DDR_TRAINING_FAIL_SM2_VERIFY;
             }
             break;
+
 
         case DDR_TRAINING_SET_FINAL_MODE:
             /*
@@ -1244,10 +1288,13 @@ static int32_t ddr_setup(void)
                   (uint32_t *)CFG_DDR_SGMII_PHY,\
                           (sizeof(CFG_DDR_SGMII_PHY_TypeDef)/4U));
 #endif
+#ifdef DEBUG_DDR_DDRCFG
+            debug_read_ddrcfg();
+#endif
 #endif
 #ifdef DEBUG_DDR_INIT
             {
-                tip_register_status (&g_mss_uart0_lo);
+                tip_register_status (g_debug_uart);
                 (void)uprint32(g_debug_uart, "\n\r ****************************************************", 0U);
 
             }
@@ -1277,15 +1324,11 @@ static int32_t ddr_setup(void)
                     SIM_FEEDBACK1(1U);
 
 #ifdef SW_CONFIG_LPDDR_WR_CALIB_FN
-                    error =\
-                            write_calibration_lpddr4_using_mtc(\
-                                                  number_of_lanes_to_calibrate);
+                    error = write_calibration_lpddr4_using_mtc(number_of_lanes_to_calibrate);
 #else
-					error =\
-                            write_calibration_using_mtc(\
-                                                  number_of_lanes_to_calibrate);
+                    error = write_calibration_using_mtc(number_of_lanes_to_calibrate);
 #endif
-				}
+                }
                 else
                 {
                     SIM_FEEDBACK1(2U);
@@ -1354,15 +1397,15 @@ static int32_t ddr_setup(void)
 
         case DDR_SANITY_CHECKS:
             //setup_ddr_segments(); //todo: create state here, as no need to do further up
-			// Also, sw should set with default values here to allow full memory range check
-			// on non cached and cached as we are doing now
-			// and set to Libero values once DDR write/read verified
+            // Also, sw should set with default values here to allow full memory range check
+            // on non cached and cached as we are doing now
+            // and set to Libero values once DDR write/read verified
+
             /*
              *  Now start the write calibration if training successful
              */
 #ifdef DEBUG_DDR_INIT
-            (void)uprint32(g_debug_uart, "\n\r\n\r DDR SANITY_CHECKS: ",\
-                                                                        error);
+            (void)uprint32(g_debug_uart, "\n\r\n\r DDR SANITY_CHECKS: ", error);
 #endif
             if(error == 0U)
             {
@@ -1396,12 +1439,12 @@ static int32_t ddr_setup(void)
              * write and read back test from drr, non cached access
              */
             {
-#ifdef DEBUG_DDR_INIT
 #ifdef DDR_FULL_32BIT_NC_CHECK_EN
+#  ifndef HSS
                 error = ddr_read_write_fn((uint64_t*)MSS_BASE_ADD_DRC_NC,\
-                                        SW_CFG_NUM_READS_WRITES,\
-                                        SW_CONFIG_PATTERN);
-#endif
+                                     SW_CFG_NUM_READS_WRITES,\
+                                   SW_CONFIG_PATTERN);
+#  endif
 #endif
             }
             if(error == 0U)
@@ -1414,13 +1457,13 @@ static int32_t ddr_setup(void)
             }
             break;
         case DDR_FULL_32BIT_CACHE_CHECK:
-#ifdef DEBUG_DDR_INIT
+
 #ifdef DDR_FULL_32BIT_CACHED_CHECK_EN
             error = ddr_read_write_fn((uint64_t*)0x80000000ULL /*MSS_BASE_ADD_DRC_NC*/,\
                                     SW_CFG_NUM_READS_WRITES,\
                                     SW_CONFIG_PATTERN);
 #endif
-#endif
+
             if(error == 0U)
             {
                 ddr_training_state = DDR_FULL_32BIT_WRC_CHECK;
@@ -1508,9 +1551,8 @@ static int32_t ddr_setup(void)
              */
 #ifdef DEBUG_DDR_INIT
             {
-            	tip_register_status (&g_mss_uart0_lo);
-                (void)uprint32(g_debug_uart, "\n\r\n\r DDR_TRAINING_PASS: ",\
-                        ddr_training_state);
+                tip_register_status (g_debug_uart);
+                (void)uprint32(g_debug_uart, "\n\r\n\r DDR_TRAINING_PASS: ", ddr_training_state);
                 (void)uprint32(g_debug_uart, "\n ****************************************************", 0);
 
             }
@@ -1574,7 +1616,6 @@ static uint8_t get_num_lanes(void)
  */
 static void set_ddr_mode_reg_and_vs_bits(uint32_t dpc_bits)
 {
-
     /*
      * R1.6
      * Write DDR phy mode reg (eg DDR3)
@@ -1624,17 +1665,17 @@ static void set_ddr_mode_reg_and_vs_bits(uint32_t dpc_bits)
     */
     {
         /*
-		 * Data mask turned off if on.
+         * Data mask turned off if on.
          * Will be reverted to Libero setting once training complete
          * in the DDR_TRAINING_SET_FINAL_MODE state
-		 * fixme: setting mode reg here does not work, regs not updated
-         * Will remove this code as do not think required, wwas only in nplace for
+         * fixme: setting mode reg here does not work, regs not updated
+         * Will remove this code as do not think required, was only in place for
          * for ddr3 when using ECC and data mask, but no requirement for data mask
          * in this configuration. Libero may need to be updated to remove data mask
          * for this config (using ECC).
          */
-    	CFG_DDR_SGMII_PHY->DDRPHY_MODE.DDRPHY_MODE  =\
-    	             (LIBERO_SETTING_DDRPHY_MODE /* & DMI_DBI_MASK */);
+         CFG_DDR_SGMII_PHY->DDRPHY_MODE.DDRPHY_MODE  =\
+             (LIBERO_SETTING_DDRPHY_MODE /* & DMI_DBI_MASK */);
         delay((uint32_t) 100U);
         CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS        = dpc_bits;
     }
@@ -2267,7 +2308,6 @@ static uint8_t read_back_sanity_check(uint64_t * address, uint32_t count)
 #ifdef DDR_SANITY_CHECKS_EN
 static uint8_t mtc_sanity_check(uint64_t start_address)
 {
-    //volatile uint32_t *DDR_word_ptr; //unused
     uint8_t result;
     uint64_t size = 4U;
     result = MTC_test((0xFU), start_address, size );
@@ -2702,7 +2742,6 @@ static uint8_t \
     uint32_t cal_data;
     uint64_t start_address = 0x0000000000001000;
     uint64_t size = 0x8U;  /* Number of reads for each iteration */
-    //uint8_t shift = 0;
 
     calib_data.write_cal.status_lower = 0U;
     /*
@@ -2723,8 +2762,7 @@ static uint8_t \
     {
         CFG_DDR_SGMII_PHY->expert_wrcalib.expert_wrcalib = cal_data;
 
-        for (laneToTest = 0x00U; laneToTest<number_of_lanes_to_calibrate;\
-                                                                laneToTest++)
+        for (laneToTest = 0x00U; laneToTest<number_of_lanes_to_calibrate; laneToTest++)
         {
             /*
              * read once to flush MTC. During write calibration the first MTC read
@@ -3138,7 +3176,7 @@ static uint8_t MTC_test(uint8_t mask, uint64_t start_address, uint32_t size)
             */
             if (++pattern > 3U)
             {
-                pattern = 0;
+                pattern = 2U;
             }
             DDRCFG->MEM_TEST.MT_DATA_PATTERN.MT_DATA_PATTERN = pattern;
         }
@@ -3968,15 +4006,6 @@ static void init_ddrc(void)
     DDRCFG->csr_custom.PHY_HALF_CLK_DLY_ENABLE.PHY_HALF_CLK_DLY_ENABLE =\
         LIBERO_SETTING_PHY_HALF_CLK_DLY_ENABLE;
 
-#ifdef DEBUG_DDR_INIT
-#ifdef DEBUG_DDR_DDRCFG
-    // todo: break this into a number of smaller options
-    (void)print_reg_array(g_debug_uart ,
-            (uint32_t *)&DDRCFG->ADDR_MAP.CFG_MANUAL_ADDRESS_MAP,\
-                          (sizeof(DDRCFG->ADDR_MAP.CFG_MANUAL_ADDRESS_MAP)/4U));
-#endif
-#endif
-
 }
 
 
@@ -4253,7 +4282,59 @@ MSS_DDR_user_commands
 }
 #endif
 
-
+#ifdef DEBUG_DDR_INIT
+#ifdef DEBUG_DDR_DDRCFG
+void debug_read_ddrcfg(void)
+{
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->ADDR_MAP,\
+                (sizeof(DDRCFG->ADDR_MAP)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->MC_BASE3,\
+                (sizeof(DDRCFG->MC_BASE3)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->MC_BASE1,\
+                (sizeof(DDRCFG->MC_BASE1)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->MC_BASE2,\
+                (sizeof(DDRCFG->MC_BASE2)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->MPFE,\
+                (sizeof(DDRCFG->MPFE)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->REORDER,\
+                (sizeof(DDRCFG->REORDER)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->RMW,\
+                (sizeof(DDRCFG->RMW)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->ECC,\
+                (sizeof(DDRCFG->ECC)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->READ_CAPT,\
+                (sizeof(DDRCFG->READ_CAPT)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->MTA,\
+                (sizeof(DDRCFG->MTA)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->DYN_WIDTH_ADJ,\
+                (sizeof(DDRCFG->DYN_WIDTH_ADJ)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->CA_PAR_ERR,\
+                (sizeof(DDRCFG->CA_PAR_ERR)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->DFI,\
+                (sizeof(DDRCFG->DFI)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->AXI_IF,\
+                (sizeof(DDRCFG->AXI_IF)/4U));
+    (void)print_reg_array(g_debug_uart ,
+                (uint32_t *)&DDRCFG->csr_custom,\
+                (sizeof(DDRCFG->csr_custom)/4U));
+    return;
+}
+#endif
+#endif
 
 #endif /* DDR_SUPPORT */
 
