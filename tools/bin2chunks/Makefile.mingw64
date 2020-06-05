@@ -49,7 +49,7 @@ INCLUDES=\
 	-I../../thirdparty/opensbi/include \
 	 
 
-bin2chunks.exe: bin2chunks.c ../../misc/hss_crc32.c
+bin2chunks.exe: bin2chunks.c 
 	$(CC) $(CFLAGS) $(INCLUDES) -o bin2chunks.exe bin2chunks.c 
 
 clean:
