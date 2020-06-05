@@ -182,6 +182,8 @@ static bool validateCrc_(struct HSS_BootImage *pImageHdr)
 
     if (headerCrc == originalCrc) {
         result = true;
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF, pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, originalCrc);
     }
 
     // restore original headerCrc
@@ -423,7 +425,7 @@ static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage)
     return result;
 }
 
-void HSS_BootSelectPayload(void);
+void HSS_BootSelectPayload(void)
 {
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting Payload as boot source ..." CRLF);
     getBootImageFunction = getBootImageFromPayload_;
