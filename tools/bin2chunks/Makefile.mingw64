@@ -27,16 +27,17 @@
 # Toplevel HSS Makefile
 #
 
-CC=gcc
-CORE_CFLAGS+=-Wall -Werror -Wshadow -fno-builtin-printf \
+CROSS_COMPILE?=x86_64-w64-mingw32-
+CC=$(CROSS_COMPILE)gcc
+CORE_CFLAGS+=-Wall -Werror -Wshadow -ffast-math -fno-builtin-printf \
    -fomit-frame-pointer -Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing \
    -fno-common -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wformat=2 -Wformat-security \
    -Wformat-y2k -Winit-self -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition \
    -Wtype-limits -Wstrict-prototypes -Wimplicit-fallthrough=5
 
-CFLAGS=--std=gnu11 -O1 -g3 $(CORE_CFLAGS) -DNR_CPUs=4 -D__riscv_xlen=64 -D_FORTIFY_SOURCE=2 -mno-ms-bitfields
+CFLAGS=--std=gnu11 -O2 -g3 $(CORE_CFLAGS) -DNR_CPUs=4 -D__riscv_xlen=64 -fpack-struct=8 -mno-ms-bitfields
 
-all: bin2chunks dump_header
+all: bin2chunks.exe
 
 -include ../../.config
 
@@ -46,13 +47,10 @@ INCLUDES=\
 	-I../../ssmb/ipi/ \
 	-I../../ \
 	-I../../thirdparty/opensbi/include \
-	
+	 
 
-bin2chunks: bin2chunks.c ../../misc/hss_crc32.c
-	$(CC) $(CFLAGS) $(INCLUDES) -o bin2chunks bin2chunks.c
-
-dump_header: dump_header.c
-	$(CC) $(CFLAGS) $(INCLUDES) -o dump_header dump_header.c
+bin2chunks.exe: bin2chunks.c ../../misc/hss_crc32.c
+	$(CC) $(CFLAGS) $(INCLUDES) -o bin2chunks.exe bin2chunks.c 
 
 clean:
-	-$(RM) bin2chunks dump_header
+	-$(RM) bin2chunks.exe

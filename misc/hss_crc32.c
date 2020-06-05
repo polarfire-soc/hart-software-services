@@ -14,8 +14,6 @@
 
 #include "config.h"
 #include "hss_types.h"
-#include <stdint.h>
-#include <stdlib.h>
 
 #include "hss_debug.h"
 #include "hss_crc32.h"

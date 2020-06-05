@@ -15,14 +15,41 @@
 #define DEBUG_MEM_OFFSET (0x81200000lu)
 
 #define _FILE_OFFSET_BITS 64
+
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <libgen.h>
 
+
+#define mCOMPILE_ASSERT(expr, msg) char msg[expr ? 1: -1]
+mCOMPILE_ASSERT(sizeof(void *)==8, fatal_64bit_compiler_required);
+
+#ifdef __MINGW32__
+   // x86_64-W64_MING32 has 4-byte long, whereas Linux x64/RV64 compilers have 8-byte long
+   // we'll fix up the type defs here to ensure that the structures (including padding)
+   // are the same sizes...
+   //
+
+#  define __ssize_t_defined
+   typedef long long          HSS_ssize_t;
+   typedef unsigned long long HSS_size_t;
+   typedef unsigned long long HSS_uintptr_t;
+   typedef unsigned long long HSS_off_t;
+#  define size_t    HSS_size_t
+#  define ssize_t   HSS_ssize_t
+#  define uintptr_t HSS_uintptr_t
+#  define off_t     HSS_off_t
+#endif
+
+#define CONFIG_CC_HAS_INTTYPES
+
 #include "hss_types.h"
 #include "hss_crc32.h"
+
+#include "../../misc/hss_crc32.c"
 
 /*****************************************************************************************/
 
@@ -30,8 +57,7 @@
 #  define NR_CPUs (4u)
 #endif
 
-#define CHUNK_SIZE chunkSize
-size_t CHUNK_SIZE = 1024u;
+size_t gChunkSize = 1024u;
 #define BYTES_PER_LINE (12u)
 
 #define ENTRY_POINT 0x80000000lu
@@ -46,6 +72,7 @@ size_t CHUNK_SIZE = 1024u;
 
 uintptr_t entryPoint[NR_CPUs] = { ENTRY_POINT, ENTRY_POINT, ENTRY_POINT, ENTRY_POINT };
 size_t execAddr[NR_CPUs] =   { 0u, 0u, 0u, 0u };
+uint8_t privMode[NR_CPUs] = { PRV_S, PRV_S, PRV_S, PRV_S };
 
 size_t bootImageSize = 0u;
 size_t bootImagePaddedSize = 0u;
@@ -60,7 +87,7 @@ size_t chunkCountArray[NR_CPUs] = { 0u, 0u, 0u, 0u };
 size_t chunkCount = 0u;
 size_t ziChunkCount = 0u;
 
-// self-checks, to ensure tool is generate good boot image
+// self-checks, to ensure tool is generating good boot images
 size_t chunkTableOffset = 0u;
 size_t ziChunkTableOffset = 0u;
 uintptr_t * pChunkOffset;
@@ -69,7 +96,7 @@ uintptr_t * pChunkOffset;
 /*****************************************************************************************/
 /*! \brief Pad helper to align structures nicely
  */
-void fileOut_WritePad(FILE *pFileOut, size_t pad)
+static void fileOut_WritePad_(FILE *pFileOut, size_t pad)
 {
     size_t i;
 
@@ -80,13 +107,13 @@ void fileOut_WritePad(FILE *pFileOut, size_t pad)
 #ifdef DEBUG
     if (DEBUG) {
         off_t posn = ftello(pFileOut);
-        printf("%s(): current location after %lu padding is %lx\n", __func__, (unsigned long)pad, (unsigned long)posn);
+        printf("%s(): current location after %lu padding is %lu\n", __func__, (unsigned long)pad, (unsigned long)posn);
     }
 #endif
 }
 
 /*****************************************************************************************/
-void calculateChunkCounts(size_t *binSize, size_t chunkSize)
+void calculateChunkCounts_(size_t *binSize, size_t chunkSize)
 {
     for (unsigned int i = 0u; i < NR_CPUs; i++) {
         if (binSize[i] == 0u) {
@@ -137,7 +164,7 @@ void calculateChunkCounts(size_t *binSize, size_t chunkSize)
 /*****************************************************************************************/
 /*! \brief Includes binary file as blob with symbols marking start, end and size
  */
-void fileOut_WriteBinaryFileArray(FILE *pFileOut, FILE **ppFileIn, size_t *binSize, size_t chunkSize)
+void fileOut_WriteBinaryFileArray_(FILE *pFileOut, FILE **ppFileIn, size_t *binSize, size_t chunkSize)
 {
     for (unsigned int i = 0u; i < NR_CPUs; i++) {
         FILE *pFileIn = ppFileIn[i];
@@ -156,14 +183,14 @@ void fileOut_WriteBinaryFileArray(FILE *pFileOut, FILE **ppFileIn, size_t *binSi
         }
 
         size_t binPaddedSize = mPAD(binSize[i], chunkSize);
-        fileOut_WritePad(pFileOut, binPaddedSize - binSize[i]);
+        fileOut_WritePad_(pFileOut, binPaddedSize - binSize[i]);
     }
 }
 
 /*****************************************************************************************/
 /*! \brief Generates the code/ro data/rw data chunk table
  */
-void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSize, size_t chunkSize)
+void fileOut_WriteBootChunkTable_(FILE *pFileOut, int *pOwnerArray, size_t *binSize, size_t chunkSize)
 {
     off_t posn = ftello(pFileOut);
     assert(chunkTableOffset == (size_t)posn);
@@ -204,8 +231,11 @@ void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSi
 
 #ifdef DEBUG
             if (DEBUG) {
-                printf("%s(): %d: Writing chunk %8lu: %lx->%lx (payload of %lu bytes)\n",
-                    __func__, bootChunk.owner, idx/chunkSize, bootChunk.loadAddr + DEBUG_MEM_OFFSET, bootChunk.execAddr, (unsigned long)bootChunk.size);
+                printf("%s(): %d: Writing chunk %lu: %" PRIx64 "->%" PRIx64
+                    " (payload of %lu bytes)\n",  __func__, bootChunk.owner,
+                    (unsigned long)(idx/chunkSize),
+                    bootChunk.loadAddr + DEBUG_MEM_OFFSET,
+                    bootChunk.execAddr, (unsigned long)bootChunk.size);
             }
 #endif
             fwrite((char *)&bootChunk, sizeof(struct HSS_BootChunkDesc), 1, pFileOut);
@@ -222,20 +252,23 @@ void fileOut_WriteBootChunkTable(FILE *pFileOut, int *pOwnerArray, size_t *binSi
 
 #ifdef DEBUG
     if (DEBUG) {
-        printf("%s(): %d: Writing chunk %8lu: %lx->%lx (%lu bytes)\n",
-            __func__, bootChunk.owner, (unsigned long)idx/chunkSize, bootChunk.loadAddr + DEBUG_MEM_OFFSET, bootChunk.execAddr, (unsigned long)bootChunk.size);
+        printf("%s(): %d: Writing chunk %lu: %" PRIx64 "->%" PRIx64 " (%lu bytes)\n",
+            __func__, bootChunk.owner,
+           (unsigned long)(idx/chunkSize),
+           bootChunk.loadAddr + DEBUG_MEM_OFFSET, bootChunk.execAddr,
+           (unsigned long)bootChunk.size);
     }
 #endif
 
     pChunkOffset[idx/chunkSize] = 0;
 
-    fileOut_WritePad(pFileOut, chunkTablePaddedSize - chunkTableSize);
+    fileOut_WritePad_(pFileOut, chunkTablePaddedSize - chunkTableSize);
 }
 
 /*****************************************************************************************/
 /*! \brief Generate the BSS/Zero Init chunk table
  */
-void fileOut_WriteBootZIChunkTable(FILE *pFileOut, int *pOwnerArray)
+void fileOut_WriteBootZIChunkTable_(FILE *pFileOut, int *pOwnerArray)
 {
     // this function is a stub for now...
     struct HSS_BootZIChunkDesc ziChunk = { .owner = 0u, .execAddr = 0x0u, .size = 0u };
@@ -244,13 +277,13 @@ void fileOut_WriteBootZIChunkTable(FILE *pFileOut, int *pOwnerArray)
     assert(ziChunkTableOffset == (size_t)posn);
 
     fwrite((char *)&ziChunk, sizeof(struct HSS_BootZIChunkDesc), 1, pFileOut);
-    fileOut_WritePad(pFileOut, ziChunkTablePaddedSize - ziChunkTableSize);
+    fileOut_WritePad_(pFileOut, ziChunkTablePaddedSize - ziChunkTableSize);
 }
 
 /*****************************************************************************************/
 /*! \brief Generate the boot image data structure
  */
-uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * pName, char ** pFileNameArray,
+uint32_t fileOut_WriteBootImageHeader_(FILE *pFileOut, int *pOwnerArray, char * pName, char ** pFileNameArray,
     size_t *pNumChunksArray, size_t numZIChunks, size_t bootImageLength, uint32_t headerCrc)
 {
 
@@ -268,10 +301,30 @@ uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * p
         .chunkTableOffset = bootImagePaddedSize,
         .ziChunkTableOffset = bootImagePaddedSize + chunkTablePaddedSize,
         .hart = {
-            { entryPoint[0], PRV_S, pNumChunksArray[0], firstChunkArray[0], lastChunkArray[0], "" },
-            { entryPoint[1], PRV_S, pNumChunksArray[1], firstChunkArray[1], lastChunkArray[1], "" },
-            { entryPoint[2], PRV_S, pNumChunksArray[2], firstChunkArray[2], lastChunkArray[2], "" },
-            { entryPoint[3], PRV_S, pNumChunksArray[3], firstChunkArray[3], lastChunkArray[3], "" },
+            { .entryPoint = entryPoint[0],
+              .privMode = privMode[0],
+              .numChunks = pNumChunksArray[0],
+              .firstChunk = firstChunkArray[0],
+              .lastChunk = lastChunkArray[0],
+              .name = "" },
+            { .entryPoint = entryPoint[1],
+              .privMode = privMode[1],
+              .numChunks = pNumChunksArray[1],
+              .firstChunk = firstChunkArray[1],
+              .lastChunk = lastChunkArray[1],
+              .name = "" },
+            { .entryPoint = entryPoint[2],
+              .privMode = privMode[2],
+              .numChunks = pNumChunksArray[2],
+              .firstChunk = firstChunkArray[2],
+              .lastChunk = lastChunkArray[2],
+              .name = "" },
+            { .entryPoint = entryPoint[3],
+              .privMode = privMode[3],
+              .numChunks = pNumChunksArray[3],
+              .firstChunk = firstChunkArray[3],
+              .lastChunk = lastChunkArray[3],
+              .name = "" },
         },
         .set_name = "PolarFireSOC-HSS::",
         .bootImageLength = bootImageLength,
@@ -290,39 +343,45 @@ uint32_t fileOut_WriteBootImageHeader(FILE *pFileOut, int *pOwnerArray, char * p
 
 #ifdef DEBUG
     if (DEBUG) {
-        printf("%s(): bootImage.chunkTableOffset is %lx\n", __func__, bootImage.chunkTableOffset);
-        printf("%s(): bootImage.ziChunkTableOffset is %lx\n", __func__, bootImage.ziChunkTableOffset);
-        printf("%s(): bootImage.headerCrc is 0x%08X\n", __func__, bootImage.headerCrc);
+        printf("%s(): bootImage.chunkTableOffset is  %" PRIu64 "\n", __func__, bootImage.chunkTableOffset);
+        printf("%s(): bootImage.ziChunkTableOffset is %" PRIu64 "\n", __func__, bootImage.ziChunkTableOffset);
+        printf("%s(): bootImage.headerCrc is 0x%08x\n", __func__, bootImage.headerCrc);
     }
 #endif
 
     fwrite((char *)&bootImage, sizeof(struct HSS_BootImage), 1, pFileOut);
-    fileOut_WritePad(pFileOut, bootImagePaddedSize - bootImageSize);
+    fileOut_WritePad_(pFileOut, bootImagePaddedSize - bootImageSize);
 
     return CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
 }
 
 
 /*****************************************************************************************/
-void print_usage(char *programName)
+static void print_usage_(char *programName)
 {
     printf("Usage: %s <0x-entry-point-u54-1> <0x-entry-point-u54-2> <0x-entry-point-u54-3> <0x-entry-point-u54-4>\n"
         "\t<chunkSize> <output.bin>\n"
-        "\t<owner-hart> <input-bin> <load-addr> [ <owner-hart> <input-bin> <load-addr> ]\n", programName);
+        "\t<owner-hart> <priv-mode> <input-bin> <exec-addr> [ <owner-hart> <priv-mode> <input-bin> <exec-addr> ]\n", programName);
 }
 
-void validate_owner(int owner) {
+static void validate_owner_(int owner) {
     assert((owner >= 0) && (owner <=4));
+}
+
+static void validate_privmode_(int privmode) {
+    assert((privmode >= PRV_U) && (privmode <=PRV_S));
 }
 
 char imageNameBuf[1024] = "";
 
 int main(int argc, char **argv)
 {
-    if (argc != 10) {
-        if ((argc < 10) || ((argc - 10) % 3)) {
-            printf("Num arguments is %d\n", argc);
-            print_usage(argv[0]);
+    printf("sizeof(long) is %lu\n", (unsigned long)sizeof(long));
+    printf("sizeof(size_t) is %lu\n", (unsigned long)sizeof(size_t));
+
+    if (argc != 11) {
+        if ((argc < 11) || ((argc - 11) % 4)) {
+            print_usage_(argv[0]);
             exit(EXIT_FAILURE);
         }
     }
@@ -331,11 +390,11 @@ int main(int argc, char **argv)
     // first core is E51 - skipped here...
     for (unsigned int i = 0u; i < NR_CPUs; i++) {
         entryPoint[i] = strtoul(argv[argIndex++], NULL, 16);
-        printf("entryPoint[%u] set to %lx\n", i, entryPoint[i]);
+        printf("entryPoint[%u] set to %" PRIx64 "\n", i, entryPoint[i]);
     }
 
-    CHUNK_SIZE = strtoul(argv[argIndex++], NULL, 10);
-    printf("chunkSize set to %lu\n", (unsigned long)CHUNK_SIZE);
+    gChunkSize = strtoul(argv[argIndex++], NULL, 10);
+    printf("chunkSize set to %lu\n", (unsigned long)gChunkSize);
 
     char * filename_output = argv[argIndex++];
     printf("output file set to >>%s<<\n", filename_output);
@@ -367,8 +426,12 @@ int main(int argc, char **argv)
         printf(" - processing image %u\n", i+1);
 
         ownerArray[i] = strtol(argv[argIndex++], NULL, 10);
-        validate_owner(ownerArray[i]);
+        validate_owner_(ownerArray[i]);
         printf(" - hart owner is >>%d<<\n", ownerArray[i]);
+
+        privMode[i] = strtol(argv[argIndex++], NULL, 10);
+        validate_privmode_(ownerArray[i]);
+        printf(" - privMode >>%d<<\n", privMode[i]);
 
         pFileNameArray[i] = argv[argIndex++];
         printf(" - input file is >>%s<<\n", pFileNameArray[i]);
@@ -380,7 +443,7 @@ int main(int argc, char **argv)
         strncat(imageNameBuf, pFileNameArray[i], BOOT_IMAGE_MAX_NAME_LEN-1);
 
         execAddr[i] = strtoul(argv[argIndex++], NULL, 16);
-        printf("execAddr[%u] set to %lx\n", i, execAddr[i]);
+        printf("execAddr[%u] set to %" PRIx64 "\n", i, execAddr[i]);
 
         ppFileIn[i] = fopen(pFileNameArray[i], "rb");
         assert(ppFileIn[i] != NULL);
@@ -391,29 +454,31 @@ int main(int argc, char **argv)
         printf(" - binSize[%u] is %lu\n", i, (unsigned long)binSize[i]);
     }
 
-    calculateChunkCounts(binSize, CHUNK_SIZE);
+    calculateChunkCounts_(binSize, gChunkSize);
     // writing test header
-    (void)fileOut_WriteBootImageHeader(pFileOut, ownerArray, imageNameBuf, &pFileNameArray[0], chunkCountArray, ziChunkCount, 0u, 0u);
-    fileOut_WriteBootChunkTable(pFileOut, ownerArray, binSize, CHUNK_SIZE);
-    fileOut_WriteBootZIChunkTable(pFileOut, ownerArray);
-    fileOut_WriteBinaryFileArray(pFileOut, ppFileIn, binSize, CHUNK_SIZE);
+    (void)fileOut_WriteBootImageHeader_(pFileOut, ownerArray, imageNameBuf, &pFileNameArray[0], chunkCountArray, ziChunkCount, 0u, 0u);
+    fileOut_WriteBootChunkTable_(pFileOut, ownerArray, binSize, gChunkSize);
+    fileOut_WriteBootZIChunkTable_(pFileOut, ownerArray);
+    fileOut_WriteBinaryFileArray_(pFileOut, ppFileIn, binSize, gChunkSize);
 
     off_t posn = ftello(pFileOut);
-    printf("%s: %lu bytes written to >>%s<<\n", argv[0], posn, filename_output);
+    printf("%s: %" PRIu64 " bytes written to >>%s<<\n", argv[0], posn, filename_output);
 
     // rewrite header to correct it
     uint32_t headerCrc = 0;
     fseeko(pFileOut, 0, SEEK_SET);
-    headerCrc = fileOut_WriteBootImageHeader(pFileOut, ownerArray, imageNameBuf, &pFileNameArray[0], chunkCountArray, ziChunkCount, posn, headerCrc);
+    headerCrc = fileOut_WriteBootImageHeader_(pFileOut, ownerArray, imageNameBuf, &pFileNameArray[0], chunkCountArray, ziChunkCount, posn, headerCrc);
     fseeko(pFileOut, 0, SEEK_SET);
-    (void) fileOut_WriteBootImageHeader(pFileOut, ownerArray, imageNameBuf, &pFileNameArray[0], chunkCountArray, ziChunkCount, posn, headerCrc);
+    (void) fileOut_WriteBootImageHeader_(pFileOut, ownerArray, imageNameBuf, &pFileNameArray[0], chunkCountArray, ziChunkCount, posn, headerCrc);
     printf("%s: headerCrc is 0x%08X\n", argv[0], headerCrc);
 
     // correct image length...
 
     fclose(pFileOut);
     for (unsigned int i = 0u; i < NR_CPUs; i++) {
-        if (ppFileIn[i]) { fclose(ppFileIn[i]); }
+        if (ppFileIn[i]) {
+            fclose(ppFileIn[i]);
+        }
     }
 
     return EXIT_SUCCESS;
