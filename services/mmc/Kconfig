@@ -10,7 +10,7 @@ menu "MMC Mode"
 config SERVICE_MMC_MODE_EMMC
 	bool "Use eMMC"
 	default y
-        depends on SERVICE_MMC 
+        depends on SERVICE_MMC && !SERVICE_MMC_MODE_SDCARD
 	help
                 This feature sets the MMC system to use eMMC.
                 This option is mutually exclusive with SERVICE_MMC_MODE_SDCARD.
@@ -43,7 +43,7 @@ config SERVICE_MMC_BUS_VOLTAGE_1V8
 config SERVICE_MMC_BUS_VOLTAGE_3V3
 	bool "Use 3.3V Bus Voltage with MMC"
 	default y
-        depends on SERVICE_MMC
+        depends on SERVICE_MMC && !SERVICE_MMC_BUS_VOLTAGE_1V8
 	help
                 This feature sets the bus voltage for MMC to 3.3V.
                 This option is mutually exclusive with SERVICE_MMC_BUS_VOLTAGE_1V8..
