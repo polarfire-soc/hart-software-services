@@ -61,6 +61,7 @@ void sbi_gets(char *s, int maxwidth, char endchar)
 #define PAD_RIGHT 1
 #define PAD_ZERO 2
 #define PAD_ALTERNATE 4
+#define PAD_SPACE 8
 #define PRINT_BUF_LEN 64
 
 #define va_start(v, l) __builtin_va_start((v), l)
@@ -103,6 +104,8 @@ static int prints(char **out, u32 *out_len, const char *string, int width,
 			width -= len;
 		if (flags & PAD_ZERO)
 			padchar = '0';
+		if (flags & PAD_SPACE)
+			padchar = ' ';
 	}
 	if (!(flags & PAD_RIGHT)) {
 		for (; width > 0; --width) {
@@ -200,6 +203,10 @@ static int print(char **out, u32 *out_len, const char *format, va_list args)
 			while (*format == '0') {
 				++format;
 				flags |= PAD_ZERO;
+			}
+			while (*format == ' ') {
+				++format;
+				flags |= PAD_SPACE;
 			}
 			/* Get width */
 			for (; *format >= '0' && *format <= '9'; ++format) {
