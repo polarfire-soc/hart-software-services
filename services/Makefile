@@ -42,3 +42,4 @@ include services/ddr/Makefile
 include services/opensbi/Makefile
 include services/ymodem/Makefile
 include services/tinycli/Makefile
+include services/usbdmsc/Makefile

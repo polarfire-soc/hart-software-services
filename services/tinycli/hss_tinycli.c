@@ -53,7 +53,9 @@ enum CmdIndex {
 #if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
     CMD_PAYLOAD,
 #endif
-    CMD_USBMSC,
+#if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
+    CMD_USBDMSC,
+#endif
 };
 
 static void   tinyCLI_CmdHandler_(int cmdIndex);
@@ -95,7 +97,9 @@ static struct {
 #if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
     { CMD_PAYLOAD, tinyCLI_CmdHandler_, "PAYLOAD", "Select boot via payload." },
 #endif
-    { CMD_USBMSC,  tinyCLI_CmdHandler_, "USBMSC",  "Export eMMC as USB MSC." },
+#if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
+    { CMD_USBDMSC,  tinyCLI_CmdHandler_, "USBDMSC",  "Export eMMC as USBD Mass Storage Class." },
+#endif
 };
 
 
@@ -217,12 +221,14 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
         break;
 #endif
 
-    case CMD_USBMSC:
+#if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
+    case CMD_USBDMSC:
         {
-            void MTD_USB_test(void);
-            MTD_USB_test();
+            void USBD_MSC_Loop(void);
+            USBD_MSC_Loop();
         }
         break;
+#endif
 
     default:
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command %d (%lu tokens)" CRLF, cmdIndex, numTokens);

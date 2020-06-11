@@ -21,9 +21,8 @@
 #include "uart_helper.h"
 
 /**************************************************************************//**
- * MSS USB FLash drive test
  */
-void MTD_USB_test(void)
+void USBD_MSC_Loop(void)
 {
     SYSREG->SOFT_RESET_CR &= ~ (1u << 16u);
 
@@ -36,35 +35,23 @@ void MTD_USB_test(void)
     PLIC_EnableIRQ(USB_MC_PLIC);
 
     MSS_GPIO_init(GPIO2_LO);
-    MSS_GPIO_config(GPIO2_LO,
-                    MSS_GPIO_0,
-                    MSS_GPIO_OUTPUT_MODE | MSS_GPIO_IRQ_EDGE_NEGATIVE);
+    MSS_GPIO_config(GPIO2_LO, MSS_GPIO_0, MSS_GPIO_OUTPUT_MODE | MSS_GPIO_IRQ_EDGE_NEGATIVE);
 
     MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0x1);
     MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0x0);
-
-    //__enable_irq();
 
     PLIC_SetPriority(MMC_main_PLIC, 2u);
     PLIC_SetPriority(MMC_wakeup_PLIC, 2u);
     PLIC_EnableIRQ(MMC_main_PLIC);
     PLIC_EnableIRQ(MMC_wakeup_PLIC);
 
-    MSS_MPU_configure(MSS_MPU_USB,
-                           MSS_MPU_PMP_REGION3,
-                           0x08000000u,
-                           0x200000u,
-                           MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS,
-                           MSS_MPU_AM_NAPOT,
-                           0u);
+    MSS_MPU_configure(MSS_MPU_USB, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
+        MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
+
     /* DMA init for eMMC */
-    MSS_MPU_configure(MSS_MPU_MMC,
-                       MSS_MPU_PMP_REGION3,
-                       0x08000000u,
-                       0x200000u,
-                       MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS,
-                       MSS_MPU_AM_NAPOT,
-                       0u);
+    MSS_MPU_configure(MSS_MPU_MMC, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
+        MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
+
     bool done = false;
     bool isHostConnected = false;
     uint8_t rx_byte = 0;
@@ -73,8 +60,7 @@ void MTD_USB_test(void)
 
     if (done) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false..." CRLF);
-    }
-    if (!done) {
+    } else { //if (!done) {
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)" CRLF);
 
         do {

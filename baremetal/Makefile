@@ -152,16 +152,16 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.o: bare
 #
 # USB
 
-EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
+ifdef CONFIG_PLATFORM_MPFS
+SRCS-$(CONFIG_SERVICE_USBDMSC) += \
 	baremetal/drivers/mss_usb/mss_usb_common_cif.c \
 	baremetal/drivers/mss_usb/mss_usb_device.c \
 	baremetal/drivers/mss_usb/mss_usb_device_cif.c \
 	baremetal/drivers/mss_usb/mss_usb_device_msd.c \
-	baremetal/drivers/flash_drive/flash_drive_app.c \
-	baremetal/drivers/flash_drive/usb_test.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/hal/hal_irq.c \
-	baremetal/drivers/flash_drive/usb_user_descriptors.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_gpio/mss_gpio.c \
+
+endif
 
 baremetal/drivers/mss_usb/mss_usb_common_cif.o: baremetal/drivers/mss_usb/mss_usb_common_cif.c config.h
 	@$(ECHO) " CC        $@";
@@ -179,19 +179,7 @@ baremetal/drivers/mss_usb/mss_usb_device_msd.o: baremetal/drivers/mss_usb/mss_us
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-baremetal/drivers/flash_drive/flash_drive_app.o: baremetal/drivers/flash_drive/flash_drive_app.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-baremetal/drivers/flash_drive/usb_test.o: baremetal/drivers/flash_drive/usb_test.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
 baremetal/polarfire-soc-bare-metal-library/src/platform/hal/hal_irq.o: baremetal/polarfire-soc-bare-metal-library/src/platform/hal/hal_irq.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-baremetal/drivers/flash_drive/usb_user_descriptors.o: baremetal/drivers/flash_drive/usb_user_descriptors.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
