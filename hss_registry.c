@@ -231,7 +231,9 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 
 #include "hss_init.h"
 #include "hss_boot_init.h"
-#include "hss_tinycli.h"
+#ifdef CONFIG_SERVICE_TINYCLI
+#  include "tinycli_service.h"
+#endif
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_board_init.h"
@@ -261,13 +263,13 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #ifdef CONFIG_SERVICE_QSPI
     { "HSS_QSPIInit",        HSS_QSPIInit,        false, false },
 #endif
-#ifdef CONFIG_TINYCLI
+#ifdef CONFIG_SERVICE_TINYCLI
     { "HSS_TinyCLI_Parser",  HSS_TinyCLI_Parser,  false, false },
 #endif
     { "IPI_QueuesInit",      IPI_QueuesInit,      false, false },
 #ifdef CONFIG_SERVICE_BOOT
     { "HSS_PMP_Init",        HSS_PMP_Init,        false, false },
-    { "HSS_BootInit",        HSS_BootInit,        false, false },
+    { "HSS_BootInit",        HSS_BootInit,        false, true },
 #endif
 };
 const size_t spanOfGlobalInitFunctions = mSPAN_OF(globalInitFunctions);

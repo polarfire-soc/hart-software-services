@@ -1,7 +1,7 @@
 config SERVICE_YMODEM
 	bool "YMODEM support"
 	default n
-        select TINYCLI
+        select SERVICE_TINYCLI
 	help
                 This feature enables support for YMODEM.
                 

@@ -39,8 +39,14 @@
 #  error Both MMC Bus Voltages defined! These are mutually exclusive.
 #endif
 
+#include "mpfs_hal/mss_sysreg.h"
+
 bool HSS_MMCInit(void)
 {
+    SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
+    SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
+    SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
+
     //static bool initialized = false;
     mss_mmc_status_t result = MSS_MMC_INIT_SUCCESS;
 
@@ -175,12 +181,7 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     uint32_t dst_sector_num = (uint32_t)dstOffset / HSS_MMC_SECTOR_SIZE;
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
-    size_t origByteCount = byteCount;
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount)) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_write(0x%p, %lu) "
-        //  "(%lu bytes remaining)" CRLF, pCSrc, dst_sector_num, byteCount);
-        HSS_ShowProgress(origByteCount, byteCount);
-
         result = MSS_MMC_single_block_write((uint32_t *)pCSrc, dst_sector_num);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
@@ -192,8 +193,6 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
         byteCount = byteCount - HSS_MMC_SECTOR_SIZE;
         pCSrc = pCSrc + HSS_MMC_SECTOR_SIZE;
     }
-
-    HSS_ShowProgress(origByteCount, 0u);
 
     return (result == MSS_MMC_TRANSFER_SUCCESS);
 }

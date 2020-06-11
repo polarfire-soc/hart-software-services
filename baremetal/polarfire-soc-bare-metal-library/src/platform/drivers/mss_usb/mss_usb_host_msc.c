@@ -87,7 +87,7 @@ typedef struct {
  */
 static scsi_command_t g_scsi_command = {0};
 static volatile uint8_t g_usbh_msc_alloc_event = 0u;
-static uint8_t g_usbh_msc_release_event = 0u;
+//static uint8_t g_usbh_msc_release_event = 0u; // unused
 static volatile uint8_t g_usbh_msc_cep_event = 0u;
 static volatile uint8_t g_usbh_msc_tx_event = 0u;
 static volatile uint8_t g_usbh_msc_rx_event = 0u;

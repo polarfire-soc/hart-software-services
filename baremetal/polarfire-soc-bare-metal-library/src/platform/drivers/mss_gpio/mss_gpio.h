@@ -393,7 +393,7 @@ static inline void MSS_GPIO_config_byte
     uint32_t config
 )
 {
-    uint8_t num = byte_num;
+    //uint8_t num = byte_num; // unused variable
 
     if(((GPIO0_LO == gpio) || (GPIO0_HI == gpio)) && (byte_num >= 1 ))
     {

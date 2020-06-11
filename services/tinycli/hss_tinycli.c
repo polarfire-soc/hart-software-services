@@ -14,15 +14,15 @@
 
 #include "config.h"
 #include "hss_types.h"
+#include "hss_debug.h"
 
 #include <ctype.h> // tolower()
 #include <string.h> // strcasecmp(), strtok(), strtok_r()
 #include <strings.h>
 
 #include "hss_boot_init.h"
-#include "hss_debug.h"
 #include "hss_init.h"
-#include "hss_tinycli.h"
+#include "tinycli_service.h"
 #include "hss_memtest.h"
 #include "hss_progress.h"
 #include "hss_version.h"
@@ -53,6 +53,7 @@ enum CmdIndex {
 #if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
     CMD_PAYLOAD,
 #endif
+    CMD_USBMSC,
 };
 
 static void   tinyCLI_CmdHandler_(int cmdIndex);
@@ -73,7 +74,9 @@ static struct {
     const char * const name;
     const char * const helpString;
 } commands[] = {
+#ifdef CONFIG_SERVICE_YMODEM
     { CMD_YMODEM,  tinyCLI_CmdHandler_, "YMODEM",  "Run YMODEM utility to download an image to DDR." },
+#endif
     { CMD_QUIT,    tinyCLI_CmdHandler_, "QUIT",    "Quit TinyCLI and return to regular boot process." },
     { CMD_BOOT,    tinyCLI_CmdHandler_, "BOOT",    "Quit TinyCLI and return to regular boot process." },
     { CMD_RESET,   tinyCLI_CmdHandler_, "RESET",   "Reset the E51." },
@@ -92,6 +95,7 @@ static struct {
 #if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
     { CMD_PAYLOAD, tinyCLI_CmdHandler_, "PAYLOAD", "Select boot via payload." },
 #endif
+    { CMD_USBMSC,  tinyCLI_CmdHandler_, "USBMSC",  "Export eMMC as USB MSC." },
 };
 
 
@@ -105,7 +109,7 @@ static bool tinyCLI_GetCmdIndex_(char *pCmdToken, size_t *index)
     for (i = 0u; i < mSPAN_OF(commands); i++) {
         if (strcasecmp(commands[i].name, pCmdToken) == 0) {
             result = true;
-            *index = commands[i].cmdIndex;
+            *index = i;
             break;
         }
     }
@@ -171,11 +175,11 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
         tinyCLI_PrintVersion_();
         break;
 
-    case CMD_YMODEM:
 #ifdef CONFIG_SERVICE_YMODEM
+    case CMD_YMODEM:
         hss_loader_ymodem_loop();
-#endif
         break;
+#endif
 
     case CMD_RESET:
         _start();
@@ -213,6 +217,13 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
         break;
 #endif
 
+    case CMD_USBMSC:
+        {
+            void MTD_USB_test(void);
+            MTD_USB_test();
+        }
+        break;
+
     default:
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command %d (%lu tokens)" CRLF, cmdIndex, numTokens);
         for (index = 1; index < numTokens; index++) {
@@ -246,7 +257,7 @@ static size_t tinyCLI_ParseIntoTokens_(char *buffer)
     size_t i = 0u;
     static char *strtok_string = NULL;
 
-    char *strtok_r(char *str, const char *delim, char **saveptr);
+    //char *strtok_r(char *str, const char *delim, char **saveptr);
 
     char *pToken = strtok_r(buffer, "\n ", &strtok_string);
     while ((pToken != NULL) && (i < mMAX_NUM_TOKENS))  {
@@ -264,7 +275,7 @@ static void tinyCLI_Execute_(void)
     bool matchFoundFlag = tinyCLI_GetCmdIndex_(tokenArray[0], &i);
 
     if (matchFoundFlag) {
-        commands[i].handler(i);
+        commands[i].handler(commands[i].cmdIndex);
     } else {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command >>%s<<." CRLF CRLF, tokenArray[0]);
     }
@@ -276,7 +287,7 @@ bool HSS_TinyCLI_Parser(void)
     uint8_t rcv_buf;
 
     keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip" CRLF,
-        CONFIG_TINYCLI_TIMEOUT, &rcv_buf);
+        CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
 
     if (!keyPressedFlag) {
         mHSS_FANCY_PUTS(LOG_NORMAL, "CLI check timeout" CRLF);

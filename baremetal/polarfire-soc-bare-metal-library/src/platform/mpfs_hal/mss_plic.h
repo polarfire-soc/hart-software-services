@@ -920,7 +920,7 @@ static inline uint32_t PLIC_ClaimIRQ(void)
 {
     uint64_t hart_id  = read_csr(mhartid);
 
-    const unsigned long lookup[5U] = {0U, 1U, 3U, 5U, 7U};
+    const int lookup[5] = {0, 1, 3, 5, 7};
 
     return (PLIC->TARGET[lookup[hart_id]].CLAIM_COMPLETE);
 }
@@ -933,7 +933,7 @@ static inline void PLIC_CompleteIRQ(uint32_t source)
 {
     uint64_t hart_id  = read_csr(mhartid);
 
-    const unsigned long lookup[5U] = {0U, 1U, 3U, 5U, 7U};
+    const int lookup[5] = {0, 1, 3, 5, 7};
 
     ASSERT(source <= MAX_PLIC_INT);
 
@@ -955,7 +955,7 @@ static inline void PLIC_CompleteIRQ(uint32_t source)
 static inline void PLIC_SetPriority_Threshold(uint32_t threshold)
 {
     uint64_t hart_id  = read_csr(mhartid);
-    const unsigned long lookup[5U] = {0U, 1U, 3U, 5U, 7U};
+    const int lookup[5] = {0, 1, 3, 5, 7};
 
     ASSERT(threshold <= 7);
 

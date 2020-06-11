@@ -55,7 +55,7 @@ CORE_CFLAGS+=-g3 -fdebug-prefix-map=/= -DDEBUG -pipe -grecord-gcc-switches
 
 
 # Warning / Code Quality
-CORE_CFLAGS+=-Wall -Werror -Wshadow -ffast-math -fno-builtin-printf \
+CORE_CFLAGS+=-Wall -Werror -Wshadow -fno-builtin-printf \
    -fomit-frame-pointer -Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing \
    -fno-common -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wformat=2 -Wformat-security \
    -Wformat-y2k -Winit-self -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition \
@@ -87,7 +87,7 @@ CFLAGS=-std=c11 $(CORE_CFLAGS) $(PLATFORM_CFLAGS) -Wmissing-prototypes
 CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y=-O2
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
-OPT-y+=-Os -fno-strict-aliasing 
+OPT-y+=-Os -fno-strict-aliasing
 
 ifndef CONFIG_LD_RELAX
 OPT-y+=-Wl,--no-relax

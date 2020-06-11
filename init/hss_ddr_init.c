@@ -42,9 +42,15 @@
  */
 bool HSS_DDRInit(void)
 {
-    //mHSS_DEBUG_PRINTF("Initializing DDR..." CRLF);
+    //mHSS_DEBUG_PRINTF(lOG_NORMAL, "Initializing DDR..." CRLF);
 #ifdef CONFIG_PLATFORM_MPFS
+#  if 0
     assert(mss_nwc_init() == 0);
+#  else
+    while (mss_nwc_init() != 0) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "mss_nwc_init() returned 0... retrying..." CRLF);
+    }
+#  endif
 #endif
 
     return true;

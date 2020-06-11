@@ -106,9 +106,7 @@ extern void ddr_pvt_calibration(void);
 extern void ddr_pvt_recalibration(void);
 extern void delay(uint32_t n);
 #ifdef DDR_FULL_32BIT_NC_CHECK_EN
-#  ifndef HSS
 extern uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access, uint32_t pattern);
-#  endif
 #endif
 #ifdef DEBUG_DDR_INIT
 #  ifdef DEBUG_DDR_DDRCFG
@@ -1438,15 +1436,10 @@ static int32_t ddr_setup(void)
             /*
              * write and read back test from drr, non cached access
              */
-            {
 #ifdef DDR_FULL_32BIT_NC_CHECK_EN
-#  ifndef HSS
-                error = ddr_read_write_fn((uint64_t*)MSS_BASE_ADD_DRC_NC,\
-                                     SW_CFG_NUM_READS_WRITES,\
-                                   SW_CONFIG_PATTERN);
-#  endif
+            error = ddr_read_write_fn((uint64_t*)MSS_BASE_ADD_DRC_NC,
+                SW_CFG_NUM_READS_WRITES, SW_CONFIG_PATTERN);
 #endif
-            }
             if(error == 0U)
             {
                 ddr_training_state = DDR_FULL_32BIT_CACHE_CHECK;

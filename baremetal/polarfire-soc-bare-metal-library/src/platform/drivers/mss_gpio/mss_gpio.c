@@ -8,11 +8,11 @@
  * This driver is based on SmartFusion2 MSS GPIO driver v2.1.102
  *
  */
-#include "mss_gpio.h"
 
 #include "hal/hal_assert.h"
 #include "mpfs_hal/mss_plic.h"
 #include "mpfs_hal/mss_sysreg.h"
+#include "mss_gpio.h"
 
 #if !defined(TARGET_ALOE)
 #ifdef __cplusplus
@@ -123,7 +123,7 @@ static uint8_t gpio_number_validate(GPIO_TypeDef * gpio, mss_gpio_id_t gpio_idx)
  */
 void MSS_GPIO_init( GPIO_TypeDef * gpio )
 {
-    uint32_t inc;
+    //uint32_t inc; // unused variable
 
     /* reset appropriate MSS GPIO hardware block*/
     if((GPIO0_LO == gpio) || (GPIO0_HI == gpio))
@@ -185,7 +185,7 @@ void MSS_GPIO_set_output
     uint8_t value
 )
 {
-    uint32_t gpio_setting;
+    //uint32_t gpio_setting; // unused variable
 
     if(0 == gpio_number_validate(gpio, port_id))
     {
@@ -212,7 +212,7 @@ void MSS_GPIO_drive_inout
     mss_gpio_inout_state_t inout_state
 )
 {
-    uint32_t outputs_state;
+    //uint32_t outputs_state; // unused variable
     uint32_t config;
 
     if(0 == gpio_number_validate(gpio, port_id))

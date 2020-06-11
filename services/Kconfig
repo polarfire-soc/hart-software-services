@@ -14,5 +14,6 @@ source "services/wdog/Kconfig"
 source "services/ipi_poll/Kconfig"
 source "services/opensbi/Kconfig"
 source "services/ymodem/Kconfig"
+source "services/tinycli/Kconfig"
 
 endmenu

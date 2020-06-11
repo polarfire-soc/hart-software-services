@@ -328,9 +328,9 @@
 #define LIBERO_SETTING_DDR_32_NON_CACHE 0xC0000000ULL
 
 /*
- * Setup configuration for HSS
+ * Set up 1MiB of L2 cache
  */
-#define HSS
+#define LIBERO_SETTING_WAY_ENABLE    0x00000007UL
 
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 

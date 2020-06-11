@@ -30,7 +30,7 @@ void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
     if (progressPercent == 100u) {
         mHSS_PUTS("                                                                " CR);
     } else if (oldProgressPercent != progressPercent) {
-        mHSS_PRINTF(" %03u%% ", progressPercent);
+        mHSS_PRINTF("  % 3u%%", progressPercent);
 
         mHSS_PUTS(" [");
 

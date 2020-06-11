@@ -8,7 +8,7 @@
  */
 
 /*!
- * \file DDR related utilities 
+ * \file DDR related utilities
  * \brief DDR utilities
  */
 

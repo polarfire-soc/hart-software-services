@@ -184,6 +184,13 @@ SECTIONS
      * (Explicitly) Initialized data section
      *
      */
+    .data.payload : ALIGN(16) 
+    {
+      _payload_start = .;
+      KEEP(boards/mpfs/payload.o(.*))
+      _payload_end = .;
+    }
+
     .data : ALIGN(0x40)
     {
         __data_load = LOADADDR(.data);
@@ -194,13 +201,6 @@ SECTIONS
         . = ALIGN(0x10);
         __data_end = .;
     } 
-
-    .data.payload : ALIGN(8) 
-    {
-      PROVIDE(_payload_start = .);
-      boards/mpfs/payload.o(.data) 
-      PROVIDE(_payload_end = .);
-    }
 
 
     /*******************************************************************************

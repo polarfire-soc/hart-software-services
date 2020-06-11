@@ -136,9 +136,6 @@ SECTIONS
     PROVIDE(__u54_4_itim_start = ORIGIN(u54_4_itim));
     PROVIDE(__u54_4_itim_end   = ORIGIN(u54_4_itim) + LENGTH(u54_4_itim));
 
-    PROVIDE(__l2lim_start      = ORIGIN(l2lim));
-    PROVIDE(__l2lim_end        = ORIGIN(l2lim) + LENGTH(l2lim));
-
     /*
      * Code and RO data lives in l2lim
      */
@@ -306,29 +303,29 @@ SECTIONS
      */
     .stack : ALIGN(0x40)
     {
-        PROVIDE(__stack_bottom = .);
+        __stack_bottom = .;
 
-        PROVIDE(__stack_bottom_h0$ = .);
+        __stack_bottom_h0$ = .;
         . += STACK_SIZE_PER_HART;
-        PROVIDE(__stack_top_h0$ = .);
+        __stack_top_h0$ = .;
 
-        PROVIDE(__stack_bottom_h1$ = .);
+        __stack_bottom_h1$ = .;
         . += STACK_SIZE_PER_HART;
-        PROVIDE(__stack_top_h1$ = .);
+        __stack_top_h1$ = .;
 
-        PROVIDE(__stack_bottom_h2$ = .);
+        __stack_bottom_h2$ = .;
         . += STACK_SIZE_PER_HART;
-        PROVIDE(__stack_top_h2$ = .);
+        __stack_top_h2$ = .;
 
-        PROVIDE(__stack_bottom_h3$ = .);
+        __stack_bottom_h3$ = .;
         . += STACK_SIZE_PER_HART;
-        PROVIDE(__stack_top_h3$ = .);
+        __stack_top_h3$ = .;
 
-        PROVIDE(__stack_bottom_h4$ = .);
+        __stack_bottom_h4$ = .;
         . += STACK_SIZE_PER_HART;
-        PROVIDE(__stack_top_h4$ = .);
+        __stack_top_h4$ = .;
 
-        PROVIDE(__stack_top = .);
+        __stack_top = .;
     } >l2lim
 
     _end = .;

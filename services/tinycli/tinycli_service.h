@@ -1,5 +1,5 @@
-#ifndef HSS_TINYCLI_H
-#define HSS_TINYCLI_H
+#ifndef HSS_TINYCLI_SERVICE_H
+#define HSS_TINYCLI_SERVICE_H
 
 /*******************************************************************************
  * Copyright 2019-2020 Microchip Corporation.

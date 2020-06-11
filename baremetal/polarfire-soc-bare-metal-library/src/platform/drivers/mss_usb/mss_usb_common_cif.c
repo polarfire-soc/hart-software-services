@@ -492,9 +492,9 @@ MSS_USB_CIF_rx_ep_read_prepare
     if (DMA_ENABLE == dma_enable)
     {
         /*Make sure that address is Modulo-4.Bits D0-D1 are read only.*/
-        HAL_ASSERT(!(((uint32_t)buf_addr) & 0x00000002U));
+        HAL_ASSERT(!(((ptrdiff_t)buf_addr) & 0x00000002U));
 
-        MSS_USB_CIF_dma_write_addr(dma_channel, (uint32_t)buf_addr);
+        MSS_USB_CIF_dma_write_addr(dma_channel, (ptrdiff_t)buf_addr);
 
         /*
          * DMA Count register will be loaded after receive interrupt occurs.
@@ -545,9 +545,9 @@ MSS_USB_CIF_ep_write_pkt
         if (DMA_ENABLE == dma_enable)
         {
             /* Make sure that address is Modulo-4.Bits D0-D1 are read only.*/
-            HAL_ASSERT(!(((uint32_t)buf_addr) & 0x00000002u));
+            HAL_ASSERT(!(((ptrdiff_t)buf_addr) & 0x00000002u));
 
-            MSS_USB_CIF_dma_write_addr(dma_channel,(uint32_t)(buf_addr));
+            MSS_USB_CIF_dma_write_addr(dma_channel,(ptrdiff_t)(buf_addr));
 
             if (MSS_USB_XFR_BULK == xfr_type)
             {
@@ -688,7 +688,7 @@ MSS_USB_CIF_tx_ep_configure
                                      mode,
                                      MSS_USB_DMA_BURST_MODE3,
                                      core_ep->num,
-                                     (uint32_t)(core_ep->buf_addr));
+                                     (ptrdiff_t)(core_ep->buf_addr));
     }
 
     MSS_USB_CIF_tx_ep_enable_irq(core_ep->num);
@@ -764,7 +764,7 @@ MSS_USB_CIF_rx_ep_configure
                                      mode,
                                      MSS_USB_DMA_BURST_MODE3,
                                      core_ep->num,
-                                     (uint32_t)(core_ep->buf_addr));
+                                     (ptrdiff_t)(core_ep->buf_addr));
     }
 
     MSS_USB_CIF_rx_ep_enable_irq(core_ep->num);

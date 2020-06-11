@@ -106,20 +106,14 @@ static bool hss_loader_qspi_erase(void)
 #ifdef CONFIG_SERVICE_MMC
 bool hss_loader_mmc_init(void)
 {
-    //static bool initialized = false;
     bool result = false;
 
-    //if (!initialized) {
-        SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
-        SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
-        SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
+    SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
+    SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
+    SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
 
-        //mHSS_PRINTF("SYSREG->SUBBLK_CLOCK_CR is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SUBBLK_CLOCK_CR, SYSREG->SUBBLK_CLOCK_CR & SUBBLK_CLOCK_CR_MMC_MASK);
-        //mHSS_PRINTF("SYSREG->SOFT_RESET_CR   is 0x%x (MMC == 0x%x)" CRLF, SYSREG->SOFT_RESET_CR, SYSREG->SOFT_RESET_CR & SOFT_RESET_CR_MMC_MASK);
+    result = HSS_MMCInit();
 
-        result = HSS_MMCInit();
-    //    initialized = true;
-    //}
     return result;
 }
 

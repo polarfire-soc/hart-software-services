@@ -54,22 +54,22 @@ extern "C" {
     | Tristate      | 0xF           |Default|
  */
 
-#define SD_SDIO             0x0
-#define EMMC                0x1
-#define QSPI                0x2
-#define SPI                 0x3
-#define USB                 0x4
-#define MMUART              0x5
-#define I2C                 0x6
-#define CAN_BUS             0x7
-#define MDIO                0x8
-#define Miscellaneous       0x9
-#define Reservedx           0xA
-#define GPIO_PAD            0xB
-#define Fabric_test         0xC
-#define Logic_0             0xD
-#define Logic_1             0xE
-#define Tristate            0xF
+#define MUX_SD_SDIO             0x0
+#define MUX_EMMC                0x1
+#define MUX_QSPI                0x2
+#define MUX_SPI                 0x3
+#define MUX_USB                 0x4
+#define MUX_MMUART              0x5
+#define MUX_I2C                 0x6
+#define MUX_CAN_BUS             0x7
+#define MUX_MDIO                0x8
+#define MUX_Miscellaneous       0x9
+#define MUX_Reservedx           0xA
+#define MUX_GPIO_PAD            0xB
+#define MUX_Fabric_test         0xC
+#define MUX_Logic_0             0xD
+#define MUX_Logic_1             0xE
+#define MUX_Tristate            0xF
 
 /**
  * \brief IOMUX configuration

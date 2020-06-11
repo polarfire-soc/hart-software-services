@@ -468,7 +468,7 @@ MSS_USBH_write_out_pipe
     HAL_ASSERT(buf);
 
     if ((target_addr != 0) && (outpipe_num != 0) && (tdev_ep_num != 0) &&
-       (maxpktsz != 0u) && (buf != 0u) )
+       (maxpktsz != 0u) && (buf != NULL) )
     {
         tid = (tdev_id_t)(target_addr & 0x03u);
         txep_ptr->tdev_idx = tid;
@@ -531,7 +531,7 @@ MSS_USBH_read_in_pipe
     HAL_ASSERT(buf);
 
     if ((target_addr != 0) && (inpipe_num != 0) && (tdev_ep_num != 0) &&
-       (tdev_ep_maxpktsz != 0u) && (buf != 0u))
+       (tdev_ep_maxpktsz != 0u) && (buf != NULL))
     {
         tid = (tdev_id_t)(target_addr & 0x03u);
         rxep_ptr->tdev_idx = tid;
@@ -634,8 +634,8 @@ MSS_USBH_start_control_xfr
 
     HAL_ASSERT(cbuf_addr != (uint8_t*)0);
     HAL_ASSERT(dbuf_addr != (uint8_t*)0);
-    HAL_ASSERT(!(((uint32_t)cbuf_addr) & 0x00000002U));
-    HAL_ASSERT(!(((uint32_t)dbuf_addr) & 0x00000002U));
+    HAL_ASSERT(!(((ptrdiff_t)cbuf_addr) & 0x00000002U));
+    HAL_ASSERT(!(((ptrdiff_t)dbuf_addr) & 0x00000002U));
     HAL_ASSERT((data_dir == USB_STD_REQ_DATA_DIR_IN) ||
            (data_dir == USB_STD_REQ_DATA_DIR_OUT));
 
@@ -866,7 +866,7 @@ MSS_USBH_resume
     void
 )
 {
-    volatile static uint32_t resume_milis = 0u;
+    static volatile uint32_t resume_milis = 0u;
 
     resume_milis = MSS_USBH_get_milis();
 
@@ -877,7 +877,7 @@ MSS_USBH_resume
     /* This delay should be at lease 20ms */
     while ((MSS_USBH_get_milis() - resume_milis) <= 40u)
     {
-        ;
+        asm volatile(" ");
     }
 
     MSS_USBH_CIF_clr_bus_resume();
@@ -1530,7 +1530,7 @@ mss_usbh_control_xfr_fsm
                 uint8_t this_tdev = cep_ptr->tdev_idx;
                 cep_ptr->state = MSS_USB_EP_XFR_SUCCESS;
 
-                if ((0u == g_tdev[(cep_ptr->tdev_idx)].class_handle) ||
+                if ((NULL == g_tdev[(cep_ptr->tdev_idx)].class_handle) ||
                     (1u == g_internal_cep_xfr))
                 {
                     g_cep_xfr_result = MSS_USB_EP_XFR_SUCCESS;
@@ -1701,7 +1701,7 @@ mss_usbh_ep_tx_complete_cb
                 txep_ptr->state = MSS_USB_EP_XFR_SUCCESS;
 
                 txep_ptr->xfr_count = MSS_USB_CIF_dma_read_addr(txep_ptr->dma_channel) -
-                                              ((uint32_t)txep_ptr->buf_addr);
+                                              ((ptrdiff_t)txep_ptr->buf_addr);
                 HAL_ASSERT(txep_ptr->xfr_count == txep_ptr->xfr_length);
                 transfer_complete = 1u;
             }
@@ -1871,7 +1871,7 @@ mss_usbh_ep_rx_cb
 
                     /* Count number of bytes read so far,since DMA was operating
                      * in m1 with Autoclr.*/
-                    rxep_ptr->xfr_count = (increamented_addr - ((uint32_t)(rxep_ptr->buf_addr)));
+                    rxep_ptr->xfr_count = (increamented_addr - ((ptrdiff_t)(rxep_ptr->buf_addr)));
 
                     if (received_count)
                     {
@@ -2070,7 +2070,7 @@ static void mss_usbh_dma_handler_cb
                 {
                     ;
                 }
-                ep_ptr->xfr_count = dma_addr_val - (uint32_t)ep_ptr->buf_addr;
+                ep_ptr->xfr_count = dma_addr_val - (ptrdiff_t)ep_ptr->buf_addr;
                 ep_ptr->state = MSS_USB_EP_XFR_SUCCESS;
                 if (0 != g_tdev[this_tdev].class_handle->usbh_class_tx_done)
                 {
@@ -2101,7 +2101,7 @@ static void mss_usbh_dma_handler_cb
                 MSS_USBH_CIF_rx_ep_clr_reqpkt((mss_usb_ep_num_t)ep_num);
                 MSS_USB_CIF_rx_ep_clr_autoclr((mss_usb_ep_num_t)ep_num);
 
-                ep_ptr->xfr_count = dma_addr_val - (uint32_t)ep_ptr->buf_addr;
+                ep_ptr->xfr_count = dma_addr_val - (ptrdiff_t)ep_ptr->buf_addr;
                 ep_ptr->state = MSS_USB_EP_XFR_SUCCESS;
                 if (MSS_USB_DMA_MODE0 == (MSS_USB_CIF_rx_ep_get_dma_mode(ep_num)))
                 {

@@ -28,6 +28,7 @@
 /*******************************************************************************
  * External Defines
  */
+
 #ifdef DEBUG_DDR_INIT
 #ifdef SWEEP_ENABLED
 extern uint8_t sweep_results[MAX_NUMBER_DPC_VS_GEN_SWEEPS]\
@@ -163,9 +164,11 @@ static uint32_t ddr_write
         case PATTERN_WALKING_ONE : DATA = 0x00000001; break;
         case PATTERN_WALKING_ZERO : DATA = 0x01;
                  DATA = ~ DATA; break;
+#ifndef HSS
         case PATTERN_RANDOM :
             DATA = rand ( );
             break;
+#endif
         case PATTERN_0xCCCCCCCC :
             DATA = 0xCCCCCCCC;
             break;
@@ -202,9 +205,11 @@ static uint32_t ddr_write
             }
             DATA = ~DATA;
             break;
+#ifndef HSS
         case PATTERN_RANDOM :
             DATA = rand ( );
             break;
+#endif
         case PATTERN_0xCCCCCCCC :
             DATA = 0xCCCCCCCC;
             break;
@@ -237,23 +242,28 @@ uint32_t ddr_read
 {
     uint32_t i;
     uint64_t DATA = 0lu;
-    uint32_t err_cnt; //read_data, *GPIO_addr, *DDR_apb_addr;
+    uint32_t err_cnt;
     volatile uint64_t ddr_data;
-    volatile uint64_t *DDR_word_pt_t, *first_DDR_word_pt_t;
+    volatile uint64_t *DDR_word_pt_t;
+#ifndef HSS
+    volatile uint64_t *first_DDR_word_pt_t;
     uint32_t rand_addr_offset;
-    //DDR_word_ptr = (uint32_t *) MSS_BASE_ADD_DRC_NC;
-    err_cnt = 0U;
+
     first_DDR_word_pt_t = DDR_word_ptr;
+#endif
+    err_cnt = 0U;
     switch (data_ptrn)
     {
         case PATTERN_INCREMENTAL : DATA = 0x00000000; break;
         case PATTERN_WALKING_ONE : DATA = 0x00000001; break;
         case PATTERN_WALKING_ZERO : DATA = 0x01;
             DATA = ~ DATA; break;
+#ifndef HSS
         case PATTERN_RANDOM :
             DATA = rand ( );
             *DDR_word_ptr = DATA;
         break;
+#endif
         case PATTERN_0xCCCCCCCC :
             DATA = 0xCCCCCCCC;
         break;
@@ -322,12 +332,14 @@ uint32_t ddr_read
                 }
                 DATA = ~DATA;
                 break;
+#ifndef HSS
             case PATTERN_RANDOM :
                 DATA = rand ( );
                 rand_addr_offset = (uint32_t)(rand() & 0xFFFFCUL);
                 DDR_word_ptr = first_DDR_word_pt_t + rand_addr_offset;
                 *DDR_word_ptr = DATA;
                 break;
+#endif
             case PATTERN_0xCCCCCCCC :
                 DATA = 0xCCCCCCCC;
                 break;

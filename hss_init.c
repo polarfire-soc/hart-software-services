@@ -24,8 +24,8 @@
 #include "hss_atomic.h"
 #include "hss_init.h"
 #include "hss_version.h"
-#ifdef CONFIG_TINYCLI
-#  include "hss_tinycli.h"
+#ifdef CONFIG_SERVICE_TINYCLI
+#  include "tinycli_service.h"
 #endif
 
 #include "csr_helper.h"
@@ -210,7 +210,7 @@ void HSS_PrintToolVersions(void)
 
 bool HSS_E51_Banner(void)
 {
-    mHSS_FANCY_PRINTF(LOG_STATUS, "PolarFireSoC Hart Software Services (HSS) - Version %d.%d.%d "
+    mHSS_FANCY_PRINTF(LOG_STATUS, "PolarFire(R) SoC Hart Software Services (HSS) - Version %d.%d.%d "
         "(OpenSBI %d.%d)" CRLF,
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
     mHSS_FANCY_PRINTF(LOG_STATUS, "(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF);
