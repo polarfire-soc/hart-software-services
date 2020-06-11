@@ -26,8 +26,6 @@ extern "C" {
 #endif
 
 
-int sbi_printf(const char *format, ...);
-
 /***************************************************************************//**
  *  Macros
  */
@@ -292,8 +290,6 @@ MSS_MMC_init
     uint8_t hw_strobe_suport;
     uint8_t hw_hs_timing;
 
-sbi_printf("%s(): card_type is %d\r\n", __func__, cfg->card_type);
-
     /* Reset MMC */
     SYSREG->SOFT_RESET_CR &= ~(MMC_SET << MMC_SOFTWARE_RESET_SHIFT);
     /* Disable MMC interrupt */
@@ -349,14 +345,12 @@ sbi_printf("%s(): card_type is %d\r\n", __func__, cfg->card_type);
     ret_status = set_data_timeout(DATA_TIMEOUT_VALUE);
     if (MSS_MMC_NO_ERROR != ret_status)
     {
-sbi_printf("%s(): failure 0: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
         ret_status = MSS_MMC_NOT_INITIALISED;
     }
     /* Turn-off Host Controller Power */
     ret_status = set_sdhost_power(MMC_CLEAR);
     if (MSS_MMC_NO_ERROR != ret_status)
     {
-sbi_printf("%s(): failure 1: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
         ret_status = MSS_MMC_NOT_INITIALISED;
     }
     reg = MMC->SRS09;
@@ -389,7 +383,6 @@ sbi_printf("%s(): failure 1: card_type is %d, ret_status is %d\r\n", __func__, c
             ret_status = set_sdhost_power(SRS10_SET_1_8V_BUS_VOLTAGE);
             if (ret_status != MSS_MMC_NO_ERROR)
             {
-sbi_printf("%s(): failure 2: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
                     ret_status = MSS_MMC_NOT_INITIALISED;
             }
         }
@@ -399,7 +392,6 @@ sbi_printf("%s(): failure 2: card_type is %d, ret_status is %d\r\n", __func__, c
                     (MSS_MMC_MODE_HS400_ES == cfg->bus_speed_mode) ||
                     (MSS_MMC_MODE_HS400 == cfg->bus_speed_mode)))
             {
-sbi_printf("%s(): failure 3: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
                     ret_status = MSS_MMC_NOT_INITIALISED;
             }
             else
@@ -408,14 +400,12 @@ sbi_printf("%s(): failure 3: card_type is %d, ret_status is %d\r\n", __func__, c
                     ret_status = set_sdhost_power(SRS10_SET_3_3V_BUS_VOLTAGE);
                     if (ret_status != MSS_MMC_NO_ERROR)
                     {
-sbi_printf("%s(): failure 4: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
                         ret_status = MSS_MMC_NOT_INITIALISED;
                     }
             }
         }
         else
         {
-sbi_printf("%s(): failure 5: bus_voltage is %d, card_type is %d, ret_status is %d\r\n", __func__, cfg->bus_voltage, cfg->card_type, ret_status);
             ret_status = MSS_MMC_NOT_INITIALISED;
         }
     }
@@ -427,7 +417,6 @@ sbi_printf("%s(): failure 5: bus_voltage is %d, card_type is %d, ret_status is %
             ret_status = set_sdhost_power(SRS10_SET_3_3V_BUS_VOLTAGE);
             if (ret_status != MSS_MMC_NO_ERROR)
             {
-sbi_printf("%s(): failure 6: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
                 ret_status = MSS_MMC_NOT_INITIALISED;
             }
         }
@@ -439,7 +428,6 @@ sbi_printf("%s(): failure 6: card_type is %d, ret_status is %d\r\n", __func__, c
         set_host_sdclk(MSS_MMC_CLOCK_400KHZ);
     }
     mmc_delay(DELAY_COUNT);
-sbi_printf("%s(): pre-failure X: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
     /* MMC memory */
     if ((MSS_MMC_CARD_TYPE_MMC == cfg->card_type) && (MSS_MMC_NO_ERROR == ret_status))
     {
@@ -626,7 +614,6 @@ sbi_printf("%s(): pre-failure X: card_type is %d, ret_status is %d\r\n", __func_
                         }
                         else
                         {
-sbi_printf("%s(): failure7\r\n", __func__);
                             g_mmc_init_complete = MMC_CLEAR;
                             ret_status = MSS_MMC_INIT_FAILURE;
                             g_mmc_trs_status.state = MSS_MMC_INIT_FAILURE;
@@ -634,7 +621,6 @@ sbi_printf("%s(): failure7\r\n", __func__);
                     }
                     else
                     {
-sbi_printf("%s(): failure 8\r\n", __func__);
                         g_mmc_init_complete = MMC_CLEAR;
                         ret_status = MSS_MMC_INIT_FAILURE;
                         g_mmc_trs_status.state = MSS_MMC_INIT_FAILURE;
@@ -642,7 +628,6 @@ sbi_printf("%s(): failure 8\r\n", __func__);
                 }
                 else
                 {
-sbi_printf("%s(): failure 9\r\n", __func__);
                     g_mmc_init_complete = MMC_CLEAR;
                     ret_status = MSS_MMC_INIT_FAILURE;
                     g_mmc_trs_status.state = MSS_MMC_INIT_FAILURE;
@@ -673,7 +658,6 @@ sbi_printf("%s(): failure 9\r\n", __func__);
             }
             else
             {
-sbi_printf("%s(): failure A\r\n", __func__);
                 g_mmc_init_complete = MMC_CLEAR;
                 ret_status = MSS_MMC_INIT_FAILURE;
                 g_mmc_trs_status.state = MSS_MMC_INIT_FAILURE;
@@ -681,7 +665,6 @@ sbi_printf("%s(): failure A\r\n", __func__);
         }
         else
         {
-sbi_printf("%s(): failure B\r\n", __func__);
             g_mmc_init_complete = MMC_CLEAR;
             ret_status = MSS_MMC_INIT_FAILURE;
             g_mmc_trs_status.state = MSS_MMC_INIT_FAILURE;
@@ -689,7 +672,6 @@ sbi_printf("%s(): failure B\r\n", __func__);
     }
     else
     {
-sbi_printf("%s(): failure X: card_type is %d, ret_status is %d\r\n", __func__, cfg->card_type, ret_status);
         ret_status = MSS_MMC_NOT_INITIALISED;
         g_mmc_init_complete = MMC_CLEAR;
         g_mmc_trs_status.state = MSS_MMC_NOT_INITIALISED;
@@ -1102,7 +1084,6 @@ MSS_MMC_sdma_write
     {
         if (MSS_MMC_TRANSFER_IN_PROGRESS == g_mmc_trs_status.state)
         {
-sbi_printf("%s(): returned MSS_MMC_TRANSFER_IN_PROGRESS\r\n", __func__);
             ret_status = MSS_MMC_TRANSFER_IN_PROGRESS;
         }
         else
@@ -1112,7 +1093,6 @@ sbi_printf("%s(): returned MSS_MMC_TRANSFER_IN_PROGRESS\r\n", __func__);
                     || (size == MMC_CLEAR) || (src == NULL_POINTER))
             {
                 ret_status = MSS_MMC_INVALID_PARAMETER;
-sbi_printf("%s(): returned MSS_MMC_INVALID_PARAMETER\r\n", __func__);
             }
             else
             {
@@ -1191,13 +1171,11 @@ sbi_printf("%s(): returned MSS_MMC_INVALID_PARAMETER\r\n", __func__);
             }
             g_mmc_trs_status.state = MSS_MMC_TRANSFER_IN_PROGRESS;
             ret_status = MSS_MMC_TRANSFER_IN_PROGRESS;
-sbi_printf("%s(): returned MSS_MMC_TRANSFER_IN_PROGRESS\r\n", __func__);
         }
     }
     else
     {
         ret_status = MSS_MMC_NOT_INITIALISED;
-sbi_printf("%s(): returned MSS_MMC_NOT_INITIALISED\r\n", __func__);
     }
     return ret_status;
 }

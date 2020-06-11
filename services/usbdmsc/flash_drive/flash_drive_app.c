@@ -33,6 +33,8 @@ extern "C" {
 int sbi_printf(const char *format, ...);
 bool HSS_MMCInit(void);
 
+#define USE_SDMA_OPERATIONS
+
 /******************************************************************************
  *
  * Private data structures
@@ -114,21 +116,6 @@ static mss_usbd_msc_scsi_inq_resp_t usb_flash_media_inquiry_data[NUMBER_OF_LUNS_
     }
 };
 
-void transfer_complete_handler(uint32_t status)
-{
-    uint32_t isr_err;
-
-    if (ERROR_INTERRUPT & status) {
-        isr_err = status >> 16u;
-    } else if (TRANSFER_COMPLETE & status) {
-        isr_err = 0u;
-    } else {
-        ;
-    }
-
-    (void)isr_err; // reference to avoid compiler warning
-}
-
 /******************************************************************************
   See flash_drive_app.h for details of how to use this function.
 */
@@ -136,39 +123,7 @@ bool FLASH_DRIVE_init(void)
 {
     bool result = true;
 
-#if 0
-    mss_mmc_cfg_t g_mmc;
-    mss_mmc_status_t ret_status;
-
-#define MMC_CARD
-#ifdef MMC_CARD
-    /* Configure eMMC */
-    g_mmc.clk_rate = MSS_MMC_CLOCK_50MHZ;
-    g_mmc.card_type = MSS_MMC_CARD_TYPE_MMC;
-    g_mmc.bus_speed_mode = MSS_MMC_MODE_SDR;
-    //g_mmc.data_bus_width = MSS_MMC_DATA_WIDTH_8BIT;
-    g_mmc.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
-#endif
-
-#ifdef SD_CARD
-    g_mmc.clk_rate = MSS_MMC_CLOCK_50MHZ;
-    g_mmc.card_type = MSS_MMC_CARD_TYPE_SD;
-    g_mmc.bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED;
-    g_mmc.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
-#endif
-    g_mmc.bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE;
-
-    //HAL_enable_interrupts();
-
-    /* Initialize eMMC/SD */
-    ret_status = MSS_MMC_init(&g_mmc);
-    if (ret_status == MSS_MMC_INIT_SUCCESS)
-#endif
     result = HSS_MMCInit();
-    if (result)
-    {
-       MSS_MMC_set_handler(transfer_complete_handler);
-    }
 
     g_host_connection_detected = 0u;
     /*Assign call-back function Interface needed by USBD driver*/
@@ -187,17 +142,29 @@ bool FLASH_DRIVE_init(void)
   Local function definitions
 */
 
+#include "hss_clock.h"
 static size_t writeCount = 0u, readCount = 0u;
+HSSTicks_t last_sec_time = 0u;
+
+static void dump_xfer_status(void)
+{
+    if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
+        sbi_printf("\r %lu bytes written, %lu bytes read", writeCount, readCount);
+        last_sec_time = HSS_GetTime();
+    }
+}
+
 static void update_write_count(size_t bytes)
 {
     writeCount += bytes;
-    sbi_printf("\r %lu bytes written, %lu bytes read", writeCount, readCount);
+
+    dump_xfer_status();
 }
 
 static void update_read_count(size_t bytes)
 {
     readCount += bytes;
-    sbi_printf("\r %lu bytes written, %lu bytes read", writeCount, readCount);
+    dump_xfer_status();
 }
 
 uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len)
@@ -247,11 +214,19 @@ uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32
 static void physical_device_read(uint64_t address, uint8_t * rx_buffer, size_t size_in_bytes)
 {
     update_read_count(size_in_bytes);
-#if 0
+#if 0 // #ifdef USE_SDMA_OPERATIONS
     uint64_t p_address = (address / 512);
     uint8_t* p_rx_buffer = rx_buffer;
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
 
+    // wait for any in-flight transactions to complete
+    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS ) {
+        do {
+            ret_status = mmc_main_plic_IRQHandler();
+        } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
+    }
+
+    // now setup next read transaction
     ret_status = MSS_MMC_sdma_read((uint32_t)p_address, p_rx_buffer, size_in_bytes);
     if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
@@ -295,45 +270,25 @@ uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr, uint3
 static void physical_device_program(uint64_t address, uint8_t * write_buffer, uint32_t size_in_bytes)
 {
     update_write_count(size_in_bytes);
-#if 0
-    bool retryFlag = false;
-retry:
-sbi_printf("%s(address=%lu, write_buffer=%p, size_in_bytes=%u) called\n", __func__, address, write_buffer, size_in_bytes); //EMDALO
+
+#ifdef USE_SDMA_OPERATIONS
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
     uint64_t p_address = (address/LBA_BLOCK_SIZE);
     uint8_t * p_write_buffer = write_buffer;
 
-
-    ret_status = MSS_MMC_sdma_write(p_write_buffer, (uint32_t)p_address, size_in_bytes);
-    if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
-sbi_printf("Transferring ");
+    // wait for any in-flight transactions to complete
+    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS ) {
         do {
             ret_status = mmc_main_plic_IRQHandler();
-sbi_printf(".");
         } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
-sbi_printf("\n");
     }
 
-    uint8_t  verify_buffer[SD_RD_WR_SIZE] __attribute__((aligned(8))) = { 0u };
-    for (; (!retryFlag) && size_in_bytes; size_in_bytes -= LBA_BLOCK_SIZE, address += LBA_BLOCK_SIZE) {
-        physical_device_read(address, verify_buffer, LBA_BLOCK_SIZE);
-
-        uint32_t CRC32_calculate(uint8_t const *pInput, size_t numBytes);
-
-        if (CRC32_calculate(verify_buffer, LBA_BLOCK_SIZE) != CRC32_calculate(write_buffer, LBA_BLOCK_SIZE)) {
-            sbi_printf("%s(): eMMC block ERROR!!\n", __func__);
-            retryFlag = true;
-
-            bool result = HSS_MMCInit();
-            if (result)
-            {
-               MSS_MMC_set_handler(transfer_complete_handler);
-            }
-
-            goto retry;
-        } else {
-            ;
-        }
+    // setup new transaction...
+    ret_status = MSS_MMC_sdma_write(p_write_buffer, (uint32_t)p_address, size_in_bytes);
+    if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
+        do {
+            ret_status = mmc_main_plic_IRQHandler();
+        } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 #else
     bool HSS_MMC_WriteBlock(size_t dstOffset, void * pSrc, size_t byteCount);
