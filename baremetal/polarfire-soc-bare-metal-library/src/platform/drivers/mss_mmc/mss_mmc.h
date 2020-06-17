@@ -332,7 +332,8 @@ typedef enum
     MSS_MMC_DEVICE_NOT_SUPPORT_HPI,
     MSS_MMC_DEVICE_IS_NOT_IN_HPI_MODE,
     MSS_MMC_DEVICE_HPI_NOT_DISABLED,
-    MSS_MMC_DATA_SIZE_IS_NOT_MULTI_BLOCK
+    MSS_MMC_DATA_SIZE_IS_NOT_MULTI_BLOCK,
+    MSS_MMC_DEVICE_ERROR
 } mss_mmc_status_t;
 
 /*-------------------------------------------------------------------------*//**
