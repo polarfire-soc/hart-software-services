@@ -21,6 +21,7 @@
 #include <string.h>
 #include <assert.h>
 
+//#define GPT_DEBUG
 
 //
 // local modules function pointer types
@@ -29,14 +30,6 @@ typedef bool (*CheckIfGUIDMatchFnPtr_t)(HSS_GPT_PartitionEntry_t const * const p
     HSS_GPT_GUID_t const * const pGUID2);
 
 static ReadBlockFnPtr_t readBlockFnPtr;
-
-static const HSS_GPT_GUID_t nullGUID = {
-    .data1 = 0u,
-    .data2 = 0u,
-    .data3 = 0u,
-    .data4 = 0u
-};
-
 
 //
 // local module function prototypes
@@ -66,7 +59,15 @@ void GPT_RegisterReadBlockFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, 
 // Debug Routines
 //
 
-#define GPT_DEBUG
+#ifdef GPT_DEBUG
+static const HSS_GPT_GUID_t nullGUID = {
+    .data1 = 0u,
+    .data2 = 0u,
+    .data3 = 0u,
+    .data4 = 0u
+};
+#endif
+
 
 //
 //
@@ -112,16 +113,16 @@ void GPT_DumpPartitionInfo(HSS_GPT_Header_t const * const pGptHeader,
     assert(pGptHeader != NULL);
     assert(pGptPartitionEntry != NULL);
 
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Partition Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
         pGptPartitionEntry->partitionTypeGUID.data1, pGptPartitionEntry->partitionTypeGUID.data2,
         pGptPartitionEntry->partitionTypeGUID.data3, pGptPartitionEntry->partitionTypeGUID.data4);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Unique Partition GUID: %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Unique GUID: %08x-%04x-%04x-%016lx" CRLF,
         pGptPartitionEntry->uniquePartitionGUID.data1, pGptPartitionEntry->uniquePartitionGUID.data2,
         pGptPartitionEntry->uniquePartitionGUID.data3, pGptPartitionEntry->uniquePartitionGUID.data4);
 
-   mHSS_DEBUG_PRINTF(LOG_STATUS, "First LBA:              %016lx" CRLF, pGptPartitionEntry->firstLBA);
-   mHSS_DEBUG_PRINTF(LOG_STATUS, "Last LBA:               %016lx" CRLF, pGptPartitionEntry->lastLBA);
-   mHSS_DEBUG_PRINTF(LOG_STATUS, "Attributes:             %016lx" CRLF, pGptPartitionEntry->attributes);
+   mHSS_DEBUG_PRINTF(LOG_STATUS, "First LBA:    %016lx" CRLF, pGptPartitionEntry->firstLBA);
+   mHSS_DEBUG_PRINTF(LOG_STATUS, "Last LBA:     %016lx" CRLF, pGptPartitionEntry->lastLBA);
+   mHSS_DEBUG_PRINTF(LOG_STATUS, "Attributes:   %016lx" CRLF, pGptPartitionEntry->attributes);
 #endif
 }
 
@@ -380,11 +381,11 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_Header_t *pGptHeader, uint8_t *pLBABuf
         } else {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found partition:" CRLF);
             HSS_GPT_GUID_t const * pGUID = &(pGptPartitionEntry->uniquePartitionGUID);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique Partition GUID: %08x-%04x-%04x-%016lx" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique GUID: %08x-%04x-%04x-%016lx" CRLF,
                 pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
 
             pGUID = &(pGptPartitionEntry->partitionTypeGUID);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Partition Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
                 pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
         }
 #endif
