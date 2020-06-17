@@ -81,6 +81,7 @@ struct StateMachine {
 
 #define SM_INVALID_STATE ((stateType_t)-1)
 
+void RunStateMachine(struct StateMachine * const pCurrentMachine);
 void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine * const pStateMachines[]);
 
 /**

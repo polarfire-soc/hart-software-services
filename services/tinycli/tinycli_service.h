@@ -33,12 +33,20 @@
 extern "C" {
 #endif
 
+#include "ssmb_ipi.h"
+#include "hss_state_machine.h"
+#include "hss_debug.h"
+
 /**
  * \file Tiny CLI parser
  * \brief Tiny CLI parser
  */
 
-bool HSS_TinyCLI_Parser(void);
+bool   HSS_TinyCLI_Parser(void);
+size_t HSS_TinyCLI_ParseIntoTokens(char *buffer);
+void   HSS_TinyCLI_Execute(void);
+
+extern struct StateMachine tinycli_service;
 
 #ifdef __cplusplus
 }

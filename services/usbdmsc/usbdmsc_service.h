@@ -1,5 +1,5 @@
-#ifndef HSS_POWERMODE_SERVICE_H
-#define HSS_POWERMODE_SERVICE_H
+#ifndef HSS_USBDMSC_SERVICE_H
+#define HSS_USBDMSC_SERVICE_H
 
 /*******************************************************************************
  * Copyright 2019-2020 Microchip Corporation.
@@ -25,23 +25,29 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - PowerMode Service
+ * Hart Software Services - USB Device Mass Storage Class
  *
- */
-
-/*!
- * \file PowerMode Service State Machine
- * \brief Clock Switching / MSS Power Mode Selection
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "ssmb_ipi.h"
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 
-extern struct StateMachine powermode_service;
+/**
+ * \file USB Device Mass Storage API
+ * \brief USB Device Mass Storage API
+ */
+
+void USBDMSC_Init(void);
+bool USBDMSC_Poll(void);
+void USBDMSC_Start(void);
+void USBDMSC_Shutdown(void);
+
+extern struct StateMachine usbdmsc_service;
 
 #ifdef __cplusplus
 }

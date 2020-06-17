@@ -1,5 +1,5 @@
-#ifndef HSS_POWERMODE_SERVICE_H
-#define HSS_POWERMODE_SERVICE_H
+#ifndef SPI_SERVICE_H
+#define SPI_SERVICE_H
 
 /*******************************************************************************
  * Copyright 2019-2020 Microchip Corporation.
@@ -25,23 +25,24 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - PowerMode Service
+ * Hart Software Services - SPI Service
  *
  */
 
 /*!
- * \file PowerMode Service State Machine
- * \brief Clock Switching / MSS Power Mode Selection
+ * \file  SPI Service
+ * \brief State Machine and API functions for SPI firmware service
+ *
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "hss_state_machine.h"
-#include "hss_debug.h"
+#include "ssmb_ipi.h"
+#include "hss_types.h"
 
-extern struct StateMachine powermode_service;
+extern struct StateMachine spi_service;
 
 #ifdef __cplusplus
 }

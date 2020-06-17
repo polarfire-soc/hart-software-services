@@ -1,6 +1,7 @@
 config SERVICE_BOOT
 	def_bool y
-	select SERVICE_GOTO
+	select SERVICE_OPENSBI
+        select SERVICE_DDR
 	help
                 This feature enables support for bootstrapping the U54 application harts. This
                 is enabled by default.

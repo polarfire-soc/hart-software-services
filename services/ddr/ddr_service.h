@@ -46,6 +46,8 @@ size_t HSS_DDR_GetSize(void);
 void *HSS_DDR_GetStart(void);
 void HSS_DDR_Train(void);
 
+extern struct StateMachine ddr_service;
+
 #ifdef __cplusplus
 }
 #endif

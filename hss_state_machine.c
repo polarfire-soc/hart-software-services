@@ -50,6 +50,82 @@ static inline bool IsValidState(struct StateMachine *pStateMachine, int state)
 /**
  * \brief Run all registered state machines
  */
+void RunStateMachine(struct StateMachine *const pCurrentMachine)
+{
+    assert(pCurrentMachine != NULL);
+
+    const char *pMachineName = "<error-unnamed>";
+    if (pCurrentMachine->pMachineName != NULL) {
+        pMachineName = (const char *)pCurrentMachine->pMachineName;
+    }
+
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "running machine %s" CRLF, pMachineName);
+    {
+        stateType_t prevState = pCurrentMachine->prevState;
+        stateType_t currentState = pCurrentMachine->state;
+
+        struct StateDesc const * const pCurrentStateDesc =
+            &(pCurrentMachine->pStateDescs[currentState]);
+
+        assert(pCurrentStateDesc != NULL); // mandatory handler
+        assert(pCurrentStateDesc->state == currentState);
+
+        if (prevState != currentState) {
+            if (IsValidState(pCurrentMachine, prevState)) {
+                struct StateDesc const * const pLastStateDesc =
+                    &(pCurrentMachine->pStateDescs[prevState]);
+
+                assert(pLastStateDesc->state == prevState);
+
+                if (pLastStateDesc->state_onExit) { // optional handler
+                    pLastStateDesc->state_onExit(pCurrentMachine);
+                }
+            }
+
+            if (pCurrentStateDesc->state_onEntry) { // optional handler
+                pCurrentStateDesc->state_onEntry(pCurrentMachine);
+            }
+
+            pCurrentMachine->startTime = HSS_GetTickCount();
+            pCurrentMachine->executionCount = 0;
+            pCurrentMachine->prevState = pCurrentMachine->state;
+        }
+
+        //if (mLIKELY(pCurrentStateDesc->state_handler != NULL)) {
+        pCurrentStateDesc->state_handler(pCurrentMachine);
+        pCurrentMachine->lastExecutionTime = HSS_GetTickCount();
+        pCurrentMachine->executionCount++;
+        //}
+
+#ifdef CONFIG_DEBUG_LOG_STATE_TRANSITIONS
+        // debug print any state transitions...
+        if (pCurrentMachine->debugFlag) {
+            const char *pLastStateName;
+
+            // refresh states
+            prevState =    pCurrentMachine->prevState;
+            currentState = pCurrentMachine->state;
+
+            pLastStateName =
+                (pCurrentMachine->pStateDescs[prevState]).pStateName;
+            // should be valid at this stage
+
+            {
+                const char *pCurrentStateName =
+                    (pCurrentMachine->pStateDescs[currentState]).pStateName;
+
+                if (prevState != currentState) {
+                    mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s::%s -> %s::%s" CRLF, pMachineName,
+                        pLastStateName, pMachineName, pCurrentStateName);
+                }
+            }
+        }
+#else
+        (void)pMachineName;
+#endif
+    }
+}
+
 static HSSTicks_t maxLoopTime = 0u;
 static uint64_t loopCount = 0u;
 void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *const pStateMachines[])
@@ -85,78 +161,8 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
 
         for (i = 0; i < spanOfPStateMachines; i++) {
             struct StateMachine * const pCurrentMachine = pStateMachines[i];
-            const char *pMachineName = "<error-unnamed>";
 
-            assert(pCurrentMachine != NULL);
-            if (pCurrentMachine->pMachineName != NULL) {
-                pMachineName = (const char *)pCurrentMachine->pMachineName;
-            }
-
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "running machine %s" CRLF, pMachineName);
-            {
-                stateType_t prevState = pCurrentMachine->prevState;
-                stateType_t currentState = pCurrentMachine->state;
-
-                struct StateDesc const * const pCurrentStateDesc =
-                    &(pCurrentMachine->pStateDescs[currentState]);
-
-                assert(pCurrentStateDesc != NULL); // mandatory handler
-                assert(pCurrentStateDesc->state == currentState);
-
-                if (prevState != currentState) {
-                    if (IsValidState(pCurrentMachine, prevState)) {
-                        struct StateDesc const * const pLastStateDesc =
-                            &(pCurrentMachine->pStateDescs[prevState]);
-
-                        assert(pLastStateDesc->state == prevState);
-
-                        if (pLastStateDesc->state_onExit) { // optional handler
-                            pLastStateDesc->state_onExit(pCurrentMachine);
-                        }
-                    }
-
-                    if (pCurrentStateDesc->state_onEntry) { // optional handler
-                        pCurrentStateDesc->state_onEntry(pCurrentMachine);
-                    }
-
-                    pCurrentMachine->startTime = HSS_GetTickCount();
-                    pCurrentMachine->executionCount = 0;
-                    pCurrentMachine->prevState = pCurrentMachine->state;
-                }
-
-                //if (mLIKELY(pCurrentStateDesc->state_handler != NULL)) {
-                pCurrentStateDesc->state_handler(pCurrentMachine);
-                pCurrentMachine->lastExecutionTime = HSS_GetTickCount();
-                pCurrentMachine->executionCount++;
-                //}
-
-#ifdef CONFIG_DEBUG_LOG_STATE_TRANSITIONS
-                // debug print any state transitions...
-                {
-                    const char *pLastStateName;
-
-                    // refresh states
-                    prevState =    pCurrentMachine->prevState;
-                    currentState = pCurrentMachine->state;
-
-                    pLastStateName =
-                        (pCurrentMachine->pStateDescs[prevState]).pStateName;
-                    // should be valid at this stage
-
-                    {
-                        const char *pCurrentStateName =
-                            (pCurrentMachine->pStateDescs[currentState]).pStateName;
-
-                        if (prevState != currentState) {
-                            mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s::%s -> %s::%s" CRLF, pMachineName,
-                                pLastStateName, pMachineName, pCurrentStateName);
-                        }
-                    }
-                }
-#else
-		(void)pMachineName;
-#endif
-            }
+            RunStateMachine(pCurrentMachine);
         }
     }
 

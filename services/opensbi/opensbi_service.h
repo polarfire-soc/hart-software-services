@@ -45,6 +45,8 @@ extern "C" {
 enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr);
 void HSS_OpenSBI_Setup(enum HSSHartId hartid);
 
+extern struct StateMachine opensbi_service;
+
 #define SBI_EXT_HSS        0x12341234
 #define SBI_EXT_HSS_REBOOT    0x0
 

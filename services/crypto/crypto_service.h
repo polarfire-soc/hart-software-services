@@ -45,6 +45,8 @@ void HSS_Crypto_Init(void);
 void HSS_SecureNVMWrite(void const *pPayload, const size_t count);
 void HSS_SecureNVMRead(void *pPayload, const size_t count);
 
+extern struct StateMachine crypto_service;
+
 #ifdef __cplusplus
 }
 #endif

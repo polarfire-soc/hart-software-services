@@ -1,6 +1,7 @@
 menu "Services"
 
 source "services/boot/Kconfig"
+source "services/ddr/Kconfig"
 source "services/goto/Kconfig"
 source "services/crypto/Kconfig"
 source "services/flashfreeze/Kconfig"

@@ -54,6 +54,11 @@ void HSS_Register_Boot_Image(struct HSS_BootImage *pImage);
 
 bool HSS_Boot_Harts(enum HSSHartId const source);
 
+extern struct StateMachine boot_service1;
+extern struct StateMachine boot_service2;
+extern struct StateMachine boot_service3;
+extern struct StateMachine boot_service4;
+
 #ifdef __cplusplus
 }
 #endif

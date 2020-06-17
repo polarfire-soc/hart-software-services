@@ -137,19 +137,59 @@ static bool pmpSetupFlag[HSS_HART_NUM_PEERS] = { false, false, false, false, fal
  * individual boot machines, one per U54 hart
  */
 struct StateMachine boot_service1 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_1)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[0]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_1)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service2 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_2)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[1]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_2)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service3 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_3)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[2]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_3)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service4 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_4)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[3]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_4)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 /*
@@ -293,7 +333,7 @@ static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine)
 
 static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
 }
 
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
@@ -313,7 +353,7 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
         // need to free as received, not all at once...
 
         if (check_for_ipi_acks(pMyMachine)) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
 
             pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;

@@ -46,6 +46,8 @@ extern "C" {
 
 enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr);
 
+extern struct StateMachine sgdma_service;
+
 #ifdef __cplusplus
 }
 #endif

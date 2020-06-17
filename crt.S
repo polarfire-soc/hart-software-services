@@ -501,16 +501,6 @@ copy_switch_code:
 .copy_switch_code_done:
 	ret
 
-        // copy_section helper function:
-        //	a0 = load_addr
-        //	a1 = exec_start_addr
-        //	a2 = exec_end_addr
-        // copy_switch_code:
-        // la	a0, __sc_load
-	// la	a1, __sc_start
-	// la	a2, __sc_end
-	// tail copy_section
-
 /***********************************************************************************
  *
  */

@@ -28,7 +28,8 @@
 
 SRCS-$(CONFIG_SERVICE_USBDMSC) += \
 	services/usbdmsc/flash_drive/flash_drive_app.c \
-	services/usbdmsc/usbdmsc.c \
+	services/usbdmsc/usbdmsc_api.c \
+	services/usbdmsc/usbdmsc_service.c \
 	services/usbdmsc/flash_drive/usb_user_descriptors.c \
 
 INCLUDES +=\
@@ -39,7 +40,7 @@ services/usbdmsc/flash_drive/flash_drive_app.o: services/usbdmsc/flash_drive/fla
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-services/usbdmsc/usbdmsc.o: services/usbdmsc/usbdmsc.c config.h
+services/usbdmsc/usbdmsc_api.o: services/usbdmsc/usbdmsc_api.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 

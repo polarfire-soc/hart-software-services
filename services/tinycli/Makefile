@@ -27,13 +27,13 @@
 # TINYCLI service
 
 SRCS-$(CONFIG_SERVICE_TINYCLI) += \
-	services/tinycli/hss_tinycli.c \
+	services/tinycli/tinycli_api.c \
 	services/tinycli/tinycli_service.c \
 
 INCLUDES +=\
 	-I./services/tinycli \
 
-services/tinycli/hss_tinycli.o: services/tinycli/hss_tinycli.c config.h
+services/tinycli/tinycli_api.o: services/tinycli/tinycli_api.c config.h
 	@$(ECHO) " CC        $@";
 	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 

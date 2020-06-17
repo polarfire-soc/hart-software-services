@@ -22,7 +22,7 @@
 
 /**************************************************************************//**
  */
-void USBD_MSC_Loop(void)
+void USBDMSC_Init(void)
 {
     SYSREG->SOFT_RESET_CR &= ~ (1u << 16u);
 
@@ -51,28 +51,75 @@ void USBD_MSC_Loop(void)
     /* DMA init for eMMC */
     MSS_MPU_configure(MSS_MPU_MMC, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
         MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
+}
 
+bool USBDMSC_Poll(void)
+{
     bool done = false;
-    bool isHostConnected = false;
+#ifndef CONFIG_SERVICE_USBDMSC_REGISTER
     uint8_t rx_byte = 0;
+
+    bool retval = uart_getchar(&rx_byte, 0, false);
+
+    if (retval) {
+        if ((rx_byte == '\003') || (rx_byte == '\033')) {
+        done = true;
+        }
+    } else {
+#else
+    {
+#endif
+        //poll PLIC
+        uint32_t source = PLIC_ClaimIRQ();
+
+        switch (source) {
+        case MMC_main_PLIC: // MMC interrupt
+            mmc_main_plic_IRQHandler(); // interrupt 88
+            break;
+
+        case USB_MC_PLIC: // main USB interrupt
+            usb_mc_plic_IRQHandler(); // interrupt 87
+            break;
+
+        case USB_DMA_PLIC: // DMA USB interrupt
+            usb_dma_plic_IRQHandler(); // interrupt 86
+            break;
+
+        default:
+            break;
+        }
+
+        if (source != INVALID_IRQn) {
+            PLIC_CompleteIRQ(source);
+        }
+    }
+
+    return done;
+}
+
+void USBDMSC_Shutdown(void)
+{
+#ifndef CONFIG_SERVICE_USBDMSC_REGISTER
+    PLIC_ClearPendingIRQ();
+    void usbmsc_deactivate(void);
+    usbmsc_deactivate();
+#endif
+}
+
+void USBDMSC_Start(void)
+{
+    bool done = false;
 
     done = !FLASH_DRIVE_init();
 
     if (done) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false..." CRLF);
-    } else { //if (!done) {
+    } else { 
+#if !defined(CONFIG_SERVICE_USBDMSC_REGISTER) || !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
+        bool isHostConnected = false;
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)" CRLF);
 
         do {
-            bool retval = uart_getchar(&rx_byte, 0, false);
-
-            if (retval) {
-                if (rx_byte == '\003') {
-                    done = true;
-                    break;
-                }
-            }
-
             if (!isHostConnected) {
                 // if we are not connected, wait until we are
                 isHostConnected = FLASH_DRIVE_is_host_connected();
@@ -87,31 +134,12 @@ void USBD_MSC_Loop(void)
                 }
             }
 
-            //poll PLIC
-            uint32_t source = PLIC_ClaimIRQ();
-
-            switch (source) {
-            case MMC_main_PLIC: // MMC interrupt
-                mmc_main_plic_IRQHandler(); // interrupt 88
-                break;
-
-            case USB_MC_PLIC: // main USB interrupt
-                usb_mc_plic_IRQHandler(); // interrupt 87
-                break;
-
-            case USB_DMA_PLIC: // DMA USB interrupt
-                usb_dma_plic_IRQHandler(); // interrupt 86
-                break;
-
-            default:
-                break;
-            }
-
-            if (source != INVALID_IRQn) {
-                PLIC_CompleteIRQ(source);
-            }
+            done = done || USBDMSC_Poll();
         } while (!done);
+        mHSS_PUTS(CRLF "USB Host disconnected..." CRLF);
+#else
+        void usbdmsc_activate(void);
+        usbdmsc_activate();
+#endif
     }
-
-    PLIC_ClearPendingIRQ();
 }

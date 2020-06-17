@@ -46,6 +46,8 @@ extern "C" {
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target);
 
+extern struct StateMachine wdog_service;
+
 #ifdef __cplusplus
 }
 #endif

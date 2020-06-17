@@ -1,5 +1,6 @@
 config SERVICE_GOTO
-	def_bool y
+	bool "GOTO support"
+	default n
 	help
                 This feature enables support for the E51 to instruct a U54 application hart to 
-                execute code in an aribtrary location of memory. This is enabled by default.
+                execute code in an aribtrary location of memory. 

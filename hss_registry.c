@@ -33,8 +33,16 @@
 # include "uart_service.h"
 #endif
 
+#ifdef CONFIG_SERVICE_SPI
+# include "spi_service.h"
+#endif
+
 #ifdef CONFIG_SERVICE_SGDMA
 # include "sgdma_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_DDR
+# include "ddr_service.h"
 #endif
 
 #ifdef CONFIG_SERVICE_GOTO
@@ -43,6 +51,14 @@
 
 #ifdef CONFIG_SERVICE_OPENSBI
 # include "opensbi_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_TINYCLI
+#  include "tinycli_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_USBDMSC
+#  include "usbdmsc_service.h"
 #endif
 
 #include "hss_debug.h"
@@ -76,6 +92,7 @@ static enum IPIStatusCode HSS_Null_IPIHandler(TxId_t transaction_id, enum HSSHar
  *
  * \warning It must end with a 'NULL' sentinel for the last handler function pointer to indicate end
  */
+
 const struct IPI_Handler ipiRegistry[] = {
     { IPI_MSG_NO_MESSAGE, 		HSS_Null_IPIHandler },
 #ifdef CONFIG_SERVICE_BOOT
@@ -149,40 +166,6 @@ const size_t spanOfIpiRegistry = mSPAN_OF(ipiRegistry);
  *
  * \warning It must end with a 'NULL' sentinel to indicate end
  */
-#ifdef CONFIG_SERVICE_IPI_POLL
-extern struct StateMachine ipi_poll_service;
-#endif
-#ifdef CONFIG_SERVICE_BOOT
-extern struct StateMachine boot_service1;
-extern struct StateMachine boot_service2;
-extern struct StateMachine boot_service3;
-extern struct StateMachine boot_service4;
-#endif
-#ifdef CONFIG_SERVICE_SPI
-extern struct StateMachine spi_service;
-#endif
-#ifdef CONFIG_SERVICE_UART
-extern struct StateMachine uart_service;
-#endif
-#ifdef CONFIG_SERVICE_WDOG
-extern struct StateMachine wdog_service;
-#endif
-#ifdef CONFIG_SERVICE_SGDMA
-extern struct StateMachine sgdma_service;
-#endif
-#ifdef CONFIG_SERVICE_POWERMODE
-extern struct StateMachine powermode_service;
-#endif
-#ifdef CONFIG_SERVICE_FLASHFREEZE
-extern struct StateMachine flashfreeze_service;
-#endif
-#ifdef CONFIG_SERVICE_CRYPTO
-extern struct StateMachine crypto_service;
-#endif
-extern struct StateMachine ddr_service;
-#ifdef CONFIG_SERVICE_OPENSBI
-extern struct StateMachine opensbi_service;
-#endif
 
 struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #ifdef CONFIG_SERVICE_IPI_POLL
@@ -215,9 +198,17 @@ struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #ifdef CONFIG_SERVICE_CRYPTO
     &crypto_service,
 #endif
+#ifdef CONFIG_SERVICE_DDR
     &ddr_service,
+#endif
 #ifdef CONFIG_SERVICE_OPENSBI
     &opensbi_service,
+#endif
+#ifdef CONFIG_SERVICE_TINYCLI_REGISTER
+    &tinycli_service,
+#endif
+#ifdef CONFIG_SERVICE_USBDMSC
+    &usbdmsc_service,
 #endif
 };
 const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
@@ -231,9 +222,6 @@ const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 
 #include "hss_init.h"
 #include "hss_boot_init.h"
-#ifdef CONFIG_SERVICE_TINYCLI
-#  include "tinycli_service.h"
-#endif
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_board_init.h"

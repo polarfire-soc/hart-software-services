@@ -5,5 +5,17 @@ config SERVICE_USBDMSC
 	help
 		This feature enables USBD-MSC support to expose eMMC/SDCard over USB.
           
-		If you don't know what to do here, say N.
+		If you do not know what to do here, say N.
 
+menu "USB Device Mass Storage Class"
+
+config SERVICE_USBDMSC_REGISTER
+        depends on SERVICE_USBDMSC
+	bool "Register USBDMSC as a state machine"
+	default n
+	help
+		This feature enables the USBD-MSC support to be registered
+		as a state machine, which makes it available at all times via the E51.
+
+		If you do not know what to do here, say N.
+endmenu

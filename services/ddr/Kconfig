@@ -1,0 +1,4 @@
+config SERVICE_DDR
+	def_bool y
+	help
+                This feature enables support for the E51 to setup DDR.

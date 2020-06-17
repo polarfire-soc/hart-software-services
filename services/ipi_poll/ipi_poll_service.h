@@ -45,6 +45,8 @@ extern "C" {
 
 void HSS_IpiPoll_Enable(enum HSSHartId target);
 
+extern struct StateMachine ipi_poll_service;
+
 #ifdef __cplusplus
 }
 #endif

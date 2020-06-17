@@ -22,12 +22,18 @@
 
 #include "hss_boot_init.h"
 #include "hss_init.h"
+#include "hss_state_machine.h"
 #include "tinycli_service.h"
 #include "hss_memtest.h"
 #include "hss_progress.h"
 #include "hss_version.h"
 #include "uart_helper.h"
-#include "mpfs_reg_map.h"
+
+#if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
+#    include "usbdmsc_service.h"
+#endif
+
+//#include "mpfs_reg_map.h"
 
 static size_t numTokens = 0u;
 #define mMAX_NUM_TOKENS 40
@@ -62,9 +68,6 @@ static void   tinyCLI_CmdHandler_(int cmdIndex);
 static bool   tinyCLI_GetCmdIndex_(char *pCmdToken, size_t *index);
 static void   tinyCLI_PrintVersion_(void);
 static void   tinyCLI_PrintHelp_(void);
-static bool   tinyCLI_Getline_(char **pBuffer, size_t *pBufLen);
-static size_t tinyCLI_ParseIntoTokens_(char *buffer);
-static void   tinyCLI_Execute_(void);
 #ifdef CONFIG_MEMTEST
 static void   tinyCLI_MemTest_(void);
 #endif
@@ -224,8 +227,10 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
 #if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
     case CMD_USBDMSC:
         {
-            void USBD_MSC_Loop(void);
-            USBD_MSC_Loop();
+            USBDMSC_Init();
+            USBDMSC_Start();
+            void tinycli_wait_for_usbmscd_done(void);
+            tinycli_wait_for_usbmscd_done();
         }
         break;
 #endif
@@ -241,6 +246,8 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
     mHSS_PUTS("" CRLF);
 }
 
+#if !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
+static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen);
 static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen)
 {
     bool result = false;
@@ -257,13 +264,12 @@ static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen)
 
     return result;
 }
+#endif
 
-static size_t tinyCLI_ParseIntoTokens_(char *buffer)
+size_t HSS_TinyCLI_ParseIntoTokens(char *buffer)
 {
     size_t i = 0u;
     static char *strtok_string = NULL;
-
-    //char *strtok_r(char *str, const char *delim, char **saveptr);
 
     char *pToken = strtok_r(buffer, "\n ", &strtok_string);
     while ((pToken != NULL) && (i < mMAX_NUM_TOKENS))  {
@@ -272,10 +278,11 @@ static size_t tinyCLI_ParseIntoTokens_(char *buffer)
         pToken = strtok_r(NULL, "\n ", &strtok_string);
     }
 
+    numTokens = i;
     return i;
 }
 
-static void tinyCLI_Execute_(void)
+void HSS_TinyCLI_Execute(void)
 {
     size_t i = 0u;
     bool matchFoundFlag = tinyCLI_GetCmdIndex_(tokenArray[0], &i);
@@ -298,22 +305,26 @@ bool HSS_TinyCLI_Parser(void)
     if (!keyPressedFlag) {
         mHSS_FANCY_PUTS(LOG_NORMAL, "CLI check timeout" CRLF);
     } else {
-        static char *pBuffer = NULL;
-        static size_t bufLen = 0u;
-
         mHSS_FANCY_PUTS(LOG_NORMAL, "Type HELP for list of commands" CRLF);
-
         while (!quitFlag) {
+#if !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
+            static char *pBuffer = NULL;
+            static size_t bufLen = 0u;
+
             mHSS_FANCY_PUTS(LOG_NORMAL, ">> ");
             bool result = tinyCLI_Getline_(&pBuffer, &bufLen);
 
             if (result && (pBuffer != NULL)) {
-                numTokens = tinyCLI_ParseIntoTokens_(pBuffer);
-
-                if (numTokens) {
-                   tinyCLI_Execute_();
+                if (HSS_TinyCLI_ParseIntoTokens(pBuffer)) {
+                   HSS_TinyCLI_Execute();
                 }
             }
+#else
+            RunStateMachine(&tinycli_service);
+#  if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
+            RunStateMachine(&usbdmsc_service);
+#  endif
+#endif
         }
     }
 
