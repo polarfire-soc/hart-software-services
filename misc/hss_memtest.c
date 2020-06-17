@@ -27,6 +27,7 @@
 #include "hss_debug.h"
 #include "hss_memtest.h"
 #include "hss_progress.h"
+#include "uart_helper.h"
 
 // Walking Ones test of the Data Bus wiring
 static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
@@ -53,15 +54,18 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     size_t offset;
     size_t testOffset;
     uint64_t* result = NULL;
+    uint8_t rx_char;
 
     const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
     const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
-    //const uint64_t pattern = (uint64_t)0xAAAAAAAAu;
-    //const uint64_t antiPattern = (uint64_t)0x55555555u;
 
     //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to pattern" CRLF);
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         baseAddr[offset] = pattern;
+
+        if (uart_getchar(&rx_char, 0, false) && ((rx_char == '\003') || (rx_char == '\033'))) {
+            goto do_return;
+        }
     }
 
     testOffset = 0u;
@@ -74,6 +78,10 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
                 baseAddr + offset, baseAddr[offset], pattern);
             result = ((uint64_t *)&baseAddr[offset]);
             break;
+        }
+
+        if (uart_getchar(&rx_char, 0, false) && ((rx_char == '\003') || (rx_char == '\033'))) {
+            goto do_return;
         }
     }
 
@@ -109,9 +117,14 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
             if (result == NULL) {
                 baseAddr[testOffset] = pattern;
             }
+
+            if (uart_getchar(&rx_char, 0, false) && ((rx_char == '\003') || (rx_char == '\033'))) {
+                goto do_return;
+            }
         }
     }
 
+do_return:
     return result;
 }
 
@@ -123,6 +136,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 
     uint64_t pattern;
     uint64_t antiPattern;
+    uint8_t rx_char;
 
     // write pattern to every cell
     mHSS_FANCY_PRINTF(LOG_NORMAL, "Write Seed Pattern to all cells" CRLF);
@@ -130,6 +144,10 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
     for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
         baseAddr[offset] = pattern;
         HSS_ShowProgress(numWords, numWords - offset);
+
+        if (uart_getchar(&rx_char, 0, false) && ((rx_char == '\003') || (rx_char == '\033'))) {
+            goto do_return;
+        }
     }
     HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
@@ -153,6 +171,10 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
         }
 
         HSS_ShowProgress(numWords, numWords - offset);
+
+        if (uart_getchar(&rx_char, 0, false) && ((rx_char == '\003') || (rx_char == '\033'))) {
+            goto do_return;
+        }
     }
     HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
@@ -169,10 +191,15 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
             }
 
             HSS_ShowProgress(numWords, numWords - offset);
+
+            if (uart_getchar(&rx_char, 0, false) && ((rx_char == '\003') || (rx_char == '\033'))) {
+                goto do_return;
+            }
         }
     }
-    HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
+do_return:
+    HSS_ShowProgress(numWords, 0u); // clear progress indicator
     return result;
 }
 
