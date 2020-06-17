@@ -249,12 +249,15 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
                 uint8_t rcvBuf;
 
                 bool keyPressedFlag = HSS_ShowTimeout("Init failed, press a key to prevent restart" CRLF, 5u, &rcvBuf);
+#ifdef CONFIG_SERVICE_TINYCLI
                 if (keyPressedFlag) {
                     bool HSS_TinyCLI_Parser(void);
 
                     (void)HSS_TinyCLI_Parser();
                 } else {
-                //if (!keyPressedFlag) {
+#else
+                if (!keyPressedFlag) {
+#endif
                     void _start(void);
                     _start();
                 }
