@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -10,15 +10,11 @@
 /***************************************************************************
  *
  * @file mtrap.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief trap functions
  *
- * SVN $Revision$
- * SVN $Date$
  */
 #include "mss_hal.h"
-#include "config/hardware/hw_platform.h"
-#include "config/software/mpfs_hal/mss_sw_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -749,7 +745,7 @@ void reset_mtime(void)
 
 /**
  * Configure system tick
- * @return
+ * @return SUCCESS or FAIL
  */
 uint32_t SysTick_Config(void)
 {
@@ -758,7 +754,14 @@ uint32_t SysTick_Config(void)
 
     uint32_t mhart_id = read_csr(mhartid);
 
-    g_systick_increment[mhart_id] = ((MSS_RTC_TOGGLE_CLK/1000U)  * tick_rate[mhart_id]);
+    /*
+     * We are assuming the tick rate is in milli-seconds
+     *
+     * convert RTC frequency into milliseconds and multiple by the tick rate
+     *
+     */
+
+    g_systick_increment[mhart_id] = ((LIBERO_SETTING_MSS_RTC_TOGGLE_CLK/1000U)  * tick_rate[mhart_id]);
 
     if (g_systick_increment[mhart_id] > 0ULL)
     {
@@ -775,8 +778,14 @@ uint32_t SysTick_Config(void)
     return (ret_val);
 }
 
-
-
+/**
+ * Disable system tick interrupt
+ */
+void disable_systick(void)
+{
+    clear_csr(mie, MIP_MTIP);   /* mie Register - Machine Timer Interrupt Enable */
+    return;
+}
 
 
 /*------------------------------------------------------------------------------
@@ -785,10 +794,34 @@ uint32_t SysTick_Config(void)
 void handle_m_timer_interrupt(void)
 {
 
-    uint32_t hart_id = read_csr(mhartid);
+    volatile uint32_t hart_id = read_csr(mhartid);
+    volatile uint32_t error_loop;
     clear_csr(mie, MIP_MTIP);
 
-    SysTick_Handler(hart_id);
+    switch(hart_id)
+    {
+        case 0U:
+            SysTick_Handler_h0_IRQHandler();
+            break;
+        case 1U:
+            SysTick_Handler_h1_IRQHandler();
+            break;
+        case 2U:
+            SysTick_Handler_h2_IRQHandler();
+            break;
+        case 3U:
+            SysTick_Handler_h3_IRQHandler();
+            break;
+        case 4U:
+            SysTick_Handler_h4_IRQHandler();
+            break;
+        default:
+            while (hart_id != 0U)
+             {
+                 error_loop++;
+             }
+            break;
+    }
 
     CLINT->MTIMECMP[read_csr(mhartid)] = CLINT->MTIME + g_systick_increment[hart_id];
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -10,7 +10,7 @@
 /*******************************************************************************
  *
  * @file mss_stubs.c
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS MSS Interrupt Function stubs.
  *
  * The functions below will only be linked with the application code if the user
@@ -18,8 +18,6 @@
  * defined with weak linking so that they can be overridden by a function with
  * same prototype in the user's application code.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 #include <stdint.h>
 #include "mss_hal.h"
@@ -60,7 +58,27 @@ __attribute__((weak)) void Software_h4_IRQHandler(void)
 
 }
 
-__attribute__((weak)) void SysTick_Handler(uint32_t hart_id)
+__attribute__((weak)) void SysTick_Handler_h0_IRQHandler(void)
+{
+
+}
+
+__attribute__((weak)) void SysTick_Handler_h1_IRQHandler(void)
+{
+
+}
+
+__attribute__((weak)) void SysTick_Handler_h2_IRQHandler(void)
+{
+
+}
+
+__attribute__((weak)) void SysTick_Handler_h3_IRQHandler(void)
+{
+
+}
+
+__attribute__((weak)) void SysTick_Handler_h4_IRQHandler(void)
 {
 
 }

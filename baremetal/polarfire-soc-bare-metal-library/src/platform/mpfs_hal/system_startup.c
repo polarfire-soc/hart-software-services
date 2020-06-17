@@ -1,5 +1,5 @@
 /******************************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -23,23 +23,30 @@
  */
 /***************************************************************************
  * @file system_startup.c
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief first C code called on startup. Will call user code created outside
  * the HAL.
- *
- * SVN $Revision$
- * SVN $Date$
  */
 #include <stddef.h>
 #include <stdbool.h>
 #include "mss_hal.h"
+#ifdef  MPFS_HAL_HW_CONFIG
+#include "nwc/mss_nwc_init.h"
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+static void copy_section(uint64_t * p_load, uint64_t * p_vma, uint64_t * p_vma_end);
+
+#ifdef  MPFS_HAL_HW_CONFIG
+static void load_virtual_rom(void);
+#endif  /* MPFS_HAL_HW_CONFIG */
+
 /*LDRA_INSPECTED 440 S MR:R.11.1,R.11.2,R.11.4,R.11.6,R.11.7  Have to allocate number (address) as point reference*/
-mss_sysreg_t*   SYSREG = ((mss_sysreg_t*) BASE32_ADDR_MSS_SYSREG);
+mss_sysreg_t * const SYSREG = ((mss_sysreg_t * const) BASE32_ADDR_MSS_SYSREG);
 
 
 /*==============================================================================
@@ -56,10 +63,41 @@ __attribute__((weak)) int main_first_hart(void)
     if(hartid == MPFS_HAL_FIRST_HART)
     {
         uint8_t hard_idx;
+        /*
+         * We only use code within the conditional compile
+         * #ifdef MPFS_HAL_HW_CONFIG
+         * if this program is used as part of the initial board bring-up
+         * Please comment/uncomment MPFS_HAL_HW_CONFIG define in
+         * platform/config/software/mpfs_hal/sw_config.h
+         * as required.
+         */
+#ifdef  MPFS_HAL_HW_CONFIG
+        load_virtual_rom();
+        config_l2_cache();
+#endif  /* MPFS_HAL_HW_CONFIG */
         init_memory();
+
+#ifdef  MPFS_HAL_HW_CONFIG
         (void)init_bus_error_unit();
         (void)init_mem_protection_unit();
+        (void)init_pmp((uint8_t)MPFS_HAL_FIRST_HART);
+#endif  /* MPFS_HAL_HW_CONFIG */
+        /*
+         * Initialise NWC
+         *      Clocks
+         *      SGMII
+         *      DDR
+         *      IOMUX
+         */
+#ifdef  MPFS_HAL_HW_CONFIG
+        (void)mss_nwc_init();
+#endif  /* MPFS_HAL_HW_CONFIG */
+        /*
+         * Copies text section if relocation required
+         */
+        (void)copy_section(&__text_load, &__text_start, &__text_end);
 
+#ifdef  MPFS_HAL_HW_CONFIG
         /*
          * Start the other harts. They are put in wfi in entry.S
          * When debugging, harts are released from reset separately,
@@ -69,7 +107,7 @@ __attribute__((weak)) int main_first_hart(void)
         hard_idx = MPFS_HAL_FIRST_HART + 1U;
         while( hard_idx <= MPFS_HAL_LAST_HART)
         {
-            uint32_t wait_count;
+            uint32_t wait_count = 0u; // initialize to avoid compiler warning
 
             switch(sm_check_thread)
             {
@@ -120,13 +158,14 @@ __attribute__((weak)) int main_first_hart(void)
             }
         }
 
+#endif /* MPFS_HAL_HW_CONFIG */
         (void)main_other_hart();
     }
 
     /* should never get here */
     while(true)
     {
-       volatile static uint64_t counter = 0U;
+        static volatile uint64_t counter = 0U;
 
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;
@@ -148,27 +187,51 @@ __attribute__((weak)) int main_first_hart(void)
  */
 __attribute__((weak)) int main_other_hart(void)
 {
+    extern char __app_stack_top_h0;
+    extern char __app_stack_top_h1;
+    extern char __app_stack_top_h2;
+    extern char __app_stack_top_h3;
+    extern char __app_stack_top_h4;
+
+    const uint64_t app_stack_top_h0 = (const uint64_t)&__app_stack_top_h0;
+    const uint64_t app_stack_top_h1 = (const uint64_t)&__app_stack_top_h1;
+    const uint64_t app_stack_top_h2 = (const uint64_t)&__app_stack_top_h2;
+    const uint64_t app_stack_top_h3 = (const uint64_t)&__app_stack_top_h3;
+    const uint64_t app_stack_top_h4 = (const uint64_t)&__app_stack_top_h4;
+
     uint64_t hartid = read_csr(mhartid);
+
+    volatile uint64_t dummy;
 
     switch(hartid)
     {
+
     case 0U:
+        __asm volatile ("add sp, x0, %1" : "=r"(dummy) : "r"(app_stack_top_h0));
         e51();
         break;
 
     case 1U:
+        (void)init_pmp((uint8_t)1);
+        __asm volatile ("add sp, x0, %1" : "=r"(dummy) : "r"(app_stack_top_h1));
         u54_1();
         break;
 
     case 2U:
+        (void)init_pmp((uint8_t)2);
+        __asm volatile ("add sp, x0, %1" : "=r"(dummy) : "r"(app_stack_top_h2));
         u54_2();
         break;
 
     case 3U:
+        (void)init_pmp((uint8_t)3);
+        __asm volatile ("add sp, x0, %1" : "=r"(dummy) : "r"(app_stack_top_h3));
         u54_3();
         break;
 
     case 4U:
+        (void)init_pmp((uint8_t)4);
+        __asm volatile ("add sp, x0, %1" : "=r"(dummy) : "r"(app_stack_top_h4));
         u54_4();
         break;
 
@@ -180,7 +243,7 @@ __attribute__((weak)) int main_other_hart(void)
     /* should never get here */
     while(true)
     {
-       volatile static uint64_t counter = 0U;
+        static volatile uint64_t counter = 0U;
 
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;
@@ -191,78 +254,77 @@ __attribute__((weak)) int main_other_hart(void)
 }
 
 /*==============================================================================
+ * Load the virtual ROM located at address 0x20003120 within the SCB system
+ * registers with an executable allowing to park a hart in an infinite loop.
+ */
+#ifdef  MPFS_HAL_HW_CONFIG
+#define VIRTUAL_BOOTROM_BASE_ADDR   0x20003120UL
+#define NB_BOOT_ROM_WORDS           8U
+static void load_virtual_rom(void)
+{
+    int inc;
+    volatile uint32_t * p_virtual_bootrom = (uint32_t *)VIRTUAL_BOOTROM_BASE_ADDR;
+
+    const uint32_t rom[NB_BOOT_ROM_WORDS] =
+    {
+            0x00000513U,    /* li a0, 0 */
+            0x34451073U,    /* csrw mip, a0 */
+            0x10500073U,    /* wfi */
+            0xFF5FF06FU,    /* j 0x20003120 */
+            0xFF1FF06FU,    /* j 0x20003120 */
+            0xFEDFF06FU,    /* j 0x20003120 */
+            0xFE9FF06FU,    /* j 0x20003120 */
+            0xFE5FF06FU     /* j 0x20003120 */
+    };
+
+    for(inc = 0; inc < NB_BOOT_ROM_WORDS; ++inc)
+    {
+        p_virtual_bootrom[inc] = rom[inc];
+    }
+}
+#endif  /* MPFS_HAL_HW_CONFIG */
+
+/*==============================================================================
+ * Put the hart executing this code into an infinite loop executing from the
+ * SCB system register memory space.
+ * This allows preventing a hart from accessing memory regardless of memory
+ * hierarchy configuration or compiler/linker settings.
+ * This function relies on load_virtual_rom() having been called previously to
+ * populate the virtual ROM with a suitable executable.
+ */
+static void park_hart(void)
+{
+    clear_csr(mstatus, MSTATUS_MIE);
+    __asm volatile("fence.i");
+    __asm volatile("li ra,0x20003120");
+    __asm volatile("ret");
+}
+
+/*==============================================================================
  * E51 code executing after system startup.
  * In absence of an application function of this name with strong linkage, this
  * function will get linked.
  * This default implementation is for illustration purpose only. If you need to
  * modify this function, create your own one in an application directory space.
  */
- __attribute__((weak)) void e51(void)
- {
-    /*Clear pending software interrupt in case there was any.
-     Enable only the software interrupt so that other core can bring this core
-     out of WFI by raising a software interrupt.
-     Note that any other interrupt can also be used to bring CPU out of WFI*/
-    clear_soft_interrupt();
-    set_csr(mie, MIP_MSIP);
-
-    /*put this hart into WFI.*/
-    do
-    {
-        __asm("wfi");
-    }while(0UL == (read_csr(mip) & MIP_MSIP));
-
-    /*The hart is out of WFI, clear the SW interrupt. Here onwards Application
-     can enable and use any interrupts as required*/
-    clear_soft_interrupt();
-
-    __enable_irq();
-
-    while(true)
-    {
-       volatile static uint64_t counter = 0U;
-
-       /* Added some code as debugger hangs if in loop doing nothing */
-       counter = counter + 1U;
-    }
+__attribute__((weak)) void e51(void)
+{
+    /* Put hart in safe infinite WFI loop. */
+     park_hart();
 }
 
 /*==============================================================================
-  * First U54.
+ * First U54.
  * In absence of an application function of this name with strong linkage, this
  * function will get linked.
  * This default implementation is for illustration purpose only. If you need to
  * modify this function, create your own one in an application directory space.
   */
- __attribute__((weak)) void u54_1(void)
- {
-     /*Clear pending software interrupt in case there was any.
-      Enable only the software interrupt so that other core can bring this core
-      out of WFI by raising a software interrupt.
-      Note that any other interrupt can also be used to bring CPU out of WFI*/
-     clear_soft_interrupt();
-     set_csr(mie, MIP_MSIP);
-
-     /*put this hart into WFI.*/
-     do
-     {
-         __asm("wfi");
-     }while(0UL == (read_csr(mip) & MIP_MSIP));
-
-     /*The hart is out of WFI, clear the SW interrupt. Here onwards Application
-      can enable and use any interrupts as required*/
-     clear_soft_interrupt();
-
-     __enable_irq();
-
-     while(true)
-     {
-        volatile static uint64_t counter = 0U;
-
-        /* Added some code as debugger hangs if in loop doing nothing */
-        counter = counter + 1U;
-     }
- }
+__attribute__((weak)) void u54_1(void)
+{
+    /* Put hart in safe infinite WFI loop. */
+     park_hart();
+}
 
 
 /*==============================================================================
@@ -274,32 +336,8 @@ __attribute__((weak)) int main_other_hart(void)
  */
 __attribute__((weak)) void u54_2(void)
 {
-    /*Clear pending software interrupt in case there was any.
-     Enable only the software interrupt so that other core can bring this core
-     out of WFI by raising a software interrupt.
-     Note that any other interrupt can also be used to bring CPU out of WFI*/
-    clear_soft_interrupt();
-    set_csr(mie, MIP_MSIP);
-
-    /*put this hart into WFI.*/
-    do
-    {
-        __asm("wfi");
-    }while(0UL == (read_csr(mip) & MIP_MSIP));
-
-    /*The hart is out of WFI, clear the SW interrupt. Here onwards Application
-     can enable and use any interrupts as required*/
-    clear_soft_interrupt();
-
-    __enable_irq();
-
-    while(true)
-    {
-       volatile static uint64_t counter = 0U;
-
-       /* Added some code as debugger hangs if in loop doing nothing */
-       counter = counter + 1U;
-    }
+    /* Put hart in safe infinite WFI loop. */
+    park_hart();
 }
 
 /*==============================================================================
@@ -309,34 +347,10 @@ __attribute__((weak)) void u54_2(void)
  * This default implementation is for illustration purpose only. If you need to
  * modify this function, create your own one in an application directory space.
  */
- __attribute__((weak)) void u54_3(void)
- {
-     /*Clear pending software interrupt in case there was any.
-      Enable only the software interrupt so that other core can bring this core
-      out of WFI by raising a software interrupt.
-      Note that any other interrupt can also be used to bring CPU out of WFI*/
-     clear_soft_interrupt();
-     set_csr(mie, MIP_MSIP);
-
-     /*put this hart into WFI.*/
-     do
-     {
-         __asm("wfi");
-     }while(0UL == (read_csr(mip) & MIP_MSIP));
-
-     /*The hart is out of WFI, clear the SW interrupt. Here onwards Application
-      can enable and use any interrupts as required*/
-     clear_soft_interrupt();
-
-     __enable_irq();
-
-     while(true)
-     {
-        volatile static uint64_t counter = 0U;
-
-        /* Added some code as debugger hangs if in loop doing nothing */
-        counter = counter + 1U;
-     }
+__attribute__((weak)) void u54_3(void)
+{
+    /* Put hart in safe infinite WFI loop. */
+     park_hart();
 }
 
 /*==============================================================================
@@ -346,35 +360,32 @@ __attribute__((weak)) void u54_2(void)
  * This default implementation is for illustration purpose only. If you need to
  * modify this function, create your own one in an application directory space.
  */
- __attribute__((weak)) void u54_4(void)
- {
-     /*Clear pending software interrupt in case there was any.
-      Enable only the software interrupt so that other core can bring this core
-      out of WFI by raising a software interrupt.
-      Note that any other interrupt can also be used to bring CPU out of WFI*/
-     clear_soft_interrupt();
-     set_csr(mie, MIP_MSIP);
-
-     /*put this hart into WFI.*/
-     do
-     {
-         __asm("wfi");
-     }while(0UL == (read_csr(mip) & MIP_MSIP));
-
-     /*The hart is out of WFI, clear the SW interrupt. Here onwards Application
-      can enable and use any interrupts as required*/
-     clear_soft_interrupt();
-
-     __enable_irq();
-
-     while(true)
-     {
-        volatile static uint64_t counter = 0U;
-
-        /* Added some code as debugger hangs if in loop doing nothing */
-        counter = counter + 1U;
-     }
+__attribute__((weak)) void u54_4(void)
+{
+    /* Put hart in safe infinite WFI loop. */
+     park_hart();
 }
+
+ /*==============================================================================
+  * Copy hardware configuration to registers.
+  * This function should be used in place of memcpy() to cover the use case
+  * where C library code has not yet been copied from its LMA to VMA. For
+  * example copying before the copy_section of the .text section has taken
+  * place.
+  */
+ __attribute__((weak)) char * config_copy(void *dest, const void * src, size_t len)
+ {
+     char *csrc = (char *)src;
+     char *cdest = (char *)dest;
+
+     for(int inc = 0; inc < len; inc++)
+     {
+         cdest[inc] = csrc[inc];
+     }
+
+     return(csrc);
+ }
+
 
 /**
  * copy_section
@@ -382,16 +393,19 @@ __attribute__((weak)) void u54_2(void)
  * @param p_vma
  * @param p_vma_end
  */
-static void copy_section(uint32_t * p_load, uint32_t * p_vma,
-                                                          uint32_t * p_vma_end)
+static void copy_section
+(
+    uint64_t * p_load,
+    uint64_t * p_vma,
+    uint64_t * p_vma_end)
 {
     if ( p_vma != p_load)
     {
-         while(p_vma < p_vma_end)
+        while(p_vma < p_vma_end)
         {
-             *p_vma = *p_load;
-             ++p_load;
-             ++p_vma;
+            *p_vma = *p_load;
+            ++p_load;
+            ++p_vma;
         }
     }
 }
@@ -401,24 +415,30 @@ static void copy_section(uint32_t * p_load, uint32_t * p_vma,
  * @param start
  * @param end
  */
- static void zero_section(uint32_t * start, uint32_t * end)
+static void zero_section(uint64_t * start, uint64_t * end)
 {
-    uint32_t * p_zero = start;
+    uint64_t * p_zero = start;
 
     while(p_zero < end)
     {
-         *p_zero = 0UL;
-         ++p_zero;
+        *p_zero = 0UL;
+        ++p_zero;
     }
 }
- /*------------------------------------------------------------------------------
+
+ /*-----------------------------------------------------------------------------
   * _start() function called invoked
   * This function is called on power up and warm reset.
   */
  __attribute__((weak)) void init_memory( void)
  {
+    extern uint64_t __l2_scratchpad_load;
+    extern uint64_t __l2_scratchpad_start;
+    extern uint64_t __l2_scratchpad_end;
+
     copy_section(&__sdata_load, &__sdata_start, &__sdata_end);
     copy_section(&__data_load, &__data_start, &__data_end);
+    copy_section(&__l2_scratchpad_load, &__l2_scratchpad_start, &__l2_scratchpad_end);
     zero_section(&__sbss_start, &__sbss_end);
     zero_section(&__bss_start, &__bss_end);
 
@@ -455,6 +475,20 @@ __attribute__((weak)) uint8_t init_bus_error_unit(void)
  */
 __attribute__((weak)) uint8_t init_mem_protection_unit(void)
 {
+#ifndef SIFIVE_HIFIVE_UNLEASHED
+    mpu_configure();
+#endif
+    return (0U);
+}
+
+/**
+ * init_pmp(void)
+ * add this function to you code and configure as required
+ * @return
+ */
+__attribute__((weak)) uint8_t init_pmp(uint8_t hart_id)
+{
+    pmp_configure(hart_id);
     return (0U);
 }
 

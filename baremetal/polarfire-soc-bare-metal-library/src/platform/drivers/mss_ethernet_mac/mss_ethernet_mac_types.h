@@ -7,7 +7,7 @@
  * Ethernet MAC and PHY device drivers. User need not include this file in
  * application source code.
  * Inclusion of mss_ethernet_mac.h inherits these types.
- * 
+ *
  * SVN $Revision$
  * SVN $Date$
  */
@@ -60,7 +60,7 @@ typedef enum
   interface_type
     This indicates the type of interface between the MAC and the PHY. The
     currently supported values are:
-  
+
       NULL_PHY   – No PHY involved, usually for direct connection via the
                    fabric.
       GMII       – Connection via GMII routed through the fabric to external PHY
@@ -125,7 +125,7 @@ typedef enum
     for hidden SGMII type interfaces such as that in the G5 SoC emulation
     platform.
 
-  tx_edc_enable 
+  tx_edc_enable
     The tx_edc_enable parameter specifies enable or disable error detection and
     correction for tx FIFOs. The allowed values for the tx_edc_enable
     configuration parameter are:
@@ -188,7 +188,7 @@ typedef enum
     The MSS_MAC_cfg_struct_def_init() function sets this configuration parameter
     to MSS_MAC_CRC_ENABLE.
 
-  fullduplex 
+  fullduplex
     The fullduplex parameter specifies enable or disable full duplex. When
     enabled, the MAC operates in full duplex mode. When disabled, the MAC
     operates in half duplex mode. The allowed values for the fullduplex
@@ -565,7 +565,7 @@ typedef enum
  * Driver creates and manages two descriptor rings for transmission and
  * reception.
  */
- 
+
 #define GEM_RX_DMA_TS_PRESENT       BIT_02
 #define GEM_RX_DMA_WRAP             BIT_01
 #define GEM_RX_DMA_USED             BIT_00
@@ -598,7 +598,7 @@ typedef enum
 #define GEM_TX_DMA_NO_CRC           BIT_16
 #define GEM_TX_DMA_LAST             BIT_15
 #define GEM_TX_DMA_BUFF_LEN         BITS_14
- 
+
 typedef struct mss_mac_tx_desc mss_mac_tx_desc_t;
 typedef struct mss_mac_rx_desc mss_mac_rx_desc_t;
 
@@ -650,7 +650,7 @@ struct mss_mac_tx_desc
 #if defined(MSS_MAC_64_BIT_ADDRESS_MODE)
     uint32_t          addr_high;    /* High portion of address in 64bit addressing mode */
     uint32_t          unused;       /* Unused word in 64bit mode */
-#endif 
+#endif
 #if defined(MSS_MAC_TIME_STAMPED_MODE)
     volatile uint32_t nano_seconds; /* Nanoseconds and LSBs of seconds for timestamp */
     volatile uint32_t seconds;      /* MSBs of timestamp seconds */
@@ -667,7 +667,7 @@ struct mss_mac_rx_desc
 #if defined(MSS_MAC_64_BIT_ADDRESS_MODE)
     uint32_t          addr_high;    /* High portion of address in 64bit addressing mode */
     uint32_t          unused;       /* Unused word in 64bit mode */
-#endif 
+#endif
 #if defined(MSS_MAC_TIME_STAMPED_MODE)
     volatile uint32_t nano_seconds; /* Nanoseconds and LSBs of seconds for timestamp */
     volatile uint32_t seconds;      /* MSBs of timestamp seconds */

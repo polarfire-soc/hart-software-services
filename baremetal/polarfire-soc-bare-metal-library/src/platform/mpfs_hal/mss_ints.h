@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -10,13 +10,11 @@
 /*******************************************************************************
  *
  * @file mss_ints.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS interrupt prototypes
  *
  * Interrupt function prototypes
  *
- * SVN $Revision$
- * SVN $Date$
  */
 
 #ifndef MSS_INTS_H
@@ -34,7 +32,11 @@ void Software_h1_IRQHandler(void);
 void Software_h2_IRQHandler(void);
 void Software_h3_IRQHandler(void);
 void Software_h4_IRQHandler(void);
-void SysTick_Handler(uint32_t hart_id);
+void SysTick_Handler_h0_IRQHandler(void);
+void SysTick_Handler_h1_IRQHandler(void);
+void SysTick_Handler_h2_IRQHandler(void);
+void SysTick_Handler_h3_IRQHandler(void);
+void SysTick_Handler_h4_IRQHandler(void);
 
 /*
  *

@@ -26,9 +26,7 @@
 */
 
 /***********************************************************************************
- * Record of Microsemi changes
- * SVN $Revision$
- * SVN $Date$
+ * Record of Microchip changes
  */
 
 #ifndef RISCV_ATOMIC_H

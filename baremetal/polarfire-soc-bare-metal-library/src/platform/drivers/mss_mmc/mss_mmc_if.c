@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: MIT
  *
  * PolarFire SoC MSS eMMC SD Interface Level Driver.
- * 
+ *
  * This eMMC/SD Interface driver provides functions for transferring
  * configuration and programming commands to the eMMC/SD device. Functions
  * contained within the eMMC/SD interface driver are accessed through the
  * mss_mmc_if.h header file.
  *
- * SVN $Revision$
- * SVN $Date$
+ * SVN $Revision: 12579 $
+ * SVN $Date: 2019-12-04 16:41:30 +0530 (Wed, 04 Dec 2019) $
  */
 #include "mss_mmc_if.h"
 #include "mss_mmc_regs.h"
@@ -55,7 +55,7 @@ cif_response_t cif_send_cmd
 
     /* Transfer the Command to the MMC device */
     send_mmc_cmd(cmd_arg, cmd_type, resp_type, CHECK_IF_CMD_SENT_POLL);
-    
+
     /* No responses for CMD 0,4,15 */
     if ((MMC_CMD_0_GO_IDLE_STATE != cmd_type) && (MMC_CMD_4_SET_DSR != cmd_type)
                                 && (MMC_CMD_15_GOTO_INACTIVE_STATE != cmd_type))
@@ -96,7 +96,7 @@ cif_response_t cif_send_cmd
     return(ret_status);
 }
 
-/***************************************************************************//** 
+/***************************************************************************//**
  * The send_mmc_cmd() function transfers the eMMC/SD command and argument to the
  * eMMC/SD device and waits until the core indicates that the command has been
  * transferred successfully.
@@ -111,7 +111,7 @@ void send_mmc_cmd
 {
     uint32_t command_information;
     uint32_t srs9, trans_status_isr;
-    
+
     /* check if command line is not busy */
     do
     {
@@ -143,8 +143,8 @@ void send_mmc_cmd
     }
 }
 
-/***************************************************************************//** 
- * The response_1_parser() returns the contents of the Card Status Register. 
+/***************************************************************************//**
+ * The response_1_parser() returns the contents of the Card Status Register.
  * This function checks that none of the error fields are set within the CSR
  * and the status of the READY_FOR_DATA flag (Bit 8).
  */
@@ -152,7 +152,7 @@ static cif_response_t response_1_parser(void)
 {
     cif_response_t ret_status = TRANSFER_IF_FAIL;
     uint32_t response;
-    
+
     response = MMC->SRS04;
     if (MMC_CLEAR == (CARD_STATUS_ALL_ERRORS_MASK & response)) /* no error */
     {
@@ -224,7 +224,7 @@ cif_response_t cif_send_cq_direct_command
     uint32_t reg;
     uint32_t cmd_response;
     cif_response_t ret_status = TRANSFER_IF_FAIL;
-    
+
     /* Enable direct command */
     reg = MMC->CQRS02;
     reg |= (uint32_t)CQRS02_DIRECT_CMD_ENABLE;
@@ -310,7 +310,7 @@ static cif_response_t cq_execute_task(uint8_t task_id)
     MMC->CQRS10 = reg;
 
     while (value--);
-    
+
     do
     {
         trans_status_isr = MMC->SRS12;
@@ -359,6 +359,8 @@ static cif_response_t cq_execute_task(uint8_t task_id)
     {
         ret_status = TRANSFER_IF_FAIL;
     }
+
+    (void) cmd_response; // unused, so referencing to avoid compiler warning
     return ret_status;
 }
 /******************************************************************************/

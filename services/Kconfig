@@ -1,139 +1,21 @@
 menu "Services"
 
-config SERVICE_BOOT
-	def_bool y
-	select SERVICE_GOTO
-	help
-                This feature enables support for bootstrapping the U54 application harts. This
-                is enabled by default.
-
-menu "Boot Service"
-
-config SERVICE_BOOT_SETS_SUPPORT
-        def_bool y
-        depends on SERVICE_BOOT
-	help
-                This feature enables support for bootstrapping the U54 application harts in groups.
-                This helps prevent boot races by starting secondary processors before the primary
-                process in a group, to ensure they are ready and waiting for a wake-up signal from
-                the primary.
-
-                This setting is is enabled by default.
-endmenu
-
-config SERVICE_GOTO
-	def_bool y
-	help
-                This feature enables support for the E51 to instruct a U54 application hart to 
-                execute code in an aribtrary location of memory. This is enabled by default.
-
-config SERVICE_CRYPTO
-	bool "Cryptography support"
-	default n
-	help
-                This feature enables support for crytographic signing of boot images.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_FLASHFREEZE
-	bool "Flash*Freeze support*"
-	default n
-	help
-                This feature enables support for Flash*Freeze.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_POWERMODE
-	bool "Low Power Mode support"
-	default n
-	help
-                This feature enables support for Low Power Mode operation.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_QSPI
-	bool "QSPI support"
-	default y
-	help
-                This feature enables support for booting via QSPI.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_QSPI_COPY_TO_DDR
-	bool "QSPI support"
-        depends on SERVICE_QSPI
-	default y
-	help
-                If CONFIG_SERVICE_QSPI is enabled, this feature copies the boot image from 
-                QSPI to DDR as a means of speeding up booting.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_BOOT_DDR_TARGET_ADDR
-	hex "Target Base address for BOOT to DDR copy"
-	default 0xB0000000
-	depends on SERVICE_QSPI_COPY_TO_DDR
-	help
-		If CONFIG_SERVICE_QSPI_COPY_TO_DDR is enabled, specify the
-                target base address for the boot image from QSPI to be 
-                cached in main system memory.
-
-config SERVICE_SGDMA
-	bool "SGDMA support"
-	default n
-	help
-                This feature enables support for E51-delegated Scatter-Gather DMA.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_SPI
-	bool "SPI support"
-	default n
-	help
-                This feature enables support for virtual SPI.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_UART
-	bool "UART support"
-	default n
-	help
-                This feature enables support for virtual UART.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_WDOG
-	bool "Virtual watchdog support"
-	default n
-	help
-                This feature enables support for E51-delegated virtual watchdog monitoring of the
-                U54 application harts.
-
-		If you don't know what to do here, say Y.
-
-config SERVICE_IPI_POLL
-	bool "IPI Polling support"
-	default n
-	help
-                This feature enables support for IPI Polling.
-                
-		If you don't know what to do here, say Y.
-
-config SERVICE_OPENSBI
-	def_bool y
-	depends on OPENSBI
-	help
-                This feature enables support for OPENSBI.
-                
-		If you don't know what to do here, say Y.
-
-config SERVICE_YMODEM
-	bool "YMODEM support"
-	default n
-        select TINYCLI
-	help
-                This feature enables support for YMODEM.
-                
-		If you don't know what to do here, say Y.
+source "services/boot/Kconfig"
+source "services/ddr/Kconfig"
+source "services/goto/Kconfig"
+source "services/crypto/Kconfig"
+source "services/flashfreeze/Kconfig"
+source "services/powermode/Kconfig"
+source "services/mmc/Kconfig"
+source "services/qspi/Kconfig"
+source "services/sgdma/Kconfig"
+source "services/spi/Kconfig"
+source "services/uart/Kconfig"
+source "services/wdog/Kconfig"
+source "services/ipi_poll/Kconfig"
+source "services/opensbi/Kconfig"
+source "services/ymodem/Kconfig"
+source "services/usbdmsc/Kconfig"
+source "services/tinycli/Kconfig"
 
 endmenu

@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - CRC16 calculation.
  *
  */
@@ -35,7 +35,7 @@ extern "C" {
 
 #include <stdint.h>
 
-uint16_t CRC16_calculate(const uint8_t *input, size_t numBytes);
+uint16_t CRC16_calculate(const uint8_t *pInput, size_t numBytes);
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -16,6 +16,7 @@
 #include "hss_types.h"
 #include "hss_state_machine.h"
 #include "hss_debug.h"
+#include "ddr_service.h"
 
 #include "ssmb_ipi.h"
 
@@ -77,12 +78,11 @@ static void ddr_idle_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-void HSS_DDR_Train(void); // TODO: clean up
 static void ddr_retrain_handler(struct StateMachine * const pMyMachine)
 {
     (void) pMyMachine;
 
-    HSS_DDR_Train();  
+    HSS_DDR_Train();
     pMyMachine->state = DDR_IDLE;
 }
 

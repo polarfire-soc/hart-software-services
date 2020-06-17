@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Virtual Watchdog Service
  *
  */
@@ -45,6 +45,8 @@ extern "C" {
 #include "mpfs_reg_map.h"
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target);
+
+extern struct StateMachine wdog_service;
 
 #ifdef __cplusplus
 }

@@ -33,8 +33,16 @@
 # include "uart_service.h"
 #endif
 
+#ifdef CONFIG_SERVICE_SPI
+# include "spi_service.h"
+#endif
+
 #ifdef CONFIG_SERVICE_SGDMA
 # include "sgdma_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_DDR
+# include "ddr_service.h"
 #endif
 
 #ifdef CONFIG_SERVICE_GOTO
@@ -43,6 +51,14 @@
 
 #ifdef CONFIG_SERVICE_OPENSBI
 # include "opensbi_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_TINYCLI
+#  include "tinycli_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_USBDMSC
+#  include "usbdmsc_service.h"
 #endif
 
 #include "hss_debug.h"
@@ -63,7 +79,7 @@ static enum IPIStatusCode HSS_Null_IPIHandler(TxId_t transaction_id, enum HSSHar
     (void)immediate_arg;
     (void)p_extended_buffer_in_ddr;
 
-    mHSS_DEBUG_PRINTF("%s() called -- ignoring" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s() called -- ignoring" CRLF);
     return IPI_SUCCESS;
 }
 
@@ -76,6 +92,7 @@ static enum IPIStatusCode HSS_Null_IPIHandler(TxId_t transaction_id, enum HSSHar
  *
  * \warning It must end with a 'NULL' sentinel for the last handler function pointer to indicate end
  */
+
 const struct IPI_Handler ipiRegistry[] = {
     { IPI_MSG_NO_MESSAGE, 		HSS_Null_IPIHandler },
 #ifdef CONFIG_SERVICE_BOOT
@@ -129,7 +146,9 @@ const struct IPI_Handler ipiRegistry[] = {
     { IPI_MSG_ACK_COMPLETE, 		IPI_ACK_IPIHandler },
     { IPI_MSG_HALT, 			HSS_Null_IPIHandler },
     { IPI_MSG_CONTINUE, 		HSS_Null_IPIHandler },
+#ifdef CONFIG_SERVICE_GOTO
     { IPI_MSG_GOTO, 			HSS_GOTO_IPIHandler },
+#endif
 #ifdef CONFIG_SERVICE_OPENSBI
     { IPI_MSG_OPENSBI_INIT, 	  	HSS_OpenSBI_IPIHandler },
 #else
@@ -147,42 +166,8 @@ const size_t spanOfIpiRegistry = mSPAN_OF(ipiRegistry);
  *
  * \warning It must end with a 'NULL' sentinel to indicate end
  */
-#ifdef CONFIG_SERVICE_IPI_POLL
-extern struct StateMachine ipi_poll_service;
-#endif
-#ifdef CONFIG_SERVICE_BOOT
-extern struct StateMachine boot_service1;
-extern struct StateMachine boot_service2;
-extern struct StateMachine boot_service3;
-extern struct StateMachine boot_service4;
-#endif
-#ifdef CONFIG_SERVICE_SPI
-extern struct StateMachine spi_service;
-#endif
-#ifdef CONFIG_SERVICE_UART
-extern struct StateMachine uart_service;
-#endif
-#ifdef CONFIG_SERVICE_WDOG
-extern struct StateMachine wdog_service;
-#endif
-#ifdef CONFIG_SERVICE_SGDMA
-extern struct StateMachine sgdma_service;
-#endif
-#ifdef CONFIG_SERVICE_POWERMODE
-extern struct StateMachine powermode_service;
-#endif
-#ifdef CONFIG_SERVICE_FLASHFREEZE
-extern struct StateMachine flashfreeze_service;
-#endif
-#ifdef CONFIG_SERVICE_CRYPTO
-extern struct StateMachine crypto_service;
-#endif
-extern struct StateMachine ddr_service;
-#ifdef CONFIG_SERVICE_OPENSBI
-extern struct StateMachine opensbi_service;
-#endif
 
-struct StateMachine /*@null@*/ * const pStateMachines[] = {
+struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #ifdef CONFIG_SERVICE_IPI_POLL
     &ipi_poll_service,
 #endif
@@ -213,69 +198,69 @@ struct StateMachine /*@null@*/ * const pStateMachines[] = {
 #ifdef CONFIG_SERVICE_CRYPTO
     &crypto_service,
 #endif
+#ifdef CONFIG_SERVICE_DDR
     &ddr_service,
+#endif
 #ifdef CONFIG_SERVICE_OPENSBI
     &opensbi_service,
 #endif
+#ifdef CONFIG_SERVICE_TINYCLI_REGISTER
+    &tinycli_service,
+#endif
+#ifdef CONFIG_SERVICE_USBDMSC
+    &usbdmsc_service,
+#endif
 };
-const size_t spanOfPStateMachines = mSPAN_OF(pStateMachines);
+const size_t spanOfPGlobalStateMachines = mSPAN_OF(pGlobalStateMachines);
 
 /******************************************************************************************************/
 /*!
  * \brief Init Function Registration Table
  *
  * The following structure is used to connect in new init functions.
- *
- * \warning It must end with a 'NULL' sentinel to indicate end
  */
-bool HSS_DDRInit(void);
-bool HSS_QueuesInit(void);
-#ifdef CONFIG_SERVICE_QSPI
-bool HSS_QSPIInit(void);
-#endif
-#ifdef CONFIG_SERVICE_BOOT
-bool HSS_BootInit(void);
-#endif
-#ifdef CONFIG_OPENSBI
-bool HSS_OpenSBIInit(void);
+
+#include "hss_init.h"
+#include "hss_boot_init.h"
+#include "hss_boot_pmp.h"
+#include "hss_sys_setup.h"
+#include "hss_board_init.h"
+#ifdef CONFIG_MEMTEST
+#  include "hss_memtest.h"
 #endif
 
-const struct InitFunction /*@null@*/ initFunctions[] = {
-    //{ "HSS_UARTInit",   HSS_UARTInit,      false },
-    { "HSS_RegistryInit", HSS_RegistryInit,  false },
-    //{ "HSS_DDRInit",    HSS_DDRInit,       false },
-    { "IPI_QueuesInit",   IPI_QueuesInit,    false },
-#ifdef CONFIG_SERVICE_QSPI
-    { "HSS_QSPIInit",     HSS_QSPIInit,      false },
-#endif
-#ifdef CONFIG_SERVICE_BOOT
-    { "HSS_BootInit",     HSS_BootInit,      false },
-#endif
+const struct InitFunction /*@null@*/ globalInitFunctions[] = {
+    // Name                  FunctionPointer      Halt   Restart
+    { "HSS_Setup_L2Cache",   HSS_Setup_L2Cache,   false, false },
+    { "HSS_Init_RWDATA_BSS", HSS_Init_RWDATA_BSS, false, false },
+    { "HSS_BoardInit",       HSS_BoardInit,       false, false },
+    { "HSS_UARTInit",        HSS_UARTInit,        false, false },
 #ifdef CONFIG_OPENSBI
-    { "HSS_OpenSBIInit",  HSS_OpenSBIInit,   false },
+    { "HSS_OpenSBIInit",     HSS_OpenSBIInit,     false, false },
+#endif
+#ifdef CONFIG_USE_LOGO
+    { "HSS_LogoInit",        HSS_LogoInit,        false, false },
+#endif
+    { "HSS_E51_Banner",      HSS_E51_Banner,      false, false },
+#ifdef CONFIG_MEMTEST
+    { "HSS_MemTestDDRFast",  HSS_MemTestDDRFast,  false, false },
+#endif
+#ifdef CONFIG_SERVICE_MMC
+    { "HSS_MMCInit",         HSS_MMCInit,         false, false },
+#endif
+#ifdef CONFIG_SERVICE_QSPI
+    { "HSS_QSPIInit",        HSS_QSPIInit,        false, false },
+#endif
+#ifdef CONFIG_SERVICE_TINYCLI
+    { "HSS_TinyCLI_Parser",  HSS_TinyCLI_Parser,  false, false },
+#endif
+    { "IPI_QueuesInit",      IPI_QueuesInit,      false, false },
+#ifdef CONFIG_SERVICE_BOOT
+    { "HSS_PMP_Init",        HSS_PMP_Init,        false, false },
+    { "HSS_BootInit",        HSS_BootInit,        false, true },
 #endif
 };
-const size_t spanOfInitFunctions = mSPAN_OF(initFunctions);
+const size_t spanOfGlobalInitFunctions = mSPAN_OF(globalInitFunctions);
 
-
-/******************************************************************************************************/
-
-/*!
- * \brief Initialise Registry
- *
- * This function is intended to be called at E51 software startup, and it will ensure that the
- * ipiRegistry[], initFunctions[] and pStateMachines[] array tables are correctly terminated.
- *
- * These arrays are extern'd into other modules and so must be correctly terminated for use.
- */
-bool HSS_RegistryInit(void)
-{
-    mHSS_DEBUG_PRINTF(" Initializing Registry..." CRLF);
-    //assert(ipiRegistry[mSPAN_OF(ipiRegistry)-1].handler == NULL);
-    //assert(initFunctions[mSPAN_OF(initFunctions)-1].handler == NULL);
-    //assert(pStateMachines[mSPAN_OF(pStateMachines)-1] == NULL);
-
-    return true;
-}
 
 /******************************************************************************************************/

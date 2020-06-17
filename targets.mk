@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -42,13 +42,15 @@ config:
 	$(CMD_PREFIX)menuconfig
 	@$(ECHO) " MENUCONFIG"
 
-.config: Kconfig
+.config:
 	$(CMD_PREFIX)menuconfig
 	@$(ECHO) " MENUCONFIG"
 
 config.h: .config
 	$(CMD_PREFIX)genconfig
 	@$(ECHO) " GENCONFIG"
+
+genconfig: config.h
 
 ##############################################################################
 #
@@ -78,10 +80,11 @@ profile: clean $(TARGET)
 
 clean:
 	$(CMD_PREFIX)$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
-		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) \
-		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) \
+		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) $(OBJS:.o=.su) \
+                $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) $(EXTRA_OBJS:.o=.su) \
+		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) $(TEST_OBJS:.o=.su) \
 		$(DEPENDENCIES) \
-		gmon.out cscope.out  $(EXTRA_OBJS) \
+		gmon.out cscope.out \
 		error.log flawfinder.log sparse.log output.map config.h \
                 $(TARGET:.elf=.hex) $(TARGET:.elf=.lss) $(TARGET:.elf=.sym) $(TARGET:.elf=.bin)
 	$(CMD_PREFIX)$(RM) -r docs/DoxygenOutput
@@ -103,14 +106,12 @@ cppcheck: $(SRCS-y)
 		 $(INCLUDES) -UDECLARE_CAUSE -UDECLARE_CSR -UDECLARE_INSN --force  . \
 		 >cppcheck.log 2>&1
 
-#sparse: $(SRCS-y)
-#	sparse $(INCLUDES) $(SRCS-y)
 sparse: REAL_CC:=$(CC)
 sparse: MCMODEL:=
 sparse: CC=cgcc
 sparse: clean $(TARGET)
 
-smatch: $(SRCS-y) $(EXTRA_SRCS-y) $(TEST_SRCS) 
+smatch: $(SRCS-y) $(EXTRA_SRCS-y) $(TEST_SRCS)
 	smatch $(INCLUDES) $(SRCS-y) $(EXTRA_SRCS-y) $(TEST_SRCS)
 
 splint: $(SRCS-y)
@@ -157,8 +158,18 @@ showsize:
 
 showfullsize: hss.elf
 	@echo
-	@$(NM) --print-size --size-sort --radix=x hss.elf 
-	@$(READELF) -e hss.elf 
+	@$(NM) --print-size --size-sort --radix=x hss.elf
+	@$(READELF) -e hss.elf
+
+ifdef CONFIG_CC_DUMP_STACKSIZE
+showstack: hss.elf
+	@echo
+	@cat `find . -name \*.su` | awk '{print $$2 " " $$0}' | sort -rn | cut -d " " -f 2- | head -20
+
+showmaxstack:  hss.elf
+	@echo
+	@cat `find . -name \*.su` | awk '$$2>a {a=$$2; b=$$0} END {print b}'
+endif
 	
 
 .PHONY: config clean docs distclean doxygen showsize \
@@ -180,10 +191,14 @@ help:
 	@$(ECHO) "	$ make lcov 		# Rebuild instrumented binaries and run lcov"
 	@$(ECHO) "	$ make valgrind		# Run valgrind on binary"
 	@$(ECHO) "	$ make flawfinder		# Run flawfinder on this directory"
-	 
+	
 	@$(ECHO) ""
 	@$(ECHO) "	$ make showloc		# Print number of lines of code"
 	@$(ECHO) "	$ make showsize		# Print information about binary size"
 	@$(ECHO) "	$ make showfullsize	# Dump detailed information about object sizes"
+ifdef CONFIG_CC_DUMP_STACKSIZE
+	@$(ECHO) "	$ make showstack	# Print top 10 functions by stack usage"
+	@$(ECHO) "	$ make showmaxstack	# Print top function by stack usage"
+endif
 	@$(ECHO) "	$ make dep		# Remake dependencies"
 

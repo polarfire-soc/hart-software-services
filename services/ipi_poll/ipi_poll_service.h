@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - IPI Polling
  *
  */
@@ -44,6 +44,8 @@ extern "C" {
 #include "mpfs_reg_map.h"
 
 void HSS_IpiPoll_Enable(enum HSSHartId target);
+
+extern struct StateMachine ipi_poll_service;
 
 #ifdef __cplusplus
 }

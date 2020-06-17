@@ -177,7 +177,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /*--------------------------------Public constants----------------------------*/
 
@@ -654,7 +654,7 @@ extern "C" {
   PASSCODE_FAIL is generated and all unlocked passcodes are re-locked.
 */
 #define MSS_SYS_OWP_OWPERR                                       1u
-   
+
 /*-------------------------------------------------------------------------*//**
   System service response data length
   ============================
@@ -1830,7 +1830,7 @@ MSS_SYS_digital_signature_service
                     about the return status.
                     The following table lists the service status code from
                     system controller.
-                    
+
                     | STATUS | Description Note                                |
                     |--------|-------------------------------------------------|
                     |   0    |  Success                                        |
@@ -1838,7 +1838,7 @@ MSS_SYS_digital_signature_service
                     |   2    |  Write failure   PNVM program/verify failed     |
                     |   3    |  System error    PUF or storage failure         |
                     |   4    |  Write Not Permitted ROMFLAG is set             |
-                    |   5    |  Access failure  Write Access from either Fabric| 
+                    |   5    |  Access failure  Write Access from either Fabric|
                     |        |  or MSS was blocked (PolarFire SoC only)        |
 */
 uint16_t
@@ -1903,7 +1903,7 @@ MSS_SYS_secure_nvm_write
                     about the return status.
                     The following table lists the service status code from
                     system controller.
-                    
+
                     | STATUS | Description Note                                |
                     |--------|-------------------------------------------------|
                     |   0    |  Success                                        |
@@ -1911,7 +1911,7 @@ MSS_SYS_secure_nvm_write
                     |   2    |  Write failure   PNVM program/verify failed     |
                     |   3    |  System error    PUF or storage failure         |
                     |   4    |  Write Not Permitted ROMFLAG is set             |
-                    |   5    |  Access failure  Write Access from either Fabric| 
+                    |   5    |  Access failure  Write Access from either Fabric|
                     |        |  or MSS was blocked (PolarFire SoC only)        |
 */
 uint16_t

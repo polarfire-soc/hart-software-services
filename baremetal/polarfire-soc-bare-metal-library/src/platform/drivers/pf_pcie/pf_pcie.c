@@ -10,7 +10,7 @@
  */
 
 #include "pf_pcie.h"
- 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,7 +61,7 @@ extern "C" {
 #define SIZE_256MB_TRANSLATE_TABLE_EN      0x00000037u
 /*
  PCIe Root Port
- Control & Status Register: enable I/O, memory access, 
+ Control & Status Register: enable I/O, memory access,
                             bus master,Parity Error
                             Response and  SERR#
 */
@@ -205,7 +205,7 @@ PF_PCIE_enumeration
     /* Default attached bridges and devices are 0 */
     uint8_t bridges_attached = PCIE_CLEAR;
     uint8_t devices_attached = PCIE_CLEAR;
-    uint32_t prim_sec_num = PRIM_SEC_SUB_BUS_DEFAULT; 
+    uint32_t prim_sec_num = PRIM_SEC_SUB_BUS_DEFAULT;
     /* Default bridge and device enumeration number is 0 */
     g_pcie_enumeration.no_of_bridges_attached = PCIE_CLEAR;
     g_pcie_enumeration.no_of_devices_attached = PCIE_CLEAR;
@@ -256,7 +256,7 @@ PF_PCIE_enumeration
         for (pcie_bus_num = PCIE_CLEAR; pcie_bus_num < PCIE_CFG_MAX_NUM_OF_BUS; pcie_bus_num++)
         {
             for (pcie_dev_num = PCIE_CLEAR; pcie_dev_num < PCIE_CFG_MAX_NUM_OF_DEV; pcie_dev_num++)
-            { 
+            {
                 for (pcie_fun_num = PCIE_CLEAR; pcie_fun_num < PCIE_CFG_MAX_NUM_OF_FUN; pcie_fun_num++)
                 {
                     /* Calculate ECAM address based on AXI slave base address and bus, device and fun num */
@@ -286,7 +286,7 @@ PF_PCIE_enumeration
                         {
                             g_pcie_enumeration.devices[devices_attached].bus_num = pcie_bus_num;
                             g_pcie_enumeration.devices[devices_attached].dev_num = pcie_dev_num;
-                            g_pcie_enumeration.devices[devices_attached].fun_num = pcie_fun_num;  
+                            g_pcie_enumeration.devices[devices_attached].fun_num = pcie_fun_num;
                             g_pcie_enumeration.devices[devices_attached].vendor_id = pcie_vendor_id;
                             ++devices_attached;
                             g_pcie_enumeration.no_of_devices_attached = devices_attached;
@@ -392,7 +392,7 @@ PF_PCIE_allocate_memory
     uint32_t axi_trns_base_addr_low;
     uint32_t axi_trns_base_addr_high;
     uint32_t read_bar, lsb4bits_bar;
-    
+
     axi_trns_base_addr_low = (uint32_t)(allocate_addr  & MASK_32BIT);
     axi_trns_base_addr_high = (uint32_t)((allocate_addr >> SHIFT_32BIT) & MASK_32BIT);
     /* Default BAR and BAR size is 0 */
@@ -445,7 +445,7 @@ PF_PCIE_allocate_memory
         {
             axi_trns_base_addr_low = (uint32_t)(axi_trns_base_addr  & MASK_32BIT);
             axi_trns_base_addr_high = (uint32_t)((axi_trns_base_addr >> SHIFT_32BIT) & MASK_32BIT);
-    
+
             /* Write 0xFFFFFFFF to read PCIe BAR1 */
              p_pcie_config_space->BAR1 = BAR_MASK;
              /* Read BAR1 */
@@ -472,7 +472,7 @@ PF_PCIE_allocate_memory
             /* Read BAR2 */
             read_bar = p_pcie_config_space->BAR2;
             lsb4bits_bar = read_bar & BAR_LSB_MASK;
-    
+
             /* Calculate BAR2 size */
             read_bar &= BAR_SIZE_MASK;
             read_bar = ~(read_bar) + PCIE_SET;
@@ -489,7 +489,7 @@ PF_PCIE_allocate_memory
                 g_pcie_bar_allocate.bar2_size = read_bar;
                 axi_trns_base_addr = axi_trns_base_addr + read_bar;
             }
-    
+
             /* Check BAR2 is not 64-bit address space */
             if (ADDR_SPACE_64BIT != (lsb4bits_bar & ADDR_SPACE_64BIT))
             {
@@ -500,7 +500,7 @@ PF_PCIE_allocate_memory
                 /* Read BAR3 */
                 read_bar = p_pcie_config_space->BAR3;
                 lsb4bits_bar = read_bar & BAR_LSB_MASK;
-    
+
                 /* Calculate BAR3 size */
                 read_bar &= BAR_SIZE_MASK;
                 read_bar = ~(read_bar) + PCIE_SET;
@@ -520,7 +520,7 @@ PF_PCIE_allocate_memory
             /* Read BAR4 */
             read_bar = p_pcie_config_space->BAR4;
             lsb4bits_bar = read_bar & BAR_LSB_MASK;
-    
+
             /* Calculate BAR4 size */
             read_bar &= BAR_SIZE_MASK;
             read_bar = ~(read_bar) + PCIE_SET;
@@ -537,7 +537,7 @@ PF_PCIE_allocate_memory
                 g_pcie_bar_allocate.bar4_size = read_bar;
                 axi_trns_base_addr = axi_trns_base_addr + read_bar;
             }
-    
+
             /* Check BAR4 is not 64-bit address space */
             if (ADDR_SPACE_64BIT != (lsb4bits_bar & ADDR_SPACE_64BIT))
             {
@@ -548,7 +548,7 @@ PF_PCIE_allocate_memory
                 /* Read BAR5 */
                 read_bar = p_pcie_config_space->BAR5;
                 lsb4bits_bar = read_bar & BAR_LSB_MASK;
-    
+
                 /* Calculate BAR5 size */
                 read_bar &= BAR_SIZE_MASK;
                 read_bar = ~(read_bar) + PCIE_SET;
@@ -585,7 +585,7 @@ PF_PCIE_enable_config_space_msi
     uint32_t p_reg;
     uint32_t msi_addr_low;
     uint32_t msi_addr_high;
-        
+
     if (NULL_POINTER != g_rp_pcie_bridge)
     {
         msi_addr_low = (uint32_t)(msi_addr & MASK_32BIT);
@@ -657,11 +657,11 @@ PF_PCIE_type1_header_read
 {
     PCIE_BRIDGE * p_pcie_bridge;
     PCIE_ROOT_CONF * p_pcie_type1_header;
-    
+
     uint32_t pcie_header_type;
     uint32_t ecam_addr_low;
     uint32_t ecam_addr_high;
-    
+
     if (PF_PCIE_CTRL_0 == pcie_ctrl_num)
     {
         p_pcie_bridge = ((PCIE_BRIDGE *)((uintptr_t)(apb_addr + PCIE0_BRIDGE_PHY_ADDR_OFFSET)));
@@ -681,15 +681,15 @@ PF_PCIE_type1_header_read
     {
         ecam_addr_low = (uint32_t)(ecam_addr & MASK_32BIT);
         ecam_addr_high = (uint32_t)((ecam_addr >> SHIFT_32BIT) & MASK_32BIT);
-        
+
         /* Selects PCIe Config space */
         p_pcie_bridge->ATR0_AXI4_SLV0_TRSL_PARAM = PCIE_CONFIG_INTERFACE;
-        
+
         p_pcie_bridge->ATR0_AXI4_SLV0_SRCADDR_PARAM = ecam_addr_low | SIZE_256MB_TRANSLATE_TABLE_EN ;
         p_pcie_bridge->ATR0_AXI4_SLV0_SRC_ADDR = ecam_addr_high;
         p_pcie_bridge->ATR0_AXI4_SLV0_TRSL_ADDR_LSB = ecam_addr_low;
         p_pcie_bridge->ATR0_AXI4_SLV0_TRSL_ADDR_UDW = ecam_addr_high;
-        
+
         p_pcie_type1_header = (PCIE_ROOT_CONF *)((uintptr_t)ecam_addr);
         /* Header Type */
         pcie_header_type = p_pcie_type1_header->BIST_HEADER & PCIE_CFG_HEADER_TYPE_MASK;
@@ -719,7 +719,7 @@ PF_PCIE_type1_header_read
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 uint8_t
 PF_PCIE_config_space_atr_table_init
@@ -758,7 +758,7 @@ PF_PCIE_config_space_atr_table_init
             g_rp_pcie_ctrl->PCIE_EVENT_INT = PCIE_EVENT_INT_DATA;
             g_rp_pcie_ctrl->SEC_ERROR_INT = PCIE_SEC_ERROR_INT_CLEAR;
             g_rp_pcie_ctrl->DED_ERROR_INT = PCIE_DED_ERROR_INT_CLEAR;
-        
+
             g_rp_pcie_bridge->ISTATUS_LOCAL = PCIE_ISTATUS_CLEAR;
             g_rp_pcie_bridge->IMASK_LOCAL = PCIE_CLEAR;
             g_rp_pcie_bridge->ISTATUS_HOST = PCIE_ISTATUS_CLEAR;
@@ -775,7 +775,7 @@ PF_PCIE_config_space_atr_table_init
             ecam_addr_high = (uint32_t)((ecam_addr >> SHIFT_32BIT) & MASK_32BIT);
             /* Selects PCIe Config space */
             g_rp_pcie_bridge->ATR0_AXI4_SLV0_TRSL_PARAM  = PCIE_CONFIG_INTERFACE;
-        
+
             g_rp_pcie_bridge->ATR0_AXI4_SLV0_SRCADDR_PARAM = ecam_addr_low |
                                                        SIZE_256MB_TRANSLATE_TABLE_EN;
             g_rp_pcie_bridge->ATR0_AXI4_SLV0_SRC_ADDR = ecam_addr_high;
@@ -792,7 +792,7 @@ PF_PCIE_config_space_atr_table_init
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 void PF_PCIE_config_space_atr_table_terminate(void)
 {
@@ -837,7 +837,7 @@ PF_PCIE_config_space_write
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 uint8_t
 PF_PCIE_master_atr_table_init
@@ -962,7 +962,7 @@ PF_PCIE_master_atr_table_init
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 uint8_t
 PF_PCIE_slave_atr_table_init
@@ -1053,7 +1053,7 @@ void PF_PCIE_dma_init(uint64_t  allocated_addr)
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 void
 PF_PCIE_set_dma_write_callback
@@ -1136,7 +1136,7 @@ PF_PCIE_dma_read
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 void
 PF_PCIE_dma_write
@@ -1160,7 +1160,7 @@ PF_PCIE_dma_write
             /* Set source address */
             g_ep_bridge_reg->DMA0_SRCADDR_LDW = (uint32_t)(src_address & MASK_32BIT);
             g_ep_bridge_reg->DMA0_SRCADDR_UDW = (uint32_t)((src_address >> SHIFT_32BIT) & MASK_32BIT);
-            /* Set destination address*/        
+            /* Set destination address*/
             g_ep_bridge_reg->DMA0_DESTADDR_LDW = (uint32_t)(dest_address & MASK_32BIT);
             g_ep_bridge_reg->DMA0_DESTADDR_UDW = (uint32_t)((dest_address >> SHIFT_32BIT) & MASK_32BIT);
             /* Set dma size */
@@ -1221,7 +1221,7 @@ void PF_PCIE_disable_interrupts(void)
 
 /**************************************************************************//**
  * See pf_pciess.h for details of how to use this function.
- * 
+ *
  */
 void PF_PCIE_isr(void)
 {
@@ -1276,7 +1276,7 @@ void PF_PCIE_isr(void)
  @param    Device is the external PCIe function's Device number.
  @param    Function is the external PCIe function's Function number.
  @return   32 bit composed value (address).
- 
+
 */
 uint64_t
 ecam_address_calc

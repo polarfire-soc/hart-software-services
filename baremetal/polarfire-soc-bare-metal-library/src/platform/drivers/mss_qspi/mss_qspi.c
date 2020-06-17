@@ -1,13 +1,11 @@
 /***************************************************************************//**
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * PolarFire SoC (MPFS) microprocessor subsystem QSPI bare metal software driver
+ * PolarFire SoC (MPFS) Microprocessor SubSystem QSPI bare metal software driver
  * implementation.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 
 #include "mss_qspi.h"
@@ -19,7 +17,7 @@ extern "C" {
 
 #define QSPI_BYTESUPPER_MASK     ((uint32_t)0xFFFF0000u)
 
-static void default_status_hanlder(uint32_t value);
+static void default_status_handler(uint32_t value);
 static volatile uint32_t g_irq_rd_byte_size = 0u;
 static volatile uint8_t g_rx_complete = 0u;
 static void * g_rd_buffer;
@@ -33,7 +31,7 @@ void MSS_QSPI_init
     void
 )
 {
-    g_handler = default_status_hanlder;
+    g_handler = default_status_handler;
 
     QSPI->CONTROL = CTRL_EN_MASK |
                     CTRL_SAMPLE_SCK |
@@ -283,6 +281,8 @@ void MSS_QSPI_set_status_handler
 static void qspi_isr(void)
 {
     uint32_t idx;
+    //static uint32_t empty = 0u; // unused
+    //static uint32_t tx_fifo_full = 0u; // unused
     uint32_t status;
 
     status = QSPI->STATUS;
@@ -326,7 +326,7 @@ static void qspi_isr(void)
 
             while (0u == (QSPI->STATUS & STTS_RFEMPTY_MASK))
             {
-                /*Make sure that the Receive FIFO is empty and any 
+                /*Make sure that the Receive FIFO is empty and any
                   remaining data is read from it after desired bytes
                   have been received.*/
                 skips = (uint32_t)((QSPI->STATUS & STTS_FLAGSX4_MASK) ?
@@ -350,7 +350,7 @@ static void qspi_isr(void)
     }
 }
 
-static void default_status_hanlder(uint32_t value)
+static void default_status_handler(uint32_t value)
 {
     /*Take some default interrupt handling action here*/
 }

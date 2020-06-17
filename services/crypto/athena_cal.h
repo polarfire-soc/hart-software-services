@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Athena CAL
  *
  */
@@ -171,7 +171,7 @@ SATR CALModRed(const uint32_t *puiA, const uint32_t *puiMod, const uint32_t *pui
 SATR CALMMult(const uint32_t *puiA, const uint32_t *puiB, const uint32_t *puiMod, const uint32_t *puiMu, uint32_t uiModLen, uint32_t *puiResult);
 SATR CALMMultAdd(const uint32_t *puiA, const uint32_t *puiB, const uint32_t *puiC, const uint32_t *puiMod, const uint32_t *puiMu, uint32_t uiModLen, uint32_t *puiResult);
 SATR CALRSACRT(const uint32_t *puiCipher, const uint32_t *puiQInv, const uint32_t *puiDP, const uint32_t *puiDQ, const uint32_t *puiP, const uint32_t *puiPMu, const uint32_t *puiQ, const uint32_t *puiQMu, uint32_t uiLen, uint32_t *puiPlain);
-SATR CALRSACRTSign(SATRSAENCTYPE eRSAEncod, SATHASHTYPE eHashType, const uint32_t *puiHash, const uint32_t *puiQInv, const uint32_t *puiDP, const uint32_t *puiDQ, const uint32_t *puiP, 
+SATR CALRSACRTSign(SATRSAENCTYPE eRSAEncod, SATHASHTYPE eHashType, const uint32_t *puiHash, const uint32_t *puiQInv, const uint32_t *puiDP, const uint32_t *puiDQ, const uint32_t *puiP,
     const uint32_t *puiPMu, const uint32_t *puiQ, const uint32_t *puiQMu, uint32_t uiLen, uint32_t *puiPlain);
 SATR CALRSACRTSignHash(SATRSAENCTYPE eRsaEncod, SATHASHTYPE eHashType, const uint32_t *puiMsg, const uint32_t *puiQInv, const uint32_t *puiDP, const uint32_t *puiDQ, const uint32_t *puiP, const uint32_t *puiPMu, const uint32_t *puiQ, const uint32_t *puiQMu, uint32_t uiModLen, uint32_t uiMsgLen, uint32_t *puiSig, SATBOOL bDMA, uint32_t uiDMAChConfig);
 SATR CALRSASign(SATRSAENCTYPE eRsaEncod, SATHASHTYPE eHashType, const uint32_t *puiHash, const uint32_t *puiD, const uint32_t *puiN, const uint32_t *puiNMu, uint32_t uiModLen, uint32_t *puiSig);

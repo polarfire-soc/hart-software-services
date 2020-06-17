@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - HSS Types
  *
  */
@@ -39,10 +39,15 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_OPENSBI
-#  include <stddef.h>  // for size_t
+#  ifndef __ssize_t_defined
+#    define __ssize_t_defined
+       typedef long			ssize_t;
+#  endif
+
+#  include <sys/types.h>  // for size_t
+#  include <stddef.h>
 #  include <stdbool.h> // for bool, true, false
 #  include <stdint.h>
-typedef long			ssize_t;
 #else
 #  ifdef __packed
 #    undef __packed
@@ -87,6 +92,7 @@ typedef union HSSHartBitmask {
  * Describes where to copy and how much...
  *
  */
+#pragma pack(8)
 struct HSS_BootChunkDesc {
     enum HSSHartId owner;
     uintptr_t loadAddr;
@@ -99,6 +105,7 @@ struct HSS_BootChunkDesc {
 /**
  *  * \brief Descriptor for U54 Boot Zero-Initialized Chunk
  *   */
+#pragma pack(8)
 struct HSS_BootZIChunkDesc {
     enum HSSHartId owner;
     void *execAddr;
@@ -111,8 +118,11 @@ struct HSS_BootZIChunkDesc {
  * \warning The chunk table *must* be terminated with a size of 0 sentinel!
  */
 #define BOOT_IMAGE_MAX_NAME_LEN (256)
+
+#pragma pack(8)
 struct HSS_BootImage {
     uint32_t magic;
+    uint32_t version;
     size_t headerLength;
     uint32_t headerCrc;
     size_t chunkTableOffset;
@@ -135,8 +145,10 @@ struct HSS_BootImage {
  * \brief Compressed Image Structure
  *
  */
+#pragma pack(8)
 struct HSS_CompressedImage {
     uint32_t magic;
+    uint32_t version;
     size_t headerLength;
     uint32_t headerCrc;
     uint32_t compressedCrc;
@@ -149,8 +161,11 @@ struct HSS_CompressedImage {
 #define mSPAN_OF(x)          (sizeof(x)/sizeof(x[0]))
 #define mMIN(A,B)            ((A) < (B) ? A : B)
 
-#define HSS_BOOT_MAGIC       (0xB007C0DEu)
-#define HSS_COMPRESSED_MAGIC (0xC08B8355u)
+#define mHSS_BOOT_MAGIC       (0xB007C0DEu)
+#define mHSS_COMPRESSED_MAGIC (0xC08B8355u)
+
+#define mLIKELY(x)            __builtin_expect((x), 1)
+#define mUNLIKELY(x)          __builtin_expect((x), 0)
 
 #ifdef __cplusplus
 }

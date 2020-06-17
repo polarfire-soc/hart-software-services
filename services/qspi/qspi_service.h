@@ -25,7 +25,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - QSPI Initialization
  *
  */
@@ -42,6 +42,8 @@ extern "C" {
 #include "hss_types.h"
 
 bool HSS_QSPIInit(void);
+bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
+bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
 
 #ifdef __cplusplus
 }

@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Progress output utility
  */
 
@@ -33,11 +33,13 @@ extern "C" {
 #endif
 
 /**
- * \file Progress output utility for long-running functions
- * \brief Progress output utility for long-running functions
+ * \file Progress output utilities for long-running functions
+ * \brief Progress output utilities for long-running functions
  */
 
 void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining);
+
+bool HSS_ShowTimeout(char const * const msg, uint32_t timeout_sec, uint8_t *pRcvBuf);
 
 #ifdef __cplusplus
 }

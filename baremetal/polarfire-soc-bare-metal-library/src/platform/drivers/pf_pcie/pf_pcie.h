@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * PolarFire and PolarFire SoC PCIe subsystem software driver public API 
+ * PolarFire and PolarFire SoC PCIe subsystem software driver public API
  * and data structure.
  *
  * SVN $Revision$
@@ -30,32 +30,32 @@
 /*=========================================================================*//**
   @mainpage PolarFire and PolarFire SoC PCIe Bare Metal Driver.
 
-  @section intro_sec Introduction 
-    Microsemi PolarFire™ FPGAs(PolarFire and PolarFire SoC devices) contain 
+  @section intro_sec Introduction
+    Microsemi PolarFire™ FPGAs(PolarFire and PolarFire SoC devices) contain
     a fully integrated PCIe endpoint and root port subsystems with optimized
     embedded controller blocks that connect to the physical layer interface of
-    the PolarFire transceiver. Each PolarFire device includes two PolarFire 
+    the PolarFire transceiver. Each PolarFire device includes two PolarFire
     embedded PCIe subsystem (PCIESS) blocks. The PCIESS is a hard PCI Express
-    protocol stack embedded within every PolarFire device. It includes the 
-    transaction layer, data link layer, and physical layer. The PolarFire 
-    PCIESS includes both a physical coding sublayer (PCS) and a physical 
-    medium attachment (PMA) sublayer that supports x1, x2, and x4 endpoint 
+    protocol stack embedded within every PolarFire device. It includes the
+    transaction layer, data link layer, and physical layer. The PolarFire
+    PCIESS includes both a physical coding sublayer (PCS) and a physical
+    medium attachment (PMA) sublayer that supports x1, x2, and x4 endpoint
     and root port configurations at up to 5 Gbps (Gen 2) speeds.
-    
-    Note: All references to PolarFire in this document include both 
+
+    Note: All references to PolarFire in this document include both
     PolarFire and PolarFire SoC devices unless stated otherwise.
-    
-    The PolarFire PCIe software driver, provided as C source code, supports a 
+
+    The PolarFire PCIe software driver, provided as C source code, supports a
     set of functions for controlling PCIe as part of a bare-metal system where
     no operating system is available. The driver can be adapted for use as part
-    of an operating system, but the implementation of the adaptation layer 
-    between the driver and the operating system's driver model is outside the 
+    of an operating system, but the implementation of the adaptation layer
+    between the driver and the operating system's driver model is outside the
     scope of the driver.
 
   @section theory_op Theory of Operation
 
     The PolarFire PCIe driver functions are grouped into the following categories:
-        • Enumeration 
+        • Enumeration
         • Memory Allocation
         • MSI Enabling
         • Configuration Space Read and Write
@@ -63,30 +63,30 @@
         • Interrupt Control
         • End Point DMA Operation
         • Supports PCIe for both PolarFire and PolarFire SoC devices
-    
-    Enumeration 
+
+    Enumeration
     If the PolarFire PCI Express is configured as a root port, the application
-    must call the PF_PCIE_enumeration() function to enumerate the PCIe system 
+    must call the PF_PCIE_enumeration() function to enumerate the PCIe system
     components. The PF_PCIE_enumeration() function uses the PCIe base address,
-    the dual PCIe controller number, and the ECAM base address as its 
+    the dual PCIe controller number, and the ECAM base address as its
     parameters, and returns the number of PCIe bridges/switches and endpoint
     devices attached to the PCIe system. The initial ECAM base address for
     the enumeration must start with 0 for bus, device, and function numbers.
 
-    Memory Allocation 
-    The PF_PCIE_allocate_memory() function allocates memory on the PCIe root 
+    Memory Allocation
+    The PF_PCIE_allocate_memory() function allocates memory on the PCIe root
     port host processor for the PCIe endpoints. The application must call this
     function after it calls the PF_PCIE_enumeration() function. This function
     uses the ECAM base address and allocated memory address from the host
     processor memory map as its parameters.
-    
-    MSI Enabling 
+
+    MSI Enabling
     The PF_PCIE_enable_config_space_msi() enables MSI in the PCIe configuration
     space of the MSI capability register set. The application must call this
     function after it calls the PF_PCIE_enumeration() function. The function must
     be called separately to enable MSI in the PCIe root port and PCIe endpoint.
-    
-    Configuration Space Read and Write 
+
+    Configuration Space Read and Write
     The following functions are used for configuration space read and write:
         • PF_PCIE_type1_header_read()
         • PF_PCIE_config_space_atr_table_init()
@@ -95,27 +95,27 @@
         • PF_PCIE_config_space_write()
 
     The PF_PCIE_config_space_read() and PF_PCIE_config_space_write() functions
-    are used by the application to read and write data to the PCIe type 0 or 
+    are used by the application to read and write data to the PCIe type 0 or
     type 1 configuration space registers. Before calling the configuration space
-    read or write function, the application must initialize the address 
-    translation table for the configuration space using the 
+    read or write function, the application must initialize the address
+    translation table for the configuration space using the
     PF_PCIE_config_space_atr_table_init() function. The application can terminate
-    the configuration space read or write operation using the 
-    PF_PCIE_config_space_atr_table_terminate() function. The application can 
+    the configuration space read or write operation using the
+    PF_PCIE_config_space_atr_table_terminate() function. The application can
     read the entire PCIe type 1 configuration space header information using the
     PF_PCIE_type1_header_read() function.
-    
+
     Address Translation table
     The following functions are used for address translation table setup:
         • PF_PCIE_master_atr_table_init()
         • PF_PCIE_slave_atr_table_init()
     The PF_PCIE_master_atr_table_init() function initializes the address
-    translation table for the PCIe to perform address translation from the 
-    PCIe address space (BAR) to the AXI4 master. 
-    The PF_PCIE_slave_atr_table_init() function initializes the address 
+    translation table for the PCIe to perform address translation from the
+    PCIe address space (BAR) to the AXI4 master.
+    The PF_PCIE_slave_atr_table_init() function initializes the address
     translation table for the PCIe to perform address translation from the
     AXI4 slave to the PCIe address space.
-    
+
     Interrupt Control
     Interrupts generated by the PCIe controller configured for MSI, INTx, and
     DMA transfer using the following functions:
@@ -128,11 +128,11 @@
     INTx, and DMA transfer interrupts on the PCIe Root Port.
     The PF_PCIE_isr() function is used to handle the PCIe interrupts. The user
     must call the PF_PCIE_isr() function from the system level interrupt handler.
-    
+
     End Point DMA Operation
     The Application on the PCIe Root Port host processor initializes and configures
     the PolarFire PCIe End Point DMA engine for DMA transfer.
-   
+
     The following functions are used for DMA transfer:
         • PF_PCIE_dma_init()
         • PF_PCIE_dma_read()
@@ -141,24 +141,24 @@
         • PF_PCIE_set_dma_write_callback()
         • PF_PCIE_set_dma_read_callback()
         • PF_PCIE_dma_get_transfer_status()
-        
+
     Initialization
     The PF_PCIE_dma_init() function in the PCIe root port application initializes
-    the PolarFire PCIe endpoint DMA. This function must be called before any 
+    the PolarFire PCIe endpoint DMA. This function must be called before any
     other PolarFire PCIe DMA driver functions. This function uses the allocated
-    memory address from the memory map for the PCIe endpoint BAR on the host 
-    processor as its parameter. The application can call this function after 
+    memory address from the memory map for the PCIe endpoint BAR on the host
+    processor as its parameter. The application can call this function after
     the PF_PCIE_enumeration() and PF_PCIE_allocate_memory() functions.
 
     Data Transfer Control
     The PF_PCIE_dma_read() function starts a DMA transfer from the PCIe endpoint
-    memory to the PCIe root port memory. It reads the data from the PCIe 
+    memory to the PCIe root port memory. It reads the data from the PCIe
     endpoint memory and writes it to the PCIe root port memory.
 
     The PF_PCIE_dma_write() function starts a DMA transfer from PCIe root port
-    memory to the PCIe endpoint memory. It reads the data from the PCIe root 
+    memory to the PCIe endpoint memory. It reads the data from the PCIe root
     port memory and writes it to the PCIe endpoint memory.
-    For all DMA transfers, the user must provide the source and destination 
+    For all DMA transfers, the user must provide the source and destination
     address, along with the transfer size.
 
     The PF_PCIE_dma_abort() function aborts a dma transfer that is in progress.
@@ -167,22 +167,22 @@
     The status of the PCIe DMA transfer initiated by the last call to PF_PCIE_dma_read()
     or PF_PCIE_dma_write() can be retrieved using the PF_PCIE_dma_get_transfer_status()
     function.
-    
-    Interrupt Handling 
+
+    Interrupt Handling
     PCIe DMA read and write operations are interrupt driven. The application must
-    register read and write callback functions with the driver. This relevant callback 
+    register read and write callback functions with the driver. This relevant callback
     function is then called by the PCIe driver every time data is written to or read
     from the destination address.
-    The PF_PCIE_set_dma_read_callback() and PF_PCIE_set_dma_write_callback() 
-    functions are used to register a handler function that is called by the 
-    driver when the endpoint DMA transfer is completed. The driver passes the 
+    The PF_PCIE_set_dma_read_callback() and PF_PCIE_set_dma_write_callback()
+    functions are used to register a handler function that is called by the
+    driver when the endpoint DMA transfer is completed. The driver passes the
     outcome of the transfer to the completion handler in the form of a
-    pf_pcie_ep_dma_status_t parameter, which indicates whether the transfer 
-    was successful, and in case of an error during the transfer, indicates 
-    the type of error that occurred. The user must create and register 
+    pf_pcie_ep_dma_status_t parameter, which indicates whether the transfer
+    was successful, and in case of an error during the transfer, indicates
+    the type of error that occurred. The user must create and register
     transfer completion handler functions suitable for the application.
 
-    The user must call the PF_PCIE_enable_interupts() function or the 
+    The user must call the PF_PCIE_enable_interupts() function or the
     PF_PCIE_disable_interupts() function to enable or disable PCIe interrupts.
     And also, the user must call the PF_PCIE_isr() function from the system
     level interrupt handler for handling DMA interrupts.
@@ -226,19 +226,19 @@ extern "C" {
   @param apb_addr
     Specifies the base address in the processor's memory map for the registers
     of the PCI Express hardware instance being initialized.
-    
+
   @param pcie_ctrl_num
-    Specifies the PCIe controller number 0 or 1. 
-    
+    Specifies the PCIe controller number 0 or 1.
+
   @param ecam_addr
     Specifies the ECAM address of PCIe system. The address is  calculated based
     on the bus number, device number, function number, and the PCIe AXI4 slave
     base address from the processor’s memory map. The bus, device, and function
     number should be 0 so the enumeration starts with bus number 0 and ends with
     bus number 8.
-    
+
   @return
-    The PF_PCIE_enumeration() function returns a pointer to the PCIe enumerate 
+    The PF_PCIE_enumeration() function returns a pointer to the PCIe enumerate
     buffer structure for all the devices and bridges connected to the PCIe system.
 
   @code
@@ -277,12 +277,12 @@ PF_PCIE_enumeration
 );
 
 /****************************************************************************
-  The PF_PCIE_allocate_memory() function allocates memory on the PCIe root 
+  The PF_PCIE_allocate_memory() function allocates memory on the PCIe root
   port host processor for the PCIe endpoint BARs. This function must be called
   after the PF_PCIE_enumeration() function.
 
   @param ecam_addr
-    Specifies the ECAM address of the PCIe system. The address is calculated 
+    Specifies the ECAM address of the PCIe system. The address is calculated
     based on the bus number, device number, function number, and PCIe AXI4 slave
     base address from the processor’s memory map.
 
@@ -337,7 +337,7 @@ PF_PCIE_allocate_memory
 
   @param ecam_addr
     Specifies the ECAM address of the PCIe system. The address is calculated
-    based on the bus number, device number, function number, and PCIe AXI4 
+    based on the bus number, device number, function number, and PCIe AXI4
     slave base address from the processor’s memory map.
 
   @param msi_addr
@@ -402,23 +402,23 @@ PF_PCIE_enable_config_space_msi
 /****************************************************************************
   The PF_PCIE_type1_header_read() function reads the PCIe type1 (bridge or switch)
   configuration space header information.
-  
+
   @param apb_addr
     Specifies the base address in the processor's memory map for the registers
     of the PCI Express hardware instance being initialized.
-  
+
   @param pcie_ctrl_num
     Specifies the PCIe controller number, 0 or 1.
-    
+
   @param ecam_addr
-    Specifies the ECAM address of the PCIe system. The address is calculated 
-    based on the bus number, device number, function number, and PCIe AXI4 
+    Specifies the ECAM address of the PCIe system. The address is calculated
+    based on the bus number, device number, function number, and PCIe AXI4
     slave base address from the processor’s memory map.
 
   @param p_type1_header
     Contains the output of the PCIe type1 header. The PCIe bridge/switch type 1
     header information is stored in this parameter.
-    
+
   @return
    The PF_PCIE_type1_header_read() function does not return a value.
 
@@ -439,24 +439,24 @@ PF_PCIE_type1_header_read
     uint8_t pcie_ctrl_num,
     uint64_t ecam_addr,
     PCIE_ROOT_CONF * p_type1_header
-); 
+);
 
 /****************************************************************************
   The PF_PCIE_config_space_atr_table_init() function initializes the PCIe AXI4
   slave address translation table using the ecam_addr parameter, and enables
   the PCIe configuration interface to read or write data to the configuration
   space registers.
-    
+
   @param apb_addr
     Specifies the base address in the processor's memory map for the registers
     of the PCI Express hardware instance being initialized.
-  
+
   @param pcie_ctrl_num
     Specifies the PCIe controller number, 0 or 1.
-    
+
   @param ecam_addr
     Specifies the ECAM address of the PCIe system. The address is calculated
-    based on the bus number, device number, function number, and PCIe AXI4 
+    based on the bus number, device number, function number, and PCIe AXI4
     slave base address from the processor’s memory map.
 
   @return
@@ -477,10 +477,10 @@ PF_PCIE_config_space_atr_table_init
   The PF_PCIE_config_space_atr_table_terminate() function disables the PCIe
   configuration interface in the address translation table and enables the PCIe
   Tx/Rx interface for PCIe transactions.
-    
+
   @param
     The PF_PCIE_config_space_atr_table_terminate() function does not have parameters.
-    
+
   @return
     The PF_PCIE_config_space_atr_table_terminate() function does not return a value.
 */
@@ -494,7 +494,7 @@ void PF_PCIE_config_space_atr_table_terminate(void);
     Specifies the ECAM address of the PCIe system. The address is calculated
     based on the bus number, device number, function number, and PCIe AXI4
     slave base address from the processor’s memory map.
-   
+
   @param config_space_offset
     Specifies a PCIe type 0/1 configuration space address offset.
 
@@ -503,19 +503,19 @@ void PF_PCIE_config_space_atr_table_terminate(void);
 
   @return
    The PF_PCIE_config_space_read() function does not return a value.
-   
+
   @code
         uint64_t apb_addr = 0x60000000
         uint64_t ecam_addr = 0x70100000;
         uint32_t read_value0;
         uint32_t read_value1;
-      
+
         PF_PCIE_config_space_atr_table_init(apb_addr, PF_PCIE_CTRL_1, ecam_addr);
-      
+
         PF_PCIE_config_space_read(ecam_addr, DEVICE_VID_DEVID, &read_value0);
-      
+
         PF_PCIE_config_space_read(ecam_addr, DEVICE_CFG_PRMSCR, &read_value1);
-      
+
         PF_PCIE_config_space_atr_table_terminate();
 
   @endcode
@@ -536,31 +536,31 @@ PF_PCIE_config_space_read
     Specifies the ECAM address of the PCIe system. The address is calculated
     based on the bus number, device number, function number, and PCIe AXI4
     slave base address from the processor’s memory map.
-   
+
   @param config_space_offset
-    Specifies a PCIe type 0/1 configuration    space address offset.  
+    Specifies a PCIe type 0/1 configuration    space address offset.
 
   @param value
     Specifies the input value to write on the PCIe type 0/1 configuration space.
 
   @return
    The PF_PCIE_config_space_write() function does not return a value.
-   
+
   @code
         uint64_t apb_addr = 0x60000000
         uint64_t ecam_addr = 0x70100000;
         uint32_t write_value0 = 0x11AA;
         uint32_t write_value1 = 0x6;
-      
+
         PF_PCIE_config_space_atr_table_init(apb_addr, PF_PCIE_CTRL_1, ecam_addr);
-      
+
         PF_PCIE_config_space_write(ecam_addr, DEVICE_VID_DEVID, write_value0);
-      
+
         PF_PCIE_config_space_write(ecam_addr, DEVICE_CFG_PRMSCR, write_value1);
-      
+
         PF_PCIE_config_space_atr_table_terminate();
 
-  @endcode   
+  @endcode
 */
 void
 PF_PCIE_config_space_write
@@ -577,7 +577,7 @@ PF_PCIE_config_space_write
   @param apb_addr
     Specifies the base address in the processor's memory map for the registers
     of the PCI Express hardware instance being initialized.
-    
+
   @param pcie_ctrl_num
     Specifies the PCIe controller number, 0 or 1.
 
@@ -586,7 +586,7 @@ PF_PCIE_config_space_write
     translation table.
 
   @param master_table_num
-    Specifies the PCIe to AXI4 master address translation table number. There 
+    Specifies the PCIe to AXI4 master address translation table number. There
     are a total of six AXI master address translation tables in the PCIESS.
 
   @param tlp_type
@@ -641,16 +641,16 @@ PF_PCIE_master_atr_table_init
   @param apb_addr
     Specifies the base address in the processor's memory map for the registers
     of the PCI Express hardware instance being initialized.
-    
+
   @param pcie_ctrl_num
     Specifies the PCIe controller number, 0 or 1.
 
   @param cfg
-    Specifies the configuration data structure of AXI4 slave to PCIe address 
-    translation table.  
+    Specifies the configuration data structure of AXI4 slave to PCIe address
+    translation table.
 
   @param slave_table_num
-    Specifies the AXI4 slave to PCIe transaction address translation table 
+    Specifies the AXI4 slave to PCIe transaction address translation table
     number. There are a total of eight AXI slave address translation tables
     in the PCIESS.
 
@@ -669,7 +669,7 @@ PF_PCIE_master_atr_table_init
     the PCIe ATR table initialization. The two possible return values are:
         -PF_PCIE_ATR_TABLE_INIT_SUCCESS
         -PF_PCIE_ATR_TABLE_INIT_FAILURE
-  
+
   @code
         uint64_t apb_addr = 0x60000000
         uint8_t slv_table_no = 0;
@@ -724,7 +724,7 @@ void PF_PCIE_dma_init(uint64_t  allocated_addr);
   @code
         void transfer_complete_handler(pf_pcie_ep_dma_status_t status);
         volatile uint32_t g_xfer_in_progress = 0;
-        
+
         uint8_t External_30_IRQHandler(void)
         {
             PF_PCIE_isr();
@@ -777,7 +777,7 @@ PF_PCIE_set_dma_write_callback
   @code
         void transfer_complete_handler(pf_pcie_ep_dma_status_t status);
         volatile uint32_t g_xfer_in_progress = 0;
-                
+
         uint8_t External_30_IRQHandler(void)
         {
             PF_PCIE_isr();
@@ -819,10 +819,10 @@ PF_PCIE_set_dma_read_callback
 );
 
 /****************************************************************************
-  The PF_PCIE_dma_read() function initiates PCIe endpoint DMA data transfer 
+  The PF_PCIE_dma_read() function initiates PCIe endpoint DMA data transfer
   from the PCIe root port host processor. Its parameters specify the source and
   destination addresses of the transfer, as well as its size. The PCIe DMA data
-  transfers for read operations always use the PCIe endpoint memory as the 
+  transfers for read operations always use the PCIe endpoint memory as the
   source and the PCIe root port memory as the destination for the transfer.
 
   Note: A call to PF_PCIE_dma_read() while a transfer is in progress will not
@@ -834,14 +834,14 @@ PF_PCIE_set_dma_read_callback
   @param src_address
     Specifies the source address of the PCIe endpoint memory (AXI4 master ATR
     table sourceaddress).
-    
+
   @param dest_address
     Specifies the destination address of the PCIe root port memory (AXI4 master
     ATR table destination address).
 
   @param rx_lenth
     Specifies the length (in bytes) of the data to be read.
-    
+
   @return
    The PF_PCIE_dma_read() function does not return a value.
 */
@@ -850,13 +850,13 @@ PF_PCIE_dma_read
 (
     uint64_t  src_address,
     uint64_t  dest_address,
-    uint32_t  rx_lenth  
+    uint32_t  rx_lenth
 );
 
 /*******************************************************************************
-  The PF_PCIE_dma_write() function initiates PCIe endpoint DMA data transfer 
-  from the PCIe root port host processor. Its parameters specify the source and 
-  destination addresses of the transfer as well as its size. The PCIe DMA data 
+  The PF_PCIE_dma_write() function initiates PCIe endpoint DMA data transfer
+  from the PCIe root port host processor. Its parameters specify the source and
+  destination addresses of the transfer as well as its size. The PCIe DMA data
   transfers for write operations always use the PCIe root port memory as the
   source and the PCIe endpoint memory as the destination for the transfer.
 
@@ -869,14 +869,14 @@ PF_PCIE_dma_read
   @param src_address
     Specifies the source address of the PCIe root port memory (AXI4 master ATR
     table source address).
-    
+
   @param dest_address
     Specifies the destination address of the PCIe endpoint memory (AXI4 master
     ATR table destination address).
 
   @param tx_lenth
     Specifies the length (in bytes) of the data to be written.
-    
+
   @return
     The PF_PCIE_dma_write() function does not return a value.
 */
@@ -889,19 +889,19 @@ PF_PCIE_dma_write
 );
 
 /*******************************************************************************
-  The PF_PCIE_dma_abort() function aborts a PCIe DMA transfer that is in progress. 
+  The PF_PCIE_dma_abort() function aborts a PCIe DMA transfer that is in progress.
 
   @param
     The PF_PCIE_dma_abort() function has no parameters.
-    
+
   @return
     The PF_PCIE_dma_abort() function does not return a value.
-*/    
+*/
 void PF_PCIE_dma_abort(void);
 
 /*******************************************************************************
   The PF_PCIE_dma_get_transfer_status() function indicates the status of a PCIe
-  endpoint DMA transfer initiated by a call to the PF_PCIE_dma_write() or 
+  endpoint DMA transfer initiated by a call to the PF_PCIE_dma_write() or
   PF_PCIE_dma_read() function.
 
   @param
@@ -958,10 +958,10 @@ void PF_PCIE_enable_interrupts(void);
 void PF_PCIE_disable_interrupts(void);
 
 /*******************************************************************************
- The PF_PCIE_isr() function is a PCIe root port local interrupt handler. The 
- PF_PCIE_isr() function is the top level interrupt handler function for the 
- PolarFire PCIe driver. The user must call the PF_PCIE_isr() function from 
- the system level interrupt handler assigned to the interrupt triggered by 
+ The PF_PCIE_isr() function is a PCIe root port local interrupt handler. The
+ PF_PCIE_isr() function is the top level interrupt handler function for the
+ PolarFire PCIe driver. The user must call the PF_PCIE_isr() function from
+ the system level interrupt handler assigned to the interrupt triggered by
  the PF_PCIE/PCIE_#_INTERRUPT_OUT signal.
 
   @param
@@ -969,7 +969,7 @@ void PF_PCIE_disable_interrupts(void);
 
   @return
     The PF_PCIE_isr() function does not return a value.
-    
+
   @code
         uint8_t External_30_IRQHandler(void)
         {

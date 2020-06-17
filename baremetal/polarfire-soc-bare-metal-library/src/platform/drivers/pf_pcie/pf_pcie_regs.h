@@ -42,7 +42,7 @@ typedef struct
     volatile    uint32_t    RESERVED1[3];
     volatile    uint32_t    LNTV_R0;
     volatile    uint32_t    RESERVED2;
-    volatile    uint32_t    LCLK_R0; 
+    volatile    uint32_t    LCLK_R0;
     volatile    uint32_t    LCLK_R1;
     volatile    uint32_t    RESERVED3[2];
     volatile    uint32_t    LRST_R0;
@@ -56,9 +56,9 @@ typedef struct
     volatile    uint32_t    PMA_CTRL_R1;
     volatile    uint32_t    PMA_CTRL_R2;
     volatile    uint32_t    MSTR_CTRL;
-    
+
  } PCS_LANE_TypeDef;
- 
+
 /*------------------------------------------------------------------------------
   PCS Common Registers.
  */
@@ -508,7 +508,7 @@ typedef struct
     volatile    uint32_t    ATR5_PCIE_WIN0_TRSL_ADDR_LSB;
     volatile    uint32_t    ATR5_PCIE_WIN0_TRSL_ADDR_UDW;
     volatile    uint32_t    ATR5_PCIE_WIN0_TRSL_PARAM;
-    volatile    uint32_t    RESERVED17; 
+    volatile    uint32_t    RESERVED17;
     volatile    uint32_t    ATR5_PCIE_WIN0_TRSL_MASK_DW0;
     volatile    uint32_t    ATR5_PCIE_WIN0_TRSL_MASK_DW1;
     volatile    uint32_t    ATR6_PCIE_WIN0_SRCADDR_PARAM;
@@ -524,10 +524,10 @@ typedef struct
     volatile    uint32_t    ATR7_PCIE_WIN0_TRSL_ADDR_LSB;
     volatile    uint32_t    ATR7_PCIE_WIN0_TRSL_ADDR_UDW;
     volatile    uint32_t    ATR7_PCIE_WIN0_TRSL_PARAM;
-    volatile    uint32_t    RESERVED19; 
+    volatile    uint32_t    RESERVED19;
     volatile    uint32_t    ATR7_PCIE_WIN0_TRSL_MASK_DW0;
     volatile    uint32_t    ATR7_PCIE_WIN0_TRSL_MASK_DW1;
-    
+
     volatile    uint32_t    ATR0_PCIE_WIN1_SRCADDR_PARAM;
     volatile    uint32_t    ATR0_PCIE_WIN1_SRC_ADDR;
     volatile    uint32_t    ATR0_PCIE_WIN1_TRSL_ADDR_LSB;
@@ -573,7 +573,7 @@ typedef struct
     volatile    uint32_t    ATR5_PCIE_WIN1_TRSL_ADDR_LSB;
     volatile    uint32_t    ATR5_PCIE_WIN1_TRSL_ADDR_UDW;
     volatile    uint32_t    ATR5_PCIE_WIN1_TRSL_PARAM;
-    volatile    uint32_t    RESERVED25; 
+    volatile    uint32_t    RESERVED25;
     volatile    uint32_t    ATR5_PCIE_WIN1_TRSL_MASK_DW0;
     volatile    uint32_t    ATR5_PCIE_WIN1_TRSL_MASK_DW1;
     volatile    uint32_t    ATR6_PCIE_WIN1_SRCADDR_PARAM;
@@ -589,7 +589,7 @@ typedef struct
     volatile    uint32_t    ATR7_PCIE_WIN1_TRSL_ADDR_LSB;
     volatile    uint32_t    ATR7_PCIE_WIN1_TRSL_ADDR_UDW;
     volatile    uint32_t    ATR7_PCIE_WIN1_TRSL_PARAM;
-    volatile    uint32_t    RESERVED27; 
+    volatile    uint32_t    RESERVED27;
     volatile    uint32_t    ATR7_PCIE_WIN1_TRSL_MASK_DW0;
     volatile    uint32_t    ATR7_PCIE_WIN1_TRSL_MASK_DW1;
 
@@ -679,58 +679,58 @@ typedef struct
      */
     /* 0x004 */
     volatile    uint32_t    CFG_PRMSCR;
-    
+
     /**
       Information register: class_code
      */
     /* 0x008 */
     volatile    uint32_t    CLASS_CODE;
-     
+
      /**
       BIST, Header, master latency timer, cache : BIST_HEADER
      */
          /* 0x00C */
     volatile    uint32_t    BIST_HEADER;
-    
+
     /**
       Bridge Configuration Register: bar0
      */
     /* 0x010 */
     volatile    uint32_t    BAR0;
-    
+
     /**
       Bridge Configuration Register: bar1
      */
     /* 0x014 */
     volatile    uint32_t    BAR1;
-    
+
     /**
       Bridge Configuration Register: bar2
      */
     /* 0x018 */
     volatile    uint32_t    BAR2;
-    
+
     /**
       Bridge Configuration Register: bar3
      */
     /* 0x01C */
     volatile    uint32_t    BAR3;
-    
+
     /**
       Bridge Configuration Register: bar4
      */
     /* 0x020 */
     volatile    uint32_t    BAR4;
-    
+
     /**
       Bridge Configuration Register: bar5
      */
     /* 0x024 */
     volatile    uint32_t    BAR5;
-    
-    
+
+
     volatile    uint32_t    RESERVED1;
-    
+
     /**
       Information register: subsystem_id
      */
@@ -742,30 +742,30 @@ typedef struct
      */
     /* 0x030 */
     volatile    uint32_t    EXPAN_ROM;
-    
+
     /**
       Capability pointer register: capab_pointer
      */
     /* 0x034 */
     volatile    uint32_t    CAPAB_POINTER;
-    
+
     /**
       Expansion ROM Base Address register: expansion_rom_base
      */
     /* 0x038 */
     volatile    uint32_t    EXPAN_ROM_BASE;
-    
+
     /**
       Interrupt Line and Pin register: int_line_pin
      */
     /* 0x03C */
     volatile    uint32_t    INT_LINE_PIN;
-    
+
     /* 0x40 to 0x7C */
     volatile    uint32_t     RESERVED2[16];
-    
+
     /* PCIe Capability structure register */
-    
+
      /**
       PCIe Capability list register: CAPAB_LIST
      */
@@ -777,13 +777,13 @@ typedef struct
      */
     /* 0x084 */
     volatile    uint32_t  DEVICE_CAPAB;
-    
+
      /**
       Device Control and status register: device_ctrl_stat
      */
     /* 0x088 */
     volatile    uint32_t  DEVICE_CTRL_STAT;
-    
+
      /**
       Link Capabilities register: link_capab
      */
@@ -807,7 +807,7 @@ typedef struct
      */
     /* 0x098 */
     volatile    uint32_t  SLOT_CTRL_STAT;
-    
+
      /**
       Root control register: root_ctrl
      */
@@ -824,14 +824,14 @@ typedef struct
       Device 2 Capabilities register: device2_capab
      */
     /* 0x0A4 */
-    volatile    uint32_t  DEVICE2_CAPAB;   
-    
+    volatile    uint32_t  DEVICE2_CAPAB;
+
      /**
       Device 2 Control and status register: device2_ctrl_stat
      */
     /* 0x0A8 */
     volatile    uint32_t  DEVICE2_CTRL_STAT;
-    
+
      /**
       Link Capabilities 2 register: link2_capab
      */
@@ -855,7 +855,7 @@ typedef struct
      */
     /* 0x0B8 */
     volatile    uint32_t  SLOT2_CTRL_STAT;
-    
+
     /* 0xBC to 0xCC */
     volatile    uint32_t     RESERVED3[5];
 
@@ -878,10 +878,10 @@ typedef struct
      */
     /* 0x0D8 */
     volatile    uint32_t  MSI_X_PBA;
-    
+
     /* 0xDC */
     volatile    uint32_t     RESERVED4;
-    
+
     /**
       MSI capability id and message control register: msi_capab_ctrl
      */
@@ -893,16 +893,16 @@ typedef struct
      */
     /* 0x0E4 */
     volatile    uint32_t  MSI_LOWER_ADDRESS;
-    
+
     /**
       MSI message upper address register: msi_upper address
      */
     /* 0x0E8 */
     volatile    uint32_t  MSI_UPPER_ADDRESS;
-    
+
     /* 0xEC */
     volatile    uint32_t     RESERVED5;
-    
+
     /**
       MSI message data register: msi_data
      */
@@ -910,20 +910,20 @@ typedef struct
     volatile    uint32_t  MSI_DATA;
     /* 0xF4 */
     volatile    uint32_t     RESERVED6;
-    
+
     /* Power Management Capability Structure */
     /**
        Power Management Capability register: power_mngm_capab
      */
     /* 0x0F8 */
     volatile    uint32_t  POWER_MNGM_CAPAB;
-    
+
     /**
        Power Management control and status register: power_ctrl_stat
      */
     /* 0x0FC */
     volatile    uint32_t  POWER_CTRL_STAT;
-    
+
 } PCIE_END_CONF_TypeDef;
 
 /*------------------------------------------------------------------------------
@@ -945,62 +945,62 @@ typedef struct
      */
     /* 0x004 */
     volatile    uint32_t    CFG_PRMSCR;
-    
+
     /**
       Information register: class_code
      */
     /* 0x008 */
     volatile    uint32_t    CLASS_CODE;
-     
+
      /**
       BIST, Header, master latency timer, cache : BIST_HEADER
      */
          /* 0x00C */
     volatile    uint32_t    BIST_HEADER;
-    
+
     /**
       Bridge Configuration Register: bar0
      */
     /* 0x010 */
     volatile    uint32_t    BAR0;
-    
+
     /**
       Bridge Configuration Register: bar1
      */
     /* 0x014 */
     volatile    uint32_t    BAR1;
-    
+
     /**
       Secondary Latency timer, Subordinate bus number,
       Secondary bus Number, primary bus number Register: prim_sec_bus_num
      */
     /* 0x018 */
     volatile    uint32_t    PRIM_SEC_BUS_NUM;
-    
+
     /**
       Secondary status, I/O limit, I/O base Register: io_limit_base
      */
     /* 0x01C */
     volatile    uint32_t    IO_LIMIT_BASE;
-    
+
     /**
       memory limit, memory base Register: mem_limit_base
      */
     /* 0x020 */
     volatile    uint32_t    MEM_LIMIT_BASE;
-    
+
     /**
       prefetchable memory limit, memory base Register: pref_mem_limit_base
      */
     /* 0x024 */
     volatile    uint32_t    PREF_MEM_LIMIT_BASE;
-    
+
     /**
       prefetchable base upper Register: pref_base_upper
      */
-    /* 0x028 */    
+    /* 0x028 */
     volatile    uint32_t    PREF_BASE_UPPER;
-    
+
     /**
       prefetchable limit upper Register: pref_limit_upper
      */
@@ -1012,30 +1012,30 @@ typedef struct
      */
     /* 0x030 */
     volatile    uint32_t    IO_LIMIT_BASE_UPPER;
-    
+
     /**
       Capability pointer register: capab_pointer
      */
     /* 0x034 */
     volatile    uint32_t    CAPAB_POINTER;
-    
+
     /**
       Expansion ROM Base Address register: expansion_rom_base
      */
     /* 0x038 */
     volatile    uint32_t    EXPAN_ROM_BASE;
-    
+
     /**
       Interrupt Line and Pin register: int_line_pin
      */
     /* 0x03C */
     volatile    uint32_t    INT_LINE_PIN;
-    
+
     /* 0x40 to 0x7C */
     volatile    uint32_t     RESERVED2[16];
-    
+
     /* PCIe Capability structure register */
-    
+
      /**
       PCIe Capability list register: CAPAB_LIST
      */
@@ -1047,13 +1047,13 @@ typedef struct
      */
     /* 0x084 */
     volatile    uint32_t  DEVICE_CAPAB;
-    
+
      /**
       Device Control and status register: device_ctrl_stat
      */
     /* 0x088 */
     volatile    uint32_t  DEVICE_CTRL_STAT;
-    
+
      /**
       Link Capabilities register: link_capab
      */
@@ -1077,7 +1077,7 @@ typedef struct
      */
     /* 0x098 */
     volatile    uint32_t  SLOT_CTRL_STAT;
-    
+
      /**
       Root control register: root_ctrl
      */
@@ -1094,14 +1094,14 @@ typedef struct
       Device 2 Capabilities register: device2_capab
      */
     /* 0x0A4 */
-    volatile    uint32_t  DEVICE2_CAPAB;   
-    
+    volatile    uint32_t  DEVICE2_CAPAB;
+
      /**
       Device 2 Control and status register: device2_ctrl_stat
      */
     /* 0x0A8 */
     volatile    uint32_t  DEVICE2_CTRL_STAT;
-    
+
      /**
       Link Capabilities 2 register: link2_capab
      */
@@ -1125,7 +1125,7 @@ typedef struct
      */
     /* 0x0B8 */
     volatile    uint32_t  SLOT2_CTRL_STAT;
-    
+
     /* 0xBC to 0xCC */
     volatile    uint32_t     RESERVED3[5];
 
@@ -1148,10 +1148,10 @@ typedef struct
      */
     /* 0x0D8 */
     volatile    uint32_t  MSI_X_PBA;
-    
+
     /* 0xDC */
     volatile    uint32_t     RESERVED4;
-    
+
     /**
       MSI capability id and message control register: msi_capab_ctrl
      */
@@ -1163,16 +1163,16 @@ typedef struct
      */
     /* 0x0E4 */
     volatile    uint32_t  MSI_LOWER_ADDRESS;
-    
+
     /**
       MSI message upper address register: msi_upper address
      */
     /* 0x0E8 */
     volatile    uint32_t  MSI_UPPER_ADDRESS;
-    
+
     /* 0xEC */
     volatile    uint32_t     RESERVED5;
-    
+
     /**
       MSI message data register: msi_data
      */
@@ -1180,20 +1180,20 @@ typedef struct
     volatile    uint32_t  MSI_DATA;
     /* 0xF4 */
     volatile    uint32_t     RESERVED6;
-    
+
     /* Power Management Capability Structure */
     /**
        Power Management Capability register: power_mngm_capab
      */
     /* 0x0F8 */
     volatile    uint32_t  POWER_MNGM_CAPAB;
-    
+
     /**
        Power Management control and status register: power_ctrl_stat
      */
     /* 0x0FC */
     volatile    uint32_t  POWER_CTRL_STAT;
-    
+
 } PCIE_ROOT_CONF_TypeDef;
 
 /*------------------------------------------------------------------------------
@@ -1202,7 +1202,7 @@ typedef struct
 typedef struct
 {
     PCS_LANE_TypeDef        pcs_lane[4];
-    PCS_CMN_TypeDef         pcs_cmn; 
+    PCS_CMN_TypeDef         pcs_cmn;
     PMA_LANE_TypeDef        pma_lane[4];
     TXPLL_SSC_TypeDef       txpll_ssc;
     TXPLL_TypeDef           txpll[2];
@@ -1211,7 +1211,7 @@ typedef struct
     PCIE_END_CONF_TypeDef   pcie_end_config_space;
     PCIE_ROOT_CONF_TypeDef  pcie_root_config_space;
     PCIE_CTRL_TypeDef       pcie_ctrl[2];
- 
+
 } PCIESS_TypeDef;
 */
 
@@ -1269,9 +1269,9 @@ typedef struct
 #define DEVICE_MSI_UPPER_ADDRESS    0x0E8u
 #define DEVICE_MSI_DATA             0x0F0u
 #define DEVICE_POWER_MNGM_CAPAB     0x0F8u
-#define DEVICE_POWER_CTRL_STAT      0x0FCu 
+#define DEVICE_POWER_CTRL_STAT      0x0FCu
 
-/*------------------------------------------------------------------------------ 
+/*------------------------------------------------------------------------------
 The table below shows the base address and available address space for each of
 the leaf instances in the pciess system.
 
@@ -1303,14 +1303,14 @@ pcie_top_1__pcie_ctrl               0x300 A000      4 KBytes
 #define PCIESS_PCS_LANE3_PHY_ADDR_OFFSET            0x00048000u
 
 #define PCIESS_PCS_CMN_PHY_ADDR_OFFSET              0x00050000u
-    
+
 #define PCIESS_PMA_LANE0_PHY_ADDR_OFFSET            0x01041000u
 #define PCIESS_PMA_LANE1_PHY_ADDR_OFFSET            0x01042000u
 #define PCIESS_PMA_LANE2_PHY_ADDR_OFFSET            0x01044000u
 #define PCIESS_PMA_LANE3_PHY_ADDR_OFFSET            0x01048000u
 
 #define PCIESS_TXPLL_SSC_PHY_ADDR_OFFSET            0x01050000u
-        
+
 #define PCIESS_TXPLL0_PHY_ADDR_OFFSET                0x02044000u
 #define PCIESS_TXPLL1_PHY_ADDR_OFFSET                0x02048000u
 

@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -19,7 +19,7 @@
 
 #include "ssmb_ipi.h"
 #include <string.h> //memset
-#include <assert.h> 
+#include <assert.h>
 
 #include "mpfs_reg_map.h"
 #include "csr_helper.h"
@@ -45,8 +45,8 @@ enum UartStatesEnum {
  *
  */
 static const struct StateDesc ipiPoll_state_descs[] = {
-    { (const stateType_t)IPI_POLL_INITIALIZATION, (const char *)"init",       NULL, NULL, &ipiPoll_init_handler },
-    { (const stateType_t)IPI_POLL_MONITORING,     (const char *)"monitoring", NULL, NULL, &ipiPoll_monitoring_handler }
+    { (const stateType_t)IPI_POLL_INITIALIZATION, (const char *)"Init",       NULL, NULL, &ipiPoll_init_handler },
+    { (const stateType_t)IPI_POLL_MONITORING,     (const char *)"Monitoring", NULL, NULL, &ipiPoll_monitoring_handler }
 };
 
 /*!
@@ -78,7 +78,7 @@ static void ipiPoll_monitoring_handler(struct StateMachine * const pMyMachine)
     // poll IPIs each iteration for new messages
     bool const status = IPI_PollReceive(hartBitmask);
 
-    enum HSSHartId const myHartId = CSR_GetHartId();
+    enum HSSHartId const myHartId = current_hartid();
     if (status) {
         unsigned int i;
         for (i = 0u; i < MAX_NUM_HARTS; i++) {
@@ -127,5 +127,5 @@ void HSS_IpiPoll_Enable(enum HSSHartId target)
        assert(1 == 0); // should never reach here!! LCOV_EXCL_LINE
        break;
    }
-   ipi_poll_service.state = IPI_POLL_MONITORING; 
+   ipi_poll_service.state = IPI_POLL_MONITORING;
 }

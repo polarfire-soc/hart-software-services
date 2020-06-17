@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -27,7 +27,7 @@
 # SGDMA Service
 
 SRCS-$(CONFIG_SERVICE_SGDMA) += \
-    services/sgdma/sgdma_service.c \
+	services/sgdma/sgdma_service.c \
 
 INCLUDES +=\
-    -I./services/sgdma \
+	-I./services/sgdma \

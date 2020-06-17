@@ -34,7 +34,7 @@ extern "C" {
 extern mss_usbh_cb_t g_mss_usbh_cb;
 
 /***************************************************************************//**
- * 
+ *
  */
 void
 MSS_USBH_CIF_init
@@ -50,7 +50,7 @@ MSS_USBH_CIF_init
     MSS_USB_CIF_tx_ep_disable_irq_all();
 
     PLIC_EnableIRQ(USB_MC_PLIC);
-    
+
     /* This was added during Compliance testing */
     USB->C_T_HSBT = 0x01u;
 
@@ -59,7 +59,7 @@ MSS_USBH_CIF_init
 }
 
 /***************************************************************************//**
- * 
+ *
  */
 void
 MSS_USBH_CIF_cep_configure
@@ -108,7 +108,7 @@ MSS_USBH_CIF_tx_ep_configure
 )
 {
     MSS_USB_CIF_tx_ep_clr_csrreg(host_ep->num);
-    
+
     /* Perform host mode configurations here */
     /* TODO: Add AutoSet DMA etc */
     MSS_USBH_CIF_tx_ep_clr_retry_err(host_ep->num);
@@ -163,7 +163,7 @@ MSS_USBH_CIF_rx_ep_configure
 
 
 /***************************************************************************//**
- * 
+ *
  */
 void
 MSS_USBH_CIF_bus_suspend
@@ -185,7 +185,7 @@ MSS_USBH_CIF_bus_suspend
 
 
 /***************************************************************************//**
- * 
+ *
  */
 void
 MSS_USBH_CIF_bus_resume
@@ -202,7 +202,7 @@ MSS_USBH_CIF_bus_resume
 
 
 /***************************************************************************//**
- * 
+ *
  */
 mss_usb_vbus_level_t
 MSS_USBH_CIF_read_vbus_level
@@ -215,7 +215,7 @@ MSS_USBH_CIF_read_vbus_level
 
 
 /***************************************************************************//**
- * 
+ *
  */
 uint32_t
 MSS_USBH_CIF_tx_ep_mp_configure
@@ -265,7 +265,7 @@ MSS_USBH_CIF_tx_ep_mp_configure
 }
 
 /***************************************************************************//**
- * 
+ *
  */
 uint32_t
 MSS_USBH_CIF_rx_ep_mp_configure
@@ -375,7 +375,7 @@ MSS_USBH_CIF_cep_read_pkt
 }
 
 /***************************************************************************//**
- * 
+ *
  */
 void
 MSS_USBH_CIF_cep_abort_xfr
@@ -402,7 +402,7 @@ MSS_USBH_CIF_cep_abort_xfr
 }
 
 /***************************************************************************//**
- * 
+ *
  */
 void
 MSS_USBH_CIF_handle_connect_irq

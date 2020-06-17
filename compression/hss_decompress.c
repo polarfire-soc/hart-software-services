@@ -1,5 +1,5 @@
 /******************************************************************************************
- * 
+ *
  * MPFS HSS Embedded Software
  *
  * Copyright 2019 Microchip Corporation.
@@ -46,31 +46,32 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
     int result = 0;
     struct HSS_CompressedImage compressedImageHdr = *(struct HSS_CompressedImage *)pInputBuffer;
 
-    if (compressedImageHdr.magic != HSS_COMPRESSED_MAGIC) {
-        mHSS_DEBUG_PRINTF("Compressed Image is missing magic value (%08X vs %08X)" CRLF, 
-            compressedImageHdr.magic, HSS_COMPRESSED_MAGIC);
+    if (compressedImageHdr.magic != mHSS_COMPRESSED_MAGIC) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image is missing magic value (%08X vs %08X)" CRLF,
+            compressedImageHdr.magic, mHSS_COMPRESSED_MAGIC);
     } else {
-        mHSS_DEBUG_PRINTF("Compressed Image Length is %lu" CRLF, compressedImageHdr.compressedImageLen);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image Length is %lu" CRLF,
+            compressedImageHdr.compressedImageLen);
 
         uint32_t originalCrc = compressedImageHdr.headerCrc;
 
         compressedImageHdr.headerCrc = 0;
-        uint32_t compressedCrc = CRC32_calculate((const uint8_t *)&compressedImageHdr, 
-            sizeof(struct HSS_CompressedImage)); 
+        uint32_t compressedCrc = CRC32_calculate((const uint8_t *)&compressedImageHdr,
+            sizeof(struct HSS_CompressedImage));
 
         if (originalCrc != compressedCrc) {
-            mHSS_DEBUG_PRINTF("Compressed Image failed CRC check" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image failed CRC check" CRLF);
         } else {
             const uint8_t *pByteOffset = pInputBuffer;
             pByteOffset += sizeof(struct HSS_CompressedImage);
 
-            mHSS_DEBUG_PRINTF("Decompressing from 0x%p to 0x%p" CRLF, pByteOffset, pOutputBuffer);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Decompressing from %p to %p" CRLF, pByteOffset, pOutputBuffer);
 
             result = fastlz_decompress(
-                (const void *)pByteOffset, (int)compressedImageHdr.compressedImageLen, 
+                (const void *)pByteOffset, (int)compressedImageHdr.compressedImageLen,
                 (void *)pOutputBuffer, (int)(compressedImageHdr.originalImageLen), HSS_ShowProgress);
         }
-    } 
+    }
 
     return result;
 }

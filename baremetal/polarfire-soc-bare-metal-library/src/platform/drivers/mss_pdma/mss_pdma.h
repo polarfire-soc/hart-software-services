@@ -20,14 +20,14 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- * 
+ *
  * PolarFire SoC Microprocessor subsystem PDMA bare metal software driver public
  * APIs.
  *
  * SVN $Revision$
  * SVN $Date$
  */
- 
+
 /*=========================================================================*//**
   @mainpage PolarFire SoC MSS PDMA Bare Metal Driver.
 
@@ -133,7 +133,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #include <stdint.h>
 
@@ -282,7 +282,7 @@ MSS_PDMA_init
            - Enable the ErrorInterrupt
            - Set the active transfer type, single or repeat.
            - Force Order.
-       
+
    @return pdma_error_id_t
            The function returns error signals of type mss_pdma_error_id_t.
 

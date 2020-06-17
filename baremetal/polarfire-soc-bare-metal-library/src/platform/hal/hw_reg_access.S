@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -13,8 +13,6 @@
  * The functions declared here are implemented using assembler as part of the
  * processor/toolchain specific HAL.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 
 .section .text

@@ -29,12 +29,12 @@
 
 #ifdef CONFIG_OPENSBI
 #  include "sbi/riscv_asm.h"
-#  include "sbi/sbi_bits.h"
+//#  include "sbi/sbi_bits.h"
+#  include "sbi/sbi_bitops.h"
 #  include "sbi/sbi_hart.h"
 #  include "sbi_init.h"
 #  include "sbi_scratch.h"
 #  include "sbi_types.h"
-#  undef __packed
 #  include "sbi_platform.h"
 #else
 #  ifdef __riscv
@@ -45,7 +45,9 @@
 
 #include "hss_atomic.h"
 
-#include "mss_sysreg.h"
+#ifdef CONFIG_PLATFORM_MPFS
+#  include "mss_sysreg.h"
+#endif
 #include "hss_memcpy_via_pdma.h"
 
 /* Timeouts */
@@ -60,7 +62,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine);
-static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine);
+//static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine);
@@ -79,7 +81,6 @@ enum BootStatesEnum {
     BOOT_INITIALIZATION,
     BOOT_SETUP_PMP,
     BOOT_SETUP_PMP_COMPLETE,
-    BOOT_SETUP_L2CACHE,
     BOOT_DOWNLOAD_CHUNKS,
     BOOT_WAIT,
     BOOT_IDLE,
@@ -95,7 +96,6 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_INITIALIZATION,     (const char *)"Init",             NULL,                             NULL,                         &boot_init_handler },
     { (const stateType_t)BOOT_SETUP_PMP,          (const char *)"SetupPMP",         &boot_setup_pmp_onEntry,          NULL,                         &boot_setup_pmp_handler },
     { (const stateType_t)BOOT_SETUP_PMP_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_pmp_complete_onEntry, NULL,                         &boot_setup_pmp_complete_handler },
-    { (const stateType_t)BOOT_SETUP_L2CACHE,      (const char *)"SetupL2cache",     NULL,                             NULL,                         &boot_setup_l2cache_handler },
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
     { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             NULL,                             NULL,                         &boot_idle_handler },
@@ -119,11 +119,11 @@ struct HSS_Boot_LocalData {
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
 #    define mDEFAULT_MSG_INDEX_AUX 0u
 #else
-#    define mDEFAULT_MSG_INDEX_AUX 
+#    define mDEFAULT_MSG_INDEX_AUX
 #endif
 
-static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS] = {
-    { HSS_HART_E51,   NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX }, // unused
+static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
+    //{ HSS_HART_E51,   NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX }, // unused
     { HSS_HART_U54_1, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
     { HSS_HART_U54_2, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
     { HSS_HART_U54_3, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
@@ -137,25 +137,65 @@ static bool pmpSetupFlag[HSS_HART_NUM_PEERS] = { false, false, false, false, fal
  * individual boot machines, one per U54 hart
  */
 struct StateMachine boot_service1 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_1)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[1]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_1)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service2 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_2)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[2]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_2)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service3 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_3)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[3]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_3)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service4 = {
-    (stateType_t)BOOT_IDLE, (stateType_t)SM_INVALID_STATE, (const uint32_t)BOOT_NUM_STATES, (const char *)"boot_service(u54_4)", 0u, 0u, 0u, boot_state_descs, false, 0u, &localData[4]
+    .state             = (stateType_t)BOOT_IDLE, 
+    .prevState         = (stateType_t)SM_INVALID_STATE, 
+    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
+    .pMachineName      = (const char *)"boot_service(u54_4)", 
+    .startTime         = 0u, 
+    .lastExecutionTime = 0u, 
+    .executionCount    = 0u, 
+    .pStateDescs       = boot_state_descs, 
+    .debugFlag         = true, 
+    .priority          = 0u, 
+    .pInstanceData     = (void *)&localData[0]
 };
 
 /*
  * table of individual boot machines, for convenience
  */
-struct {
+const struct {
     struct StateMachine* const pMachine;
     const enum HSSHartId hartId;
 } bootMachine[] = {
@@ -187,10 +227,11 @@ static void boot_do_download_chunk(enum HSSHartId target, struct HSS_BootChunkDe
     assert(pChunk->size);
 
     if (HSS_PMP_CheckWrite(target, (void *)pChunk->execAddr, pChunk->size)) {
-        memcpy_via_pdma((void *)pChunk->execAddr, 
+        memcpy_via_pdma((void *)pChunk->execAddr,
             (void*)((size_t)pBootImage + (size_t)pChunk->loadAddr), pChunk->size);
     } else {
-        mHSS_DEBUG_PRINTF_EX("Target %d is skipping chunk %p due to invalid permissions" CRLF, target, pChunk);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Target %d is skipping chunk %p due to invalid permissions" CRLF,
+            target, pChunk);
     }
 }
 
@@ -248,15 +289,13 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
 static void boot_init_handler(struct StateMachine * const pMyMachine)
 {
     if (pBootImage) {
-        mHSS_DEBUG_PRINTF("%s::\tstarting boot" CRLF, pMyMachine->pMachineName);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot" CRLF, pMyMachine->pMachineName);
 
         pMyMachine->state = BOOT_SETUP_PMP;
     } else {
         // unexpected error state
         if (!pBootImage) {
-            mHSS_DEBUG_ERROR_TEXT;
-            mHSS_DEBUG_PRINTF("%s::\tNo Boot Image registered" CRLF, pMyMachine->pMachineName);
-            mHSS_DEBUG_NORMAL_TEXT;
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::\tNo Boot Image registered" CRLF, pMyMachine->pMachineName);
         }
         pMyMachine->state = BOOT_ERROR;
     }
@@ -294,16 +333,14 @@ static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine)
 
 static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_PRINTF("%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
 }
 
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
 {
     if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_SETUP_PMP_COMPLETE_TIMEOUT)) {
-        mHSS_DEBUG_ERROR_TEXT;
-        mHSS_DEBUG_PRINTF("%s::\tTimeout after %" PRIu64 " iterations" CRLF, pMyMachine->pMachineName,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF, pMyMachine->pMachineName,
             pMyMachine->executionCount);
-        mHSS_DEBUG_NORMAL_TEXT;
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
@@ -316,19 +353,15 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
         // need to free as received, not all at once...
 
         if (check_for_ipi_acks(pMyMachine)) {
-            mHSS_DEBUG_PRINTF("%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
-            mHSS_DEBUG_PRINTF("%s::\tPMP setup completed" CRLF, pMyMachine->pMachineName);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
 
-            pMyMachine->state = BOOT_SETUP_L2CACHE;
+            pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
         }
     }
 }
 
-static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine)
-{
-    HSS_Setup_L2Cache();
-    pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
-}
+/////////////////
 
 static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
 {
@@ -338,14 +371,14 @@ static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
     assert(pBootImage != NULL);
 
     if (pBootImage->hart[target-1].numChunks) {
-        mHSS_DEBUG_PRINTF("%s::Processing boot image: \"%s\"" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image:" CRLF "  \"%s\"" CRLF,
             pMyMachine->pMachineName, pBootImage->hart[target-1].name);
         pInstanceData->pChunk =
             (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
 
 #ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
-        mHSS_DEBUG_PRINTF("%s:: firstChunk is %u" CRLF, pMyMachine->pMachineName, pBootImage->hart[target-1].firstChunk);
-        mHSS_DEBUG_PRINTF("%s:: lastChunk is %u" CRLF, pMyMachine->pMachineName, pBootImage->hart[target-1].lastChunk);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::firstChunk is %u" CRLF, pMyMachine->pMachineName, pBootImage->hart[target-1].firstChunk);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::lastChunk is %u" CRLF, pMyMachine->pMachineName, pBootImage->hart[target-1].lastChunk);
 #endif
 
         pInstanceData->chunkCount = 0u;
@@ -370,7 +403,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
             // and it is for us, then download it
             if (pInstanceData->pChunk->owner == target) {
 #ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
-                mHSS_DEBUG_PRINTF("%s::\t%d:chunk@0x%X->0x%X, %u bytes" CRLF, pMyMachine->pMachineName,
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:chunk@0x%X->0x%X, %u bytes" CRLF, pMyMachine->pMachineName,
                     pInstanceData->chunkCount, (uint64_t)pInstanceData->pChunk->loadAddr,
                     (uint64_t)pInstanceData->pChunk->execAddr, pInstanceData->pChunk->size);
 #endif
@@ -416,7 +449,7 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
                 if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
                     // found another hart in same boot set as me...
 
-                    mHSS_DEBUG_PRINTF("%s::\tu54_%u:goto 0x%p" CRLF, pMyMachine->pMachineName,
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
                         peer, pBootImage->hart[peer-1].entryPoint);
                     result = IPI_MessageAlloc(&(pInstanceData->msgIndexAux));
                     assert(result);
@@ -424,69 +457,41 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
                     mb();
                     mb_i();
 
-                    IPI_MessageDeliver(pInstanceData->msgIndexAux, peer, IPI_MSG_GOTO,
-                        pBootImage->hart[peer-1].privMode, &(pBootImage->hart[peer-1].entryPoint));
+                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux, peer,
+#if 0
+                        IPI_MSG_GOTO,
+#else
+                        IPI_MSG_OPENSBI_INIT,
+#endif
+                        pBootImage->hart[peer-1].privMode,
+                        &(pBootImage->hart[peer-1].entryPoint));
+                    assert(result);
 
-                    HSS_SpinDelay_MilliSecs(1);
+                    //HSS_SpinDelay_MilliSecs(1);
                 }
             }
 #endif
-            mHSS_DEBUG_PRINTF("%s::\tu54_%u:goto 0x%p" CRLF, pMyMachine->pMachineName,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
                 target, pBootImage->hart[target-1].entryPoint);
             result = IPI_MessageAlloc(&(pInstanceData->msgIndex));
             assert(result);
 
+            mb();
+            mb_i();
+
+            //HSS_SpinDelay_MilliSecs(50); //TBD
+
+            result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
 #if 0
-            extern struct sbi_scratch scratches[];
-            static struct sbi_platform platform =  {
-                .name               = "Test",
-                .features           = SBI_PLATFORM_DEFAULT_FEATURES,
-                .hart_count         = MAX_NUM_HARTS,
-                .hart_stack_size    = 16384u,
-                .disabled_hart_mask = 0x17u,
-                .early_init         = NULL,
-                .final_init         = NULL,
-                .pmp_region_count   = NULL,
-                .pmp_region_info    = NULL,
-                .console_putc       = NULL,
-                .console_getc       = NULL,
-                .console_init       = NULL,
-                .irqchip_init       = NULL,
-                .ipi_send           = NULL,
-                .ipi_sync           = NULL,
-                .ipi_clear          = NULL,
-                .ipi_init           = NULL,
-                .timer_value        = NULL,
-                .timer_event_start  = NULL,
-                .timer_event_stop   = NULL,
-                .timer_init         = NULL,
-                .system_reboot      = NULL,
-                .system_shutdown    = NULL
-            };
-
-            if (target == HSS_HART_U54_3) {
-                scratches[HSS_HART_U54_3].fw_start = 0xA0000000u;
-                scratches[HSS_HART_U54_3].fw_size = 0x10000000u;
-                scratches[HSS_HART_U54_3].next_arg1 = 0u;
-                scratches[HSS_HART_U54_3].next_addr = 0xA0000000u;
-                scratches[HSS_HART_U54_3].next_mode = PRV_S;
-                scratches[HSS_HART_U54_3].warmboot_addr = 0xA0000000u;
-                scratches[HSS_HART_U54_3].platform_addr = (unsigned long)&platform;
-                scratches[HSS_HART_U54_3].hartid_to_scratch = 0lu;
-                scratches[HSS_HART_U54_3].tmp0 = 0u;
-
-                IPI_MessageDeliver(pInstanceData->msgIndex, target, IPI_MSG_OPENSBI_INIT,
-                    pBootImage->hart[target-1].privMode, &(pBootImage->hart[target-1].entryPoint));
-            } else
+                IPI_MSG_GOTO,
+#else
+                IPI_MSG_OPENSBI_INIT,
 #endif
-            //mb();
-            //mb_i();
-
-            IPI_MessageDeliver(pInstanceData->msgIndex, target, IPI_MSG_GOTO,
                 pBootImage->hart[target-1].privMode, &(pBootImage->hart[target-1].entryPoint));
+            assert(result);
         }
     } else {
-        mHSS_DEBUG_PRINTF("%s::\ttarget is %u, pBootImage is 0x%p, skipping goto 0x%p" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::target is %u, pBootImage is %p, skipping sbi_init %p" CRLF,
             pMyMachine->pMachineName, target, pBootImage, pBootImage->hart[target-1].entryPoint);
     }
 }
@@ -496,7 +501,7 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
 static void boot_wait_onEntry(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
-    mHSS_DEBUG_PRINTF("%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
 }
 
 static void boot_wait_handler(struct StateMachine * const pMyMachine)
@@ -508,10 +513,8 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
         // nothing for me to do, not expecting GOTO ack...
         pMyMachine->state = BOOT_IDLE;
     } else if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_WAIT_TIMEOUT)) {
-        mHSS_DEBUG_ERROR_TEXT;
-        mHSS_DEBUG_PRINTF("%s::\tTimeout after %" PRIu64 " iterations" CRLF, pMyMachine->pMachineName,
-            pMyMachine->executionCount);
-        mHSS_DEBUG_NORMAL_TEXT;
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
+            pMyMachine->pMachineName, pMyMachine->executionCount);
 
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
         free_msg_index_aux(pInstanceData);
@@ -522,12 +525,14 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
     } else {
         // need to free as received, not all at once...
         if (check_for_ipi_acks(pMyMachine)) {
-
-            // turn appropriate bit on in  SYSREGSCB:MSS_STATUS:BOOT_STATUS to indicate it is up 
+#ifdef CONFIG_PLATFORM_MPFS
+            // turn appropriate bit on in SYSREGSCB:MSS_STATUS:BOOT_STATUS to indicate it is up
             // note: this bit is a status indicator to SW only, and is not functional/does not have side effects
             mHSS_ReadModWriteRegU32(SYSREGSCB, MSS_STATUS, 0xFFFFu, 1u << (target-1));
+#endif
 
-            mHSS_DEBUG_PRINTF("%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF,
+                pMyMachine->pMachineName);
             pMyMachine->state = BOOT_IDLE;
         }
     }
@@ -537,13 +542,11 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
 
 static void boot_error_handler(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_ERROR_TEXT;
-    mHSS_DEBUG_PRINTF("%s::" CRLF
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::" CRLF
         "*******************************************************************" CRLF
         "* WARNING: Boot Error - transitioning to IDLE                     *" CRLF
         "*******************************************************************" CRLF,
         pMyMachine->pMachineName);
-    mHSS_DEBUG_NORMAL_TEXT;
 
     pMyMachine->state = BOOT_IDLE;
 }
@@ -573,11 +576,18 @@ bool HSS_Boot_Harts(enum HSSHartId const source)
         if ((source == HSS_HART_ALL) || (source == bootMachine[i].hartId)) {
             struct StateMachine * const pMachine = bootMachine[i].pMachine;
 
+#if 1
+            if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) { // TBD
+               pMachine->state = (stateType_t)BOOT_INITIALIZATION;
+               result = true;
+            } else
+#endif
             if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
-               result = result & true;
+               result = true;
             } else {
                result = false;
+               mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for hart %u" CRLF, pMachine->state, i);
             }
         }
     }
@@ -591,9 +601,9 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
     enum IPIStatusCode result = IPI_FAIL;
 
     if (source != HSS_HART_ALL) {
-        mHSS_DEBUG_PRINTF("\tcalled for hart %u" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, source);
     } else {
-        mHSS_DEBUG_PRINTF("\tcalled for all harts" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts" CRLF);
     }
 
     if (HSS_Boot_Harts(source)) {
@@ -612,7 +622,7 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     (void)p_extended_buffer_in_ddr;
 
     // boot strap IPI received from one of the U54s...
-    //mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
 
     return HSS_Boot_RestartCore(source);
 }
@@ -637,12 +647,10 @@ enum IPIStatusCode HSS_Boot_PMPSetupHandler(TxId_t transaction_id, enum HSSHartI
     (void)immediate_arg;
     (void)p_extended_buffer_in_ddr;
 
-     enum HSSHartId CSR_GetHartId(void);
-
     // request to setup PMP by E51 received
-    enum HSSHartId myHartId = CSR_GetHartId();
+    enum HSSHartId myHartId = current_hartid();
 
-    mHSS_DEBUG_PRINTF("\tHart%u ", myHartId);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Hart%u ", myHartId);
 
     if (!pmpSetupFlag[myHartId]) {
         pmpSetupFlag[myHartId] = true; // PMPs can be setup only once without reboot....
@@ -672,7 +680,7 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
     assert(target != HSS_HART_ALL); // need to setup PMPs on each Hart individually
 
-    mHSS_DEBUG_PRINTF("\tcalled for hart %u" CRLF, target);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, target);
 
     result = IPI_MessageAlloc(indexOut);
     assert(result);
@@ -682,7 +690,38 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF("\thart %u: failed to send message, so freeing" CRLF, target); //TODO
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing" CRLF, target); //TODO
+            IPI_MessageFree(*indexOut);
+        }
+    }
+
+    return result;
+}
+
+/*!
+ * \brief SBI Setup Request
+ *
+ * Make request to U54 from E51 to setup SBIs
+ *
+ */
+bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut)
+{
+    // setup SBI for each hart ...
+    bool result;
+
+    assert(target != HSS_HART_ALL); // need to setup SBIs on each Hart individually
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, target);
+
+    result = IPI_MessageAlloc(indexOut);
+    assert(result);
+
+    if (result) {
+        result = IPI_MessageDeliver(*indexOut, target, IPI_MSG_OPENSBI_INIT, 0u, NULL);
+
+        // couldn't send message, so free up resources...
+        if (!result) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing" CRLF, target); //TODO
             IPI_MessageFree(*indexOut);
         }
     }

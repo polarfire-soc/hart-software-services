@@ -14,6 +14,11 @@
 
 struct sbi_scratch;
 
-void __noreturn sbi_init(struct sbi_scratch *scratch);
+void /*__noreturn*/ sbi_init(struct sbi_scratch *scratch);
+
+unsigned long sbi_init_count(u32 hartid);
+void sbi_hss_e51_init(struct sbi_scratch *scratch, bool coldboot);
+
+void __noreturn sbi_exit(struct sbi_scratch *scratch);
 
 #endif

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -9,11 +9,9 @@
 
 /***************************************************************************
  * @file mss_util.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MACROs defines and prototypes associated with utility functions
  *
- * SVN $Revision$
- * SVN $Date$
  */
 #ifndef G5SOC_UTIL_H
 #define G5SOC_UTIL_H
@@ -29,7 +27,7 @@ extern "C" {
 #define DDR_BASE (0x80000000ul)
 
 /*
- * Useful macros 
+ * Useful macros
  */
 #define WRITE_REG8(x, y) (*((volatile uint8_t *)(x)) = (y))
 #define READ_REG8(x)     (*((volatile uint8_t *)(x)))

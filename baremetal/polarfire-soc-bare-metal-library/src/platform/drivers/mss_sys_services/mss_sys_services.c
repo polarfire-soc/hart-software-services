@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * PSE microcontroller subsystem System Services bare metal driver
  * implementation.
  *
@@ -16,7 +16,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /*******************************************************************************
  * Null buffer constant definition
@@ -1405,7 +1405,7 @@ MSS_SYS_debug_write_mem
 {
     uint16_t status = MSS_SYS_PARAM_ERR;
     uint8_t mb_format[16] = {0};
-  
+
     *(uint16_t*)(mb_format)     = mem_addr;
     *(uint16_t*)(mb_format + 2u) = n_words;
     *(uint64_t*)(mb_format + 8u) = mss_addr;
@@ -1699,13 +1699,13 @@ MSS_SYS_unlock_debug_passcode
 )
 {
     uint16_t status = MSS_SYS_PARAM_ERR;
-    uint8_t mb_format[32] = {0};
-    uint8_t index = 0u;
+    //uint8_t mb_format[32] = {0};
+    //uint8_t index = 0u;
 
-    for (index = 0u; index < 32u; index++)
-    {
-        mb_format[index] = cmd_data[index];
-    }
+    //for (index = 0u; index < 32u; index++)
+    //{
+    //    mb_format[index] = cmd_data[index];
+    //}
 
     if (MSS_SYS_SERVICE_INTERRUPT_MODE == g_service_mode)
     {
@@ -2105,6 +2105,7 @@ g5c_message_plic_IRQHandler
     reg = *MSS_SCBMESSAGE_INT;
     *MSS_SCBMESSAGE_INT = 0x0u; /*clear message_int reg*/
     reg = *MSS_SCBMESSAGE_INT;
+    (void)reg; // reference to avoid compiler warning
 
     mss_sys_interrupt_handler();
 

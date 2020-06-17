@@ -7,26 +7,25 @@ config OPENSBI
 
 		If you don't know what to do here, say Y.
 
-config TINYCLI
-	bool "TinyCLI support"
-	default n
+menu "OpenSBI"
+config PROVIDE_DTB
+	bool "Provide a DTB for OpenSBI"
+	depends on OPENSBI
+	default y
 	help
-		This feature enables a simple command-line interpreter prompt.
-          
-		If you don't know what to do here, say N.
+		This feature enabling the building in of a device tree blob and the provision
+		of this blob to OpenSBI via the a1 register.
 
-config TINYCLI_TIMEOUT
-        depends on TINYCLI
-	int "MSS AXI Switch Clock"
-	default 5
-        help
-		The timeout for entering the TinyCLI (in seconds). When CONFIG_TINYCLI is enabled,
-                the HSS will wait for a keypress for this timeout before continuing with its boot
-                process.
+                If this isn't needed, it is possible to save some space by removing it.
 
-                If a key press (other than ESC) is detected, the HSS will enter the TINYCLI mode,
-                which allows interactive running of a small number of commands. Typing `HELP` at
-                the TINYCLI prompt lists the supported commands.
+		If you don't know what to do here, say Y.
+
+config DEFAULT_DEVICE_TREE
+	string "hifive-unleashed-a00-freedom-u540.dtb"
+	depends on PROVIDE_DTB
+	help
+		This option specifies the default Device Tree to be used.
+endmenu
 
 config SUPERLOOP_IN_U_MODE
 	bool "Run Superloop in U-Mode"
@@ -36,6 +35,7 @@ config SUPERLOOP_IN_U_MODE
 
 		If you don't know what to do here, say N for now.
 
+menu "Memory Options"
 config MEMTEST
 	bool "DDR Memory Tester"
 	default n
@@ -69,4 +69,22 @@ config USE_PDMA
 	default y
         help
 		Use the PDMA for memory to memory transfers.
+
+config INITIALIZE_MEMORIES
+	bool "Initialize memories to zero"
+	default y
+        help
+		Initialize memories to zero, to seed ECC.
+		
+		If you don't know what to do here, say N for now.
+
+config USE_ZERO_DEVICE
+	bool "Use the Zero Device for initializing memories"
+	default y
+        depends on USE_PDMA && INITIALIZE_MEMORIES
+        help
+		Use the PDMA for memory to memory transfers.
+
+endmenu
+
 endmenu

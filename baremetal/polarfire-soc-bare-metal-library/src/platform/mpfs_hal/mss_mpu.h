@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -8,26 +8,25 @@
  */
 /*******************************************************************************
  * @file mss_mpu.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS MPU driver APIS for configuring access regions for
  * the external masters.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 /*=========================================================================*//**
-  
+
  *//*=========================================================================*/
 #ifndef MSS_MPU_H
 #define MSS_MPU_H
 
 #include <stdint.h>
 
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef SIFIVE_HIFIVE_UNLEASHED
 
 /***************************************************************************//**
 
@@ -40,7 +39,7 @@ typedef enum {
     MSS_MPU_FIC0    = 0x00,
     MSS_MPU_FIC1,
     MSS_MPU_FIC2,
-    MSS_MPU_ATHENA,
+    MSS_MPU_CRYPTO,
     MSS_MPU_GEM0,
     MSS_MPU_GEM1,
     MSS_MPU_USB,
@@ -77,17 +76,25 @@ typedef enum {
 
 extern uint8_t num_pmp_lut[10];
 
+#ifndef __I
 #define __I  const volatile
+#endif
+#ifndef __IO
 #define __IO volatile
+#endif
+#ifndef __O
 #define __O volatile
+#endif
+
 
 
 typedef struct
-{    __IO uint64_t  pmp   : 38;
+{
+    __IO uint64_t  pmp   : 38;
     __IO uint64_t  rsrvd : 18;
     __IO uint64_t  mode  : 8;
 } MPUCFG_TypeDef;
-    
+
 typedef struct
 {
     __IO uint64_t  addr   : 38;
@@ -103,7 +110,11 @@ typedef struct
 } MPU_TypeDef;
 
 
+
 #define MSS_MPU(master)                ( (MPU_TypeDef*) (0x20005000UL + ((master) << 8U)))
+
+
+uint8_t mpu_configure(void);
 
 
 uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
@@ -182,10 +193,15 @@ static inline MPU_FailStatus_TypeDef MSS_MPU_get_failstatus(mss_mpu_mport_t mast
     return (MSS_MPU(master_port)->STATUS);
 }
 
+#endif /* ! SIFIVE_HIFIVE_UNLEASHED */
+
+uint8_t pmp_configure(uint8_t hart_id);
+
+
 
 #ifdef __cplusplus
 }
 #endif
 
+
 #endif /* MSS_MPU_H */
-#endif

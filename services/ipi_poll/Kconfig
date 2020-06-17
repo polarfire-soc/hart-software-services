@@ -1,0 +1,7 @@
+config SERVICE_IPI_POLL
+	bool "IPI Polling support"
+	default n
+	help
+                This feature enables support for IPI Polling.
+                
+		If you do not know what to do here, say Y.

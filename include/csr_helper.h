@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - CSR Helper
  *
  */
@@ -45,31 +45,19 @@ extern "C" {
 
 #ifdef CONFIG_OPENSBI
 #  include "sbi/riscv_asm.h"
-#  include "sbi/sbi_bits.h"
+#  include "sbi/sbi_bitops.h"
 #  include "sbi/sbi_hart.h"
 #  include "sbi/sbi_init.h"
 #  include "sbi/sbi_scratch.h"
 #  define mHSS_CSR_READ csr_read
-#  define mCSR_WRITE csr_write
+#  define mHSS_CSR_WRITE csr_write
 #else
 #  include "machine/encoding.h"
 #  include "machine/bits.h"
 #  define mHSS_CSR_READ read_csr
-#  define mCSR_WRITE write_csr
+#  define mHSS_CSR_WRITE write_csr
 #endif
 
-
-#ifdef CONFIG_SUPERLOOP_IN_U_MODE
-void CSR_Init(void);
-#endif
-
-enum HSSHartId CSR_GetHartId(void);
-
-unsigned long CSR_GetVendorID(void);
-
-unsigned long CSR_GetArchID(void);
-
-unsigned long CSR_GetMISA(void);
 
 HSSTicks_t CSR_GetTickCount(void);
 

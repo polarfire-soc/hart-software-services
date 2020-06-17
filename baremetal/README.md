@@ -12,3 +12,6 @@ To update the bare metal drivers, use:
     $ git fetch polarfire-soc-bare-metal-library master
     $ git subtree pull --prefix baremetal/polarfire-soc-bare-metal-library polarfire-soc-bare-metal-library master --squash
 
+## Notes
+
+The `examples` and `config` subdirectories were removed.

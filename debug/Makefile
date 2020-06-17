@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -27,25 +27,16 @@
 # Optional profiling hooks
 #
 
+EXTRA_SRCS-y += \
+        debug/hss_debug.c
+
 EXTRA_SRCS-$(CONFIG_DEBUG_PROFILING_SUPPORT) += \
-        misc/profiling.c
+        debug/profiling.c \
 
 OPT-$(CONFIG_DEBUG_PROFILING_SUPPORT) += \
 	-finstrument-functions \
 	-finstrument-functions-exclude-function-list=g5soc_init_mutex,ee_printf,CSR_GetHartId,CSR_GetTime,ee_vsprintf,uart_send_string_mmuart_ex,g5soc_release_mutex,take_loop,CSR_GetTickCount,ee_puts
 
-misc/profiling.o: misc/profiling.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-misc/hss_crc16.o: misc/hss_crc16.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-misc/hss_crc32.o: misc/hss_crc32.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-misc/uart_helper.o: misc/uart_helper.c config.h
+debug/profiling.o: debug/profiling.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

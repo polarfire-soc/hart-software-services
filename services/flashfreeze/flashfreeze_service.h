@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Flash*Freeze Service
  *
  */
@@ -42,6 +42,8 @@ extern "C" {
 #include "hss_debug.h"
 
 enum IPIStatusCode HSS_FlashFreeze_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr);
+
+extern struct StateMachine flashfreeze_service;
 
 #ifdef __cplusplus
 }

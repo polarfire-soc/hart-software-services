@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -61,7 +61,7 @@ NEXT_CHARACTER:
         case '0':
             formatFlags |= (int)FORMAT_FLAG_ZERO_PAD;
             goto NEXT_CHARACTER;
-        case '1'...'9': 
+        case '1'...'9':
             field_width = 1u;
             break;
         case 'd':

@@ -24,8 +24,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
- * Hart Software Services - U54 GOTO Service 
+ *
+ * Hart Software Services - U54 GOTO Service
  * Allows E51 to instruct U54 to run specific code
  *
  */

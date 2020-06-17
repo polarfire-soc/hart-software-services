@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -33,30 +33,51 @@ SHELL=/bin/bash
 # To build the HSS under SoftConsole on Windows, we need to spawn the build out to
 # MSYS2. If MSYS2, we need to ensure that the path is correctly setup to find
 # genconfig.exe
-# 
+#
 # Therefore, we need to determine whether we are on Linux, or a Unix-ish environment
-# such as MSYS2 or Cygwin.  
+# such as MSYS2 or Cygwin.
 #
 SYSTEM:=$(shell uname -s)
-ifneq (, $(findstring Linux, $(SYSTEM)))
-# Linux-specific mods
-#
-# Nothing special needed
-else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))
-# MSYS2-specific mods
-#
-# Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
-PATH+=:/usr/bin:/bin
-$(info MSYS2 detected, PATH is "$(PATH)")
-else ifneq (, $(findstring CYGWIN, $(SYSTEM)))
-# Any Cygwin-specific paths
-#
-# Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
-#
-ifdef CONFIG_OPENSBI
-$(warning OPENSBI build may fail on Cygwin due to issues with file paths)
-endif
+ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
+  # Nothing special needed
+  HOST_LINUX=true
+else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))  # MSYS2-specific mods
+  #
+  # Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
+  PATH+=:/usr/bin:/bin
+  $(info MSYS2 detected, PATH is "$(PATH)")
+  HOST_MSYS_NT=true
+else ifneq (, $(findstring CYGWIN, $(SYSTEM)))   # Cygwin-specific mods
+  #
+  # Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
+  #
+  ifdef CONFIG_OPENSBI
+    $(warning OPENSBI build may fail on Cygwin due to issues with file paths)
+  endif
+  HOST_CYGWIN=true
 else
+endif
+
+all: ${TARGET}
+
+include .config
+
+ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
+  include boards/${BOARD}/Makefile
+else
+  ifndef BOARD
+    $(warning BOARD not specified) # default to icicle if nothing found
+    BOARD:=icicle-kit-es
+    include boards/${BOARD}/Makefile
+  else
+    $(error Board >>${BOARD}<< not found)
+  endif
+endif
+
+ifneq ("$(wildcard boards/${BOARD}/hss.ld)", "")
+  LINKER_SCRIPT=boards/${BOARD}/hss.ld
+else
+  $(error Linker Script >>${LINKER_SCRIPT}<< not found)
 endif
 
 RISCV_TARGET=hss.elf
@@ -66,27 +87,23 @@ SRCS-y= \
     hss_clock.c \
     hss_registry.c \
 
-INCLUDES=\
+INCLUDES +=\
     -I./include \
-    -I./thirdparty/riscv-pk \
     -I.
 
 ASM_SRCS= \
     crt.S \
-    thirdparty/riscv-pk/machine/mentry.S \
-    thirdparty/riscv-pk/machine/mpfs_mutex.S
-EXTRA_SRCS-y= \
-    thirdparty/riscv-pk/machine/mtrap.c \
+
+
+EXTRA_SRCS-y += \
     hss_init.c \
     hss_main.c
 
-
-EXTRA_OBJS=$(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(OPENSBI_LIBS) 
+EXTRA_OBJS += $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(EXTRA_OBJS-y)
 
 MCMODEL=-mcmodel=medany
 
 TARGET:=$(RISCV_TARGET)
-include .config
 include rules.mk
 include targets.mk
 include init/Makefile
@@ -94,31 +111,26 @@ include misc/Makefile
 include baremetal/Makefile
 include ssmb/Makefile
 include services/Makefile
-ifdef CONFIG_COMPRESSION
+include debug/Makefile
 include compression/Makefile
-endif
 
-LIBS =
+LIBS = $(OPENSBI_LIBS)
 
-ifndef CONFIG_SERVICE_QSPI
-ifdef CONFIG_COMPRESSION
-EXTRA_OBJS += \
-        tools/compression/fastlz/bootImageBlob.bin.lz77.o
-else
-EXTRA_OBJS += \
-        tools/bin2chunks/bootImageBlob.bin.o
-endif
-endif
-
-EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += misc/stack_guard.c
+EXTRA_SRCS-y += misc/stack_guard.c
 
 
 ifdef CONFIG_OPENSBI
-OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
-$(OPENSBI_LIBS):
-	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
+  OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
+  $(OPENSBI_LIBS):
+ifdef CONFIG_WITH_ARCH
+	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_WITH_ARCH=$(CONFIG_WITH_ARCH) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
 else
-OPENSBI_LIBS =
+	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) -r --no-print-directory -C thirdparty/opensbi V=$(V)
+endif
+
+  .PHONY: $(OPENSBI_LIBS)
+else
+  OPENSBI_LIBS =
 endif
 
 #$(info $$INCLUDES is [${INCLUDES}])
@@ -126,30 +138,38 @@ endif
 hss_main.o: hss_main.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-hss_init.o: hss_init.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-thirdparty/riscv-pk/machine/mtrap.o: thirdparty/riscv-pk/machine/mtrap.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c 
+hss_init.o: hss_init.c include/tool_versions.h config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-config.h: .config
+hss_state_machine.o: hss_state_machine.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-ifdef CONFIG_USE_MAKEDEP
-DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) 
-.PHONY: dep
-dep: $(DEPENDENCIES)
+tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
--include $(DEPENDENCIES)
+ifdef CONFIG_CC_USE_MAKEDEP
+  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d)
+  .PHONY: dep
+  dep: $(DEPENDENCIES)
+
+  -include $(DEPENDENCIES)
 endif
 
-$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT)
+ifdef CONFIG_DISPLAY_TOOL_VERSIONS
+include/tool_versions.h:
+	$(CMD_PREFIX)echo \#define CC_VERSION_STRING \"`$(CC) --version | head -n 1`\" > include/tool_versions.h
+	$(CMD_PREFIX)echo \#define LD_VERSION_STRING \"`$(LD) --version | head -n 1`\" >> include/tool_versions.h
+
+DEPENDENCIES+=include/tool_versions.h
+endif
+
+$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS)
 	@$(ECHO) " LD        $@";
-	+$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT)  $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,-Map=output.map -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=output.map -Wl,--gc-sections -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"

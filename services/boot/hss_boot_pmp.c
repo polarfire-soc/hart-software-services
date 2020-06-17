@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -41,27 +41,41 @@ static void pmp_decode(struct PmpEntry *pPmpEntry, struct PmpEntry *pPreviousPmp
 static inline uint8_t pmp_getConfigVal(size_t index);
 static inline uint64_t pmp_getAddrVal(size_t index);
 
-void HSS_PMP_Init(void)
+bool HSS_PMP_Init(void)
 {
+    bool result = true;
     enum HSSHartId target;
     unsigned int pmpIndex;
 
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing PMPs" CRLF);
 
     for (target = HSS_HART_U54_1; target <HSS_HART_NUM_PEERS; target++) {
         for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {
+#if 0
+#ifdef CONFIG_PLATFORM_MPFS
             const uint64_t configVal = pmp_getConfigVal(pmpIndex);
             const uint64_t addrVal = pmp_getAddrVal(pmpIndex);
 
             struct PmpEntry *pCurrentEntry = &(pmpEntry[target][pmpIndex]);
             struct PmpEntry *pPreviousEntry = NULL;
 
-            if (pmpIndex) { 
-                pPreviousEntry = &(pmpEntry[target][pmpIndex-1]); 
+            if (pmpIndex) {
+                pPreviousEntry = &(pmpEntry[target][pmpIndex-1]);
             }
 
             pmp_decode(pCurrentEntry, pPreviousEntry, configVal, addrVal);
+#endif
+#else
+            (void)pmp_decode;
+            //(void)configVal;
+            //(void)addrVal;
+            //(void)pCurrentEntry;
+            //(void)pPreviousEntry;
+#endif
         }
     }
+
+    return result;
 }
 
 bool HSS_PMP_CheckWrite(enum HSSHartId target, void *addr, size_t length)
@@ -127,7 +141,7 @@ bool HSS_PMP_CheckRead(enum HSSHartId target, void *addr, size_t length)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
-// Decode Functions 
+// Decode Functions
 //
 static uint64_t pmp_decode_napot_size_encoding(uint64_t addrVal, uint64_t *pMask)
 {
@@ -138,7 +152,7 @@ static uint64_t pmp_decode_napot_size_encoding(uint64_t addrVal, uint64_t *pMask
 
     while (mask)
     {
-        if ((addrVal & mask) == mask) 
+        if ((addrVal & mask) == mask)
         {
             *pMask = mask;
             break;
@@ -208,23 +222,23 @@ static inline uint8_t pmp_getConfigVal(size_t index)
     uint64_t result;
 
     switch (index) {
-    case 0:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 1:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 2:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 3:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 4:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 5:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 6:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
-    case 7:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break; 
+    case 0:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 1:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 2:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 3:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 4:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 5:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 6:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
+    case 7:  result = (uint64_t)mHSS_CSR_READ(pmpcfg0); break;
 
-    case 8:  result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 9:  result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 10: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 11: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 12: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 13: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 14: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
-    case 15: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break; 
+    case 8:  result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 9:  result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 10: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 11: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 12: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 13: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 14: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
+    case 15: result = (uint64_t)mHSS_CSR_READ(pmpcfg1); break;
     default: result = 0u;                break;
     }
 
@@ -232,7 +246,7 @@ static inline uint8_t pmp_getConfigVal(size_t index)
         result = result >> (index * 8u);
     } else if (index < 15) {
         result = result >> ((index - 8u) * 8u);
-    } 
+    }
 
     return (uint8_t)(result & 0xFFu);
 }
@@ -242,22 +256,22 @@ static inline uint64_t pmp_getAddrVal(size_t index)
     uint64_t result;
 
     switch (index) {
-    case 0:  result = (uint64_t)mHSS_CSR_READ(pmpaddr0);  break; 
-    case 1:  result = (uint64_t)mHSS_CSR_READ(pmpaddr1);  break; 
-    case 2:  result = (uint64_t)mHSS_CSR_READ(pmpaddr2);  break; 
-    case 3:  result = (uint64_t)mHSS_CSR_READ(pmpaddr3);  break; 
-    case 4:  result = (uint64_t)mHSS_CSR_READ(pmpaddr4);  break; 
-    case 5:  result = (uint64_t)mHSS_CSR_READ(pmpaddr5);  break; 
-    case 6:  result = (uint64_t)mHSS_CSR_READ(pmpaddr6);  break; 
-    case 7:  result = (uint64_t)mHSS_CSR_READ(pmpaddr7);  break; 
-    case 8:  result = (uint64_t)mHSS_CSR_READ(pmpaddr8);  break; 
-    case 9:  result = (uint64_t)mHSS_CSR_READ(pmpaddr9);  break; 
-    case 10: result = (uint64_t)mHSS_CSR_READ(pmpaddr10); break; 
-    case 11: result = (uint64_t)mHSS_CSR_READ(pmpaddr11); break; 
-    case 12: result = (uint64_t)mHSS_CSR_READ(pmpaddr12); break; 
-    case 13: result = (uint64_t)mHSS_CSR_READ(pmpaddr13); break; 
-    case 14: result = (uint64_t)mHSS_CSR_READ(pmpaddr14); break; 
-    case 15: result = (uint64_t)mHSS_CSR_READ(pmpaddr15); break; 
+    case 0:  result = (uint64_t)mHSS_CSR_READ(pmpaddr0);  break;
+    case 1:  result = (uint64_t)mHSS_CSR_READ(pmpaddr1);  break;
+    case 2:  result = (uint64_t)mHSS_CSR_READ(pmpaddr2);  break;
+    case 3:  result = (uint64_t)mHSS_CSR_READ(pmpaddr3);  break;
+    case 4:  result = (uint64_t)mHSS_CSR_READ(pmpaddr4);  break;
+    case 5:  result = (uint64_t)mHSS_CSR_READ(pmpaddr5);  break;
+    case 6:  result = (uint64_t)mHSS_CSR_READ(pmpaddr6);  break;
+    case 7:  result = (uint64_t)mHSS_CSR_READ(pmpaddr7);  break;
+    case 8:  result = (uint64_t)mHSS_CSR_READ(pmpaddr8);  break;
+    case 9:  result = (uint64_t)mHSS_CSR_READ(pmpaddr9);  break;
+    case 10: result = (uint64_t)mHSS_CSR_READ(pmpaddr10); break;
+    case 11: result = (uint64_t)mHSS_CSR_READ(pmpaddr11); break;
+    case 12: result = (uint64_t)mHSS_CSR_READ(pmpaddr12); break;
+    case 13: result = (uint64_t)mHSS_CSR_READ(pmpaddr13); break;
+    case 14: result = (uint64_t)mHSS_CSR_READ(pmpaddr14); break;
+    case 15: result = (uint64_t)mHSS_CSR_READ(pmpaddr15); break;
     default: result = 0u;                 break;
     }
 

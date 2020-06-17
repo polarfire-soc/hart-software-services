@@ -34,7 +34,7 @@ extern "C" {
 #define MSS_USBH_HID_CLASS_ID                               0x03u
 #define MSS_USBH_HID_SUBCLASS_ID                            0x01u
 #define MSS_USBH_HID_PROTOCOL_ID                            0x02u
-  
+
 #define MSS_USBH_HID_DRIVER_ID       (uint32_t)((MSS_USBH_HID_CLASS_ID << 16) |\
                                                (MSS_USBH_HID_SUBCLASS_ID << 8)|\
                                                (MSS_USBH_HID_PROTOCOL_ID) )
@@ -65,7 +65,7 @@ typedef enum
   HID_GET_DATA,
   HID_READ_DATA,
   HID_WAIT_READ_DATA,
-  HID_SYNC,     
+  HID_SYNC,
   HID_POLL,
   HID_ERROR,
 }
@@ -80,9 +80,9 @@ typedef struct USBH_HIDDescriptor
                                    * describing */
   uint8_t   bCountryCode;         /* specifies the transfer type. */
   uint8_t   bNumDescriptors;      /* specifies the transfer type. */
-  uint8_t   bReportDescriptorType;/* Maximum Packet Size this endpoint is 
-                                   * capable of sending or receiving */  
-  uint16_t  wItemLength;          /* is used to specify the polling interval 
+  uint8_t   bReportDescriptorType;/* Maximum Packet Size this endpoint is
+                                   * capable of sending or receiving */
+  uint16_t  wItemLength;          /* is used to specify the polling interval
                                    * of certain transfers. */
 }
 USBH_HIDDesc_TypeDef_t;
@@ -90,7 +90,7 @@ USBH_HIDDesc_TypeDef_t;
 USBH_HIDDesc_TypeDef_t              USBH_HID_Desc;
 
 #pragma data_alignment = 4
-uint8_t g_hid_report[50] = {0}; 
+uint8_t g_hid_report[50] = {0};
 volatile uint8_t toggle_in = 0;
 HID_State HID_Machine_state= HID_IDLE;
 volatile uint8_t next = 0;
@@ -123,7 +123,7 @@ static mss_usbh_hid_user_cb_t* g_hidh_user_cb;
 
 static uint8_t usbh_hid_allocate_cb(uint8_t tdev_addr);
 static uint8_t usbh_hid_release_cb(uint8_t tdev_addr);
-static uint8_t usbh_hid_cep_done_cb(uint8_t tdev_addr, 
+static uint8_t usbh_hid_cep_done_cb(uint8_t tdev_addr,
                                     uint8_t status, uint32_t count);
 static uint8_t usbh_hid_tx_complete_cb(uint8_t tdev_addr,
                                        uint8_t status,
@@ -191,7 +191,7 @@ MSS_USBH_HID_task
 {
     uint8_t std_req_buf[USB_SETUP_PKT_LEN] = {0};
     static volatile uint32_t wait_mili = 0u;
-    
+
     switch (g_hid_state)
     {
         case USBH_HID_IDLE:
@@ -203,7 +203,7 @@ MSS_USBH_HID_task
         break;
 
         case USBH_HID_GET_CLASS_DESCR:
-            /* Read all the User Configuration descripter, HID descripter, 
+            /* Read all the User Configuration descripter, HID descripter,
              * Interface and Endpoint  descriptor in one go instaed of reading
              * each descripter individually.
              * May seperated it after completing implementation
@@ -228,13 +228,13 @@ MSS_USBH_HID_task
                                              USB_STD_REQ_GET_DESCRIPTOR,
                                              USB_CONFIGURATION_DESCRIPTOR_TYPE,
                                              0, /*stringID*/
-                                             34); 
+                                             34);
 
                     g_hid_state = USBH_HID_WAIT_GET_CLASS_DESCR;
                     MSS_USBH_start_control_xfr(std_req_buf,
                                                (uint8_t*)&g_hid_conf_desc,
                                                USB_STD_REQ_DATA_DIR_IN,
-                                               34); 
+                                               34);
                 }
             }
         break;
@@ -269,7 +269,7 @@ MSS_USBH_HID_task
                 }
             }
         break;
-        
+
         case USBH_HID_SET_CONFIG:
             if (0 != g_hidh_user_cb->hidh_valid_config)
             {
@@ -295,7 +295,7 @@ MSS_USBH_HID_task
                 g_hid_state = USBH_HID_WAIT_DEV_SETTLE;
             }
         break;
-        
+
         case USBH_HID_WAIT_DEV_SETTLE:
             /* After SET_CONFIG command, we must give time for device to settle
              * down as per spec*/
@@ -311,7 +311,7 @@ MSS_USBH_HID_task
               {
                   g_hid_conf_desc[i] = 0;
               }
-                 
+
               memset(std_req_buf, 0u, 8*(sizeof(uint8_t)));
               MSS_USBH_construct_get_descr_command(std_req_buf,
                                                USB_STD_REQ_DATA_DIR_IN,
@@ -320,16 +320,16 @@ MSS_USBH_HID_task
                                                USB_STD_REQ_GET_DESCRIPTOR,
                                                USBH_HID_DESC,
                                                0, /*stringID*/
-                                               USBH_HID_DESC_SIZE); 
-           
+                                               USBH_HID_DESC_SIZE);
+
               g_hid_state = USBH_HID_WAIT_GET_HID_DESC;
               MSS_USBH_start_control_xfr(std_req_buf,(uint8_t*)&USBH_HID_Desc,
                                             USB_STD_REQ_DATA_DIR_IN,
                                             9);
-                 
+
             }
         break;
-         
+
         case USBH_HID_WAIT_GET_HID_DESC:
             if (g_usbh_hid_cep_event)
             {
@@ -338,7 +338,7 @@ MSS_USBH_HID_task
                 g_hid_state = USBH_HID_REQ_GET_REPORT_DESC;
             }
         break;
-         
+
         case USBH_HID_REQ_GET_REPORT_DESC:
              MSS_USBH_configure_control_pipe(g_hid_tdev_addr);
              memset(std_req_buf, 0u, 8*(sizeof(uint8_t)));
@@ -357,7 +357,7 @@ MSS_USBH_HID_task
                                         USB_STD_REQ_DATA_DIR_IN,
                                         USBH_HID_Desc.wItemLength);
         break;
-         
+
         case USBH_HID_WAIT_REQ_GET_REPORT_DESC:
             if (g_usbh_hid_cep_event)
             {
@@ -366,7 +366,7 @@ MSS_USBH_HID_task
                 g_hid_state = USBH_HID_REQ_SET_IDLE;
             }
         break;
-         
+
         case USBH_HID_REQ_SET_IDLE:
             memset(std_req_buf, 0u, 8*(sizeof(uint8_t)));
             MSS_USBH_construct_get_descr_command(std_req_buf,
@@ -384,7 +384,7 @@ MSS_USBH_HID_task
                                 USB_STD_REQ_DATA_DIR_IN,
                                 0);
         break;
-      
+
         case USBH_HID_WAIT_REQ_SET_IDLE:
             if (g_usbh_hid_cep_event)
             {
@@ -398,9 +398,9 @@ MSS_USBH_HID_task
             }
 
         break;
- 
+
         case USBH_HID_REQ_SET_PROTOCOL:
-     
+
             memset(std_req_buf, 0u, 8*(sizeof(uint8_t)));
             std_req_buf[0] = 0x21;
             std_req_buf[1] = 0x0B;
@@ -417,7 +417,7 @@ MSS_USBH_HID_task
                                 USB_STD_REQ_DATA_DIR_IN,
                                 0);
         break;
-      
+
         case USBH_HID_WAIT_REQ_SET_PROTOCOL:
             if (g_usbh_hid_cep_event)
             {
@@ -467,7 +467,7 @@ usbh_hid_allocate_cb
 {
     g_hid_tdev_addr = tdev_addr;
     g_usbh_hid_alloc_event = 1u;
-    
+
     return (USB_SUCCESS);
 }
 
@@ -512,7 +512,7 @@ usbh_hid_cep_done_cb
 )
 {
     g_usbh_hid_cep_event = status;
-    
+
     return (USB_SUCCESS);
 }
 
@@ -529,7 +529,7 @@ usbh_hid_tx_complete_cb
 )
 {
     g_usbh_hid_tx_event = 1;
-    
+
     return (USB_SUCCESS);
 }
 
@@ -591,7 +591,7 @@ MSS_USBH_HID_extract_tdev_ep_desc
     {
         return (USBH_HID_WRONG_DESCR);
     }
-    
+
      /* TdevEP is IN type for HID class */
     if (g_hid_conf_desc[29u] & USB_STD_REQ_DATA_DIR_MASK)
     {
@@ -601,7 +601,7 @@ MSS_USBH_HID_extract_tdev_ep_desc
 
         g_tdev_in_ep.desclen = (uint16_t)((g_hid_conf_desc[26u] << 8u) |
                                            (g_hid_conf_desc[25u]));
-                
+
     }
     else
     {
@@ -619,7 +619,7 @@ static void USBH_HID_Handle(void)
     static uint32_t wait_mili = 0;
 
     switch (HID_Machine_state)
-    {  
+    {
         case HID_IDLE:
             HID_Machine_state = HID_GET_DATA;
 

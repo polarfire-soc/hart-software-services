@@ -72,7 +72,7 @@ SATR CALRSACRT(const uint32_t *puiCipher, const uint32_t *puiQInv, const uint32_
     return SATR_SUCCESS;
 }
 
-SATR CALRSACRTSign(SATRSAENCTYPE eRSAEncod, SATHASHTYPE eHashType, const uint32_t *puiHash, const uint32_t *puiQInv, const uint32_t *puiDP, const uint32_t *puiDQ, const uint32_t *puiP, 
+SATR CALRSACRTSign(SATRSAENCTYPE eRSAEncod, SATHASHTYPE eHashType, const uint32_t *puiHash, const uint32_t *puiQInv, const uint32_t *puiDP, const uint32_t *puiDQ, const uint32_t *puiP,
     const uint32_t *puiPMu, const uint32_t *puiQ, const uint32_t *puiQMu, uint32_t uiLen, uint32_t *puiPlain) {
     return SATR_SUCCESS;
 }

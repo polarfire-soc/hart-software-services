@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -35,8 +35,11 @@ include services/sgdma/Makefile
 include services/spi/Makefile
 include services/flashfreeze/Makefile
 include services/goto/Makefile
+include services/mmc/Makefile
 include services/qspi/Makefile
 include services/ipi_poll/Makefile
 include services/ddr/Makefile
 include services/opensbi/Makefile
 include services/ymodem/Makefile
+include services/tinycli/Makefile
+include services/usbdmsc/Makefile

@@ -7,7 +7,7 @@
  * interface. All basic MII register bits and enhanced capability register bits
  * are defined.
  * Complies with Clauses 22, 28, 37, 40 of IEEE RFC 802.3
- * 
+ *
  * SVN $Revision$
  * SVN $Date$
  */
@@ -33,8 +33,8 @@ extern "C" {
 #define MII_ADVERTISE           (0X04U)    /* Advertisement control reg   */
 #define MII_LPA                 (0X05U)    /* Link partner ability reg    */
 #define MII_EXPANSION           (0X06U)    /* Expansion register          */
-#define MII_NPAR                (0X07U)   
-#define MII_LPNPA               (0X08U)    
+#define MII_NPAR                (0X07U)
+#define MII_LPNPA               (0X08U)
 #define MII_CTRL1000            (0X09U)    /* 1000BASE-T control          */
 #define MII_STAT1000            (0X0AU)    /* 1000BASE-T status           */
 #define MII_ESTATUS             (0X0FU)    /* Extended Status */
@@ -49,9 +49,9 @@ extern "C" {
 #define MII_RESV2               (0X1AU)    /* Reserved...                 */
 #define MII_TPISTATUS           (0X1BU)    /* TPI status for 10mbps       */
 #define MII_NCONFIG             (0X1CU)    /* Network interface config    */
-#define MII_LMCS                (0X1DU)    
-#define MII_PHYCTRL1            (0X1EU)    
-#define MII_PHYCTRL2            (0X1FU)    
+#define MII_LMCS                (0X1DU)
+#define MII_PHYCTRL1            (0X1EU)
+#define MII_PHYCTRL2            (0X1FU)
 
 #define MII_TI_REGCR            (0X0DU)
 #define MII_TI_ADDAR            (0X0EU)
@@ -262,7 +262,7 @@ void MSS_MAC_NULL_phy_init(/* mss_mac_instance_t */ const void *v_this_mac, uint
 #endif
 
 /***************************************************************************//**
- 
+
  */
 #if MSS_MAC_USE_PHY_VSC8541
 void MSS_MAC_VSC8541_phy_set_link_speed(/* mss_mac_instance_t */ const void *v_this_mac, uint32_t speed_duplex_select);
@@ -281,7 +281,7 @@ void MSS_MAC_NULL_phy_set_link_speed(/* mss_mac_instance_t */ const void *v_this
 #endif
 
 /***************************************************************************//**
- 
+
  */
 #if MSS_MAC_USE_PHY_VSC8541
 void MSS_MAC_VSC8541_phy_autonegotiate(/* mss_mac_instance_t */ const void *v_this_mac);
@@ -300,7 +300,7 @@ void MSS_MAC_NULL_phy_autonegotiate(/* mss_mac_instance_t */ const void *v_this_
 #endif
 
 /***************************************************************************//**
- 
+
  */
 
 #if MSS_MAC_USE_PHY_VSC8541

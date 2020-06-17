@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -10,13 +10,11 @@
 /*******************************************************************************
  *
  * @file mss_hart_ints.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief MPFS local interrupt definitions
  *
  * Definitions and functions associated with local interrupts for each hart.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 #ifndef MSS_HART_INT_H
 #define MSS_HART_INT_H
@@ -35,7 +33,7 @@ typedef struct BEU_Type_
     volatile uint64_t PLIC_INT;
     volatile uint64_t ACCRUED;
     volatile uint64_t LOCAL_INT;
-    volatile uint64_t reserved2[((0x1000 - 0x6)/8)];
+    volatile uint64_t reserved2[((0x1000U/8U) - 0x6U)];
 } BEU_Type;
 
 typedef struct BEU_Types_

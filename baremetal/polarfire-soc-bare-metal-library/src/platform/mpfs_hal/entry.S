@@ -1,19 +1,17 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
  * MPFS HAL Embedded Software
  *
-*/
+ */
 
-/***********************************************************************************
+/*******************************************************************************
  * @file entry.S
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief entry functions.
-
- * SVN $Revision$
- * SVN $Date$
+ *
  */
 #include "bits.h"
 #include "encoding.h"
@@ -29,8 +27,8 @@ reset_vector:
 _start:
     /* Setup trap handler */
     la a4, trap_vector
-    csrw mtvec, a4                    # initalise machine trap vector address
-    /* Make sure that mtvec is updated */
+    csrw mtvec, a4          # initalise machine trap vector address
+    /* Make sure that mtvec is updated before continuing */
     1:
     csrr    a5, mtvec
     bne a4, a5, 1b
@@ -40,6 +38,13 @@ _start:
     csrc mstatus, a2        # clear interrupt enable bit
     csrw mie, zero
     csrw mip, zero
+    # Init delegation registers, mideleg, medeleg, if a U54
+    # These are not initialised by the hardware and come up in a random state
+    csrr a0, mhartid
+    beqz a0, .skip_e51
+    csrw mideleg, 0
+    csrw medeleg, 0
+.skip_e51:
     # mscratch must be init to zero- we are not using scratch memory
     csrw mscratch, zero
     csrw mcause, zero
@@ -80,18 +85,29 @@ _start:
     li t0, MSTATUS_FS | MSTATUS_XS
     csrs mstatus, t0
 
+    # Init floating point control register to zero
+    # skip if e51
+    csrr a0, mhartid
+    beqz a0, .no_float
+#ifdef __riscv_flen
+    fscsr x0
+#endif
+.no_float:
+
      # make sure XLEN agrees with compilation choice, if not will loop here
+.LxlenCheck:
     csrr t0, misa
 #if __riscv_xlen == 64
-    bltz t0, .LxlenCheck
+    bltz t0, .LxlenPass
 #else
-    bgez t0, .LxlenCheck
+    bgez t0, .LxlenPass
 #endif
-.LxlenCheck:
+    j .LxlenCheck
+.LxlenPass:
 
     # initialize global pointer, global data
-    # The __global_pointer is allocated in the linker script. It points to a location 2k after sdata start
-    # as the offsets used in the gp are +/- 2k
+    # The __global_pointer is allocated in the linker script. It points to a
+    # location 2k after sdata start as the offsets used in the gp are +/- 2k
     # See https://www.sifive.com/blog/2017/08/28/all-aboard-part-3-linker-relaxation-in-riscv-toolchain/
     # see: http://www.rowleydownload.co.uk/arm/documentation/gnu/as/RISC_002dV_002dDirectives.html
     .option push
@@ -113,23 +129,23 @@ _start:
     beq a0, a1, .hart4
 
 .hart0:
-    la a4, __stack_bottom_h0$      # keep bottom of stack in a5 so we can init later
+    la a4, __stack_bottom_h0$  # keep bottom of stack in a5 so we can init later
     la sp, __stack_top_h0$
     j .continue
 .hart1:
-    la a4, __stack_bottom_h1$      # keep bottom of stack in a5 so we can init later
+    la a4, __stack_bottom_h1$  # keep bottom of stack in a5 so we can init later
     la sp, __stack_top_h1$
     j .continue
 .hart2:
-    la a4, __stack_bottom_h2$      # keep bottom of stack in a5 so we can init later
+    la a4, __stack_bottom_h2$  # keep bottom of stack in a5 so we can init later
     la sp, __stack_top_h2$
     j .continue
 .hart3:
-    la a4, __stack_bottom_h3$      # keep bottom of stack in a5 so we can init later
+    la a4, __stack_bottom_h3$  # keep bottom of stack in a5 so we can init later
     la sp, __stack_top_h3$
     j .continue
 .hart4:
-    la a4, __stack_bottom_h4$      # keep bottom of stack in a5 so we can init later
+    la a4, __stack_bottom_h4$  # keep bottom of stack in a5 so we can init later
     la sp, __stack_top_h4$
 
 .continue:
@@ -150,13 +166,27 @@ _start:
     bne a0, a1, .LOtherHartstoWFI
     # clear the common heap
     la  a4, __heap_start
-    la  a5, __bss_end
+    la  a5, __heap_end
 .init_heap:
     #csrw mepc, zero
     STORE x0, 0(a4)
     add a4, a4, __SIZEOF_POINTER__
     blt a4, a5, .init_heap
-    # core MPFS_HAL_FIRST_HART jumps to main_first_hart
+    #
+    # clear DTIM - this is required to stop memory errors on initial access by
+    # cache
+    # Also, stops x propagation in simulation, when cache/stack reads unused
+    # area
+    #
+    li  a4, 0x01000000
+    li  a5, 0x01002000
+.init_dtim:
+    #csrw mepc, zero
+    STORE x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, .init_dtim
+    # now core MPFS_HAL_FIRST_HART jumps to main_first_hart
+.main_hart:
     j main_first_hart
 .LoopForeverMain:
     #in case of return, loop forever. nop's added so can be seen in debugger
@@ -166,21 +196,26 @@ _start:
 
 .LOtherHartstoWFI:
     li a2,  MSTATUS_MIE
-    csrc mstatus, a2        # clear interrupt enable bit
+    csrc mstatus, a2       # clear interrupt enable bit
     csrw mie, zero
     csrw mip, zero
     li a2, MIP_MSIP
-    csrw mie, a2            # Set MSIE bit to receive IPI. This needs to be enabled- otherwise stays in wfi.
-                            # Other interrupts appera to bring out of wfi, even if not enabled.
+    csrw mie, a2           # Set MSIE bit to receive IPI. This needs to be
+                           # enabled- otherwise stays in wfi.
+                           # Other interrupts appera to bring out of wfi,even if
+                           # not enabled.
     li a1, HLS_DATA_IN_WFI
     STORE a1, 0(tp)
     /* flush the instruction cache */
     fence.i
 .LwaitOtherHart:
-    # We assume wfi instruction will be run before main hart attampts to take out of wfi
+    # We assume wfi instruction will be run before main hart attampts to take
+    # out of wfi
     wfi
-    # Only start if MIP_MSIP is set - the wfi will ensure this, but adding breakpoints in the debugger (halt)
-    # will wakeup wfi, so the following code will make sure we remain here until we get a software interrupt
+    # Only start if MIP_MSIP is set - the wfi will ensure this, but adding
+    # breakpoints in the debugger (halt)
+    # will wakeup wfi, so the following code will make sure we remain here until
+    # we get a software interrupt
     csrr a2, mip
     andi a2, a2, MIP_MSIP
     beqz a2, .LwaitOtherHart
@@ -199,9 +234,9 @@ _start:
     nop
     j .LoopForeverOther
 
-/****************************************************************************************/
-/******************************interrupt handeling below here****************************/
-/****************************************************************************************/
+/******************************************************************************/
+/******************************interrupt handeling below here******************/
+/******************************************************************************/
 trap_vector:
     # The mscratch register is an XLEN-bit read/write register dedicated for use by machine mode.
     # Typically, it is used to hold a pointer to a machine-mode hart-local context space and swapped
@@ -209,7 +244,8 @@ trap_vector:
     # In this implementation, we are noty using HLS
     # csrrw sp, mscratch, sp                    #copy sp to mscratch, and mscrath to sp
 
-    addi sp, sp, -INTEGER_CONTEXT_SIZE     # moves sp down stack to make INTEGER_CONTEXT_SIZE area
+    addi sp, sp, -INTEGER_CONTEXT_SIZE     # moves sp down stack to make I
+                                           # INTEGER_CONTEXT_SIZE area
     # Preserve the registers.
     STORE sp, 2*REGBYTES(sp)               # sp
     STORE a0, 10*REGBYTES(sp)              # save a0,a1 in the created CONTEXT
@@ -243,13 +279,13 @@ trap_vector:
     STORE t5,30*REGBYTES(sp)
     STORE t6,31*REGBYTES(sp)
     # Invoke the handler.
-    mv a0, sp                               # a0 <- regs
+    mv a0, sp                          # a0 <- regs
     # Please note: mtval is the newer name for register mbadaddr
     # If you get a compile failure here, use the newer name
     # At this point (2019), both are supported in latest compiler
     # older compiler versions only support mbadaddr, so going with this.
     # See: https://github.com/riscv/riscv-gcc/issues/133
-    csrr a1, mbadaddr                       # useful for anaysis when things go wrong
+    csrr a1, mbadaddr                 # useful for anaysis when things go wrong
     csrr a2, mepc
     jal trap_from_machine_mode
 
@@ -286,12 +322,13 @@ restore_regs:
     LOAD t5,30*REGBYTES(sp)
     LOAD t6,31*REGBYTES(sp)
     LOAD sp, 2*REGBYTES(sp)
-    addi sp, sp, +INTEGER_CONTEXT_SIZE     # moves sp up stack to reclaim INTEGER_CONTEXT_SIZE area
+    addi sp, sp, +INTEGER_CONTEXT_SIZE  # moves sp up stack to reclaim
+                                        # INTEGER_CONTEXT_SIZE area
     mret
 
- /****************************************************************************************/
- /******************************interrupt handeling above here****************************/
- /****************************************************************************************/
+ /*****************************************************************************/
+ /******************************interrupt handeling above here*****************/
+ /*****************************************************************************/
 
 .enable_sw_int:
     li a2, MIP_MSIP

@@ -1,0 +1,33 @@
+config SERVICE_TINYCLI
+	bool "TinyCLI support"
+	default n
+	help
+		This feature enables a simple command-line interpreter prompt.
+          
+		If you do not know what to do here, say N.
+
+menu "Tiny Command Line Interface" 
+
+config SERVICE_TINYCLI_TIMEOUT
+        depends on SERVICE_TINYCLI
+	int "Timeout for entering TinyCLI (in seconds)"
+	default 5
+        help
+		The timeout for entering the TinyCLI (in seconds). When CONFIG_TINYCLI is enabled,
+                the HSS will wait for a keypress for this timeout before continuing with its boot
+                process.
+
+                If a key press (other than ESC) is detected, the HSS will enter the TINYCLI mode,
+                which allows interactive running of a small number of commands. Typing `HELP` at
+                the TINYCLI prompt lists the supported commands.
+
+config SERVICE_TINYCLI_REGISTER
+        depends on SERVICE_TINYCLI
+	bool "Register TinyCLI as a state machine"
+	default n
+	help
+		This feature enables the TinyCLI command-line interpreter to be registered
+		as a state machine, which makes it available at all times via the E51.
+
+		If you do not know what to do here, say N.
+endmenu

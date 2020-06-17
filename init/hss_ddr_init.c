@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -15,46 +15,43 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_debug.h"
-#ifdef CONFIG_MEMTEST
-#    include "hss_memtest.h"
-#endif
 
 #include <assert.h>
-
-
-#include <mss_uart.h>
+#include "csr_helper.h"
 
 /*!
  * \brief DDR Training
  *
- * The E51 ensures that DDR is setup prior to code download, 
+ * The E51 ensures that DDR is setup prior to code download,
  * and thus perform an DDR training and configuration required to achieve this.
  *
- * The intention is to allow as much flexibility as possible in DDR training, 
- * so it is driven by MPFS HSS Embedded Software, with hardware hooks to 
- * perform real-time critical functions. 
+ * The intention is to allow as much flexibility as possible in DDR training,
+ * so it is driven by MPFS HSS Embedded Software, with hardware hooks to
+ * perform real-time critical functions.
  *
- * TBD: is periodic re-calibration required during operation (e.g. temperature induced 
+ * TBD: is periodic re-calibration required during operation (e.g. temperature induced
  * or other)
  */
-enum HSSHartId CSR_GetHartId(void);
-void HSS_DDR_Train(void)
-{
-    mHSS_DEBUG_PRINTF("\trunning DDR training on hart %u..." CRLF, CSR_GetHartId());
-}
+
+#ifdef CONFIG_PLATFORM_MPFS
+#  include "nwc/mss_nwc_init.h"
+#endif
 
 /*!
  * \brief Hook for DDR Setup
  */
 bool HSS_DDRInit(void)
 {
-#ifdef CONFIG_MEMTEST
-    mHSS_DEBUG_PRINTF("\tMemory Testing DDR..." CRLF);
-    HSS_MemTestDDRFast();
+    //mHSS_DEBUG_PRINTF(lOG_NORMAL, "Initializing DDR..." CRLF);
+#ifdef CONFIG_PLATFORM_MPFS
+#  if 0
+    assert(mss_nwc_init() == 0);
+#  else
+    while (mss_nwc_init() != 0) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "mss_nwc_init() returned 0... retrying..." CRLF);
+    }
+#  endif
 #endif
-
-    mHSS_DEBUG_PRINTF("\tInitializing DDR..." CRLF);
-    HSS_DDR_Train();
 
     return true;
 }

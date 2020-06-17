@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -26,17 +26,15 @@
 #
 # YMODEM Service (NOTE: not a traditional super-loop service)
 
-SRCS-$(CONFIG_SERVICE_YMODEM) += \
-    services/ymodem/e51_glue.c \
-    services/ymodem/ymodem.c \
+ifdef CONFIG_SERVICE_YMODEM
+SRCS-$(CONFIG_PLATFORM_MPFS) += \
+	services/ymodem/hss_ymodem_loader.c \
+	services/ymodem/ymodem_protocol.c
+endif
 
 INCLUDES +=\
-    -I./services/ymodem \
+	-I./services/ymodem \
 
-services/ymodem/ymodem.o: services/ymodem/ymodem.c config.h 
+services/ymodem/hss_ymodem_loader.o: services/ymodem/hss_ymodem_loader.c config.h
 	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
-
-services/ymodem/e51_glue.o: services/ymodem/e51_glue.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

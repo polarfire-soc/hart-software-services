@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -31,9 +31,7 @@ EXTRA_SRCS-y += \
         misc/csr_helper.c \
         misc/c_stubs.c \
         misc/ee_printf.c \
-        misc/my_printf.c \
         misc/u54_handle_ipi.c \
-        misc/uart_helper.c \
         misc/vsnprintf.c \
         misc/hss_crc16.c \
         misc/hss_crc32.c \
@@ -76,7 +74,7 @@ misc/hss_memcpy_via_pdma.o: misc/hss_memcpy_via_pdma.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-misc/hss_memtest.o: misc/hss_memtest.c config.h
+misc/stack_guard.o: misc/stack_guard.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
@@ -86,8 +84,8 @@ misc/hss_memtest.o: misc/hss_memtest.c config.h
 #
 
 EXTRA_SRCS-$(CONFIG_OPENSBI) += \
-        thirdparty/opensbi/platform/common/libc/string.c
+        thirdparty/opensbi/lib/sbi/sbi_string.c
 ifdef CONFIG_OPENSBI
-INCLUDES += -I./thirdparty/opensbi/platform/common/include/
+INCLUDES += -I./thirdparty/opensbi/include/sbi
 endif
 

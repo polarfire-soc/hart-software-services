@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - State Machine Defines/Types/Declarations
  *
  */
@@ -48,7 +48,7 @@ typedef int stateType_t;
 /**
  * \brief State Descriptor Structure
  *
- * A State Descriptor contains all information about a particular state 
+ * A State Descriptor contains all information about a particular state
  * within a state machine
  */
 struct StateDesc {
@@ -77,11 +77,12 @@ struct StateMachine {
     bool debugFlag;
     uint8_t priority;
     void *pInstanceData;
-}; 
+};
 
 #define SM_INVALID_STATE ((stateType_t)-1)
 
-void RunStateMachines(void); //struct StateMachine **ppStateMachines);
+void RunStateMachine(struct StateMachine * const pCurrentMachine);
+void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine * const pStateMachines[]);
 
 /**
  * \brief Init Function Type
@@ -90,7 +91,9 @@ void RunStateMachines(void); //struct StateMachine **ppStateMachines);
 struct InitFunction {
     const char * const pName;
     bool (*handler)(void);
-    bool haltOnFailure;
+
+    int haltOnFailure:1;
+    int restartOnFailure:1;
 };
 
 /**
@@ -102,5 +105,6 @@ uint64_t GetStateMachinesExecutionCount(void);
 }
 #endif
 
+void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunction initFunctions[]);
 
 #endif

@@ -2,7 +2,7 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
@@ -16,10 +16,10 @@
 #include "hss_types.h"
 #include "hss_state_machine.h"
 #include "hss_debug.h"
+#include "hss_clock.h"
 
-#include "ssmb_ipi.h"
 #include <string.h> //memset
-#include <assert.h> 
+#include <assert.h>
 
 #include "wdog_service.h"
 #include "mpfs_reg_map.h"
@@ -31,7 +31,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine);
 static void wdog_monitoring_handler(struct StateMachine * const pMyMachine);
 
 /*!
- * \brief UART Driver States
+ * \brief WDOG Driver States
  *
  */
 enum UartStatesEnum {
@@ -42,7 +42,7 @@ enum UartStatesEnum {
 };
 
 /*!
- * \brief UART Driver State Descriptors
+ * \brief WDOG Driver State Descriptors
  *
  */
 static const struct StateDesc wdog_state_descs[] = {
@@ -52,7 +52,7 @@ static const struct StateDesc wdog_state_descs[] = {
 };
 
 /*!
- * \brief UART Driver State Machine
+ * \brief WDOG Driver State Machine
  *
  */
 struct StateMachine wdog_service = {
@@ -63,6 +63,8 @@ struct StateMachine wdog_service = {
 // Handlers for each state in the state machine
 //
 static union HSSHartBitmask hartBitmask = { .uint = 0u };
+
+static HSSTicks_t wdogInitTime[MAX_NUM_HARTS] = { 0u };
 
 static void wdog_init_handler(struct StateMachine * const pMyMachine)
 {
@@ -77,8 +79,24 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
     (void) pMyMachine;
 
     if (hartBitmask.uint) {
-        mHSS_DEBUG_PRINTF("\twatchdog bitmask is 0x%x" CRLF, hartBitmask.uint);
-        wdog_service.state = WDOG_MONITORING; 
+        if (hartBitmask.s.u54_1) {
+            wdogInitTime[HSS_HART_U54_1] = HSS_GetTime();
+        }
+
+        if (hartBitmask.s.u54_2) {
+            wdogInitTime[HSS_HART_U54_2] = HSS_GetTime();
+        }
+
+        if (hartBitmask.s.u54_3) {
+            wdogInitTime[HSS_HART_U54_3] = HSS_GetTime();
+        }
+
+        if (hartBitmask.s.u54_4) {
+            wdogInitTime[HSS_HART_U54_4] = HSS_GetTime();
+        }
+
+        //mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%X" CRLF, hartBitmask.uint);
+        wdog_service.state = WDOG_MONITORING;
     }
 
     // nothing to do in this state
@@ -87,22 +105,49 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
+#define WDOG_OUTPUT_TIMEOUT_SEC  240u
+static HSSTicks_t lastEntryTime = 0u;
 static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 {
-    uint32_t status;
-    uint32_t mask;
-
     (void) pMyMachine;
 
-    status  = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
+    if ((hartBitmask.uint)
+        && (HSS_Timer_IsElapsed(lastEntryTime, WDOG_OUTPUT_TIMEOUT_SEC * TICKS_PER_SEC))) {
+        lastEntryTime = HSS_GetTime();
 
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog Status Update: ");
+
+        if (hartBitmask.s.u54_1) {
+            mHSS_DEBUG_PRINTF_EX("U54_1 (%lu sec) ",
+                (lastEntryTime - wdogInitTime[HSS_HART_U54_1]) / TICKS_PER_SEC);
+        }
+
+        if (hartBitmask.s.u54_2) {
+            mHSS_DEBUG_PRINTF_EX("U54_2 (%lu sec) ",
+                (lastEntryTime - wdogInitTime[HSS_HART_U54_2]) / TICKS_PER_SEC);
+        }
+
+        if (hartBitmask.s.u54_3) {
+            mHSS_DEBUG_PRINTF_EX("U54_3 (%lu sec) ",
+                (lastEntryTime - wdogInitTime[HSS_HART_U54_3]) / TICKS_PER_SEC);
+        }
+
+        if (hartBitmask.s.u54_4) {
+            mHSS_DEBUG_PRINTF_EX("U54_4 (%lu sec) ",
+                (lastEntryTime - wdogInitTime[HSS_HART_U54_4]) / TICKS_PER_SEC);
+        }
+        mHSS_DEBUG_PRINTF_EX(CRLF);
+
+    }
+
+    uint32_t status = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
     status = (status >> 4) & mHSS_BITMASK_ALL_U54; // move bits[8:4] to [4:0]
 
-    mask = hartBitmask.uint;
+    status &= hartBitmask.uint;
 
-    if ((status & mask) != 0u) {
+    if (status) {
         // watchdog timer has triggered for a monitored hart..
-        mHSS_DEBUG_PRINTF("\tWatchdog has triggered" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Watchdog has triggered - %02x" CRLF, status);
 
         if (hartBitmask.s.u54_1) {
             HSS_Boot_RestartCore(HSS_HART_U54_1);
@@ -127,7 +172,7 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target)
 {
-    mHSS_DEBUG_PRINTF("called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
 
     switch (target) {
     case HSS_HART_U54_1:

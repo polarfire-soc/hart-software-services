@@ -12,31 +12,59 @@
 
 #include <sbi/sbi_types.h>
 
-#define SBI_IPI_EVENT_SOFT			0x1
-#define SBI_IPI_EVENT_FENCE_I			0x2
-#define SBI_IPI_EVENT_SFENCE_VMA		0x4
-#define SBI_IPI_EVENT_SFENCE_VMA_ASID		0x8
-#define SBI_IPI_EVENT_HALT			0x10
+/* clang-format off */
+
+#define SBI_IPI_EVENT_MAX			__riscv_xlen
+
+/* clang-format on */
 
 struct sbi_scratch;
 
-struct sbi_ipi_data {
-	unsigned long ipi_type;
+/** IPI event operations or callbacks */
+struct sbi_ipi_event_ops {
+	/** Name of the IPI event operations */
+	char name[32];
+
+	/** Update callback to save/enqueue data for remote HART
+	 *  Note: This is an optional callback and it is called just before
+	 *  triggering IPI to remote HART.
+	 */
+	int (* update)(struct sbi_scratch *scratch,
+			struct sbi_scratch *remote_scratch,
+			u32 remote_hartid, void *data);
+
+	/** Sync callback to wait for remote HART
+	 *  Note: This is an optional callback and it is called just after
+	 *  triggering IPI to remote HART.
+	 */
+	void (* sync)(struct sbi_scratch *scratch);
+
+	/** Process callback to handle IPI event
+	 *  Note: This is a mandatory callback and it is called on the
+	 *  remote HART after IPI is triggered.
+	 */
+	void (* process)(struct sbi_scratch *scratch);
 };
 
-struct sbi_tlb_info {
-	unsigned long start;
-	unsigned long size;
-	unsigned long asid;
-};
+int sbi_ipi_send_many(struct sbi_scratch *scratch, ulong hmask,
+		      ulong hbase, u32 event, void *data);
 
-int sbi_ipi_send_many(struct sbi_scratch *scratch,
-		      ulong *pmask, u32 event, void *data);
+int sbi_ipi_event_create(const struct sbi_ipi_event_ops *ops);
+
+void sbi_ipi_event_destroy(u32 event);
+
+int sbi_ipi_send_smode(struct sbi_scratch *scratch, ulong hmask, ulong hbase);
 
 void sbi_ipi_clear_smode(struct sbi_scratch *scratch);
+
+int sbi_ipi_send_halt(struct sbi_scratch *scratch, ulong hmask, ulong hbase);
+
+int sbi_ipi_send_hss(struct sbi_scratch *scratch, ulong hmask, ulong hbase);
 
 void sbi_ipi_process(struct sbi_scratch *scratch);
 
 int sbi_ipi_init(struct sbi_scratch *scratch, bool cold_boot);
+
+void sbi_ipi_exit(struct sbi_scratch *scratch);
 
 #endif

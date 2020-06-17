@@ -2,14 +2,14 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
 
 /**
- * \file CSR Helper
- * \brief CSR Helper
+ * \file Code Profiling
+ * \brief Code Profiling
  */
 
 #include "config.h"
@@ -34,9 +34,9 @@ volatile uint32_t profiling_mutex = 0u;
 #define mATOMIC_ENTER g5soc_take_mutex(&profiling_mutex);
 #define mATOMIC_EXIT g5soc_release_mutex(&profiling_mutex);
 
-void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFunc, void *pCaller) 
+void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFunc, void *pCaller)
 {
-    enum HSSHartId const myHartId = CSR_GetHartId();
+    enum HSSHartId const myHartId = current_hartid();
     (void) pCaller;
 
     if (myHartId != 0) { return; }
@@ -56,14 +56,14 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFu
         assert(allocationCount < mSPAN_OF(functionNode));
         pNode = &(functionNode[allocationCount]);
         allocationCount++;
-        mATOMIC_ENTER; 
+        mATOMIC_ENTER;
         pNode->pFunc = pFunc;
         pNode->timeCount = 0lu;
-        mATOMIC_EXIT; 
+        mATOMIC_EXIT;
     }
 
     if (pNode) {
-        mATOMIC_ENTER; 
+        mATOMIC_ENTER;
         pNode->entryTime = CSR_GetTickCount();
         mATOMIC_EXIT;
     }
@@ -73,7 +73,7 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFu
 
 void __attribute__((no_instrument_function)) __cyg_profile_func_exit (void *pFunc, void *pCaller)
 {
-    enum HSSHartId const myHartId = CSR_GetHartId();
+    enum HSSHartId const myHartId = current_hartid();
     (void) pCaller;
 
     assert(pFunc != NULL);
@@ -83,9 +83,9 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_exit (void *pFun
     size_t i;
     for (i = 0u; i < allocationCount; i++) {
         if (functionNode[i].pFunc == pFunc) {
-            mATOMIC_ENTER; 
+            mATOMIC_ENTER;
             functionNode[i].timeCount += (CSR_GetTickCount() - functionNode[i].entryTime);
-            mATOMIC_EXIT; 
+            mATOMIC_EXIT;
             break;
         }
     }

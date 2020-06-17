@@ -74,8 +74,8 @@ if [ -z "${BUILD_ARCHIVE_SUFFIX}" ]; then
 fi
 
 # Get version of OpenSBI
-BUILD_VERSION_MAJOR=$(grep MAJOR "${BUILD_OPENSBI_SOURCE_PATH}/include/sbi/sbi_version.h" | sed 's/.*MAJOR.*\([0-9][0-9]*\)/\1/')
-BUILD_VERSION_MINOR=$(grep MINOR "${BUILD_OPENSBI_SOURCE_PATH}/include/sbi/sbi_version.h" | sed 's/.*MINOR.*\([0-9][0-9]*\)/\1/')
+BUILD_VERSION_MAJOR=$(grep "define OPENSBI_VERSION_MAJOR" "${BUILD_OPENSBI_SOURCE_PATH}/include/sbi/sbi_version.h" | sed 's/.*MAJOR.*\([0-9][0-9]*\)/\1/')
+BUILD_VERSION_MINOR=$(grep "define OPENSBI_VERSION_MINOR" "${BUILD_OPENSBI_SOURCE_PATH}/include/sbi/sbi_version.h" | sed 's/.*MINOR.*\([0-9][0-9]*\)/\1/')
 
 # Setup archive name
 BUILD_ARCHIVE_NAME="opensbi-${BUILD_VERSION_MAJOR}.${BUILD_VERSION_MINOR}-rv${BUILD_RISCV_XLEN}-${BUILD_ARCHIVE_SUFFIX}"
@@ -83,16 +83,18 @@ BUILD_ARCHIVE_NAME="opensbi-${BUILD_VERSION_MAJOR}.${BUILD_VERSION_MINOR}-rv${BU
 # Setup platform list
 case "${BUILD_RISCV_XLEN}" in
 32)
-	# Setup 32bit platform list
+	# Setup 32-bit platform list
 	BUILD_PLATFORM_SUBDIR=("qemu/virt")
-	BUILD_PLATFORM_SUBDIR+=("qemu/sifive_u")
 	;;
 64)
-	# Setup 64bit platform list
+	# Setup 64-bit platform list
 	BUILD_PLATFORM_SUBDIR=("qemu/virt")
-	BUILD_PLATFORM_SUBDIR+=("qemu/sifive_u")
 	BUILD_PLATFORM_SUBDIR+=("sifive/fu540")
 	BUILD_PLATFORM_SUBDIR+=("kendryte/k210")
+	BUILD_PLATFORM_SUBDIR+=("ariane-fpga")
+	BUILD_PLATFORM_SUBDIR+=("andes/ae350")
+	BUILD_PLATFORM_SUBDIR+=("thead/c910")
+	BUILD_PLATFORM_SUBDIR+=("spike")
 	;;
 *)
 	echo "Invalid RISC-V XLEN"
@@ -103,10 +105,13 @@ esac
 # Ensure output directory is present
 mkdir -p "${BUILD_OUTPUT_PATH}"
 
+# Do a clean build first
+make distclean
+
 # Build and install generic library
 echo "Build and install generic library XLEN=${BUILD_RISCV_XLEN}"
 echo ""
-make -C "${BUILD_OPENSBI_SOURCE_PATH}" O="${BUILD_OUTPUT_PATH}" I="${BUILD_OUTPUT_PATH}/${BUILD_ARCHIVE_NAME}" PLATFORM_RISCV_XLEN="${BUILD_RISCV_XLEN}" install_libsbi -j "${BUILD_NUM_THREADS}"
+make -C "${BUILD_OPENSBI_SOURCE_PATH}" O="${BUILD_OUTPUT_PATH}" I="${BUILD_OUTPUT_PATH}/${BUILD_ARCHIVE_NAME}" PLATFORM_RISCV_XLEN="${BUILD_RISCV_XLEN}" install_libsbi install_libsbiutils -j "${BUILD_NUM_THREADS}"
 echo ""
 
 # Build and install relevant platforms

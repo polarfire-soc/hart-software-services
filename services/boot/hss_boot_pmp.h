@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Physical Memory Protections
  *
  */
@@ -43,7 +43,7 @@ enum PMP_Priv_S {
 
 #define MAX_NUM_PMPS 16u
 
-void HSS_PMP_Init(void);
+bool HSS_PMP_Init(void);
 
 bool HSS_PMP_CheckWrite(enum HSSHartId target, void *addr, size_t length);
 bool HSS_PMP_CheckRead(enum HSSHartId target, void *addr, size_t length);

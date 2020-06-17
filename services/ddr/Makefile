@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -27,7 +27,13 @@
 # DDR Refresh Service
 
 SRCS-y += \
-    services/ddr/ddr_service.c \
+	services/ddr/ddr_service.c \
+	services/ddr/ddr_api.c \
 
 INCLUDES +=\
-    -I./services/ddr \
+	-I./services/ddr \
+
+services/ddr/ddr_api.o: services/ddr/ddr_api.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+

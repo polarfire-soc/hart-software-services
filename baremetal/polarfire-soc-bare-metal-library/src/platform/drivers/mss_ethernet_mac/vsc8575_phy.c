@@ -226,7 +226,7 @@ void MSS_MAC_VSC8575_phy_init(/* mss_mac_instance_t*/ const void *v_this_mac, ui
 
     static vtss_phy_reset_conf_t vts_phy_init_params = {VTSS_PORT_INTERFACE_SGMII, VTSS_PHY_MEDIA_IF_CU, {1,2},
          {TRUE},VTSS_PHY_FORCE_RESET, VTSS_PHY_PKT_MODE_IEEE_1_5_KB, TRUE};
-         
+
     const mss_mac_instance_t *this_mac = (const mss_mac_instance_t *)v_this_mac;
     volatile vtss_rc vrc;
     volatile int32_t vrc_i32;

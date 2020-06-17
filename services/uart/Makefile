@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -27,8 +27,8 @@
 # Virtual UART Service
 
 SRCS-$(CONFIG_SERVICE_UART) += \
-    services/uart/uart_service.c \
-    services/uart/uart_api.c \
+	services/uart/uart_service.c \
+	services/uart/uart_api.c \
 
 INCLUDES +=\
-    -I./services/uart \
+	-I./services/uart \

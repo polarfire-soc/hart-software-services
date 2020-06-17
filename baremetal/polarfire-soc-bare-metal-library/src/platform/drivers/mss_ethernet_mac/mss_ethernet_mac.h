@@ -74,7 +74,7 @@
   @section hw_dependencies Hardware Flow Dependencies
     The configuration of all features of the MSS Ethernet MAC is covered by this
     driver.
-    
+
     The base address, register addresses and interrupt number assignment for the
     MSS Ethernet MAC are defined as constants in the PolarFire SoC HAL. You must
     ensure that the latest PolarFire SoC HAL is included in the project settings
@@ -119,7 +119,7 @@
         - Receive operations
         - Reading link status and statistics
         - Feature support
-        
+
     Initialization and Configuration
     The MSS Ethernet MAC driver is initialized and configured by
     calling the MSS_MAC_init()function. The MSS_MAC_init() function takes as one
@@ -132,12 +132,12 @@
     configuration and then overwrite the defaults with the application specific
     settings such as PHY address, PHY type, interface type, allowed link speeds,
     link duplex mode and MAC address etc.
-    
+
     The following functions are used as part of the initialization and
     configuration process:
         - MSS_MAC_cfg_struct_def_init()
         - MSS_MAC_init()
-        
+
     Transmit Operations
     The MSS Ethernet MAC driver transmit operations are interrupt driven. The
     application must register a transmit call-back function with the driver
@@ -157,7 +157,7 @@
     The following functions are used as part of transmit and receive operations:
         - MSS_MAC_send_pkt()
         - MSS_MAC_set_tx_callback()
-        
+
     Receive Operations
     The MSS Ethernet MAC driver receive operations are interrupt driven. The
     application must first register a receive call-back function using the
@@ -173,7 +173,7 @@
     The following functions are used as part of transmit and receive operations:
         - MSS_MAC_receive_pkt()
         - MSS_MAC_set_rx_callback()
-        
+
     Reading Status and Statistics
     The MSS Ethernet MAC driver provides the following functions to retrieve the
     current link status and statistics.
@@ -260,7 +260,7 @@ extern "C" {
  */
 #define MSS_MAC_SUCCESS                     MSS_MAC_ENABLE
 #define MSS_MAC_FAILED                      MSS_MAC_DISABLE
-  
+
 /********************************************************************************
   The following definitions are used with function MSS_MAC_get_link_status() to
   report the link�s status.
@@ -269,10 +269,10 @@ extern "C" {
 #define MSS_MAC_LINK_UP                     (1U)
 
 #define MSS_MAC_HALF_DUPLEX                 (0U)
-#define MSS_MAC_FULL_DUPLEX                 (1U) 
+#define MSS_MAC_FULL_DUPLEX                 (1U)
 
 /*******************************************************************************
- * Broadcast MAC address 
+ * Broadcast MAC address
  */
 #define MSS_MAC_BROADCAST_MAC_ADDRESS       0xFFU,0xFFU,0xFFU,0xFFU,0xFFU,0xFFU
 
@@ -325,10 +325,10 @@ extern "C" {
 /***************************************************************************//**
   The definition below is provided to specify that the MSS_MAC_init() function
   should attempt to discover the address of the PHY connected to the MAC�s
-  management interface.It can be used with mss_mac_cfg_t configuration parameter 
+  management interface.It can be used with mss_mac_cfg_t configuration parameter
   phy_addr and mss_mac_cfg_t as a parameter to a call to the MSS_MAC_init()
   function.
-  
+
   Note: To auto detect the PHY address, this drivers scans the valid MDIO
   addresses starting from 0 looking for valid data. This should not be done if
   more than 1 device is connected to the MDIO interface.
@@ -483,12 +483,12 @@ extern uint8_t *g_mss_mac_ddr_ptr;
   auto-negotiate at all available speeds up to 1000Mbps. This default
   configuration can then be used as parameter to MSS_MAC_init(). Typically, the
   default configuration would be modified to suit the application before being
-  passed to MSS_MAC_init(). 
- 
+  passed to MSS_MAC_init().
+
   @param cfg
     This parameter is a pointer to an mss_mac_cfg_t data structure that will be
     used as parameter to function MSS_MAC_init().
- 
+
   @return
     This function does not return a value.
 
@@ -500,7 +500,7 @@ extern uint8_t *g_mss_mac_ddr_ptr;
   address and force a 100Mbps full duplex link.
   @code
     mss_mac_cfg_t mac_config;
-    
+
     MSS_MAC_cfg_struct_def_init(&mac_config);
 
     mac_config.interface_type = TBI;
@@ -518,11 +518,11 @@ extern uint8_t *g_mss_mac_ddr_ptr;
     mac_config.mac_addr[3] = 0x88u;
     mac_config.mac_addr[4] = 0x88u;
     mac_config.mac_addr[5] = 0x88u;
-    
+
     MSS_MAC_init(&g_mac0, &mac_config);
   @endcode
  */
-void 
+void
 MSS_MAC_cfg_struct_def_init
 (
     mss_mac_cfg_t * cfg
@@ -569,7 +569,7 @@ MSS_MAC_cfg_struct_def_init
     mss_mac_cfg_t cfg;
 
     MSS_MAC_cfg_struct_def_init(&cfg);
-    
+
     cfg.mac_addr[0] = 0xC0u;
     cfg.mac_addr[1] = 0xB1u;
     cfg.mac_addr[2] = 0x3Cu;
@@ -580,9 +580,9 @@ MSS_MAC_cfg_struct_def_init
     MSS_MAC_init(&g_mac0, &cfg);
   @endcode
  */
-void 
+void
 MSS_MAC_init
-( 
+(
     mss_mac_instance_t *this_mac,
     mss_mac_cfg_t * cfg
 );
@@ -653,7 +653,7 @@ MSS_MAC_update_hw_address
   The MSS_MAC_set_tx_callback() function registers the function that will be
   called by the Ethernet MAC driver when a packet has been sent on the specified
   queue.
- 
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -668,7 +668,7 @@ MSS_MAC_update_hw_address
   @param tx_complete_handler
     This parameter is a pointer to the function that will be called when a
     packet is sent by the Ethernet MAC on the selected queue.
-  
+
   @return
     This function does not return a value.
 
@@ -683,7 +683,7 @@ void MSS_MAC_set_tx_callback
 /***************************************************************************//**
   The MSS_MAC_set_rx_callback() function registers the function that will be
   called by the Ethernet MAC driver when a packet is received.
-  
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -698,7 +698,7 @@ void MSS_MAC_set_tx_callback
   @param rx_callback
     This parameter is a pointer to the function that will be called when the a
     packet is received by Ethernet MAC on the selected queue.
-  
+
   Example:
   The example below demonstrates the use of the MSS_MAC_set_rx_callback()
   function. The init() function calls the MSS_MAC_set_rx_callback() function to
@@ -712,10 +712,10 @@ void MSS_MAC_set_tx_callback
   The rx_callback() function will be called again every time a packet is
   received to process the received packet and reallocate rx_buffer for packet
   reception.
-  
+
   @code
     uint8_t rx_buffer[MSS_MAC_MAX_RX_BUF_SIZE];
-    
+
     void rx_callback
     (
         void *this_mac,
@@ -730,7 +730,7 @@ void MSS_MAC_set_tx_callback
         MSS_MAC_receive_pkt((mss_mac_instance_t *)this_mac, queue_no,
                             p_rx_packet, caller_info, MSS_MAC_INT_ENABLE);
     }
-    
+
     void init(void)
     {
         MSS_MAC_set_rx_callback(rx_callback);
@@ -752,7 +752,7 @@ void MSS_MAC_set_rx_callback
   immediately without waiting for the packet to be sent. The Ethernet MAC driver
   indicates that the packet is sent by calling the transmit completion handler
   registered by a call to MSS_MAC_set_tx_callback().
-  
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -766,10 +766,10 @@ void MSS_MAC_set_rx_callback
 
   @param tx_buffer
     This parameter is a pointer to the buffer containing the packet to send.
-    
+
   @param tx_length
     This parameter specifies the length in bytes of the packet to send.
-    
+
   @param p_user_data
     This parameter is a pointer to an optional application defined data
     structure. Its usage is left to the application. It is intended to help the
@@ -777,9 +777,9 @@ void MSS_MAC_set_rx_callback
     driver does not make use of this pointer. The Ethernet MAC driver will pass
     back this pointer to the application as part of the call to the transmit
     completion handler registered by the application.
-    
+
   @return
-    This function returns 1 on successfully assigning the packet to a 
+    This function returns 1 on successfully assigning the packet to a
     transmit descriptor. It returns 0 otherwise.
 
   Example:
@@ -796,29 +796,29 @@ void MSS_MAC_set_rx_callback
   function uses p_user_data, which points to tx_packet, to release memory
   allocated by the application to store the transmit packet.
   @code
-    
+
     void tx_complete_handler(void *this_mac, uint32_t queue_no,
                              mss_mac_tx_desc_t *cdesc, void * caller_info);
-    
+
     void init(void)
     {
         MSS_MAC_set_tx_callback(tx_complete_handler);
     }
-    
+
     void tx_complete_handler(void *this_mac, uint32_t queue_no,
                              mss_mac_tx_desc_t *cdesc, void * caller_info)
     {
         release_packet_memory(caller_info);
     }
-    
+
     void send_packet(app_packet_t * packet)
     {
         MSS_MAC_send_pkt(packet->buffer, packet->length, packet);
     }
-    
+
   @endcode
  */
-uint8_t 
+uint8_t
 MSS_MAC_send_pkt
 (
     mss_mac_instance_t *this_mac,
@@ -843,7 +843,7 @@ MSS_MAC_send_pkt
   received.
   The p_user_data parameter can be optionally used to point to a memory
   management data structure managed by the application.
- 
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -859,7 +859,7 @@ MSS_MAC_send_pkt
     This parameter is a pointer to a memory buffer. It points to the memory that
     will be assigned to one of the Ethernet MAC's receive descriptors. It must
     point to a buffer large enough to contain the largest possible packet.
-  
+
   @param p_user_data
     This parameter is intended to help the application manage memory. Its usage
     is left to the application. The Ethernet MAC driver does not make use of
@@ -867,7 +867,7 @@ MSS_MAC_send_pkt
     application as part of the call to the application's receive callback
     function to help the application associate the received packet with the
     memory it allocated prior to the call to MSS_MAC_receive_pkt().
- 
+
   @param enable
     This parameter controls the enabling of the Ethernet MAC interrupt. If set
     to MSS_MAC_INT_DISABLE, the interrupt is left disabled by this function. If
@@ -882,7 +882,7 @@ MSS_MAC_send_pkt
   @return
     This function returns 1 on successfully assigning the buffer to a receive
     descriptor. It returns 0 otherwise.
-  
+
   Example:
   The example below demonstrates the use of the MSS_MAC_receive_pkt() function
   to handle packet reception using two receive buffers. The init() function
@@ -909,7 +909,7 @@ MSS_MAC_send_pkt
   @code
     uint8_t rx_buffer_1[MSS_MAC_MAX_RX_BUF_SIZE];
     uint8_t rx_buffer_2[MSS_MAC_MAX_RX_BUF_SIZE];
-    
+
     void rx_callback
     (
         void *this_mac,
@@ -924,7 +924,7 @@ MSS_MAC_send_pkt
         MSS_MAC_receive_pkt((mss_mac_instance_t *)this_mac, queue_no,
                             p_rx_packet, caller_info, MSS_MAC_INT_ENABLE);
     }
-    
+
     void init(void)
     {
         MSS_MAC_set_rx_callback(&g_mac_0, 0, rx_callback);
@@ -953,7 +953,7 @@ MSS_MAC_receive_pkt
   This function also adjusts the Ethernet MAC's internal configuration if some
   of the link characteristics have changed since the previous call to this
   function.
-  
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -965,15 +965,15 @@ MSS_MAC_receive_pkt
     current link speed will be stored if the link is up. This variable is not
     updated if the link is down. This parameter can be set to zero if the caller
     does not need to find out the link speed.
-  
+
   @param fullduplex
     This parameter is a pointer to an unsigned character where the current link
     duplex mode will be stored if the link is up. This variable is not updated
     if the link is down.
-  
+
   @return
     This function returns 1 if the link is up. It returns 0 if the link is down.
-  
+
   Example:
   @code
     uint8_t link_up;
@@ -1020,7 +1020,7 @@ uint8_t MSS_MAC_get_link_status
     uint32_t tx_pkts_cnt = MSS_MAC_read_stat(FRAMES_TXED_OK);
   @endcode
  */
-uint32_t 
+uint32_t
 MSS_MAC_read_stat
 (
     const mss_mac_instance_t *this_mac,
@@ -1031,7 +1031,7 @@ MSS_MAC_read_stat
   @brief MSS_MAC_clear_statistics()
     The MSS_MAC_clear_statistics() function clears all the statistics counter
     registers for the selected MAC.
-    
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -1054,7 +1054,7 @@ void MSS_MAC_clear_statistics
   writing your own Ethernet PHY driver.
   This function always accesses the pMAC registers as the same PHY is shared by
   both eMAC and pMAC and only has an MDIO connection to the pMAC.
- 
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -1066,13 +1066,13 @@ void MSS_MAC_clear_statistics
     management interface. This address is typically defined through Ethernet PHY
     hardware configuration signals. Please refer to the Ethernet PHY's datasheet
     for details of how this address is assigned.
- 
+
   @param regaddr
     This parameter is the address of the Ethernet PHY register to be read. This
     address is the offset of the register within the Ethernet PHY's register
     map.
 
-  @return 
+  @return
     This function returns the 16-bit value of the requested register.
 
   Example:
@@ -1101,7 +1101,7 @@ MSS_MAC_read_phy_reg
   if writing your own Ethernet PHY driver.
   This function always accesses the pMAC registers as the same PHY is shared by
   both eMAC and pMAC and only has an MDIO connection to the pMAC.
- 
+
   @param this_mac
     This parameter is a pointer to one of the global mss_mac_instance_t
     structures which identifies the MAC that the function is to operate on.
@@ -1113,7 +1113,7 @@ MSS_MAC_read_phy_reg
     management interface. This address is typically defined through Ethernet PHY
     hardware configuration signals. Please refer to the Ethernet PHY's datasheet
     for details of how this address is assigned.
- 
+
   @param regaddr
     This parameter is the address of the Ethernet register that will be written
     to. This address is the offset of the register within the Ethernet PHY's
@@ -1137,7 +1137,7 @@ MSS_MAC_read_phy_reg
     }
   @endcode
  */
-void 
+void
 MSS_MAC_write_phy_reg
 (
     const mss_mac_instance_t *this_mac,
@@ -2908,7 +2908,7 @@ MSS_MAC_start_preemption_verify
 /***************************************************************************//**
   The MSS_MAC_get_mmsl_status() function is used to monitor the current state of
   the MAC Merge Sublayer component of the GEM. The function returns the raw 32
-  bit value from the MMSL Status register and the definitions in 
+  bit value from the MMSL Status register and the definitions in
   mss_ethernet_mac_regs.h can be used to examine the status.
   The function only operates on the pMAC.
 

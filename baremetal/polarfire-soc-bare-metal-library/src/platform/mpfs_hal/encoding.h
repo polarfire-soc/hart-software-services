@@ -26,9 +26,7 @@
 */
 
 /***********************************************************************************
- * Record of Microsemi changes
- * SVN $Revision$
- * SVN $Date$
+ * Record of Microchip changes
  */
 
 
@@ -251,6 +249,24 @@
 #define clear_csr(reg, bit) ({ unsigned long __tmp; \
   asm volatile ("csrrc %0, " #reg ", %1" : "=r"(__tmp) : "rK"(bit)); \
   __tmp; })
+
+#if 0
+#define csr_write(csr, val)                 \
+({                              \
+    unsigned long __v = (unsigned long)(val);       \
+    asm volatile ("csrw " __ASM_STR(csr) ", %0" \
+                  : : "rK" (__v)            \
+                  : "memory");          \
+})
+
+#define csr_write(csr, val)                 \
+({                              \
+    unsigned long __v = (unsigned long)(val);       \
+    __asm__ __volatile__ ("csrw " __ASM_STR(csr) ", %0" \
+                  : : "rK" (__v)            \
+                  : "memory");          \
+})
+#endif
 
 #define rdtime() read_csr(time)
 #define rdcycle() read_csr(cycle)

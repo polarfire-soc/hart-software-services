@@ -2,10 +2,10 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * Register bit offsets and masks definitions for PolarFire SoC MSS system
  * services
- * 
+ *
  * SVN $Revision$
  * SVN $Date$
  */
@@ -49,7 +49,7 @@ extern "C" {
 #define SCBCTRL_SERVICESSR_STATUS                   (16u)
 #define SCBCTRL_SERVICESSR_STATUS_MASK              (0xFFFFu << SCBCTRL_SERVICESSR_STATUS)
 
-#ifdef __cplusplus                       
+#ifdef __cplusplus
 }
 #endif
 

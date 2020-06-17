@@ -388,7 +388,7 @@ vtss_rc miim_write(const vtss_inst_t    inst,
     {
         MSS_MAC_write_phy_reg(g_my_mac, (uint8_t)(phy_port + g_my_mac->phy_addr), (uint8_t)phy_reg, value); /* TBD: PMCS Warning only works for single MAC/VSC8575 combination */
     }
-    
+
     return VTSS_RC_OK;
 }
 #endif /* MSS_MAC_USE_PHY_VSC8575 */
@@ -452,7 +452,7 @@ int32_t miim_read( const uint32_t          phy_port,
     {
         *value = MSS_MAC_read_phy_reg(g_my_mac, (uint8_t)(phy_port + g_my_mac->phy_addr), (uint8_t)phy_reg); /* TBD: PMCS Warning only works for single MAC/VSC8575 combination */
     }
-    
+
     T_N("miim read port_no = %d, addr = %d, value = 0x%X", port_no, addr, *value);
 
     return 0;
@@ -516,7 +516,7 @@ int32_t miim_write( const uint32_t      phy_port,
     {
         MSS_MAC_write_phy_reg(g_my_mac, (uint8_t)(phy_port + g_my_mac->phy_addr), (uint8_t)phy_reg, value); /* TBD: PMCS Warning only works for single MAC/VSC8575 combination */
     }
-    
+
     return 0;
 }
 

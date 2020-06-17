@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * (c) Copyright 2018 Microsemi SoC Products Group.  All rights reserved.
- * 
+ *
  * Driver for MICRON_MT25Q QSPI flash memory on Xilinx Emulation board.
  * This dirver uses the PSE MSS QSPI driver interface.
  *
@@ -9,11 +9,11 @@
  * SVN $Date:  $
  */
 
-#include "mss_qspi.h"
+#include "drivers/mss_qspi/mss_qspi.h"
 #include "micron_mt25q.h"
 #include "mss_plic.h"
 #include "hal_assert.h"
-#include "mss_uart.h"
+#include "drivers/mss_uart/mss_uart.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -381,7 +381,6 @@ void Flash_sector_erase(uint32_t addr)
 
 void Flash_die_erase(void)
 {
-
     uint8_t command_buf[5] __attribute__ ((aligned (4))) = {MICRON_WRITE_ENABLE};
     /*Both Write enable and Die erase can work in all modes*/
 

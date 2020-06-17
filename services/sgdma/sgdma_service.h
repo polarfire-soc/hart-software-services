@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Virtual SGDMA Service API
  *
  */
@@ -45,6 +45,8 @@ extern "C" {
 #include "sgdma_types.h"
 
 enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr);
+
+extern struct StateMachine sgdma_service;
 
 #ifdef __cplusplus
 }

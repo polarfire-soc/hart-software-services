@@ -13,20 +13,157 @@
 #include <sbi/sbi_scratch.h>
 #include <sbi/sbi_trap.h>
 
-	.align 3
+#define BOOT_STATUS_RELOCATE_DONE	1
+#define BOOT_STATUS_BOOT_HART_DONE	2
+
+.macro	MOV_3R __d0, __s0, __d1, __s1, __d2, __s2
+	add	\__d0, \__s0, zero
+	add	\__d1, \__s1, zero
+	add	\__d2, \__s2, zero
+.endm
+
+.macro	MOV_5R __d0, __s0, __d1, __s1, __d2, __s2, __d3, __s3, __d4, __s4
+	add	\__d0, \__s0, zero
+	add	\__d1, \__s1, zero
+	add	\__d2, \__s2, zero
+	add	\__d3, \__s3, zero
+	add	\__d4, \__s4, zero
+.endm
+
+/*
+ * If __start_reg <= __check_reg and __check_reg < __end_reg then
+ *   jump to __pass
+ */
+.macro BRANGE __start_reg, __end_reg, __check_reg, __jump_lable
+	blt	\__check_reg, \__start_reg, 999f
+	bge	\__check_reg, \__end_reg, 999f
+	j	\__jump_lable
+999:
+.endm
+
 	.section .entry, "ax", %progbits
+	.align 3
 	.globl _start
 	.globl _start_warm
 _start:
-	/*
-	 * Jump to warm-boot if this is not the first core booting,
-	 * that is, for mhartid != 0
-	 */
-	csrr	a6, CSR_MHARTID
-	blt	zero, a6, _wait_for_boot_hart
+	/* Find preferred boot HART id */
+	MOV_3R	s0, a0, s1, a1, s2, a2
+	call	fw_boot_hart
+	add	a6, a0, zero
+	MOV_3R	a0, s0, a1, s1, a2, s2
+	li	a7, -1
+	beq	a6, a7, _try_lottery
+	/* Jump to relocation wait loop if we are not boot hart */
+	bne	a0, a6, _wait_relocate_copy_done
+_try_lottery:
+	/* Jump to relocation wait loop if we don't get relocation lottery */
+	la	a6, _relocate_lottery
+	li	a7, 1
+	amoadd.w a6, a7, (a6)
+	bnez	a6, _wait_relocate_copy_done
 
+	/* Save load address */
+	la	t0, _load_start
+	la	t1, _start
+	REG_S	t1, 0(t0)
+
+	/* Relocate if load address != link address */
+_relocate:
+	la	t0, _link_start
+	REG_L	t0, 0(t0)
+	la	t1, _link_end
+	REG_L	t1, 0(t1)
+	la	t2, _load_start
+	REG_L	t2, 0(t2)
+	sub	t3, t1, t0
+	add	t3, t3, t2
+	beq	t0, t2, _relocate_done
+	la	t4, _relocate_done
+	sub	t4, t4, t2
+	add	t4, t4, t0
+	blt	t2, t0, _relocate_copy_to_upper
+_relocate_copy_to_lower:
+	ble	t1, t2, _relocate_copy_to_lower_loop
+	la	t3, _relocate_lottery
+	BRANGE	t2, t1, t3, _start_hang
+	la	t3, _boot_status
+	BRANGE	t2, t1, t3, _start_hang
+	la	t3, _relocate
+	la	t5, _relocate_done
+	BRANGE	t2, t1, t3, _start_hang
+	BRANGE	t2, t1, t5, _start_hang
+	BRANGE  t3, t5, t2, _start_hang
+_relocate_copy_to_lower_loop:
+	REG_L	t3, 0(t2)
+	REG_S	t3, 0(t0)
+	add	t0, t0, __SIZEOF_POINTER__
+	add	t2, t2, __SIZEOF_POINTER__
+	blt	t0, t1, _relocate_copy_to_lower_loop
+	jr	t4
+_relocate_copy_to_upper:
+	ble	t3, t0, _relocate_copy_to_upper_loop
+	la	t2, _relocate_lottery
+	BRANGE	t0, t3, t2, _start_hang
+	la	t2, _boot_status
+	BRANGE	t0, t3, t2, _start_hang
+	la	t2, _relocate
+	la	t5, _relocate_done
+	BRANGE	t0, t3, t2, _start_hang
+	BRANGE	t0, t3, t5, _start_hang
+	BRANGE	t2, t5, t0, _start_hang
+_relocate_copy_to_upper_loop:
+	add	t3, t3, -__SIZEOF_POINTER__
+	add	t1, t1, -__SIZEOF_POINTER__
+	REG_L	t2, 0(t3)
+	REG_S	t2, 0(t1)
+	blt	t0, t1, _relocate_copy_to_upper_loop
+	jr	t4
+_wait_relocate_copy_done:
+	la	t0, _start
+	la	t1, _link_start
+	REG_L	t1, 0(t1)
+	beq	t0, t1, _wait_for_boot_hart
+	la	t2, _boot_status
+	la	t3, _wait_for_boot_hart
+	sub	t3, t3, t0
+	add	t3, t3, t1
+1:
+	/* waitting for relocate copy done (_boot_status == 1) */
+	li	t4, BOOT_STATUS_RELOCATE_DONE
+	REG_L	t5, 0(t2)
+	/* Reduce the bus traffic so that boot hart may proceed faster */
+	nop
+	nop
+	nop
+	bgt     t4, t5, 1b
+	jr	t3
+_relocate_done:
+
+	/*
+	 * Mark relocate copy done
+	 * Use _boot_status copy relative to the load address
+	 */
+	la	t0, _boot_status
+	la	t1, _link_start
+	REG_L	t1, 0(t1)
+	la	t2, _load_start
+	REG_L	t2, 0(t2)
+	sub	t0, t0, t1
+	add	t0, t0, t2
+	li	t1, BOOT_STATUS_RELOCATE_DONE
+	REG_S	t1, 0(t0)
+	fence	rw, rw
+
+	/* At this point we are running from link address */
+
+	/* Reset all registers for boot HART */
 	li	ra, 0
 	call	_reset_regs
+
+	/* Allow main firmware to save info */
+	MOV_5R	s0, a0, s1, a1, s2, a2, s3, a3, s4, a4
+	call	fw_save_info
+	MOV_5R	a0, s0, a1, s1, a2, s2, a3, s3, a4, s4
 
 	/* Preload HART details
 	 * s7 -> HART Count
@@ -59,6 +196,7 @@ _scratch_init:
 	sub	tp, tp, a5
 
 	/* Initialize scratch space */
+	/* Store fw_start and fw_size in scratch space */
 	la	a4, _fw_start
 	la	a5, _fw_end
 	mul	t0, s7, s8
@@ -66,21 +204,44 @@ _scratch_init:
 	sub	a5, a5, a4
 	REG_S	a4, SBI_SCRATCH_FW_START_OFFSET(tp)
 	REG_S	a5, SBI_SCRATCH_FW_SIZE_OFFSET(tp)
-	/* Note: fw_next_arg1() uses a0, a1, and ra */
+	/* Store next arg1 in scratch space */
+	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_arg1
 	REG_S	a0, SBI_SCRATCH_NEXT_ARG1_OFFSET(tp)
-	/* Note: fw_next_addr() uses a0, a1, and ra */
+	MOV_3R	a0, s0, a1, s1, a2, s2
+	/* Store next address in scratch space */
+	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_addr
 	REG_S	a0, SBI_SCRATCH_NEXT_ADDR_OFFSET(tp)
-	li	a4, PRV_S
-	REG_S	a4, SBI_SCRATCH_NEXT_MODE_OFFSET(tp)
+	MOV_3R	a0, s0, a1, s1, a2, s2
+	/* Store next mode in scratch space */
+	MOV_3R	s0, a0, s1, a1, s2, a2
+	call	fw_next_mode
+	REG_S	a0, SBI_SCRATCH_NEXT_MODE_OFFSET(tp)
+	MOV_3R	a0, s0, a1, s1, a2, s2
+	/* Store warm_boot address in scratch space */
 	la	a4, _start_warm
 	REG_S	a4, SBI_SCRATCH_WARMBOOT_ADDR_OFFSET(tp)
+	/* Store platform address in scratch space */
 	la	a4, platform
 	REG_S	a4, SBI_SCRATCH_PLATFORM_ADDR_OFFSET(tp)
+	/* Store hartid-to-scratch function address in scratch space */
 	la	a4, _hartid_to_scratch
 	REG_S	a4, SBI_SCRATCH_HARTID_TO_SCRATCH_OFFSET(tp)
+	/* Clear tmp0 in scratch space */
 	REG_S	zero, SBI_SCRATCH_TMP0_OFFSET(tp)
+	/* Store firmware options in scratch space */
+	MOV_3R	s0, a0, s1, a1, s2, a2
+#ifdef FW_OPTIONS
+	li	a4, FW_OPTIONS
+#else
+	add	a4, zero, zero
+#endif
+	call	fw_options
+	or	a4, a4, a0
+	REG_S	a4, SBI_SCRATCH_OPTIONS_OFFSET(tp)
+	MOV_3R	a0, s0, a1, s1, a2, s2
+	/* Move to next scratch space */
 	add	t1, t1, t2
 	blt	t1, s7, _scratch_init
 
@@ -93,12 +254,10 @@ _bss_zero:
 	blt	a4, a5, _bss_zero
 
 	/* Override pervious arg1 */
-	add	s0, a0, zero
-	add	s1, a1, zero
+	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_prev_arg1
 	add	t1, a0, zero
-	add	a0, s0, zero
-	add	a1, s1, zero
+	MOV_3R	a0, s0, a1, s1, a2, s2
 	beqz	t1, _prev_arg1_override_done
 	add	a1, t1, zero
 _prev_arg1_override_done:
@@ -113,16 +272,15 @@ _prev_arg1_override_done:
 	 */
 	beqz	a1, _fdt_reloc_done
 	/* Mask values in a3 and a4 */
-	li	a3, ~0xf
+	li	a3, ~(__SIZEOF_POINTER__ - 1)
 	li	a4, 0xff
 	/* t1 = destination FDT start address */
-	add	s0, a0, zero
-	add	s1, a1, zero
+	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_arg1
 	add	t1, a0, zero
-	add	a0, s0, zero
-	add	a1, s1, zero
+	MOV_3R	a0, s0, a1, s1, a2, s2
 	beqz	t1, _fdt_reloc_done
+	beq	t1, a1, _fdt_reloc_done
 	and	t1, t1, a3
 	/* t0 = source FDT start address */
 	add	t0, a1, zero
@@ -166,22 +324,26 @@ _fdt_reloc_again:
 	blt	t1, t2, _fdt_reloc_again
 _fdt_reloc_done:
 
-	/* Update boot hart flag */
-	la	a4, _boot_hart_done
-	li	a5, 1
-	REG_S	a5, (a4)
+	/* mark boot hart done */
+	li	t0, BOOT_STATUS_BOOT_HART_DONE
+	la	t1, _boot_status
+	REG_S	t0, 0(t1)
+	fence	rw, rw
+	j	_start_warm
 
-	/* Wait for boot hart */
+	/* waitting for boot hart done (_boot_status == 2) */
 _wait_for_boot_hart:
-	la	a4, _boot_hart_done
-	REG_L	a5, (a4)
+	li	t0, BOOT_STATUS_BOOT_HART_DONE
+	la	t1, _boot_status
+	REG_L	t1, 0(t1)
 	/* Reduce the bus traffic so that boot hart may proceed faster */
 	nop
 	nop
 	nop
-	beqz	a5, _wait_for_boot_hart
+	bne	t0, t1, _wait_for_boot_hart
 
 _start_warm:
+	/* Reset all registers for non-boot HARTs */
 	li	ra, 0
 	call	_reset_regs
 
@@ -221,10 +383,8 @@ _start_warm:
 	la	a4, _trap_handler
 	csrw	CSR_MTVEC, a4
 	/* Make sure that mtvec is updated */
-	1:
-	csrr	a5, CSR_MTVEC
+1:	csrr	a5, CSR_MTVEC
 	bne	a4, a5, 1b
-
 
 	/* Initialize SBI runtime */
 	csrr	a0, CSR_MSCRATCH
@@ -234,12 +394,19 @@ _start_warm:
 	j	_start_hang
 
 	.align 3
-	.section .data, "aw"
-_boot_hart_done:
+_relocate_lottery:
 	RISCV_PTR	0
+_boot_status:
+	RISCV_PTR	0
+_load_start:
+	RISCV_PTR	_fw_start
+_link_start:
+	RISCV_PTR	_fw_start
+_link_end:
+	RISCV_PTR	_fw_reloc_end
 
-	.align 3
 	.section .entry, "ax", %progbits
+	.align 3
 	.globl _hartid_to_scratch
 _hartid_to_scratch:
 	add	sp, sp, -(3 * __SIZEOF_POINTER__)
@@ -273,15 +440,15 @@ _hartid_to_scratch:
 	add	sp, sp, (3 * __SIZEOF_POINTER__)
 	ret
 
-	.align 3
 	.section .entry, "ax", %progbits
+	.align 3
 	.globl _start_hang
 _start_hang:
 	wfi
 	j	_start_hang
 
-	.align 3
 	.section .entry, "ax", %progbits
+	.align 3
 	.globl _trap_handler
 _trap_handler:
 	/* Swap TP and MSCRATCH */
@@ -334,6 +501,16 @@ _trap_handler_all_mode:
 	REG_S	t0, SBI_TRAP_REGS_OFFSET(mepc)(sp)
 	csrr	t0, CSR_MSTATUS
 	REG_S	t0, SBI_TRAP_REGS_OFFSET(mstatus)(sp)
+	REG_S	zero, SBI_TRAP_REGS_OFFSET(mstatusH)(sp)
+#if __riscv_xlen == 32
+	csrr	t0, CSR_MISA
+	srli	t0, t0, ('H' - 'A')
+	andi	t0, t0, 0x1
+	beq	t0, zero, _skip_mstatush_save
+	csrr	t0, CSR_MSTATUSH
+	REG_S	t0, SBI_TRAP_REGS_OFFSET(mstatusH)(sp)
+_skip_mstatush_save:
+#endif
 
 	/* Save all general regisers except SP and T0 */
 	REG_S	zero, SBI_TRAP_REGS_OFFSET(zero)(sp)
@@ -408,6 +585,15 @@ _trap_handler_all_mode:
 	csrw	CSR_MEPC, t0
 	REG_L	t0, SBI_TRAP_REGS_OFFSET(mstatus)(sp)
 	csrw	CSR_MSTATUS, t0
+#if __riscv_xlen == 32
+	csrr	t0, CSR_MISA
+	srli	t0, t0, ('H' - 'A')
+	andi	t0, t0, 0x1
+	beq	t0, zero, _skip_mstatush_restore
+	REG_L	t0, SBI_TRAP_REGS_OFFSET(mstatusH)(sp)
+	csrw	CSR_MSTATUSH, t0
+_skip_mstatush_restore:
+#endif
 
 	/* Restore T0 */
 	REG_L	t0, SBI_TRAP_REGS_OFFSET(t0)(sp)
@@ -417,14 +603,14 @@ _trap_handler_all_mode:
 
 	mret
 
-	.align 3
 	.section .entry, "ax", %progbits
+	.align 3
 	.globl _reset_regs
 _reset_regs:
 
 	/* flush the instruction cache */
 	fence.i
-	/* Reset all registers except ra, a0,a1 */
+	/* Reset all registers except ra, a0, a1 and a2 */
 	li sp, 0
 	li gp, 0
 	li tp, 0
@@ -433,7 +619,6 @@ _reset_regs:
 	li t2, 0
 	li s0, 0
 	li s1, 0
-	li a2, 0
 	li a3, 0
 	li a4, 0
 	li a5, 0

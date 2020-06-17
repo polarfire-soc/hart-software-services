@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - Registry of Tables (State Machines, IPI handlers, Init
  * Functions)
  *
@@ -32,22 +32,20 @@
 
 /*!
  * \file HSS Registry
- * \brief Initalization for any registered tables. 
+ * \brief Initalization for any registered tables.
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool HSS_RegistryInit(void);
-
 extern const struct IPI_Handler  /*@null@*/ ipiRegistry[];
-extern struct StateMachine /*@null@*/ * const pStateMachines[];
-extern const struct InitFunction /*@null@*/ initFunctions[];
+extern struct StateMachine /*@null@*/ * const pGlobalStateMachines[];
+extern const struct InitFunction /*@null@*/ globalInitFunctions[];
 
 extern const size_t spanOfIpiRegistry;
-extern const size_t spanOfPStateMachines;
-extern const size_t spanOfInitFunctions;
+extern const size_t spanOfPGlobalStateMachines;
+extern const size_t spanOfGlobalInitFunctions;
 
 #ifdef __cplusplus
 }

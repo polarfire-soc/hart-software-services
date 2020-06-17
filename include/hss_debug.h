@@ -40,8 +40,11 @@ extern "C" {
 
 #include "hss_types.h"
 
-#ifdef CONFIG_HAS_INTTYPES
+#ifdef CONFIG_CC_HAS_INTTYPES
 #    include "inttypes.h"
+#    ifndef PRIu64
+#        define PRIu64 "llu"
+#    endif
 #else
 #  define __PRI64_PREFIX	"l"
 #  define __PRIPTR_PREFIX	"l"
@@ -53,49 +56,59 @@ extern "C" {
 #define CRLF "\r\n"
 #define CR   "\r"
 
-#ifdef CONFIG_COLOR_OUTPUT
-#    define mHSS_DEBUG_ERROR_TEXT            mHSS_DEBUG_PRINTF_EX("\033[37;41m")
-#    define mHSS_DEBUG_WARN_TEXT             mHSS_DEBUG_PRINTF_EX("\033[1;33m")
-#    define mHSS_DEBUG_STATUS_TEXT           mHSS_DEBUG_PRINTF_EX("\033[1;32m")
-#    define mHSS_DEBUG_NORMAL_TEXT           mHSS_DEBUG_PRINTF_EX("\033[0m");
-#    define mHSS_DEBUG_STATE_TRANSITION_TEXT mHSS_DEBUG_PRINTF_EX("\033[37;44m");
-#else
-#  define mHSS_DEBUG_ERROR_TEXT
-#  define mHSS_DEBUG_WARN_TEXT
-#  define mHSS_DEBUG_STATUS_TEXT
-#  define mHSS_DEBUG_NORMAL_TEXT
-#  define mHSS_DEBUG_STATE_TRANSITION_TEXT
-#endif
+typedef enum {
+    HSS_DEBUG_LOG_NORMAL,
+    HSS_DEBUG_LOG_FUNCTION,
+    HSS_DEBUG_LOG_TIMESTAMP,
+    HSS_DEBUG_LOG_ERROR,
+    HSS_DEBUG_LOG_WARN,
+    HSS_DEBUG_LOG_STATUS,
+    HSS_DEBUG_LOG_STATE_TRANSITION,
+} HSS_Debug_LogLevel_t;
 
-#ifdef __riscv
-int ee_printf(const char *fmt, ...);
-int ee_puts(const char *buf);
-int ee_putc(const char c);
-#    define mHSS_PUTS ee_puts
-#    define mHSS_PUTC ee_putc
-#    define mHSS_FANCY_PRINTF ee_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), ee_printf
-#    define mHSS_FANCY_PRINTF_EX ee_printf
-#    define mHSS_FANCY_PUTS ee_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), ee_puts
-#else
-#    define mHSS_PUTS (void)
-#    define mHSS_PUTC (void)
-#    define mHSS_FANCY_PRINTF (void)
-#    define mHSS_FANCY_PRINTF_EX (void)
-#    define mHSS_FANCY_PUTS (void)
-#endif
+void HSS_Debug_Highlight(HSS_Debug_LogLevel_t logLevel);
+
+int sbi_printf(const char *fmt, ...);
+void sbi_puts(const char *buf);
+void sbi_putc(char c);
+
+void HSS_Debug_Timestamp(void);
+#    define mHSS_TIMESTAMP HSS_Debug_Timestamp()
+
+#    define mHSS_PUTS sbi_puts
+#    define mHSS_PUTC sbi_putc
+#    define mHSS_FANCY_PRINTF(logLevel, ...) { \
+         mHSS_TIMESTAMP; \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+         (void)sbi_printf(" %s(): ", __func__); \
+         HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
+         sbi_printf(__VA_ARGS__); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
+     }
+#    define mHSS_FANCY_PUTS(logLevel, ...) { \
+         mHSS_TIMESTAMP; \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+         (void)sbi_printf(" %s(): ", __func__); \
+         HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
+         sbi_puts(__VA_ARGS__); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
+     }
+
+#    define mHSS_PRINTF sbi_printf
+#    define mHSS_FANCY_PRINTF_EX sbi_printf
 
 #ifndef mHSS_DEBUG_PRINTF
 #  ifdef DEBUG
-extern int my_printf(char const * const fmt, ...);
-#    ifdef __riscv
-#      define mHSS_DEBUG_PRINTF ee_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), ee_printf
-#      define mHSS_DEBUG_PRINTF_EX ee_printf
-#      define mHSS_DEBUG_PUTS ee_puts
-#    else
-#      define mHSS_DEBUG_PRINTF my_printf("%" PRIu64 " %s(): ", HSS_GetTime(),  __func__), my_printf
-#      define mHSS_DEBUG_PRINTF_EX my_printf
-#      define mHSS_DEBUG_PUTS my_printf
-#    endif
+#    define mHSS_DEBUG_PRINTF(logLevel, ...) { \
+         mHSS_TIMESTAMP; \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+         (void)sbi_printf(" %s(): ", __func__); \
+         HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
+         sbi_printf(__VA_ARGS__); \
+         HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
+     }
+#      define mHSS_DEBUG_PRINTF_EX sbi_printf
+#      define mHSS_DEBUG_PUTS sbi_puts
 #  else
 #    define mHSS_DEBUG_PRINTF (void)
 #    define mHSS_DEBUG_PRINTF_EX (void)
@@ -103,8 +116,8 @@ extern int my_printf(char const * const fmt, ...);
 #  endif
 #endif
 
-#define DO_PRAGMA(x) _Pragma(#x)
-#define TODO(x) DO_PRAGMA(message ("TODO: " #x))
+#define mDO_PRAGMA(x) _Pragma(#x)
+#define mTODO(x) mDO_PRAGMA(message ("TODO: " #x))
 
 #ifdef __cplusplus
 }

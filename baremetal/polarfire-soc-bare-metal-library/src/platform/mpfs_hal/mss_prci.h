@@ -1,5 +1,5 @@
  /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -9,11 +9,9 @@
 
 /*******************************************************************************
  * @file mss_prci.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief PRCI: Power, Reset, Clock, Interrupt
  *
- * SVN $Revision$
- * SVN $Date$
  */
 
 #ifndef MSS_PRCI_H

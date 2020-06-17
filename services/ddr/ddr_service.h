@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - DDR Retraining Service
  *
  */
@@ -41,6 +41,12 @@ extern "C" {
 
 #include "hss_state_machine.h"
 #include "hss_debug.h"
+
+size_t HSS_DDR_GetSize(void);
+void *HSS_DDR_GetStart(void);
+void HSS_DDR_Train(void);
+
+extern struct StateMachine ddr_service;
 
 #ifdef __cplusplus
 }

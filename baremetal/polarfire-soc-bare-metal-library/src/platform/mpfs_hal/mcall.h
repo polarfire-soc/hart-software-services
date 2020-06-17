@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -9,11 +9,9 @@
 
 /***********************************************************************************
  * @file mcall.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief mcall definitions
 
- * SVN $Revision$
- * SVN $Date$
  */
 #ifndef RISCV_SBI_H
 #define RISCV_SBI_H

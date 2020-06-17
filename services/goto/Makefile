@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -27,11 +27,11 @@
 # U54-GOTO Service
 
 SRCS-$(CONFIG_SERVICE_GOTO) += \
-    services/goto/goto_service.c \
+	services/goto/goto_service.c \
 
 INCLUDES +=\
-    -I./services/goto \
+	-I./services/goto \
 
 services/goto/goto_service.o: services/goto/goto_service.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

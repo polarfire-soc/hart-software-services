@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - PowerMode Service
  *
  */
@@ -40,6 +40,8 @@ extern "C" {
 
 #include "hss_state_machine.h"
 #include "hss_debug.h"
+
+extern struct StateMachine powermode_service;
 
 #ifdef __cplusplus
 }

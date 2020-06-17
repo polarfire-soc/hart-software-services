@@ -1,5 +1,5 @@
 /******************************************************************************************
- * 
+ *
  * MPFS HSS Embedded Software
  *
  * Copyright 2019 Microchip Corporation.
@@ -41,11 +41,7 @@
 #include "ssmb_ipi.h"
 
 #include "hss_init.h"
-
-#ifndef CONFIG_OPENSBI
-#  include "machine/encoding.h"
-#  include "machine/bits.h"
-#endif
+#include "hss_registry.h"
 
 #ifdef CONFIG_SERVICE_WDOG
 #  include "wdog_service.h"
@@ -55,18 +51,16 @@
 
 #include <string.h>
 
-/******************************************************************************************************/
+/******************************************************************************************/
 
 void hss_main(void)
 {
-    HSS_Init();
-
 #ifdef CONFIG_SERVICE_WDOG
     HSS_Wdog_MonitorHart(HSS_HART_ALL);
 #endif
 
-    while (1) {
-        RunStateMachines();
+    while (true) {
+        RunStateMachines(spanOfPGlobalStateMachines, pGlobalStateMachines);
     }
 }
 
@@ -75,37 +69,20 @@ int main(int argc, char **argv)
     (void)argc; // unused
     (void)argv; // unused
 
-    HSS_Init_Setup_RWDATA_And_BSS();
+    HSS_Init();
+
+    if (current_hartid() != 0) {
+        sbi_hart_hang();
+    }
 
 #ifdef CONFIG_SUPERLOOP_IN_U_MODE
-    CSR_Init();
-
-    if (CSR_GetHartId() != 0) {
-        while(1);
-    }
-
-    // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1
-    uint32_t mstatus_val = read_csr(mstatus);
-
-    // immediate_arg stores the desired privilege mode to return to...
-    // typically PRV_S
-    mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPP, PRV_U);
-    mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPIE, 1);
-    write_csr(mstatus, mstatus_val);
-
-    // set MEPC to function address
-    write_csr(mepc, (void *)hss_main);
-
-    // execute MRET, 
-    // causing MIE <= MPIE, new priv mode <= PRV_U, MPIE <= 1, MPP <= U
-    asm("mret");
+    sbi_hart_switch_mode(current_hartid(), 0lu, (unsigned long)hss_main, PRV_U, false);
 #else
-    if (CSR_GetHartId() != 0) {
-        while(1);
-    }
     hss_main();
 #endif
 
     // will never be reached
+    __builtin_unreachable();
+
     return 0;
 }

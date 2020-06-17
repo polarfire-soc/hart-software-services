@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -27,11 +27,11 @@
 # QSPI Service (NOTE: not a traditional super-loop service)
 
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
-    services/qspi/qspi_api.c \
+	services/qspi/qspi_api.c \
 
 INCLUDES +=\
-    -I./services/qspi \
+	-I./services/qspi \
 
 services/qspi/qspi_api.o: services/qspi/qspi_api.c config.h
 	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

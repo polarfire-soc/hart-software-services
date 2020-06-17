@@ -2,13 +2,13 @@
  * Copyright 2019 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * MPFS HSS Embedded Software
  *
  */
 
 /*!
- * \file U54 Handle IPI 
+ * \file U54 Handle IPI
  * \brief U54 Handle IPI
  */
 
@@ -41,15 +41,15 @@
 // This routine gets executed when a U54 receives an IPI from E51 in machine mode...
 //
 
-bool U54_HandleIPI(void)
+bool HSS_U54_HandleIPI(void)
 {
-    mHSS_DEBUG_PRINTF(">>" CRLF);
+    //mHSS_DEBUG_PRINTF(">>" CRLF);
     volatile bool intentFound = false;
 
     mb();
 
 #ifdef CONFIG_SERVICE_BOOT
-    /*if (!intentFound)*/ 
+    /*if (!intentFound)*/
     { intentFound = IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_PMP_SETUP); }
 #endif
 
@@ -61,39 +61,30 @@ bool U54_HandleIPI(void)
     if (!intentFound) { intentFound =  IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_OPENSBI_INIT); }
 #endif
 
-     CLINT_Clear_MSIP(CSR_GetHartId());
+     CLINT_Clear_MSIP(current_hartid());
 
 #ifdef CONFIG_DEBUG_IPI_STATS
     {
-        enum HSSHartId myHartId = CSR_GetHartId();
-        static size_t count[5]; count[myHartId]++; 
+        enum HSSHartId myHartId = current_hartid();
+        static size_t count[5]; count[myHartId]++;
 
-        mHSS_DEBUG_STATUS_TEXT;
-        mHSS_DEBUG_PRINTF(" ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId], intentFound);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, " ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId],
+            intentFound);
         IPI_DebugDumpStats();
-        mHSS_DEBUG_NORMAL_TEXT;
     }
 #endif
 
     //mb();
     // if not for me, pass to S-mode ...
-    mHSS_DEBUG_PRINTF("<<" CRLF);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "MTVEC is now %p" CRLF, mHSS_CSR_READ(mtvec));
 
-    return intentFound; 
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "<<" CRLF);
+
+    return intentFound;
 }
 
-void u54_banner(void);
-
-void u54_banner(void)
+void HSS_U54_Banner(void)
 {
     // wait for E51 to setup BSS...
-    int msip = MIP_MSIP;
-    asm volatile("wfi\n\
-    	    csrc mip, %0" : : "r"(msip));
-
-    CLINT_Clear_MSIP(CSR_GetHartId());
-
-    asm volatile("csrw mstatus, %0" : : "r"(msip));
-
-    mHSS_DEBUG_PRINTF("u54_%d: Waiting for E51 instruction" CRLF, CSR_GetHartId());
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%d: Waiting for E51 instruction" CRLF, current_hartid());
 }

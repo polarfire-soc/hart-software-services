@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -10,13 +10,11 @@
 /*******************************************************************************
  *
  * @file mss_h2f.h
- * @author Microsemi-PRO Embedded Systems Solutions
+ * @author Microchip-FPGA Embedded Systems Solutions
  * @brief H2F access data structures and functions.
  *
  * Definitions and functions associated with host to fabric interrupt controller.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 
 #ifndef MSS_H2F_H

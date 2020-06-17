@@ -19,6 +19,7 @@
 #include <stddef.h>
 //#include <ctype.h>  // including ctype.h breaks the build currently
 #include <string.h>
+#include <sbi_string.h>
 
 #include "csr_helper.h"
 
@@ -36,8 +37,9 @@ __attribute__((weak)) size_t strnlen(const char *s, size_t count)
     return result;
 }
 
-__attribute__((weak)) void *memcpy(void *dest, const void *src, size_t n) 
+__attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict src, size_t n)
 {
+    // no overlaps allowed!!
     char *cDest = (char*)dest;
     char *cSrc = (char*)src;
 
@@ -50,16 +52,21 @@ __attribute__((weak)) void *memcpy(void *dest, const void *src, size_t n)
         }
     }
 
+#ifndef CONFIG_OPENSBI
     while (n--) {
         *cDest = *cSrc;
         cDest++; cSrc++;
     }
 
     return (dest);
+#else
+    return sbi_memcpy(dest, src, n);
+#endif
 }
 
 __attribute__((weak)) void *memset(void *dest, int c, size_t n)
 {
+#ifndef CONFIG_OPENSBI
     char *cDest = (char*)dest;
 
     while (n--) {
@@ -68,10 +75,14 @@ __attribute__((weak)) void *memset(void *dest, int c, size_t n)
     }
 
     return (dest);
+#else
+    return sbi_memset(dest, c, n);
+#endif
 }
 
 __attribute__((weak)) size_t strlen (const char *s)
 {
+#ifndef CONFIG_OPENSBI
     size_t result = 0;
 
     while (*s) {
@@ -80,6 +91,9 @@ __attribute__((weak)) size_t strlen (const char *s)
     }
 
     return result;
+#else
+    return sbi_strlen(s);
+#endif
 }
 //#endif
 
@@ -106,7 +120,7 @@ __attribute__((weak)) int strcasecmp(const char *s1, const char *s2)
         //    s1++;
         //    s2++;
         //    continue;
-        //} else 
+        //} else
         if (c1 < c2) {
             result = -1;
             break;
@@ -157,7 +171,52 @@ __attribute__((weak)) char *strtok_r(char *str, const char *delim, char **savept
             *saveptr = *saveptr + 1;
         }
     }
-    
+
     return result;
 }
 
+
+__attribute__((weak)) int strncmp(const char *s1, const char *s2, size_t n)
+{
+    int result = 0;
+
+    assert(s1);
+    assert(s2);
+
+    for (size_t i = 0u; i < n; i++) {
+        if ((*s1 == '\0') || (*s2 == '\0')) {
+            break;
+        } else if (*s1 < *s2) {
+            result = -1;
+            break;
+        } else if (*s1 > *s2) {
+            result = 1;
+            break;
+        } else /* if (*s1 == *s2) */ {
+            result = 0;
+        }
+
+        s1++;
+        s2++;
+    }
+
+    return result;
+}
+
+
+__attribute__((weak)) int64_t __bswapdi2(int64_t a)
+{
+    int64_t result;
+
+    result =
+          ((a & 0xFF) << 56)
+        | ((a & 0xFF00) << 40)
+        | ((a & 0xFF0000) << 24)
+        | ((a & 0xFF000000) << 8)
+        | ((a & 0xFF00000000) >> 8)
+        | ((a & 0xFF0000000000) >> 24)
+        | ((a & 0xFF000000000000) >> 40)
+        | ((a & 0xFF00000000000000) >> 56);
+
+    return result;
+}

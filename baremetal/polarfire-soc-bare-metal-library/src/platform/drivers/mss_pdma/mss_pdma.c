@@ -9,12 +9,12 @@
  * SVN $Date$
  */
 
-#include "mss_pdma.h"
+#include "drivers/mss_pdma/mss_pdma.h"
 #include "mpfs_hal/mss_hal.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /* MACRO to set the correct channel memory offset for the memory mapped
  * configuration register.

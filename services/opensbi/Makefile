@@ -1,4 +1,4 @@
-# 
+#
 # MPFS HSS Embedded Software
 #
 # Copyright 2019 Microchip Corporation.
@@ -28,70 +28,95 @@
 
 SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	services/opensbi/opensbi_service.c \
-	services/opensbi/platform.c \
-	thirdparty/opensbi/platform/common/sys/clint.c \
-	thirdparty/opensbi/platform/common/irqchip/plic.c \
-	thirdparty/opensbi/platform/common/tinyfdt.c \
+	thirdparty/opensbi/lib/utils/sys/clint.c \
+	thirdparty/opensbi/lib/utils/irqchip/plic.c \
+	thirdparty/opensbi/lib/utils/libfdt/fdt.c \
+	thirdparty/opensbi/lib/utils/libfdt/fdt_ro.c \
+	thirdparty/opensbi/lib/utils/libfdt/fdt_rw.c \
+	thirdparty/opensbi/lib/utils/libfdt/fdt_wip.c \
+	thirdparty/opensbi/lib/utils/libfdt/fdt_addresses.c \
 
-#	opensbi/platform/common/libfdt/fdt_rw.c \
-#	opensbi/platform/common/libfdt/fdt_ro.c \
-#	opensbi/platform/common/libfdt/fdt.c \
-#	opensbi/platform/common/libfdt/fdt_overlay.c \
-#	opensbi/platform/common/libfdt/fdt_strerror.c \
-#	opensbi/platform/common/libfdt/fdt_sw.c \
-#	opensbi/platform/common/libfdt/fdt_wip.c \
+ifdef CONFIG_PLATFORM_MPFS
+SRCS-$(CONFIG_SERVICE_OPENSBI) += \
+	services/opensbi/platform.c
+endif
+
+ifdef CONFIG_PLATFORM_FU540
+SRCS-$(CONFIG_SERVICE_OPENSBI) += \
+	thirdparty/opensbi/lib/utils/serial/sifive-uart.c \
+	thirdparty/opensbi/platform/sifive/fu540/platform.c
+endif
+
 
 ifdef CONFIG_OPENSBI
 INCLUDES += \
 	-I./services/opensbi \
 	-I./thirdparty/opensbi/include/sbi \
 	-I./thirdparty/opensbi/include \
-	-I./thirdparty/opensbi/platform/common \
+	-I./thirdparty/opensbi/lib/utils/libfdt \
 
-#	-I./thirdparty/opensbi/platform/common/libfdt
 endif
 
+ifdef CONFIG_PROVIDE_DTB
+ifdef CONFIG_DEFAULT_DEVICE_TREE
+EXTRA_OBJS += services/opensbi/mpfs_dtb.o
+services/opensbi/mpfs_dtb.o: $(CONFIG_DEFAULT_DEVICE_TREE:"%"=%).dtb
+	$(CMD_PREFIX)$(CROSS_COMPILE)ld -r -b binary -o $@ $<
+endif
+endif
 
 services/opensbi/opensbi_service.o: services/opensbi/opensbi_service.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 services/opensbi/platform.o: services/opensbi/platform.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/sys/clint.o: thirdparty/opensbi/platform/common/sys/clint.c config.h
+thirdparty/opensbi/lib/utils/sys/clint.o: thirdparty/opensbi/lib/utils/sys/clint.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/irqchip/plic.o: thirdparty/opensbi/platform/common/irqchip/plic.c config.h
+thirdparty/opensbi/lib/utils/irqchip/plic.o: thirdparty/opensbi/lib/utils/irqchip/plic.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt_rw.o: thirdparty/opensbi/platform/common/libfdt/fdt_rw.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt_rw.o: thirdparty/opensbi/lib/utils/libfdt/fdt_rw.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt_ro.o: thirdparty/opensbi/platform/common/libfdt/fdt_ro.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt_ro.o: thirdparty/opensbi/lib/utils/libfdt/fdt_ro.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt.o: thirdparty/opensbi/platform/common/libfdt/fdt.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt.o: thirdparty/opensbi/lib/utils/libfdt/fdt.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt_overlay.o: thirdparty/opensbi/platform/common/libfdt/fdt_overlay.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt_overlay.o: thirdparty/opensbi/lib/utils/libfdt/fdt_overlay.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt_strerror.o: thirdparty/opensbi/platform/common/libfdt/fdt_strerror.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt_strerror.o: thirdparty/opensbi/lib/utils/libfdt/fdt_strerror.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt_sw.o: thirdparty/opensbi/platform/common/libfdt/fdt_sw.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt_sw.o: thirdparty/opensbi/lib/utils/libfdt/fdt_sw.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-thirdparty/opensbi/platform/common/libfdt/fdt_wip.o: thirdparty/opensbi/platform/common/libfdt/fdt_wip.c config.h
+thirdparty/opensbi/lib/utils/libfdt/fdt_addresses.o: thirdparty/opensbi/lib/utils/libfdt/fdt_addresses.c config.h
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $< 
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+
+thirdparty/opensbi/lib/utils/libfdt/fdt_wip.o: thirdparty/opensbi/lib/utils/libfdt/fdt_wip.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+
+thirdparty/opensbi/lib/utils/serial/sifive-uart.o: thirdparty/opensbi/lib/utils/serial/sifive-uart.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+
+thirdparty/opensbi/platform/sifive/fu540/platform.o: thirdparty/opensbi/platform/sifive/fu540/platform.c config.h
+	@$(ECHO) " CC        $@";
+	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<

@@ -69,7 +69,7 @@ struct StateMachine goto_service = {
 //
 static void goto_init_handler(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
     pMyMachine->state++;
 }
 
@@ -77,7 +77,7 @@ static void goto_init_handler(struct StateMachine * const pMyMachine)
 static void goto_idle_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine; // unused
-    mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
 }
 
 
@@ -88,10 +88,10 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     enum IPIStatusCode result = IPI_FAIL;
 
     // goto IPI received from E51
-    //mHSS_DEBUG_PRINTF("\tcalled (goto_service.state is %u)" CRLF, goto_service.state);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (goto_service.state is %u)" CRLF, goto_service.state);
 
     if (source != HSS_HART_E51) {
-        mHSS_DEBUG_PRINTF("\tsecurity policy prevented GOTO request from hart %d" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from hart %d" CRLF, source);
         result = IPI_FAIL;
     } else {
         // the following should always be true if we have consumed intents for GOTO...
@@ -99,12 +99,13 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
         // we ain't coming back from the GOTO, so need to ACK here...
 #if __riscv //TODO
-        //mHSS_DEBUG_PRINTF("Source is %d, transaction_id is %u" CRLF, source, transaction_id);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Source is %d, transaction_id is %u" CRLF, source,
+        //    transaction_id);
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
         // first find queue
-        struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, CSR_GetHartId());
+        struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, current_hartid());
         // now find my message in the queue
         size_t i;
 
@@ -117,9 +118,9 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         if (pMsg->transaction_id == transaction_id) {
             pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
-            mHSS_DEBUG_PRINTF("Address to execute is 0x%p" CRLF, *(void **)p_extended_buffer);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p" CRLF, *(void **)p_extended_buffer);
 
-            enum HSSHartId myHartId = CSR_GetHartId();
+            enum HSSHartId myHartId = current_hartid();
 
             switch (myHartId) {
             case HSS_HART_U54_1:
@@ -143,7 +144,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
                 break;
 
             default:
-                mHSS_DEBUG_PRINTF("Unknown hart ID %u" CRLF, myHartId);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown hart ID %u" CRLF, myHartId);
                 result = IPI_FAIL;
                 break;
             }
@@ -160,18 +161,18 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             const uint32_t next_mode = immediate_arg;
 
 #ifdef CONFIG_OPENSBI
-            sbi_hart_switch_mode(0u, 0u, *(unsigned long *)p_extended_buffer, next_mode);
+            sbi_hart_switch_mode(0u, 0u, *(unsigned long *)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
 #else
             // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1
             uint32_t mstatus_val = mHSS_CSR_READ(mstatus);
 
             // next_mode stores the desired privilege mode to return to..
             // typically PRV_S
-            //mHSS_DEBUG_PRINTF("Setting priv mode to %d" CRLF, next_mode);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Setting priv mode to %d" CRLF, next_mode);
             mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPP, next_mode);
 
             if (next_mode == PRV_M) {
-                mHSS_DEBUG_PRINTF("Booting into M-Mode so clearing MSTATUS:MIE" CRLF);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Booting into M-Mode so clearing MSTATUS:MIE" CRLF);
                 mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPIE, 0);
                 mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MIE, 0);
             } else {
@@ -181,15 +182,16 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
             mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_SIE, 0);
             mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_SPIE, 0);
-            mCSR_WRITE(mstatus, mstatus_val);
+            mHSS_CSR_WRITE(mstatus, mstatus_val);
 
             // set MEPC to function address (smuggled in p_extended_buffer argument)
-            mCSR_WRITE(mepc, *((void **)p_extended_buffer));
+            mHSS_CSR_WRITE(mepc, *((void **)p_extended_buffer));
 
             //mb();
             //mb_i();
             // execute MRET, causing MIE <= MPIE, new priv mode <= PRV_S, MPIE <= 1, MPP <= U
             asm("mret");
+            __builtin_unreachable();
 #endif
 
             // state machine doesn't want outside framework to send a separate complete
@@ -205,18 +207,21 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         //
         // for tidyness/test code, we'll return IPI_IDLE in this scenario if all is okay, or
         // IPI_FAIL otherwise
-        enum HSSHartId myHartId = CSR_GetHartId();
+        enum HSSHartId myHartId = current_hartid();
 
         switch (myHartId) {
         case HSS_HART_U54_1:
+            __attribute__((fallthrough); // deliberate fallthrough
         case HSS_HART_U54_2:
+            __attribute__((fallthrough); // deliberate fallthrough
         case HSS_HART_U54_3:
+            __attribute__((fallthrough); // deliberate fallthrough
         case HSS_HART_U54_4:
             result = IPI_IDLE;
             break;
 
         default:
-            mHSS_DEBUG_PRINTF("Unknown or unexpected hart ID %u" CRLF, myHartId);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown or unexpected hart ID %u" CRLF, myHartId);
             result = IPI_FAIL;
             break;
         }

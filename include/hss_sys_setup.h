@@ -24,7 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * Hart Software Services - System Setup
  *
  */
@@ -42,12 +42,13 @@ extern "C" {
 /**
  * Interface
  */
-void HSS_Setup_PAD_IO(void);
-void HSS_Setup_PLIC(void);
-void HSS_Setup_MPU(void);
-void HSS_Setup_L2Cache(void);
-void HSS_Setup_Clocks(void);
-void HSS_Setup_PMP(void);
+bool HSS_Setup_PAD_IO(void);
+bool HSS_Setup_PLIC(void);
+bool HSS_Setup_MPU(void);
+bool HSS_Setup_L2Cache(void);
+bool HSS_Setup_Clocks(void);
+bool HSS_Setup_PMP(void);
+bool HSS_Setup_BusErrorUnit(void);
 
 #ifdef __cplusplus
 }
