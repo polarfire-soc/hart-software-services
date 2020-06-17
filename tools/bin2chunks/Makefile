@@ -48,7 +48,7 @@ INCLUDES=\
 	-I../../thirdparty/opensbi/include \
 	
 
-bin2chunks: bin2chunks.c 
+bin2chunks: bin2chunks.c
 	$(CC) $(CFLAGS) $(INCLUDES) -o bin2chunks bin2chunks.c
 
 dump_header: dump_header.c
