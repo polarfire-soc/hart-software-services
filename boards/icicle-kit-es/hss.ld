@@ -136,10 +136,13 @@ SECTIONS
     PROVIDE(__u54_4_itim_start = ORIGIN(u54_4_itim));
     PROVIDE(__u54_4_itim_end   = ORIGIN(u54_4_itim) + LENGTH(u54_4_itim));
 
+    PROVIDE(__l2lim_start      = ORIGIN(l2lim));
+    PROVIDE(__l2lim_end        = ORIGIN(l2lim) + LENGTH(l2lim));
+
     /*
-     * Code and RO data lives in l2lim
+     * Code and RO data lives in envm (flash)
      */
-    . = __l2lim_start;
+    . = __envm_start;
 
     PROVIDE(_hss_start = .);
 
@@ -161,6 +164,7 @@ SECTIONS
         KEEP (*crtend.o(.dtors))
 
         *(.rodata .rodata.* .gnu.linkonce.r.*)
+        *(.sdata2.*)
         *(.gcc_except_table)
         *(.eh_frame_hdr)
         *(.eh_frame)
@@ -180,12 +184,12 @@ SECTIONS
         KEEP (*(SORT(.fini_array.*)))
         PROVIDE_HIDDEN (__fini_array_end = .);
         . = ALIGN(0x10);
-    } >l2lim
+    } >envm
 
     .gnu_build_id : ALIGN(8) {
         PROVIDE(gnu_build_id = .);
         *(.note.gnu.build-id)
-    } >l2lim
+    } >envm
 
     PROVIDE(_hss_end = .);
 
@@ -199,7 +203,7 @@ SECTIONS
         . = ALIGN(0x10);
         __l2_scratchpad_end = .;
         __l2_scratchpad_vma_end = .;
-    } >l2lim
+    } >l2lim AT>envm
 
 
     /*******************************************************************************
@@ -220,7 +224,7 @@ SECTIONS
         *(.ram_coderodata*)
         . = ALIGN (0x10);
         __sc_end = .;
-    } >switch_code
+    } >switch_code AT>envm
 
     /*******************************************************************************
      *
@@ -242,10 +246,10 @@ SECTIONS
         __global_pointer$ = . + 0x800;
         *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2)
         *(.srodata*)
-        *(.sdata .sdata2.* .sdata.* .gnu.linkonce.s.*)
+        *(.sdata .sdata.* .gnu.linkonce.s.*)
         . = ALIGN(0x10);
         __sdata_end = .;
-    } >l2lim
+    } >l2lim AT >envm
 
     /*******************************************************************************
      *
@@ -261,7 +265,7 @@ SECTIONS
         *(.data .data.* .gnu.linkonce.d.*)
         . = ALIGN(0x10);
         __data_end = .;
-    } >l2lim
+    } >l2lim AT >envm
 
     /*******************************************************************************
      *
