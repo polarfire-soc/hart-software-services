@@ -17,6 +17,7 @@
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 #include "hss_progress.h"
+#include "hss_clock.h"
 
 #include <assert.h>
 #include <string.h>
@@ -75,6 +76,15 @@ bool HSS_MMCInit(void)
         };
 
         result = MSS_MMC_init(&g_mmc);
+        if (result != MSS_MMC_INIT_SUCCESS) {
+            SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
+            SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
+            SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
+
+            HSS_SpinDelay_Secs(1u); // delay for 1 second
+
+            result = MSS_MMC_init(&g_mmc);
+        }
 
         if (result != MSS_MMC_INIT_SUCCESS) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, result);
