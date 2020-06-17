@@ -15,8 +15,16 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_debug.h"
+#include "hss_clock.h"
 
 #include <assert.h>
+
+void HSS_Debug_Timestamp(void)
+{
+    HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP);
+    (void)sbi_printf("[%" PRIu64, HSS_GetTime() / ONE_SEC);
+    (void)sbi_printf(".%05" PRIu64 "]", HSS_GetTime() % ONE_SEC);
+}
 
 void HSS_Debug_Highlight(HSS_Debug_LogLevel_t logLevel)
 {

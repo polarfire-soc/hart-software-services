@@ -71,11 +71,14 @@ void HSS_Debug_Highlight(HSS_Debug_LogLevel_t logLevel);
 int sbi_printf(const char *fmt, ...);
 void sbi_puts(const char *buf);
 void sbi_putc(char c);
+
+void HSS_Debug_Timestamp(void);
+#    define mHSS_TIMESTAMP HSS_Debug_Timestamp()
+
 #    define mHSS_PUTS sbi_puts
 #    define mHSS_PUTC sbi_putc
 #    define mHSS_FANCY_PRINTF(logLevel, ...) { \
-         HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP); \
-         (void)sbi_printf("[%" PRIu64 "]", HSS_GetTime()); \
+         mHSS_TIMESTAMP; \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
          (void)sbi_printf(" %s(): ", __func__); \
          HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
@@ -83,8 +86,7 @@ void sbi_putc(char c);
          HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
      }
 #    define mHSS_FANCY_PUTS(logLevel, ...) { \
-         HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP); \
-         (void)sbi_printf("[%" PRIu64 "]", HSS_GetTime()); \
+         mHSS_TIMESTAMP; \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
          (void)sbi_printf(" %s(): ", __func__); \
          HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
@@ -98,8 +100,7 @@ void sbi_putc(char c);
 #ifndef mHSS_DEBUG_PRINTF
 #  ifdef DEBUG
 #    define mHSS_DEBUG_PRINTF(logLevel, ...) { \
-         HSS_Debug_Highlight(HSS_DEBUG_LOG_TIMESTAMP); \
-         (void)sbi_printf("[%" PRIu64 "]", HSS_GetTime()); \
+         mHSS_TIMESTAMP; \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
          (void)sbi_printf(" %s(): ", __func__); \
          HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
