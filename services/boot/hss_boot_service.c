@@ -137,58 +137,58 @@ static bool pmpSetupFlag[HSS_HART_NUM_PEERS] = { false, false, false, false, fal
  * individual boot machines, one per U54 hart
  */
 struct StateMachine boot_service1 = {
-    .state             = (stateType_t)BOOT_IDLE, 
-    .prevState         = (stateType_t)SM_INVALID_STATE, 
-    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
-    .pMachineName      = (const char *)"boot_service(u54_1)", 
-    .startTime         = 0u, 
-    .lastExecutionTime = 0u, 
-    .executionCount    = 0u, 
-    .pStateDescs       = boot_state_descs, 
-    .debugFlag         = true, 
-    .priority          = 0u, 
+    .state             = (stateType_t)BOOT_IDLE,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)BOOT_NUM_STATES,
+    .pMachineName      = (const char *)"boot_service(u54_1)",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = boot_state_descs,
+    .debugFlag         = true,
+    .priority          = 0u,
     .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service2 = {
-    .state             = (stateType_t)BOOT_IDLE, 
-    .prevState         = (stateType_t)SM_INVALID_STATE, 
-    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
-    .pMachineName      = (const char *)"boot_service(u54_2)", 
-    .startTime         = 0u, 
-    .lastExecutionTime = 0u, 
-    .executionCount    = 0u, 
-    .pStateDescs       = boot_state_descs, 
-    .debugFlag         = true, 
-    .priority          = 0u, 
+    .state             = (stateType_t)BOOT_IDLE,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)BOOT_NUM_STATES,
+    .pMachineName      = (const char *)"boot_service(u54_2)",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = boot_state_descs,
+    .debugFlag         = true,
+    .priority          = 0u,
     .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service3 = {
-    .state             = (stateType_t)BOOT_IDLE, 
-    .prevState         = (stateType_t)SM_INVALID_STATE, 
-    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
-    .pMachineName      = (const char *)"boot_service(u54_3)", 
-    .startTime         = 0u, 
-    .lastExecutionTime = 0u, 
-    .executionCount    = 0u, 
-    .pStateDescs       = boot_state_descs, 
-    .debugFlag         = true, 
-    .priority          = 0u, 
+    .state             = (stateType_t)BOOT_IDLE,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)BOOT_NUM_STATES,
+    .pMachineName      = (const char *)"boot_service(u54_3)",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = boot_state_descs,
+    .debugFlag         = true,
+    .priority          = 0u,
     .pInstanceData     = (void *)&localData[0]
 };
 
 struct StateMachine boot_service4 = {
-    .state             = (stateType_t)BOOT_IDLE, 
-    .prevState         = (stateType_t)SM_INVALID_STATE, 
-    .numStates         = (const uint32_t)BOOT_NUM_STATES, 
-    .pMachineName      = (const char *)"boot_service(u54_4)", 
-    .startTime         = 0u, 
-    .lastExecutionTime = 0u, 
-    .executionCount    = 0u, 
-    .pStateDescs       = boot_state_descs, 
-    .debugFlag         = true, 
-    .priority          = 0u, 
+    .state             = (stateType_t)BOOT_IDLE,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)BOOT_NUM_STATES,
+    .pMachineName      = (const char *)"boot_service(u54_4)",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = boot_state_descs,
+    .debugFlag         = true,
+    .priority          = 0u,
     .pInstanceData     = (void *)&localData[0]
 };
 
