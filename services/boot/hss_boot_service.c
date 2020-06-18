@@ -161,7 +161,7 @@ struct StateMachine boot_service2 = {
     .pStateDescs       = boot_state_descs,
     .debugFlag         = true,
     .priority          = 0u,
-    .pInstanceData     = (void *)&localData[0]
+    .pInstanceData     = (void *)&localData[1]
 };
 
 struct StateMachine boot_service3 = {
@@ -175,7 +175,7 @@ struct StateMachine boot_service3 = {
     .pStateDescs       = boot_state_descs,
     .debugFlag         = true,
     .priority          = 0u,
-    .pInstanceData     = (void *)&localData[0]
+    .pInstanceData     = (void *)&localData[2]
 };
 
 struct StateMachine boot_service4 = {
@@ -189,7 +189,7 @@ struct StateMachine boot_service4 = {
     .pStateDescs       = boot_state_descs,
     .debugFlag         = true,
     .priority          = 0u,
-    .pInstanceData     = (void *)&localData[0]
+    .pInstanceData     = (void *)&localData[3]
 };
 
 /*
