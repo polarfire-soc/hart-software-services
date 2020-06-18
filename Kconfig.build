@@ -18,6 +18,18 @@ config USE_LOGO
 
 		If you do not know what to do here, say Y.
 
+menu "Logo"
+config LOGO_INVERT_COLORS
+	bool "Invert Logo colors"
+        default n
+        depends on USE_LOGO
+        help
+		This feature enables output for the Microchip logo, with
+                white text.
+
+		If you do not know what to do here, say N.
+endmenu
+
 
 config CC_STACKPROTECTOR_STRONG
 	bool "Enable strong stack protection"

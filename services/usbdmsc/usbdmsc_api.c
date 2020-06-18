@@ -114,7 +114,7 @@ void USBDMSC_Start(void)
 
     if (done) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false..." CRLF);
-    } else { 
+    } else {
 #if !defined(CONFIG_SERVICE_USBDMSC_REGISTER) || !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
         bool isHostConnected = false;
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)" CRLF);
