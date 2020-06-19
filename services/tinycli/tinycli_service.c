@@ -82,7 +82,7 @@ static void tinycli_init_handler(struct StateMachine * const pMyMachine)
 
 #define HSS_UART_HELPER_MAX_GETLINE 80
 
-static char myBuffer[HSS_UART_HELPER_MAX_GETLINE]; 
+static char myBuffer[HSS_UART_HELPER_MAX_GETLINE];
 const size_t bufferLen = mSPAN_OF(myBuffer);
 ssize_t readStringLen = 0;
 

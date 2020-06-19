@@ -16,8 +16,12 @@ Source code is found under the `hart-software-services` folder.
      
     hart-software-services
     ├── baremetal
-    │   ├── drivers (legacy)
+    │   ├── drivers (local modules)
     │   └── polarfire-soc-bare-metal-library (subtree)
+    ├── boards
+    │   ├── icicle-kit-es (Icicle Kit)
+    │   ├── mpfs (Aloe Vera platform)
+    │   └── lc-mpfs (Low-cost Aloe Vera platform)
     ├── compression
     ├── debug (helper routines for function profiling)
     ├── include
@@ -30,12 +34,16 @@ Source code is found under the `hart-software-services` folder.
     │   ├── flashfreeze
     │   ├── goto
     │   ├── ipi_poll
+    │   ├── mmc
     │   ├── opensbi
     │   ├── powermode
     │   ├── qspi
     │   ├── sgdma
     │   ├── spi
+    │   ├── tinycli
     │   ├── uart
+    │   ├── usbdmsc
+    │   │    └── flash_drive
     │   ├── wdog
     │   └── ymodem
     ├── ssmb (secure software message bus)

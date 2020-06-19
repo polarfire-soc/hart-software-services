@@ -61,6 +61,22 @@
 #  include "usbdmsc_service.h"
 #endif
 
+#ifdef CONFIG_SERVICE_POWERMODE
+#  include "powermode_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_FLASHFREEZE
+#  include "flashfreeze_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_CRYPTO
+#  include "crypto_service.h"
+#endif
+
+#ifdef CONFIG_SERVICE_WDOG
+#  include "wdog_service.h"
+#endif
+
 #include "hss_debug.h"
 #include "hss_registry.h"
 

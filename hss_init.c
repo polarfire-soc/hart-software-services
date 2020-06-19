@@ -172,7 +172,7 @@ bool HSS_Init_RWDATA_BSS(void)
 }
 
 
-#ifdef CONFIG_USE_GNU_BUILD_ID
+#ifdef CONFIG_CC_USE_GNU_BUILD_ID
 void HSS_PrintBuildId(void);
 void HSS_PrintBuildId(void)
 {
@@ -201,7 +201,7 @@ void HSS_PrintBuildId(void)
 #include "tool_versions.h"
 void HSS_PrintToolVersions(void)
 {
-    mHSS_FANCY_PUTS(LOG_NORMAL, "Built with the following tools: " CRLF);
+    mHSS_FANCY_PUTS(LOG_STATUS, "Built with the following tools: " CRLF);
 
     mHSS_PUTS(" - " CC_VERSION_STRING CRLF);
     mHSS_PUTS(" - " LD_VERSION_STRING CRLF CRLF);
@@ -215,7 +215,7 @@ bool HSS_E51_Banner(void)
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
     mHSS_FANCY_PRINTF(LOG_STATUS, "(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF);
 
-#ifdef CONFIG_USE_GNU_BUILD_ID
+#ifdef CONFIG_CC_USE_GNU_BUILD_ID
     HSS_PrintBuildId();
 #endif
 
