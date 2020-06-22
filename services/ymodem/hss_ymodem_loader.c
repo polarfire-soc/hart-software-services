@@ -159,7 +159,7 @@ void hss_loader_ymodem_loop(void)
 #ifdef CONFIG_SERVICE_MMC
             " 5. MMC Write -- write application file to the Device" CRLF
 #endif
-            " 6. Quit -- quit QSPI Utility " CRLF CRLF
+            " 6. Quit -- quit QSPI Utility" CRLF CRLF
             " Select a number:" CRLF;
 
         mHSS_PUTS(menuText);
