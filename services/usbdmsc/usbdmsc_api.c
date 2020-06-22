@@ -56,7 +56,7 @@ void USBDMSC_Init(void)
 bool USBDMSC_Poll(void)
 {
     bool done = false;
-#ifndef CONFIG_SERVICE_USBDMSC_REGISTER
+#if !defined(CONFIG_SERVICE_USBDMSC_REGISTER) || !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
     uint8_t rx_byte = 0;
 
     bool retval = uart_getchar(&rx_byte, 0, false);
