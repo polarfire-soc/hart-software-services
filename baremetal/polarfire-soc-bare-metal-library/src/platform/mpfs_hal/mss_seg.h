@@ -44,12 +44,14 @@ extern "C" {
 #endif
 
 typedef struct {
-
-    struct {
-        volatile int32_t    offset : 15;
-        volatile int32_t    rsrvd  : 16;
-        volatile int32_t    locked : 1;
-    } CFG[8U];
+    union {
+        struct {
+            volatile int32_t    offset : 15;
+            volatile int32_t    rsrvd  : 16;
+            volatile int32_t    locked : 1;
+        } CFG;
+        uint32_t raw;
+    } u[8u];
 
     uint32_t fill[64U-8U];
 

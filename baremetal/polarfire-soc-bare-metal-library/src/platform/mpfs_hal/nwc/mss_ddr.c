@@ -966,7 +966,7 @@ static int32_t ddr_setup(void)
 
                         rx_previous = rx_current;
                         uint32_t max=0U;
-                        for (int j=0U;j<8U;j++)
+                        for (uint32_t j=0U;j<8U;j++)
                         {
                             /* sweep through found answers and select the most common */
                             if (answer_count[j] > max)
@@ -4042,13 +4042,12 @@ static void init_ddrc(void)
  */
 static void setup_ddr_segments(void)
 {
-
-    SEG[0].CFG[0].offset = LIBERO_SETTING_SEG0_0;
-    SEG[0].CFG[1].offset = LIBERO_SETTING_SEG0_1;
-    SEG[1].CFG[2].offset = LIBERO_SETTING_SEG1_2;
-    SEG[1].CFG[3].offset = LIBERO_SETTING_SEG1_3;
-    SEG[1].CFG[4].offset = LIBERO_SETTING_SEG1_4;
-    SEG[1].CFG[5].offset = LIBERO_SETTING_SEG1_5;
+    SEG[0].u[0].raw = LIBERO_SETTING_SEG0_0;
+    SEG[0].u[1].raw = LIBERO_SETTING_SEG0_1;
+    SEG[1].u[2].raw = LIBERO_SETTING_SEG1_2;
+    SEG[1].u[3].raw = LIBERO_SETTING_SEG1_3;
+    SEG[1].u[4].raw = LIBERO_SETTING_SEG1_4;
+    SEG[1].u[5].raw = LIBERO_SETTING_SEG1_5;
     /*
      * disable ddr blocker
      * Is cleared at reset. When written to ‘1’ disables the blocker function
@@ -4056,8 +4055,7 @@ static void setup_ddr_segments(void)
      * the register cannot be written to 0, only an MSS reset will clear the
      * register
      */
-    SEG[0].CFG[7].offset = 0x01U;
-
+    SEG[0].u[7].raw = 0x01U;
 }
 
 /**

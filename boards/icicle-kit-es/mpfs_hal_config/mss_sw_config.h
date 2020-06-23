@@ -182,21 +182,6 @@
  */
 #define USE_SW_BCLK_SCK_TRAINING                    0x00000001UL
 #define SW_TRAING_BCLK_SCLK_OFFSET                  0x00000000UL
-
-#if 0
-/*
- * 0x6DU => setting vref_ca to 40%
- * This (0x6DU) is the default setting.
- * */
-#define DDR_MODE_REG_VREF_VALUE       0x6DU
-
-/*
- * Will review address settings in Libero, tie in, sanity check with SEG
- * settings
- */
-#define LIBERO_SETTING_DDR_32_NON_CACHE 0xC0000000ULL
-#endif
-
 /*
  * Set up 1MiB of L2 cache
  */
