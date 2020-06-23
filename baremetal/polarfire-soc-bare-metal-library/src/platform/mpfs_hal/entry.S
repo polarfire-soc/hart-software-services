@@ -16,7 +16,7 @@
 #include "bits.h"
 #include "encoding.h"
 #include "mtrap.h"
-#include "config/software/mpfs_hal/mss_sw_config.h"
+#include "mpfs_hal_config/mss_sw_config.h"
 
   .option norvc
   .section .text.init,"ax", %progbits

@@ -118,7 +118,7 @@ follow ODT_STR table, depends on drive STR setting */
 #if !defined (LIBERO_SETTING_RPC_SPARE0_DQ)
 /*bits 15:14 connect to pc_ibufmx DQ/DQS/DM bits 13:12 connect to pc_ibufmx
 CA/CK Check at ioa pc bit */
-#define LIBERO_SETTING_RPC_SPARE0_DQ    0x0000A000UL
+#define LIBERO_SETTING_RPC_SPARE0_DQ    0x00008000UL //13:12 ca/ck ibufmx 15:14 dqdqsdm mid common mode
     /* RPC_SPARE0_DQ                     [0:32]  RW value= 0xA000 */
 #endif
 #if !defined (LIBERO_SETTING_RPC_EN_ADDCMD1_OVRT10)
@@ -130,7 +130,8 @@ architecture */
 #if !defined (LIBERO_SETTING_RPC_EN_ADDCMD2_OVRT11)
 /*0x2000 742C OVRT11 - physical configurations of LPDDR4, given the twindie
 architecture */
-#define LIBERO_SETTING_RPC_EN_ADDCMD2_OVRT11    0x00000000UL
+//#define LIBERO_SETTING_RPC_EN_ADDCMD2_OVRT11    0x00000000UL
+#define LIBERO_SETTING_RPC_EN_ADDCMD2_OVRT11    0x00000120UL
     /* RPC_EN_ADDCMD2_OVRT11             [0:32]  RW value= 0x0 */
 #endif
 

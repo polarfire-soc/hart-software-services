@@ -33,13 +33,17 @@ typedef long            ssize_t;
 #include "mpfs_hal/nwc/mss_pll.h"
 #include "mpfs_hal/nwc/mss_scb_nwc_regs.h"
 #include "mpfs_hal/nwc/mss_scb_nwc_regs.h"
-#include "config/software/mpfs_hal/mss_sw_config.h"
+/*
+ * mss_sw_config.h may be edited as required and should be located outside the
+ * mpfs_hal folder
+ */
+#include "mpfs_hal_config/mss_sw_config.h"
 /*
  * The hw_platform.h is included here only. It must be included after
  * mss_sw_config.h. This allows defines in hw_platform.h be overload from
  * mss_sw_config.h if necessary.
  * */
-#include "config/hardware/hw_platform.h"
+#include "soc_config/hw_platform.h"
 #include "atomic.h"
 #include "bits.h"
 #include "encoding.h"
@@ -60,6 +64,7 @@ typedef long            ssize_t;
 #include "nwc/mss_ddr.h"
 #include "nwc/mss_sgmii.h"
 #include "system_startup.h"
+#include "nwc/mss_ddr_debug.h"
 #ifdef SIMULATION_TEST_FEEDBACK
 #include "nwc/simulation.h"
 #endif

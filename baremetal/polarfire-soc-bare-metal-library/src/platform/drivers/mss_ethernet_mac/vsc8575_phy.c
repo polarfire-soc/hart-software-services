@@ -22,7 +22,7 @@
 #include "drivers/mss_mac/mss_ethernet_mac_types.h"
 
 #include "mpfs_hal/mss_plic.h"
-#include "config/hardware/hw_platform.h"
+#include "soc_config/hw_platform.h"
 #include "mpfs_hal/mss_coreplex.h"
 
 #include "hal/hal.h"

@@ -15,7 +15,7 @@
 #include "mpfs_hal/mss_plic.h"
 #include "mpfs_hal/mss_util.h"
 #include "mpfs_hal/mss_ints.h"
-#include "config/hardware/hw_platform.h"
+#include "soc_config/hw_platform.h"
 
 #include "drivers/mss_mac/mss_ethernet_registers.h"
 #include "drivers/mss_mac/mss_ethernet_mac_regs.h"

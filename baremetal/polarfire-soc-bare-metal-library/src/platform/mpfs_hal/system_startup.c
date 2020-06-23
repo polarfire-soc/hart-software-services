@@ -165,8 +165,7 @@ __attribute__((weak)) int main_first_hart(void)
     /* should never get here */
     while(true)
     {
-        static volatile uint64_t counter = 0U;
-
+       static volatile uint64_t counter = 0U;
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;
     }
@@ -243,8 +242,7 @@ __attribute__((weak)) int main_other_hart(void)
     /* should never get here */
     while(true)
     {
-        static volatile uint64_t counter = 0U;
-
+       static volatile uint64_t counter = 0U;
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;
     }
@@ -267,14 +265,14 @@ static void load_virtual_rom(void)
 
     const uint32_t rom[NB_BOOT_ROM_WORDS] =
     {
-            0x00000513U,    /* li a0, 0 */
-            0x34451073U,    /* csrw mip, a0 */
-            0x10500073U,    /* wfi */
-            0xFF5FF06FU,    /* j 0x20003120 */
-            0xFF1FF06FU,    /* j 0x20003120 */
-            0xFEDFF06FU,    /* j 0x20003120 */
-            0xFE9FF06FU,    /* j 0x20003120 */
-            0xFE5FF06FU     /* j 0x20003120 */
+        0x00000513U,    /* li a0, 0 */
+        0x34451073U,    /* csrw mip, a0 */
+        0x10500073U,    /* wfi */
+        0xFF5FF06FU,    /* j 0x20003120 */
+        0xFF1FF06FU,    /* j 0x20003120 */
+        0xFEDFF06FU,    /* j 0x20003120 */
+        0xFE9FF06FU,    /* j 0x20003120 */
+        0xFE5FF06FU     /* j 0x20003120 */
     };
 
     for(inc = 0; inc < NB_BOOT_ROM_WORDS; ++inc)

@@ -17,17 +17,9 @@
 #include <stdio.h>
 #include "mpfs_hal/mss_hal.h"
 
-/*
- * SCB bank addresses, used to setup NCODE, PCODE and VS
+/*******************************************************************************
+ * external functions
  */
-/* Configures the MSSIO block 2 */
-#define SCB_ADD_MSSIO_BANK2_CFG_CR  0x370401C4ULL
-/* Configures the MSSIO block 2 */
-#define SCB_ADD_MSSIO_BANK4_CFG_CR  0x370401C8ULL
-/* dpc values for MSSIO bank 2 */
-#define SCB_ADD_MSSIO_VB2_CFG       0x37040278ULL
-/* dpc values for MSSIO bank 4*/
-#define SCB_ADD_MSSIO_VB4_CFG       0x3704027CULL
 
 /*
  * IOMUX values from Libero
@@ -103,7 +95,6 @@ MSSIO_BANK2_CONFIG mssio_bank2_io_config = {
  * Local functions
  */
 static int32_t io_mux_and_bank_config(void);
-static int32_t set_bank2_and_bank4_volts(void);
 
 /***************************************************************************//**
  *    MSSIO OFF Mode
@@ -128,7 +119,7 @@ static int32_t set_bank2_and_bank4_volts(void);
  *
  * Setup the IOMUX and IO bank 2 and 4.
  *
- * To setup bank 2 and 4, ncode and pcode registers rpc registers in system
+ * To setup bank 2 and 4, ncode and pcode scb registers in system
  * register block are set as per Libero supplied values.
  * These need to be transferred to I/0
  *
@@ -136,9 +127,8 @@ static int32_t set_bank2_and_bank4_volts(void);
  */
 int32_t mssio_setup(void)
 {
-    uint32_t ret_status;
-    ret_status = io_mux_and_bank_config();
-    ret_status = set_bank2_and_bank4_volts();
+    uint32_t ret_status = io_mux_and_bank_config();
+    set_bank2_and_bank4_volts();
     return (ret_status);
 }
 
@@ -202,31 +192,28 @@ static int32_t io_mux_and_bank_config(void)
                 &(mssio_bank2_io_config),
                 sizeof(MSSIO_BANK2_CONFIG));
 
+    set_bank2_and_bank4_volts();
+
     return(0L);
 }
 
 /**
  * set_bank2_and_bank4_volts(void)
  * sets bank voltage parameters
- * These must be set by a direct write to the SCB registers
- * MSSIO_BANK4_CFG_CR
- *   bank_pcode                        [0:6]
- *   bank_ncode                        [6:6]
- *   vs                                [12:4]
- * MSSIO_BANK2_CFG_CR
- *   bank_pcode                        [0:6]
- *   bank_ncode                        [6:6]
- *   vs                                [12:4]
- * @return 0 => pass
+ *   bank_pcode
+ *   bank_ncode
+ *   vs
+ * @return
  */
-static int32_t  set_bank2_and_bank4_volts(void)
+void set_bank2_and_bank4_volts(void)
 {
-    volatile uint32_t *scb_address;
-    scb_address = (uint32_t *)SCB_ADD_MSSIO_BANK2_CFG_CR;
-    *scb_address = (uint32_t)LIBERO_SETTING_MSSIO_BANK4_CFG_CR;
-    scb_address = (uint32_t *)SCB_ADD_MSSIO_BANK4_CFG_CR;
-    *scb_address = (uint32_t)LIBERO_SETTING_MSSIO_BANK4_CFG_CR;
-    return(0U);
+
+    SCB_REGS->MSSIO_BANK2_CFG_CR.MSSIO_BANK2_CFG_CR =\
+                (uint32_t)LIBERO_SETTING_MSSIO_BANK2_CFG_CR;
+    SCB_REGS->MSSIO_BANK4_CFG_CR.MSSIO_BANK4_CFG_CR =\
+                (uint32_t)LIBERO_SETTING_MSSIO_BANK4_CFG_CR;
+
+    return;
 }
 
 #ifdef EXAMPLE_MSSIO_APP_CODE

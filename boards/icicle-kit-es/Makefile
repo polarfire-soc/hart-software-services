@@ -36,7 +36,8 @@ CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
 
 INCLUDES += \
-	-Iboards/icicle-kit-es/config/hardware \
+	-Iboards/icicle-kit-es/mpfs_hal_config/\
+	-Iboards/icicle-kit-es/soc_config/\
 	-Iboards/icicle-kit-es/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 

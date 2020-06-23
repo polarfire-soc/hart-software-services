@@ -243,9 +243,9 @@ extern "C" {
 
 /*Switches GPIO interrupt from PAD to Fabric GPIO*/
 #define GPIO_INTERRUPT_FAB_CR_OFFSET                             0x54
-    /* Setting these  bits will disable the Pad interrupt and enable the fa
-    bric GPIO interrupt for bits 31:0. When the bit is set the Pad interrupt wi
-    ll be ORED into the GPIO0 & GPIO1  non-direct  interrupts. When the bit is
+    /* Setting these  bits will disable the Pad interrupt and enable the fabric
+    GPIO interrupt for bits 31:0. When the bit is set the Pad interrupt will
+    be ORED into the GPIO0 & GPIO1  non-direct  interrupts. When the bit is
     not set the Fabric interrupt is ORED into the GPIO2  non-direct interrupt.
     To prevent ORING then the interrupt should not be enabled in the GPIO block
     */
@@ -330,10 +330,10 @@ extern "C" {
     #define APBBUS_CR_H2FINT_OFFSET                              0x17
     #define APBBUS_CR_H2FINT_MASK                                (0x01 << 0x17)
 
-/*"Enables the clock to the MSS peripheral. By turning clocks off dynamic p
-    ower can be saved. When the clock is off the peripheral  should not be acce
-    ssed the acess may be ignored return unspecified data or result in bus resp
-    onse error."*/
+/*"Enables the clock to the MSS peripheral. By turning clocks off dynamic power
+    can be saved. When the clock is off the peripheral  should not be accessed
+    the access may be ignored return unspecified data or result in bus response
+    error."*/
 #define SUBBLK_CLOCK_CR_OFFSET                                   0x84
     /* */
     #define SUBBLK_CLOCK_CR_ENVM_OFFSET                          0x0
@@ -426,7 +426,7 @@ extern "C" {
     #define SUBBLK_CLOCK_CR_CFM_OFFSET                           0x1D
     #define SUBBLK_CLOCK_CR_CFM_MASK                             (0x01 << 0x1D)
 
-/*"Holds the MSS peripherals in reset. Whenin reset the peripheral  should
+/*"Holds the MSS peripherals in reset. Whenin reset the peripheral should
     not be accessed the acess may be ignored return unspecified data or result
     in bus response error."*/
 #define SOFT_RESET_CR_OFFSET                                     0x88
@@ -697,26 +697,26 @@ extern "C" {
     #define ENVM_CR_CLOCK_SUPPRESS_MASK                          (0x01 << 0x9)
     /* "Enables ""read-ahead"" on the ENVM controller. The controller will
     automatically read the next PNVM location as soon as possible ahead of the
-    AHB request. This will improve read performance when incrementing though me
-    mory as the NVM reads and AHB cycles are pipelined. When set  non increment
-    ing accesses will take longer as the controller may be in the process of re
-    ading the next address and the PNVM cycle needs to complete prior to starti
-    ng the required read"*/
+    AHB request. This will improve read performance when incrementing though
+    memory as the NVM reads and AHB cycles are pipelined. When set non incrementing
+    accesses will take longer as the controller may be in the process of reading
+    the next address and the PNVM cycle needs to complete prior to starting
+    the required read"*/
     #define ENVM_CR_READAHEAD_OFFSET                             0x10
     #define ENVM_CR_READAHEAD_MASK                               (0x01 << 0x10)
-    /* When '1' the controller will initiate separate ENVM reads for all re
-    ads. No buffering or speculative operations will be carried out. When perfo
-    rming word reads incrementing through PNVM each location will  be read twic
-    e (intended for test use)*/
+    /* When '1' the controller will initiate separate ENVM reads for all reads.
+    No buffering or speculative operations will be carried out. When performing
+    word reads incrementing through PNVM each location will be read twice
+    (intended for test use)*/
     #define ENVM_CR_SLOWREAD_OFFSET                              0x11
     #define ENVM_CR_SLOWREAD_MASK                                (0x01 << 0x11)
     /* Enable the ENVM interrupt*/
     #define ENVM_CR_INTERRUPT_ENABLE_OFFSET                      0x12
     #define ENVM_CR_INTERRUPT_ENABLE_MASK                        (0x01 << 0x12)
-    /* "Sets the duration of the timer used to detect a non response of slo
-    w response from the PNVM on C and R bus accesses.Timer Duration = Value *
-    (1000/AHBFREQMHZ)   0x00: Timer disabled. If the timer expires the AHB cycl
-    e is terminates using the HRESP protocol"*/
+    /* "Sets the duration of the timer used to detect a non response of slow
+    response from the PNVM on C and R bus accesses.Timer Duration = Value *
+    (1000/AHBFREQMHZ)   0x00: Timer disabled. If the timer expires the AHB cycle
+    is terminates using the HRESP protocol"*/
     #define ENVM_CR_TIMER_OFFSET                                 0x18
     #define ENVM_CR_TIMER_MASK                                   (0xFF << 0x18)
 

@@ -416,6 +416,7 @@ void mss_pll_config(void)
     copy_switch_code(); /* copy switch code to RAM */
 
     MSS_SCB_DDR_PLL->SOFT_RESET     = PLL_INIT_AND_OUT_OF_RESET;
+    MSS_SCB_MSS_PLL->SOFT_RESET     = PLL_INIT_AND_OUT_OF_RESET;
 
     /*
         Enable the PLL by removing the reset-
@@ -442,7 +443,6 @@ void mss_pll_config(void)
 
     /* MSS PLL - 0x3E001000 - */
     MSS_SCB_MSS_PLL->PLL_CTRL       = LIBERO_SETTING_MSS_PLL_CTRL;
-    /* PLL calibration register */
 
     /*
      * PLL calibration register
@@ -505,7 +505,6 @@ void mss_pll_config(void)
      */
     mss_mux_post_mss_pll_config();
 }
-
 
 /**
  *
@@ -607,7 +606,7 @@ uint8_t ddr_pll_lock_scb(void)
 {
     uint8_t result = 1U;
 #ifndef RENODE_DEBUG
-    if((MSS_SCB_MSS_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == PLL_CTRL_LOCK_BIT)
+    if((MSS_SCB_DDR_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == PLL_CTRL_LOCK_BIT)
     {
         result = 0U; /* PLL lock has occurred */
     }
@@ -638,14 +637,14 @@ void sgmii_pll_config_scb(uint8_t option)
     switch(option)
     {
         default:
-        case 0:   /* write to   SCB register */
+        case SCB_UPDATE:   /* write to   SCB register */
             /* PERIPH / periph_reset_b  - This asserts the functional reset of
              * the block. It is asserted at power up. When written is stays
              * asserted until written to 0.
              * First set periph_reset_b, than remove reset. As may be called
              * more than one.
              * */
-            MSS_SCB_DDR_PLL->SOFT_RESET      = PLL_INIT_AND_OUT_OF_RESET;
+            MSS_SCB_SGMII_PLL->SOFT_RESET      = PLL_INIT_AND_OUT_OF_RESET;
 
             /* MSS PLL - 0x3E001000 - */
             MSS_SCB_SGMII_PLL->PLL_CTRL      = LIBERO_SETTING_SGMII_PLL_CTRL;
@@ -684,7 +683,7 @@ void sgmii_pll_config_scb(uint8_t option)
 
             break;
 
-        case 1:
+        case RPC_REG_UPDATE:
             /*
              * set the NV map reset
              * This will load the APB registers, set via SGMII TIP.
@@ -704,7 +703,7 @@ uint8_t sgmii_pll_lock_scb(void)
 {
     uint8_t result = 1U;
 #ifndef RENODE_DEBUG
-    if((MSS_SCB_MSS_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == PLL_CTRL_LOCK_BIT)
+    if((MSS_SCB_SGMII_PLL->PLL_CTRL & PLL_CTRL_LOCK_BIT) == PLL_CTRL_LOCK_BIT)
     {
         result = 0U; /* PLL lock has occurred */
     }

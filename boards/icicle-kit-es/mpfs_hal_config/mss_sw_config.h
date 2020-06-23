@@ -6,6 +6,7 @@
  * MPFS HAL Embedded Software
  *
  */
+
 /*******************************************************************************
  *
  * Platform definitions
@@ -121,6 +122,7 @@
 #define MSSIO_SUPPORT
 //#define SIMULATION_TEST_FEEDBACK
 //#define E51_ENTER_SLEEP_STATE
+
 /*
  * DDR software options
  */
@@ -174,147 +176,14 @@
 //#define DEBUG_DDR_DDRCFG
 
 /*
- * You can over write any on the settings coming from Libero here
- *
- * e.g. Define how you want SEG registers configured, if you want to change from
- * the default settings
- */
-
-#define LIBERO_SETTING_SEG0_0     (-(0x0080000000LL >> 24U))
-#define LIBERO_SETTING_SEG0_1     (-(0x1000000000LL >> 24U))
-#define LIBERO_SETTING_SEG1_2     (-(0x00C0000000LL >> 24U))
-#define LIBERO_SETTING_SEG1_3     (-(0x1400000000LL >> 24U))
-#define LIBERO_SETTING_SEG1_4     (-(0x00D0000000LL >> 24U))
-#define LIBERO_SETTING_SEG1_5     (-(0x1800000000LL >> 24U))
-
-/*  comment out any of these defines if you do not want to sweep values
- *      SUPPORT_ADDR_CMD_OFFSET_SWEEP
- *      SUPPORT_BCLK_SCLK_SWEEP
- *      SUPPORT_DPC_SWEEP
- *  Alternatively, modify the sweep values. This helps when calibrating a new
- *  board design. Enabling DEBUG_DDR_INIT define above will display the
- *  calibration sweep.
- */
-//#define SWEEP_ENABLED
-#define SUPPORT_ADDR_CMD_OFFSET_SWEEP
-#define SUPPORT_BCLK_SCLK_SWEEP
-#define SUPPORT_DPC_SWEEP
-
-#define LIBERO_SETTING_MAX_ADDRESS_CMD_OFFSET       4UL
-#define LIBERO_SETTING_MIN_ADDRESS_CMD_OFFSET       2UL
-#define MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS           ((LIBERO_SETTING_MAX_ADDRESS_CMD_OFFSET-LIBERO_SETTING_MIN_ADDRESS_CMD_OFFSET) +1U)
-
-#define LIBERO_SETTING_MAX_ADDRESS_BCLK_SCLK_OFFSET 5UL
-#define LIBERO_SETTING_MIN_ADDRESS_BCLK_SCLK_OFFSET 5UL
-#define MAX_NUMBER__BCLK_SCLK_OFFSET_SWEEPS         ((LIBERO_SETTING_MAX_ADDRESS_BCLK_SCLK_OFFSET-LIBERO_SETTING_MIN_ADDRESS_BCLK_SCLK_OFFSET)+1U)
-
-#define LIBERO_SETTING_MAX_DPC_V_GEN                9UL
-#define LIBERO_SETTING_MIN_DPC_V_GEN                9UL
-#define MAX_NUMBER_DPC_V_GEN_SWEEPS                 ((LIBERO_SETTING_MAX_DPC_V_GEN-LIBERO_SETTING_MIN_DPC_V_GEN)+1U)
-
-#define LIBERO_SETTING_MAX_DPC_H_GEN                2UL
-#define LIBERO_SETTING_MIN_DPC_H_GEN                2UL
-#define MAX_NUMBER_DPC_H_GEN_SWEEPS                 ((LIBERO_SETTING_MAX_DPC_H_GEN-LIBERO_SETTING_MIN_DPC_H_GEN)+1U)
-
-#define LIBERO_SETTING_MAX_DPC_VS_GEN               2UL
-#define LIBERO_SETTING_MIN_DPC_VS_GEN               2UL
-#define MAX_NUMBER_DPC_VS_GEN_SWEEPS                ((LIBERO_SETTING_MAX_DPC_VS_GEN-LIBERO_SETTING_MIN_DPC_VS_GEN)+1U)
-
-/*
- * Define SW_CONFIG_LPDDR_WR_CALIB_FN if we want to use lpddr4 wr calib function
- */
-//#define SW_CONFIG_LPDDR_WR_CALIB_FN
-/*
- *  Temporally write Icicle/peripheral board differences here
- */
-#define ICICLE_BOARD
-#ifdef ICICLE_BOARD
-
-/*
-* over-write value from Libero todo: remove once verified in Libero design
-*/
-
-#define LIBERO_SETTING_MSSIO_BANK2_CFG_CR    0x00080907UL
-    /* BANK_PCODE                        [0:6]   RW value= 0x7 */
-    /* RESERVED0                         [6:2]   RW value= 0x00 */
-    /* BANK_NCODE                        [8:6]   RW value= 0x9 */
-    /* RESERVED1                         [14:2]  RW value= 0x0 */
-    /* VS                                [16:4]  RW value= 0x8 */
-    /* RESERVED2                         [20:12] RW value= 0x0 */
-#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR    0x00080907UL
-    /* BANK_PCODE                        [0:6]   RW value= 0x7 */
-    /* RESERVED0                         [6:2]   RW value= 0x00 */
-    /* BANK_NCODE                        [8:6]   RW value= 0x9 */
-    /* RESERVED1                         [14:2]  RW value= 0x0 */
-    /* VS                                [16:4]  RW value= 0x8 */
-    /* RESERVED2                         [20:12] RW value= 0x0 */
-
-
-//#define LIBERO_SETTING_DPC_BITS         0x00049432UL
-#define LIBERO_SETTING_DPC_BITS         0x00049432UL  // Received from SVG 5/14/2020
-#define LIBERO_SETTING_DDRPHY_MODE      0x00014B24UL
-#define LIBERO_SETTING_DATA_LANES_USED  0x00000004UL
-#define LIBERO_SETTING_CFG_DQ_WIDTH     0x00000000UL
-
-#define LIBERO_SETTING_TIP_CFG_PARAMS    0x07CFE02AUL // 0x07CFE02AUL//0x07CFE02AUL
-    /* ADDCMD_OFFSET                     [0:3]   RW value= 0x2 5*/
-    /* BCKLSCLK_OFFSET                   [3:3]   RW value= 0x4 */
-    /* WRCALIB_WRITE_COUNT               [6:7]   RW value= 0x0 */
-    /* READ_GATE_MIN_READS               [13:8]  RW value= 0x1F */
-    /* ADDRCMD_WAIT_COUNT                [22:8]  RW value= 0x1F */
-
-/*
- * over write value from Libero
- */
-#define LIBERO_SETTING_CFG_DFI_T_PHY_WRLAT          0x00000003UL
-
-/*
- * Temporarily over write values from Libero
- */
-#define LIBERO_SETTING_RPC_ODT_ADDCMD           2
-#define LIBERO_SETTING_RPC_ODT_CLK              2
-#define LIBERO_SETTING_RPC_ODT_DQ               6 //6
-#define LIBERO_SETTING_RPC_ODT_DQS              6 //2 for peripheral board
-
-#else /* peripheral board */
-/*
- * over-write value from Libero todo: remove once verifid in Libero design
- */
-#define LIBERO_SETTING_TIP_CFG_PARAMS    0x07C3E035UL //0x07C3E025UL
-    /* ADDCMD_OFFSET                     [0:3]   RW value= 0x2 5*/
-    /* BCKLSCLK_OFFSET                   [3:3]   RW value= 0x4 */
-    /* WRCALIB_WRITE_COUNT               [6:7]   RW value= 0x0 */
-    /* READ_GATE_MIN_READS               [13:8]  RW value= 0x1F */
-    /* ADDRCMD_WAIT_COUNT                [22:8]  RW value= 0x1F */
-
-/*
- * over write value from Libero
- */
-#define LIBERO_SETTING_CFG_DFI_T_PHY_WRLAT          0x00000003UL
-
-/*
- * Temporarily over write values from Libero
- */
-#define LIBERO_SETTING_RPC_ODT_ADDCMD           2
-#define LIBERO_SETTING_RPC_ODT_CLK              2
-#define LIBERO_SETTING_RPC_ODT_DQ               6
-#define LIBERO_SETTING_RPC_ODT_DQS              2
-
-#endif /* not ICICLE */
-
-/*
- * 0 implies all IP traing's used. This should be the default
- * setting.
- */
-#define LIBERO_SETTING_TRAINING_SKIP_SETTING        0x00000000UL
-/*
  * 1 implies sw BCLK_SCK traing carried out before IP training. This should be
  * the default
  * setting.
  */
 #define USE_SW_BCLK_SCK_TRAINING                    0x00000001UL
-#define SW_TRAING_BCLK_SCLK_OFFSET                  0x00000006UL
+#define SW_TRAING_BCLK_SCLK_OFFSET                  0x00000000UL
 
+#if 0
 /*
  * 0x6DU => setting vref_ca to 40%
  * This (0x6DU) is the default setting.
@@ -326,6 +195,7 @@
  * settings
  */
 #define LIBERO_SETTING_DDR_32_NON_CACHE 0xC0000000ULL
+#endif
 
 /*
  * Set up 1MiB of L2 cache

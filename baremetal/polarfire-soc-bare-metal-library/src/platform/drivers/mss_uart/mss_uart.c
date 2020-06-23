@@ -12,7 +12,7 @@
 #include "mss_uart_regs.h"
 #include "mpfs_hal/mss_plic.h"
 #include "mpfs_hal/mss_util.h"
-#include "config/hardware/hw_platform.h"
+#include "soc_config/hw_platform.h"
 
 #ifdef __cplusplus
 extern "C" {

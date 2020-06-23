@@ -38,8 +38,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "config/hardware/hw_platform.h"
-#include "config/hardware/clocks/hw_mss_clks.h"
+#include "soc_config/hw_platform.h"
+#include "soc_config/clocks/hw_mss_clks.h"
 #undef ROUNDUP
 #undef ROUNDDOWN
 #include "mss_util.h"

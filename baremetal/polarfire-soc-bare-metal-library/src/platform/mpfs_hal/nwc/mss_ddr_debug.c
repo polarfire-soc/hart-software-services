@@ -28,15 +28,14 @@
 /*******************************************************************************
  * External Defines
  */
-
 #ifdef DEBUG_DDR_INIT
-#ifdef SWEEP_ENABLED
+#  ifdef SWEEP_ENABLED
 extern uint8_t sweep_results[MAX_NUMBER_DPC_VS_GEN_SWEEPS]\
                             [MAX_NUMBER_DPC_H_GEN_SWEEPS]\
                             [MAX_NUMBER_DPC_V_GEN_SWEEPS]\
                             [MAX_NUMBER__BCLK_SCLK_OFFSET_SWEEPS]\
                             [MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS];
-#endif
+#  endif
 mss_uart_instance_t *g_debug_uart = &g_mss_uart0_lo;
 #endif
 
@@ -155,7 +154,7 @@ static uint32_t ddr_write
 )
 {
     uint32_t i;
-    uint64_t DATA =0lu; //, read_data;
+    uint64_t DATA = 0lu; //, read_data;
     uint32_t error_count = 0U;
 
     switch (data_ptrn)
@@ -170,10 +169,10 @@ static uint32_t ddr_write
             break;
 #endif
         case PATTERN_0xCCCCCCCC :
-            DATA = 0xCCCCCCCC;
+            DATA = 0xCCCCCCCCCCCCCCCC;
             break;
         case PATTERN_0x55555555 :
-            DATA = 0x55555555;
+            DATA = 0x5555555555555555;
             break;
         case PATTERN_ZEROS :
             DATA = 0x00000000;
@@ -181,49 +180,54 @@ static uint32_t ddr_write
         default :  break;
     }
 
-  for( i = 0; i< (no_of_access); i++)
-  {
-    *DDR_word_ptr = DATA;
-
-    DDR_word_ptr = DDR_word_ptr + 1;
-    switch (data_ptrn)
+    for( i = 0; i< (no_of_access); i++)
     {
-        case PATTERN_INCREMENTAL : DATA = DATA + 0x00000001; break;
-        case PATTERN_WALKING_ONE :
-            if (DATA == 0x80000000)
-                DATA = 0x00000001;
-            else
-                DATA = (DATA << 1);
-            break;
-        case PATTERN_WALKING_ZERO :
-            DATA = ~DATA;
-            if (DATA == 0x80000000)
-                DATA = 0x00000001;
-            else
-            {
-                DATA = (DATA << 1);
-            }
-            DATA = ~DATA;
-            break;
-#ifndef HSS
-        case PATTERN_RANDOM :
-            DATA = rand ( );
-            break;
+        *DDR_word_ptr = DATA;
+        DDR_word_ptr = DDR_word_ptr + 1;
+#ifdef DEBUG_DDR_INIT
+        if((i%0x1000000UL) ==0UL)
+        {
+            MSS_UART_polled_tx(g_debug_uart, "w", (uint32_t)1UL);
+        }
 #endif
-        case PATTERN_0xCCCCCCCC :
-            DATA = 0xCCCCCCCC;
-            break;
-        case PATTERN_0x55555555 :
-            DATA = 0x55555555;
-            break;
-        case PATTERN_ZEROS :
-            DATA = 0x00000000;
-            break;
-        default :
-            break;
+        switch (data_ptrn)
+        {
+            case PATTERN_INCREMENTAL : DATA = DATA + 0x00000001; break;
+            case PATTERN_WALKING_ONE :
+                if (DATA == 0x80000000)
+                    DATA = 0x00000001;
+                else
+                    DATA = (DATA << 1);
+                break;
+            case PATTERN_WALKING_ZERO :
+                DATA = ~DATA;
+                if (DATA == 0x80000000)
+                    DATA = 0x00000001;
+                else
+                {
+                    DATA = (DATA << 1);
+                }
+                DATA = ~DATA;
+                break;
+#ifndef HSS
+            case PATTERN_RANDOM :
+                DATA = rand ( );
+                break;
+#endif
+            case PATTERN_0xCCCCCCCC :
+                DATA = 0xCCCCCCCCCCCCCCCC;
+                break;
+            case PATTERN_0x55555555 :
+                DATA = 0x5555555555555555;
+                break;
+            case PATTERN_ZEROS :
+                DATA = 0x00000000;
+                break;
+            default :
+                break;
         }
     }
-  return error_count;
+    return error_count;
 }
 
 /***************************************************************************//**
@@ -251,6 +255,7 @@ uint32_t ddr_read
 
     first_DDR_word_pt_t = DDR_word_ptr;
 #endif
+
     err_cnt = 0U;
     switch (data_ptrn)
     {
@@ -265,10 +270,10 @@ uint32_t ddr_read
         break;
 #endif
         case PATTERN_0xCCCCCCCC :
-            DATA = 0xCCCCCCCC;
+            DATA = 0xCCCCCCCCCCCCCCCC;
         break;
         case PATTERN_0x55555555 :
-            DATA = 0x55555555;
+            DATA = 0x5555555555555555;
         break;
         case PATTERN_ZEROS :
             DATA = 0x00000000;
@@ -284,19 +289,26 @@ uint32_t ddr_read
         DDR_word_pt_t = DDR_word_ptr;
         ddr_data = *DDR_word_pt_t;
 
+#ifdef DEBUG_DDR_INIT
+        if((i%0x1000000UL) ==0UL)
+        {
+            MSS_UART_polled_tx(g_debug_uart, "r", (uint32_t)1UL);
+        }
+#endif
+
         if (ddr_data != DATA)
         {
 #ifdef DEBUG_DDR_INIT
 #ifdef DEBUG_DDR_RD_RW_FAIL
             if (err_cnt <=0xF)
             {
-                uprint32(&g_mss_uart0_lo,\
+                uprint32(g_debug_uart,\
                         "\n\r READ/ WRITE ACCESS FAILED AT ADDR: 0x ",\
                             (uintptr_t)DDR_word_ptr);
-                uprint32(&g_mss_uart0_lo,"\t Expected Data 0x ", DATA);
-                uprint32(&g_mss_uart0_lo,"\t READ DATA: 0x ", ddr_data);
-                uprint32(&g_mss_uart0_lo,"\t READ DATA: 0x ", *DDR_word_ptr);
-                uprint32(&g_mss_uart0_lo,"\t READ DATA: 0x ", *DDR_word_ptr);
+                uprint32(g_debug_uart,"\t Expected Data 0x ", DATA);
+                uprint32(g_debug_uart,"\t READ DATA: 0x ", ddr_data);
+                uprint32(g_debug_uart,"\t READ DATA: 0x ", *DDR_word_ptr);
+                uprint32(g_debug_uart,"\t READ DATA: 0x ", *DDR_word_ptr);
             }
 #endif
 #endif
@@ -306,8 +318,8 @@ uint32_t ddr_read
         {
 #ifdef DEBUG_DDR_RD_RW_PASS
             //printf("\n\r READ/ WRITE ACCESS passED AT ADDR: 0x%x expected data = 0x%x, Data read 0x%x",DDR_word_ptr, DATA, *DDR_word_ptr);
-            uprint32(&g_mss_uart0_lo, "\n\r READ/ WRITE ACCESS PASSED AT ADDR: 0x", DDR_word_ptr);
-            uprint32(&g_mss_uart0_lo,"\t READ DATA: 0x", *DDR_word_ptr);
+            uprint32(&g_debug_uart, "\n\r READ/ WRITE ACCESS PASSED AT ADDR: 0x", DDR_word_ptr);
+            uprint32(&g_debug_uart,"\t READ DATA: 0x", *DDR_word_ptr);
 #endif
         }
         DDR_word_ptr = DDR_word_ptr + 1U;
@@ -341,10 +353,10 @@ uint32_t ddr_read
                 break;
 #endif
             case PATTERN_0xCCCCCCCC :
-                DATA = 0xCCCCCCCC;
+                DATA = 0xCCCCCCCCCCCCCCCC;
                 break;
             case PATTERN_0x55555555 :
-                DATA = 0x55555555;
+                DATA = 0x5555555555555555;
                 break;
             case PATTERN_ZEROS :
                 DATA = 0x00000000;
@@ -377,14 +389,12 @@ uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access,\
             if(pattern & pattern_mask)
             {
 #ifdef DEBUG_DDR_INIT
-                uprint32(&g_mss_uart0_lo,"\n\r\t Pattern: 0x", pattern_shift);
+                uprint32(g_debug_uart,"\n\r\t Pattern: 0x", pattern_shift);
 #endif
                 /* write the pattern */
-                error_cnt += ddr_write ((uint64_t *)DDR_word_ptr + 0x100ULL,\
-                        no_access, pattern_mask);
+                error_cnt += ddr_write ((uint64_t *)DDR_word_ptr, no_access, pattern_mask);
                 /* read back and verifies */
-                error_cnt += ddr_read ((uint64_t *)DDR_word_ptr+ 0x100ULL, \
-                        no_access, pattern_mask);
+                error_cnt += ddr_read ((uint64_t *)DDR_word_ptr, no_access, pattern_mask);
             }
         }
         DDR_word_ptr++; /* increment the address */

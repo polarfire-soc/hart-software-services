@@ -382,6 +382,23 @@ typedef enum DDR_MEMORY_ACCESS_
 #define DQ_DQS_NUM_TAPS                             5U
 //#define SW_CONFIG_LPDDR_WR_CALIB_FN
 
+#if !defined (LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET)
+/* If skipping add/cmd training, this value is used */
+/* The value used may be trained. The value here should be determined */
+/* for the board design by performing a manual sweep. */
+#define LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET    0x00000006UL
+    /* CA_BUS_RX_OFF_POST_TRAINING       [0:1]   RW value= 0x1 */
+#endif
+
+/*
+ * We currently need at least one retrain, otherwise driver can get stuck in
+ * sanity check state
+ */
+#if !defined (EN_RETRY_ON_FIRST_TRAIN_PASS)
+#define EN_RETRY_ON_FIRST_TRAIN_PASS    1
+#endif
+
+
 /***************************************************************************//**
 
  */
@@ -629,6 +646,26 @@ uint32_t
 ddr_state_machine
 (
     DDR_SS_COMMAND command
+);
+
+/***************************************************************************//**
+  The debug_read_ddrcfg() prints out the ddrcfg register values
+
+  @return
+    This function returns status, see DDR_SS_STATUS enum
+
+  Example:
+  @code
+
+      debug_read_ddrcfg();
+
+  @endcode
+
+ */
+void
+debug_read_ddrcfg
+(
+    void
 );
 
 

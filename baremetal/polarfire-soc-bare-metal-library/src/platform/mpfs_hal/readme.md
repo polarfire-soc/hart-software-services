@@ -33,38 +33,89 @@ There are two configuration sources.
    form for consumption by the hal.
   
 2. Software configuration
-   Software configuration settings are located in the config/software under the 
-   platform directory.
+   Software configuration settings are located in the mpfs_hal_config folder.
 
 
 ### Example Project directory structure, showing where mpfs_hal folder sits.
 
 ~~~~
-   +---------+      +-----------+                      +---------+
-   | src     +----->|application|                  +-->|hardware |
-   +---------+  |   +-----------+                  |   +---------+
-                |                                  |
-                |   +-----------+                  |   +---------+
-                +-->|modules    |                  +-->|linker   |
-                |   +-----------+                  |   +---------+
-                |                                  |
-                |   +-----------+     +---------+  |   +---------+
-                +-->|platform   +---->|config   +--+-->|software |
-                    +-----------+  |  +---------+      +---------+
-                                   |
-                                   |  +---------+
-                                   +->|drivers  |
-                                   |  +---------+
-                                   |
-                                   |  +---------+      +----------+
-                                   +->|hal      +----->|mss_uart  |
-                                   |  +---------+      +----------+              
-                                   |
-                                   |  +---------+      +----------+
-                                   +->|mpfs_hal +----->|nwc       |
-                                      +---------+      +----------+
-                                      
+
+  +---------+
+  | project |
+  +----+----+ +---------+      +-----------+
+       +-----+| src     |----->|application|
+              +---------+  |   +-----------+
+                           |
+                           |   +-----------+
+                           +-->|boards     |
+                           +   +----+------+
+                           |        |          +---------------+
+                           |        +---------+|icicle-kit-es  |
+                           |                   +---+-----------+
+                           |                       |
+                           |                       |  +---------------+
+                           |                       +->|platform_config|
+                           |                       |  +---------------+
+                           |                       |
+                           |                       |         +---------------+
+                           |                       |---------|drivers_config |
+                           |                       |         +---------------+
+                           |                       |
+                           |                       |         +---------------+
+                           |                       |---------|linker         |
+                           |                       |         +---------------+
+                           |                       |
+                           |                       |         +---------------+
+                           |                       |---------|mpfs_hal_config|
+                           |                       |         +---------------+
+                           |                       |
+                           |                       |
+                           |                       | +---------------+
+                           |                       +>|soc_config     |
+                           |                       | +---+-----------+
+                           |                       |     |
+                           |                       |     |  +---------------+------------------------+
+                           |                       |     +->|multiple folders with fpga config for sw|
+                           |                       |        +----------------------------------------+
+                           |                       |
+                           |                       |
+                           |                       |
+                           |                       | +---------------+
+                           |                       +>|soc_fpga_design|
+                           |                         +--+------------+
+                           |                            |
+                           |                            |   +---------------+
+                           |                            +-->|libero_tcl     |
+                           |                            |   +---------------+
+                           |                            |
+                           |   +-----------+            |   +---------------+
+                           +--+|middleware +            +-->|xml            |
+                           |   +-----------+                +---------------+
+                           |
+                           +
+                           |   +-----------+
+                           +--+|platform   |
+                               +----+------+
+                                    |          +---------------+
+                                    +---------+|drivers        |
+                                    |          +---------------+
+                                    |
+                                    |          +---------------+
+                                    +---------+|hal            |
+                                    |          +---------------+
+                                    |
+                                    |          +---------------+
+                                    +---------+|mpfs_hal       |
+                                    |          +---------------+
+                                    |
+                                    |          +-------------------------+
+                                    +---------+|platform_config_reference|
+                                    |          +-------------------------+
+                                    |
+                                    |          +---------------------+
+                                    +---------+|soc_config_generator |
+                                               +---------------------+
 ~~~~
   
-Please see the UG0864 PolarFire-SoC HAL.pdf user guide for further details on 
+Please see the user guide for further details on 
 use.

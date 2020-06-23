@@ -711,22 +711,22 @@ extern  "C" {
 #endif
 #if !defined (LIBERO_SETTING_CFG_READ_TO_WRITE)
 /*IP Blk = MC_BASE2 Access=RW */
-#define LIBERO_SETTING_CFG_READ_TO_WRITE    0x00000001UL
+#define LIBERO_SETTING_CFG_READ_TO_WRITE    0x0000000FUL
     /* CFG_READ_TO_WRITE                 [0:32]  RW value= 0x1 */
 #endif
 #if !defined (LIBERO_SETTING_CFG_WRITE_TO_WRITE)
 /*IP Blk = MC_BASE2 Access=RW */
-#define LIBERO_SETTING_CFG_WRITE_TO_WRITE    0x00000000UL
+#define LIBERO_SETTING_CFG_WRITE_TO_WRITE    0x0000000FUL
     /* CFG_WRITE_TO_WRITE                [0:32]  RW value= 0x0 */
 #endif
 #if !defined (LIBERO_SETTING_CFG_READ_TO_READ)
 /*IP Blk = MC_BASE2 Access=RW */
-#define LIBERO_SETTING_CFG_READ_TO_READ    0x00000001UL
+#define LIBERO_SETTING_CFG_READ_TO_READ    0x0000000FUL
     /* CFG_READ_TO_READ                  [0:32]  RW value= 0x1 */
 #endif
 #if !defined (LIBERO_SETTING_CFG_WRITE_TO_READ)
 /*IP Blk = MC_BASE2 Access=RW */
-#define LIBERO_SETTING_CFG_WRITE_TO_READ    0x00000001UL
+#define LIBERO_SETTING_CFG_WRITE_TO_READ    0x0000001FUL
     /* CFG_WRITE_TO_READ                 [0:32]  RW value= 0x1 */
 #endif
 #if !defined (LIBERO_SETTING_CFG_READ_TO_WRITE_ODT)
@@ -1211,7 +1211,8 @@ extern  "C" {
 #endif
 #if !defined (LIBERO_SETTING_CFG_CA_ODT)
 /*IP Blk = MC_BASE2 Access=RW */
-#define LIBERO_SETTING_CFG_CA_ODT    0x00000002UL
+//#define LIBERO_SETTING_CFG_CA_ODT    0x00000002UL
+#define LIBERO_SETTING_CFG_CA_ODT    0x00000004UL
     /* CFG_CA_ODT                        [0:32]  RW value= 0x0 */
 #endif
 #if !defined (LIBERO_SETTING_CFG_ZQLATCH_DURATION)
@@ -1641,7 +1642,7 @@ extern  "C" {
 #endif
 #if !defined (LIBERO_SETTING_CFG_DQ_WIDTH)
 /*IP Blk = DYN_WIDTH_ADJ Access=RW */
-#define LIBERO_SETTING_CFG_DQ_WIDTH    0x00000000UL
+#define LIBERO_SETTING_CFG_DQ_WIDTH    0x00000001UL
     /* CFG_DQ_WIDTH                      [0:32]  RW value= 0x1 */
 #endif
 #if !defined (LIBERO_SETTING_CFG_ACTIVE_DQ_SEL)

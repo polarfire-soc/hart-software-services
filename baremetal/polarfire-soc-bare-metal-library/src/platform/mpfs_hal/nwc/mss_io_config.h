@@ -231,6 +231,26 @@ gpio_toggle_test
     void
 );
 
+/***************************************************************************//**
+  set_bank2_and_bank4_volts()
+  Sets bank 2 and 4 voltages, with Values coming from Libero
+
+  Example:
+
+  @code
+
+  set_bank2_and_bank4_volts();
+
+  @endcode
+
+ *
+ */
+void
+set_bank2_and_bank4_volts
+(
+   void
+);
+
 
 #ifdef __cplusplus
 }

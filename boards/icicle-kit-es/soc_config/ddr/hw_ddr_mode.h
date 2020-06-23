@@ -36,7 +36,13 @@ extern  "C" {
 #if !defined (LIBERO_SETTING_DDRPHY_MODE)
 /*DDRPHY MODE (binary)- 000 ddr3, 001 ddr33L, 010 ddr4, 011 LPDDR3, 100 LPDDR4,
 111 OFF_MODE */
-#define LIBERO_SETTING_DDRPHY_MODE    0x00014B24UL
+#define LIBERO_SETTING_DDRPHY_MODE    0x00014B04UL
+//#define LIBERO_SETTING_DDRPHY_MODE    0x00010B04UL	//0->50
+//#define LIBERO_SETTING_DDRPHY_MODE    0x00012B04UL	//1->40
+//#define LIBERO_SETTING_DDRPHY_MODE    0x00014B04UL	//2 ->34
+//#define LIBERO_SETTING_DDRPHY_MODE    0x00016B04UL	//3 ->60
+
+
     /* DDRMODE                           [0:3]   RW value= 0x4 */
     /* ECC                               [3:1]   RW value= 0x0 */
     /* CRC                               [4:1]   RW value= 0x0 */
@@ -44,7 +50,7 @@ extern  "C" {
     /* DMI_DBI                           [8:1]   RW value= 0x1 */
     /* DQ_DRIVE                          [9:2]   RW value= 0x0 */
     /* DQS_DRIVE                         [11:2]  RW value= 0x0 */
-    /* ADD_CMD_DRIVE                     [13:2]  RW value= 0x0 */
+    /* ADD_CMD_DRIVE                     [13:2]  RW value= 0x0  0->50;1->40; 2->34; 3-> 60*/
     /* CLOCK_OUT_DRIVE                   [15:2]  RW value= 0x0 */
     /* DQ_TERMINATION                    [17:2]  RW value= 0x0 */
     /* DQS_TERMINATION                   [19:2]  RW value= 0x0 */

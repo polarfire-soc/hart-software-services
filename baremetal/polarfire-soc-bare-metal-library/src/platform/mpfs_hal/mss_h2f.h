@@ -20,7 +20,7 @@
 #ifndef MSS_H2F_H
 #define MSS_H2F_H
 
-#include "config/software/mpfs_hal/mss_sw_config.h"
+#include "mpfs_hal_config/mss_sw_config.h"
 
 #ifdef __cplusplus
 extern "C" {

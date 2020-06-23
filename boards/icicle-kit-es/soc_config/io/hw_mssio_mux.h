@@ -92,7 +92,7 @@ specification for for description. */
 #if !defined (LIBERO_SETTING_IOMUX4_CR)
 /*Configures the IO Mux structure for each IO pad. See the MSS MAS
 specification for for description. */
-#define LIBERO_SETTING_IOMUX4_CR    0x88FF4444UL
+#define LIBERO_SETTING_IOMUX4_CR    0x88CC4444UL
     /* PAD22                             [0:4]   RW value= 0x4 */
     /* PAD23                             [4:4]   RW value= 0x4 */
     /* PAD24                             [8:4]   RW value= 0x4 */
@@ -131,47 +131,48 @@ IOMUX structure */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_CFG_CR)
 /*Configures the MSSIO block */
-#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR    0x00008247UL
+#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR    0x00080907UL
     /* BANK_PCODE                        [0:6]   RW value= 0x7 */
     /* BANK_NCODE                        [6:6]   RW value= 0x9 */
     /* VS                                [12:4]  RW value= 0x8 */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR)
 /*IO electrical configuration for MSSIO pad */
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR    0x08290829UL
-    /* IO_CFG_0                          [0:16]  RW value= 0x0829 */
-    /* IO_CFG_1                          [16:16] RW value= 0x0829 */
+#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR    0x09610167UL
+    /* IO_CFG_0                          [0:16]  RW value= 0x0167 */
+    /* IO_CFG_1                          [16:16] RW value= 0x0961 */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR)
 /*IO electrical configuration for MSSIO pad */
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR    0x08290829UL
-    /* IO_CFG_2                          [0:16]  RW value= 0x0829 */
-    /* IO_CFG_3                          [16:16] RW value= 0x0829 */
+#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR    0x09610961UL
+    /* IO_CFG_2                          [0:16]  RW value= 0x0961 */
+    /* IO_CFG_3                          [16:16] RW value= 0x0961 */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR)
 /*IO electrical configuration for MSSIO pad */
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR    0x08290829UL
-    /* IO_CFG_4                          [0:16]  RW value= 0x0829 */
-    /* IO_CFG_5                          [16:16] RW value= 0x0829 */
+#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR    0x09610961UL
+    /* IO_CFG_4                          [0:16]  RW value= 0x0961 */
+    /* IO_CFG_5                          [16:16] RW value= 0x0961 */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR)
 /*IO electrical configuration for MSSIO pad */
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR    0x08290829UL
-    /* IO_CFG_6                          [0:16]  RW value= 0x0829 */
-    /* IO_CFG_7                          [16:16] RW value= 0x0829 */
+#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR    0x01670961UL
+    /* IO_CFG_6                          [0:16]  RW value= 0x0961 */
+    /* IO_CFG_7                          [16:16] RW value= 0x0167 */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR)
 /*IO electrical configuration for MSSIO pad */
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR    0x08290829UL
-    /* IO_CFG_8                          [0:16]  RW value= 0x0829 */
-    /* IO_CFG_9                          [16:16] RW value= 0x0829 */
+#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR    0x09610961UL
+    /* IO_CFG_8                          [0:16]  RW value= 0x0961 */
+    /* IO_CFG_9                          [16:16] RW value= 0x0961 */
 #endif
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR)
 /*IO electrical configuration for MSSIO pad */
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR    0x08290829UL
-    /* IO_CFG_10                         [0:16]  RW value= 0x0829 */
-    /* IO_CFG_11                         [16:16] RW value= 0x0829 */
+#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR    0x09610961UL
+    /* IO_CFG_10                         [0:16]  RW value= 0x0961 */
+    /* IO_CFG_11                         [16:16] RW value= 0x0961 */
 #endif
+
 #if !defined (LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR)
 /*IO electrical configuration for MSSIO pad */
 #define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR    0x08290829UL
