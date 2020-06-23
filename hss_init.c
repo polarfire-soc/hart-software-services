@@ -210,10 +210,14 @@ void HSS_PrintToolVersions(void)
 
 bool HSS_E51_Banner(void)
 {
-    mHSS_FANCY_PRINTF(LOG_STATUS, "PolarFire(R) SoC Hart Software Services (HSS) - Version %d.%d.%d "
-        "(OpenSBI %d.%d)" CRLF,
-        HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH, OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
-    mHSS_FANCY_PRINTF(LOG_STATUS, "(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF);
+    mHSS_FANCY_PRINTF(LOG_STATUS,
+        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" CRLF
+        "(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF,
+        HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH);
+
+    mHSS_FANCY_PRINTF(LOG_STATUS, "incorporating OpenSBI - version %d.%d" CRLF
+        "(c) Copyright 2019-2020 Western Digital Corporation." CRLF CRLF,
+        OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
 
 #ifdef CONFIG_CC_USE_GNU_BUILD_ID
     HSS_PrintBuildId();
