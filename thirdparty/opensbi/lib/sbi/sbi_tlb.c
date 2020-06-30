@@ -202,7 +202,16 @@ static void sbi_tlb_entry_process(struct sbi_scratch *scratch,
 
 		rscratch = sbi_hart_id_to_scratch(scratch, i);
 		rtlb_sync = sbi_scratch_offset_ptr(rscratch, tlb_sync_off);
-		while (atomic_raw_xchg_ulong(rtlb_sync, 1)) ;
+
+                // the upstream code has
+		//     while (atomic_raw_xchg_ulong(rtlb_sync, 1));
+                // is this a logic bug? if  rtlb_sync is already 1, this will hang
+                // forever... also, why the while() loop? that is only going
+                // to mask any races in the design...
+                //
+                // From soak testing, we seem to have better behaviour with high loads when 
+                // doing the following
+		atomic_raw_xchg_ulong(rtlb_sync, 1);
 	}
 }
 
