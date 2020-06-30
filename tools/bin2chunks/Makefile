@@ -32,7 +32,9 @@ CORE_CFLAGS+=-Wall -Werror -Wshadow -fno-builtin-printf \
    -fomit-frame-pointer -Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing \
    -fno-common -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wformat=2 -Wformat-security \
    -Wformat-y2k -Winit-self -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition \
-   -Wtype-limits -Wstrict-prototypes -Wimplicit-fallthrough=5
+   -Wtype-limits -Wstrict-prototypes 
+
+#  -Wimplicit-fallthrough=5 # not supported in GCC 5.4 (Ubuntu 16.04)
 
 CFLAGS=--std=gnu11 -O1 -g3 $(CORE_CFLAGS) -DNR_CPUs=4 -D__riscv_xlen=64 -D_FORTIFY_SOURCE=2 -mno-ms-bitfields
 
