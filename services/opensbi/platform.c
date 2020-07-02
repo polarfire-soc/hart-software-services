@@ -120,7 +120,7 @@ static void mpfs_console_putc(char ch)
     }
 }
 
-#define BLOCK_FOREVER -1
+#define NO_BLOCK 0
 #define GETC_EOF -1
 static int mpfs_console_getc(void)
 {
@@ -128,7 +128,7 @@ static int mpfs_console_getc(void)
     bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick);
 
     uint8_t rcvBuf;
-    if (uart_getchar(&rcvBuf, BLOCK_FOREVER, FALSE)) {
+    if (uart_getchar(&rcvBuf, NO_BLOCK, FALSE)) {
         result = rcvBuf;
     }
 
@@ -198,6 +198,12 @@ static int mpfs_system_down(u32 type)
     return 0;
 }
 
+#define MPFS_TLB_RANGE_FLUSH_LIMIT 0
+static u64 mpfs_get_tlbr_flush_limit(void)
+{
+    return MPFS_TLB_RANGE_FLUSH_LIMIT;
+}
+
 const struct sbi_platform_operations platform_ops = {
     .early_init = NULL,
     .final_init = mpfs_final_init,
@@ -222,7 +228,7 @@ const struct sbi_platform_operations platform_ops = {
     .ipi_init = mpfs_ipi_init,
     .ipi_exit = NULL,
 
-    .get_tlbr_flush_limit = NULL,
+    .get_tlbr_flush_limit = mpfs_get_tlbr_flush_limit,
 
     .timer_value = clint_timer_value,
     .timer_event_start = clint_timer_event_start,
