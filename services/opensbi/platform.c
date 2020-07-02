@@ -198,7 +198,7 @@ static int mpfs_system_down(u32 type)
     return 0;
 }
 
-#define MPFS_TLB_RANGE_FLUSH_LIMIT 0
+#define MPFS_TLB_RANGE_FLUSH_LIMIT 0u
 static u64 mpfs_get_tlbr_flush_limit(void)
 {
     return MPFS_TLB_RANGE_FLUSH_LIMIT;
