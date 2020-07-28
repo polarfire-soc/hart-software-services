@@ -314,7 +314,11 @@ bool HSS_Setup_Clocks(void)
            SOFT_RESET_CR_GPIO2_MASK |
            SOFT_RESET_CR_DDRC_MASK |
            SOFT_RESET_CR_ATHENA_MASK |
-           SOFT_RESET_CR_SGMII_MASK );
+           SOFT_RESET_CR_SGMII_MASK |
+	   SOFT_RESET_CR_FIC0_MASK |
+	   SOFT_RESET_CR_FIC1_MASK |
+	   SOFT_RESET_CR_FIC3_MASK |
+	   SOFT_RESET_CR_FPGA_MASK );
 
     SYSREG->SOFT_RESET_CR = 0x3FFFFFFEu; // everything but ENVM
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
