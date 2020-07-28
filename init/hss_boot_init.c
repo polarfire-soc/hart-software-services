@@ -105,7 +105,7 @@ bool HSS_BootInit(void)
     //
     // for now, compression only works with a source already in DDR or XIP-QSPI
 #  if defined(CONFIG_COMPRESSION)
-    if (result && pBootImage->magic = mHSS_COMPRESSED_MAGIC) {
+    if (result && pBootImage->magic == mHSS_COMPRESSED_MAGIC) {
         decompressedFlag = true;
         if (!result) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to get boot image, cannot decompress" CRLF);
