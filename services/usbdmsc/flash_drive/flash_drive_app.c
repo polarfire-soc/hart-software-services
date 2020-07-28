@@ -46,7 +46,7 @@ bool HSS_MMCInit(void);
 
 /* Single block buffer size */
 #define LBA_BLOCK_SIZE            512u
-#define NUM_LBA_BLOCKS            0xEE6666 // 15623782 => ~8GB
+#define NUM_LBA_BLOCKS            0xE90E80 // 15273600 => ~7.28GiB
 #define ERROR_INTERRUPT           0x8000u
 #define TRANSFER_COMPLETE         0x1u
 #define SD_RD_WR_SIZE             32768u
