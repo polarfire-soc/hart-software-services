@@ -115,7 +115,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     assert(((size_t)srcOffset & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
     assert(((size_t)pCDest & (sizeof(uint32_t)-1)) == 0u);
 
-    uint32_t src_sector_num = (uint32_t)srcOffset / HSS_MMC_SECTOR_SIZE;
+    uint32_t src_sector_num = (uint32_t)(srcOffset / HSS_MMC_SECTOR_SIZE);
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount >= HSS_MMC_SECTOR_SIZE)) {
@@ -188,7 +188,7 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     assert(((size_t)pCSrc & (sizeof(uint32_t)-1)) == 0u);
     assert((byteCount & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
 
-    uint32_t dst_sector_num = (uint32_t)dstOffset / HSS_MMC_SECTOR_SIZE;
+    uint32_t dst_sector_num = (uint32_t)(dstOffset / HSS_MMC_SECTOR_SIZE);
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount)) {
