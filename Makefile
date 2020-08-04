@@ -41,10 +41,12 @@ SYSTEM:=$(shell uname -s)
 ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
   # Nothing special needed
   HOST_LINUX=true
-else ifneq (, $(findstring MSYS_NT, $(SYSTEM)))  # MSYS2-specific mods
+else ifneq (, $(findstring MSYS2_NT, $(SYSTEM)))  # MSYS2-specific mods
   #
   # Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
-  PATH+=:/usr/bin:/bin
+  PATH:=/bin:/usr/bin:$(PATH)
+  TOOLPATH=$(shell /usr/bin/cygpath "${SC_INSTALL_DIR}/riscv-unknown-elf-gcc/bin")
+  PATH:=$(TOOLPATH):$(PATH)
   $(info MSYS2 detected, PATH is "$(PATH)")
   HOST_MSYS_NT=true
 else ifneq (, $(findstring CYGWIN, $(SYSTEM)))   # Cygwin-specific mods

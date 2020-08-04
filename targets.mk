@@ -92,7 +92,7 @@ clean:
 	$(CMD_PREFIX)$(RM) *.gcov
 	$(CMD_PREFIX)$(RM) *.lss *.hex *.sym
 ifdef CONFIG_OPENSBI
-	+$(CMD-PREFIX)$(MAKE) -C thirdparty/opensbi clean V=$(V)
+	+$(CMD-PREFIX)$(MAKE) -C thirdparty/opensbi CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CC) clean V=$(V)
 endif
 
 distclean:
