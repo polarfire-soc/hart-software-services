@@ -39,10 +39,9 @@
 extern "C" {
 #endif
 
-static void copy_section(uint64_t * p_load, uint64_t * p_vma, uint64_t * p_vma_end);
-
 #ifdef  MPFS_HAL_HW_CONFIG
 static void load_virtual_rom(void);
+static void copy_section(uint64_t * p_load, uint64_t * p_vma, uint64_t * p_vma_end);
 #endif  /* MPFS_HAL_HW_CONFIG */
 
 /*LDRA_INSPECTED 440 S MR:R.11.1,R.11.2,R.11.4,R.11.6,R.11.7  Have to allocate number (address) as point reference*/
@@ -391,11 +390,7 @@ __attribute__((weak)) void u54_4(void)
  * @param p_vma
  * @param p_vma_end
  */
-static void copy_section
-(
-    uint64_t * p_load,
-    uint64_t * p_vma,
-    uint64_t * p_vma_end)
+static void copy_section(uint64_t * p_load, uint64_t * p_vma, uint64_t * p_vma_end)
 {
     if ( p_vma != p_load)
     {

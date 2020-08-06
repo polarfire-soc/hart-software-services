@@ -27,7 +27,8 @@ typedef long            ssize_t;
 #  endif
 #endif
 
-#include "mpfs_hal/nwc/mss_ddr.h"
+#include "mss_assert.h"
+#include "mpfs_hal/nwc/mss_ddr_defs.h"
 #include "mpfs_hal/nwc/mss_ddr_SGMII_regs.h"
 #include "mpfs_hal/nwc/mss_io_config.h"
 #include "mpfs_hal/nwc/mss_pll.h"
@@ -43,10 +44,11 @@ typedef long            ssize_t;
  * mss_sw_config.h. This allows defines in hw_platform.h be overload from
  * mss_sw_config.h if necessary.
  * */
-#include "soc_config/hw_platform.h"
 #include "atomic.h"
 #include "bits.h"
 #include "encoding.h"
+#include "soc_config/hw_platform.h"
+#include "mpfs_hal/nwc/mss_ddr.h"
 #include "mss_clint.h"
 #include "mss_coreplex.h"
 #include "mss_h2f.h"
@@ -61,6 +63,8 @@ typedef long            ssize_t;
 #include "mss_util.h"
 #include "mtrap.h"
 #include "mss_l2_cache.h"
+#include "mss_axiswitch.h"
+#include "nwc/mss_cfm.h"
 #include "nwc/mss_ddr.h"
 #include "nwc/mss_sgmii.h"
 #include "system_startup.h"

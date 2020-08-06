@@ -28,7 +28,7 @@
 #include "drivers/mss_mac/mss_ethernet_mac.h"
 #include "drivers/mss_mac/phy.h"
 #include "hal/hal.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mpfs_hal/mss_sysreg.h"
 
 #if defined (TI_PHY)
@@ -167,16 +167,16 @@ MSS_MAC_init
 )
 {
     int32_t queue_no;
-    HAL_ASSERT(cfg != NULL_POINTER);
+    ASSERT(cfg != NULL_POINTER);
 #if defined(TARGET_ALOE)
-    HAL_ASSERT(this_mac == &g_mac0);
+    ASSERT(this_mac == &g_mac0);
 
     instances_init(this_mac, cfg);
 
     if((cfg != NULL_POINTER) && (this_mac == &g_mac0))
 #endif
 #if defined(TARGET_G5_SOC)
-    HAL_ASSERT((this_mac == &g_mac0) || (this_mac == &g_mac1) || (this_mac == &g_emac0) || (this_mac == &g_emac1));
+    ASSERT((this_mac == &g_mac0) || (this_mac == &g_mac1) || (this_mac == &g_emac0) || (this_mac == &g_emac1));
     instances_init(this_mac, cfg);
 
     /*
@@ -407,7 +407,7 @@ MSS_MAC_update_hw_address
     const mss_mac_cfg_t * cfg
 )
 {
-    HAL_ASSERT(cfg != NULL_POINTER);
+    ASSERT(cfg != NULL_POINTER);
 
     if(MSS_MAC_AVAILABLE == this_mac->mac_available)
     {
@@ -670,7 +670,7 @@ MSS_MAC_cfg_struct_def_init
     mss_mac_cfg_t * cfg
 )
 {
-    HAL_ASSERT(NULL_POINTER != cfg);
+    ASSERT(NULL_POINTER != cfg);
     if(NULL_POINTER != cfg)
     {
         (void)memset(cfg, 0, sizeof(mss_mac_cfg_t)); /* Start with clean slate */
@@ -947,15 +947,15 @@ static void config_mac_hw(mss_mac_instance_t *this_mac, const mss_mac_cfg_t * cf
     uint32_t temp_length;
 
     /* Check for validity of configuration parameters */
-    HAL_ASSERT( IS_STATE(cfg->tx_edc_enable) );
-    HAL_ASSERT( IS_STATE(cfg->rx_edc_enable) );
-    HAL_ASSERT( MSS_MAC_PREAMLEN_MAXVAL >= cfg->preamble_length );
-    HAL_ASSERT( IS_STATE(cfg->jumbo_frame_enable) );
-    HAL_ASSERT( IS_STATE(cfg->length_field_check) );
-    HAL_ASSERT( IS_STATE(cfg->append_CRC) );
-    HAL_ASSERT( IS_STATE(cfg->loopback) );
-    HAL_ASSERT( IS_STATE(cfg->rx_flow_ctrl) );
-    HAL_ASSERT( IS_STATE(cfg->tx_flow_ctrl) );
+    ASSERT( IS_STATE(cfg->tx_edc_enable) );
+    ASSERT( IS_STATE(cfg->rx_edc_enable) );
+    ASSERT( MSS_MAC_PREAMLEN_MAXVAL >= cfg->preamble_length );
+    ASSERT( IS_STATE(cfg->jumbo_frame_enable) );
+    ASSERT( IS_STATE(cfg->length_field_check) );
+    ASSERT( IS_STATE(cfg->append_CRC) );
+    ASSERT( IS_STATE(cfg->loopback) );
+    ASSERT( IS_STATE(cfg->rx_flow_ctrl) );
+    ASSERT( IS_STATE(cfg->tx_flow_ctrl) );
 
 #if defined(TARGET_ALOE)
     config_mac_pll_and_reset();
@@ -1175,8 +1175,8 @@ MSS_MAC_write_phy_reg
     volatile uint32_t phy_op;
     psr_t lev;
 
-    HAL_ASSERT(MSS_MAC_PHYADDR_MAXVAL >= phyaddr);
-    HAL_ASSERT(MSS_MAC_PHYREGADDR_MAXVAL >= regaddr);
+    ASSERT(MSS_MAC_PHYADDR_MAXVAL >= phyaddr);
+    ASSERT(MSS_MAC_PHYREGADDR_MAXVAL >= regaddr);
     /*
      * Write PHY address in MII Mgmt address register.
      * Makes previous register address 0 & invalid.
@@ -1223,8 +1223,8 @@ MSS_MAC_read_phy_reg
     volatile uint32_t phy_op;
     psr_t lev;
 
-    HAL_ASSERT(MSS_MAC_PHYADDR_MAXVAL >= phyaddr);
-    HAL_ASSERT(MSS_MAC_PHYREGADDR_MAXVAL >= regaddr);
+    ASSERT(MSS_MAC_PHYADDR_MAXVAL >= phyaddr);
+    ASSERT(MSS_MAC_PHYREGADDR_MAXVAL >= regaddr);
     /*
      * Write PHY address in MII Mgmt address register.
      * Makes previous register address 0 & invalid.
@@ -1405,8 +1405,8 @@ MSS_MAC_receive_pkt
             }
         }
 
-        HAL_ASSERT(NULL_POINTER != rx_pkt_buffer);
-        HAL_ASSERT(IS_WORD_ALIGNED(rx_pkt_buffer));
+        ASSERT(NULL_POINTER != rx_pkt_buffer);
+        ASSERT(IS_WORD_ALIGNED(rx_pkt_buffer));
 
         if(this_mac->queue[queue_no].nb_available_rx_desc > 0U)
         {
@@ -1599,9 +1599,9 @@ MSS_MAC_send_pkt
             }
         }
 
-        HAL_ASSERT(NULL_POINTER != tx_buffer);
-        HAL_ASSERT(0U != tx_length);
-        HAL_ASSERT(IS_WORD_ALIGNED(tx_buffer));
+        ASSERT(NULL_POINTER != tx_buffer);
+        ASSERT(0U != tx_length);
+        ASSERT(IS_WORD_ALIGNED(tx_buffer));
 
 #if defined(MSS_MAC_SIMPLE_TX_QUEUE)
         if(this_mac->queue[queue_no].nb_available_tx_desc == (uint32_t)MSS_MAC_TX_RING_SIZE)
@@ -2521,7 +2521,7 @@ static void generic_mac_irq_handler(mss_mac_instance_t *this_mac, uint32_t queue
         else
         {
             volatile int32_t index;
-            HAL_ASSERT(0); /* Need to think about how to deal with this... */
+            ASSERT(0); /* Need to think about how to deal with this... */
             while(1)
             {
                 index++;
@@ -3223,7 +3223,7 @@ void MSS_MAC_set_sa_filter(const mss_mac_instance_t *this_mac, uint32_t filter, 
     uint32_t address32_l;
     uint32_t address32_h;
 
-    HAL_ASSERT(NULL_POINTER!= mac_addr);
+    ASSERT(NULL_POINTER!= mac_addr);
 
     if((MSS_MAC_AVAILABLE == this_mac->mac_available) && (NULL_POINTER != mac_addr))
     {
@@ -4260,8 +4260,8 @@ txpkt_handler
     uint32_t empty_flag;
     uint32_t index;
     uint32_t completed = 0U;
-    HAL_ASSERT(g_mac.first_tx_index != INVALID_INDEX);
-    HAL_ASSERT(g_mac.last_tx_index != INVALID_INDEX);
+    ASSERT(g_mac.first_tx_index != INVALID_INDEX);
+    ASSERT(g_mac.last_tx_index != INVALID_INDEX);
     /* TBD PMCS multi packet tx queue not implemented yet */
     index = g_mac.first_tx_index;
     do
@@ -4374,7 +4374,7 @@ static void assign_station_addr
     uint32_t address32_l;
     uint32_t address32_h;
 
-    HAL_ASSERT(NULL_POINTER != mac_addr);
+    ASSERT(NULL_POINTER != mac_addr);
 
     if((NULL_POINTER != mac_addr) && (NULL_POINTER != this_mac))
     {

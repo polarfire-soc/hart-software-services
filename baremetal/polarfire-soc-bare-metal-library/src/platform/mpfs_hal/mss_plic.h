@@ -24,7 +24,7 @@
 #    include "encoding.h"
 #endif
 
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 
 #ifdef __cplusplus
 extern "C" {

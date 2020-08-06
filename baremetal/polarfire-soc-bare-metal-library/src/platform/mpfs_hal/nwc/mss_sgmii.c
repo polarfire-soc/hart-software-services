@@ -28,8 +28,6 @@ static uint32_t sgmii_channel_setup(void);
 /*
  * extern functions
  */
-extern void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option);
-
 
 uint32_t sgmii_setup(void)
 {

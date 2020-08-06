@@ -202,7 +202,7 @@ typedef struct MSSIO_Bank2_IO_Config_ {
   @endcode
 
  */
-int32_t
+uint8_t
 mssio_setup
 (
     void

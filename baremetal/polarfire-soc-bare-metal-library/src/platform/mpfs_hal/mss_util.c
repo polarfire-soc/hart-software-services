@@ -22,6 +22,30 @@ extern "C" {
 #endif
 
 /*------------------------------------------------------------------------------
+ *
+ */
+void enable_interrupts(void) {
+    __enable_irq();
+}
+
+/*------------------------------------------------------------------------------
+ *
+ */
+uint64_t disable_interrupts(void) {
+    uint64_t psr;
+    psr = read_csr(mstatus);
+    __disable_irq();
+    return(psr);
+}
+
+/*------------------------------------------------------------------------------
+ *
+ */
+void restore_interrupts(uint64_t saved_psr) {
+    write_csr(mstatus, saved_psr);
+}
+
+/*------------------------------------------------------------------------------
  * Disable all interrupts.
  */
 void __disable_irq(void)
@@ -48,22 +72,22 @@ void __enable_irq(void)
 /*------------------------------------------------------------------------------
  * Enable particular local interrupt
  */
-void __enable_local_irq(int8_t local_interrupt)
+void __enable_local_irq(uint8_t local_interrupt)
 {
-    if((local_interrupt > 0) && (local_interrupt <= LOCAL_INT_MAX))
+    if((local_interrupt > (int8_t)0) && (local_interrupt <= LOCAL_INT_MAX))
     {
-        set_csr(mie, (1LLU << (local_interrupt + 16U)));  /* mie Register- Machine Interrupt Enable Register */
+        set_csr(mie, (0x1LLU << (int8_t)(local_interrupt + 16U)));  /* mie Register- Machine Interrupt Enable Register */
     }
 }
 
 /*------------------------------------------------------------------------------
  * Disable particular local interrupt
  */
-void __disable_local_irq(int8_t local_interrupt)
+void __disable_local_irq(uint8_t local_interrupt)
 {
-    if((local_interrupt > 0U) && (local_interrupt <= LOCAL_INT_MAX))
+    if((local_interrupt > (int8_t)0) && (local_interrupt <= LOCAL_INT_MAX))
     {
-        clear_csr(mie, (0x01U << (local_interrupt + 16U)));  /* mie Register- Machine Interrupt Enable Register */
+        clear_csr(mie, (0x1LLU << (int8_t)(local_interrupt + 16U)));  /* mie Register- Machine Interrupt Enable Register */
     }
 }
 

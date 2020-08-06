@@ -16,7 +16,7 @@
 
 #include "mss_usb_common_cif.h"
 
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mss_usb_common_reg_io.h"
 #include "mss_usb_core_regs.h"
 #include "mpfs_hal/mss_plic.h"
@@ -278,7 +278,7 @@ MSS_USB_CIF_handle_cep_irq
                 }
                 else
                 {
-                    HAL_ASSERT(0);
+                    ASSERT(0);
                 }
             }
         }
@@ -489,7 +489,7 @@ MSS_USB_CIF_rx_ep_read_prepare
     if (DMA_ENABLE == dma_enable)
     {
         /* Make sure that address is Modulo-4.Bits D0-D1 are read only.*/
-        HAL_ASSERT(!(((ptrdiff_t)buf_addr) & 0x00000002U));
+        ASSERT(!(((ptrdiff_t)buf_addr) & 0x00000002U));
 
         MSS_USB_CIF_dma_write_addr(dma_channel, (ptrdiff_t)buf_addr);
 
@@ -542,7 +542,7 @@ MSS_USB_CIF_ep_write_pkt
         if (DMA_ENABLE == dma_enable)
         {
             /* Make sure that address is Modulo-4.Bits D0-D1 are read only.*/
-            HAL_ASSERT(!(((ptrdiff_t)buf_addr) & 0x00000002u));
+            ASSERT(!(((ptrdiff_t)buf_addr) & 0x00000002u));
 
             MSS_USB_CIF_dma_write_addr(dma_channel,(ptrdiff_t)(buf_addr));
 
@@ -651,7 +651,7 @@ MSS_USB_CIF_tx_ep_configure
     }
     else
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
 
     MSS_USB_CIF_tx_ep_set_max_pkt(core_ep->num,
@@ -727,7 +727,7 @@ MSS_USB_CIF_rx_ep_configure
     }
     else
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
 
     MSS_USB_CIF_rx_ep_set_max_pkt(core_ep->num,

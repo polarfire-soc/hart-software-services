@@ -6,8 +6,8 @@
  * MPFS HAL Embedded Software
  *
  */
-#ifndef ASSERT_HEADER
-#define ASSERT_HEADER
+#ifndef MSS_ASSERT_H
+#define MSS_ASSERT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,25 +31,8 @@ extern "C" {
 #endif /* NDEBUG check */
 #endif /* compiler check */
 
-#if defined(NDEBUG)
-/***************************************************************************//**
- * ASSERT() is defined out when the NDEBUG symbol is used.
- ******************************************************************************/
-#define ASSERT(CHECK)
-
-#else
-/***************************************************************************//**
- * Default behaviour for ASSERT() macro:
- *------------------------------------------------------------------------------
-  The behaviour is toolchain specific and project setting specific.
- ******************************************************************************/
-#define ASSERT(CHECK)     ASSERT(CHECK);
-
-#endif  /* NDEBUG */
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* ASSERT_HEADER */
-
+#endif  /* MSS_ASSERT_H */

@@ -15,6 +15,7 @@
 #undef ROUNDUP
 #undef ROUNDDOWN
 #include "mpfs_hal/mss_hal.h"
+#include "mss_assert.h"
 #include "flash_drive_app.h"
 #include "drivers/mss_gpio/mss_gpio.h"
 #include "mss_plic.h"

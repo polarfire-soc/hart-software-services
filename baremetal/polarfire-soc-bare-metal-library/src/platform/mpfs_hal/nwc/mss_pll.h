@@ -218,13 +218,128 @@ typedef enum REG_LOAD_METHOD_
 }   REG_LOAD_METHOD;
 
 
-void ddr_pll_config_scb(void);
+
+/***************************************************************************//**
+  ddr_pll_config() configure DDR PLL
+
+  Example:
+  @code
+
+      ddr_pll_config();
+
+  @endcode
+
+ */
 void ddr_pll_config(REG_LOAD_METHOD option);
+
+/***************************************************************************//**
+  ddr_pll_lock_scb() Checks if PLL locked
+
+  @return
+    0U if locked
+
+  Example:
+  @code
+      if (ddr_pvt_calibration() == 0U)
+      {
+           PLL is locked
+      }
+  @endcode
+
+ */
 uint8_t ddr_pll_lock_scb(void);
+
+/***************************************************************************//**
+  sgmii_pll_config_scb() configure sgmii PLL
+
+   @param option 1 => soft reset, load RPC settings
+                 0 => write values using SCB
+
+  Example:
+  @code
+
+      sgmii_pll_config_scb(1U);
+
+  @endcode
+
+ */
 void sgmii_pll_config_scb(uint8_t option);
+
+/***************************************************************************//**
+  sgmii_pll_lock_scb() Checks if PLL is locked
+
+   @return
+    0U if locked
+
+  Example:
+  @code
+      if (ddr_pvt_calibration() == 0U)
+      {
+           PLL is locked
+      }
+  @endcode
+
+ */
 uint8_t sgmii_pll_lock_scb(void);
+
+/***************************************************************************//**
+  ddr_pll_config_scb_turn_off() Puts PLL in reset
+
+  Example:
+  @code
+
+      ddr_pll_config_scb_turn_off();
+
+  @endcode
+
+ */
 void ddr_pll_config_scb_turn_off(void);
-uint8_t set_RTC_divisor(void);
+
+/***************************************************************************//**
+  set_RTC_divisor() Sets the RTC divisor based on values from Libero
+  It is assumed the RTC clock is set to 1MHz
+  Example:
+  @code
+
+      set_RTC_divisor();
+
+  @endcode
+
+ */
+void set_RTC_divisor(void);
+
+/***************************************************************************//**
+  sgmii_mux_config_via_scb() configures mux for SGMii
+
+  Example:
+  @code
+
+      sgmii_mux_config_via_scb();
+
+  @endcode
+
+ */
+void sgmii_mux_config_via_scb(uint8_t option);
+
+/***************************************************************************//**
+  pre_configure_sgmii_and_ddr_pll_via_scb()
+
+  @param option 1 => soft reset, load RPC settings
+                0 => write values using SCB
+
+  Example:
+  @code
+
+      ddr_pvt_calibration(1U);
+
+  @endcode
+
+ */
+void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option);
+
+/******************************************************************************
+ * Public Functions - API                                                      *
+ ******************************************************************************/
 void mss_pll_config(void);
 
 #ifdef __cplusplus

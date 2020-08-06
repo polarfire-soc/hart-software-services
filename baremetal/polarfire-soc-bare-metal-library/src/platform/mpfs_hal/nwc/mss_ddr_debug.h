@@ -40,10 +40,8 @@
 #define __MSS_DDr_DEBUG_H_ 1
 
 #ifdef DEBUG_DDR_INIT
-
 #include "drivers/mss_uart/mss_uart.h"
-
-
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +72,7 @@ uint32_t no_access,
 uint32_t pattern
 );
 
+#ifdef DEBUG_DDR_INIT
 /***************************************************************************//**
   The uprint32() function is used to print to the designated debug port
 
@@ -91,6 +90,61 @@ mss_uart_instance_t * uart,
 const char* msg,
 uint32_t d
 );
+
+/***************************************************************************//**
+  The uprint64() function is used to print to the designated debug port
+
+  Example:
+  @code
+
+  (void)uprint64(g_debug_uart, "\n\r DDR_TRAINING_FAIL: ", error);
+
+  @endcode
+ */
+void
+uprint64
+(
+mss_uart_instance_t * uart,
+const char* msg,
+uint64_t d
+);
+
+/***************************************************************************//**
+  The error_status() function is used to print to the designated debug port
+
+  Example:
+  @code
+
+  (void)error_status(g_debug_uart, "\n\r DDR_TRAINING_FAIL: ", error);
+
+  @endcode
+ */
+uint32_t error_status(mss_uart_instance_t *g_mss_uart_debug_pt, uint32_t error);
+
+/***************************************************************************//**
+  The wrcalib_status() function is used to print to the designated debug port
+
+  Example:
+  @code
+
+  (void)wrcalib_status(mss_uart_instance_t *g_mss_uart_debug_pt);
+
+  @endcode
+ */
+uint32_t wrcalib_status(mss_uart_instance_t *g_mss_uart_debug_pt);
+
+/***************************************************************************//**
+  The tip_register_status() function is used to print ddr TIP status to the
+  designated debug port
+
+  Example:
+  @code
+
+  (void)tip_register_status(mss_uart_instance_t *g_mss_uart_debug_pt);
+
+  @endcode
+ */
+uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt);
 
 /***************************************************************************//**
   The setup_ddr_debug_port() function is used to setup a serial port dedicated

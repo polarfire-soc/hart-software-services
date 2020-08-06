@@ -57,7 +57,6 @@ uint8_t mss_nwc_init(void)
     uint8_t error = 0U;
 
 #ifndef SIFIVE_HIFIVE_UNLEASHED
-    //uint8_t sgmii_instruction; //unused
 
 #ifdef SIMULATION_TEST_FEEDBACK
     /*

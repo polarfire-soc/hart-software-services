@@ -24,8 +24,11 @@
  * Local Defines
  */
 /* This string is updated if any change to ddr driver */
-#define DDR_DRIVER_VERSION_STRING   "0.0.011"
-
+#define DDR_DRIVER_VERSION_STRING   "0.1.001"
+/* Version     |  Change                                                      */
+/* 0.1.001     |  Reset modified- corrects softreset on retry issue           */
+/* 0.0.013     |  Added code to turn off DM if DDR4 and using ECC             */
+/* 0.0.012     |  Added support for turning off unused I/O from Libero        */
 
 /*
  * Calibration data records calculated write calibration values during training
@@ -68,10 +71,10 @@ uint8_t sweep_results[MAX_NUMBER_DPC_VS_GEN_SWEEPS]\
 /*******************************************************************************
  * Local function declarations
  */
-static int32_t ddr_setup(void);
+static uint32_t ddr_setup(void);
 static void init_ddrc(void);
 static void setup_ddr_segments(void);
-static uint8_t write_calibration_using_mtc(uint32_t num_of_lanes_to_calibrate);
+static uint8_t write_calibration_using_mtc(uint8_t num_of_lanes_to_calibrate);
 #ifdef SW_CONFIG_LPDDR_WR_CALIB_FN
 static uint8_t write_calibration_lpddr4_using_mtc(uint8_t num_lanes_to_cal);
 #endif
@@ -95,6 +98,8 @@ static void set_ddr_mode_reg_and_vs_bits(uint32_t dpc_bits);
 static void set_ddr_rpc_regs(DDR_TYPE ddr_type);
 static uint8_t get_num_lanes(void);
 static void load_dq(uint8_t lane);
+static uint8_t use_software_bclk_sclk_training(DDR_TYPE ddr_type);
+static void config_ddr_io_pull_up_downs_rpc_bits(void);
 #ifdef SWEEP_ENABLED
 static uint8_t get_best_sweep(sweep_index *good_index);
 #endif
@@ -102,12 +107,9 @@ static uint8_t get_best_sweep(sweep_index *good_index);
 /*******************************************************************************
  * External function declarations
  */
-extern void ddr_pvt_calibration(void);
-extern void ddr_pvt_recalibration(void);
+//extern void ddr_pvt_calibration(void);
+//extern void ddr_pvt_recalibration(void);
 extern void delay(uint32_t n);
-#ifdef DDR_FULL_32BIT_NC_CHECK_EN
-extern uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access, uint32_t pattern);
-#endif
 #ifdef DEBUG_DDR_INIT
 #  ifdef DEBUG_DDR_DDRCFG
 void debug_read_ddrcfg(void);
@@ -166,21 +168,6 @@ uint32_t  ddr_state_machine(DDR_SS_COMMAND command)
     return (return_status);
 }
 
-/***************************************************************************//**
- * ddr_status()
- * returns the status
- *
- * @return
- */
-int32_t  ddr_status(void)
-{
-    uint32_t status = 0;
-    /*
-     * Report status of DDR
-     */
-    return(status);
-}
-
 
 /***************************************************************************//**
  * ddr_setup(DDR_TYPE ddr_type)
@@ -188,7 +175,7 @@ int32_t  ddr_status(void)
  *
  * @param ddr_type
  */
-static int32_t ddr_setup(void)
+static uint32_t ddr_setup(void)
 {
     static DDR_TRAINING_SM ddr_training_state = DDR_TRAINING_INIT;
     static uint32_t error;
@@ -744,7 +731,7 @@ static int32_t ddr_setup(void)
             /* Turn on DDRC clock */
             SYSREG->SUBBLK_CLOCK_CR |= SUBBLK_CLOCK_CR_DDRC_MASK;
             /* Remove soft reset */
-            SYSREG->SOFT_RESET_CR   &= ~SOFT_RESET_CR_DDRC_MASK;
+            SYSREG->SOFT_RESET_CR   &= (uint32_t)~SOFT_RESET_CR_DDRC_MASK;
             ddr_training_state = DDR_TRAINING_SETUP_DDRC;
             break;
         case DDR_TRAINING_SETUP_DDRC:
@@ -767,21 +754,26 @@ static int32_t ddr_setup(void)
 /* To verify if separate reset required for DDR4 - believe it is not */
 #ifndef SPECIAL_TRAINIG_RESET
             CFG_DDR_SGMII_PHY->training_reset.training_reset    = 0x00000002U;
-
+#ifndef     SOFT_RESET_PRE_TAG_172
+            DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  =\
+                                                                                0x00000000U;
+            DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  =\
+                                                                                0x00000001U;
+#endif      /* !SOFT_RESET_PRE_TAG_172 */
 #else
-            /* Disable CKE */
-            DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;
+        	/* Disable CKE */
+        	DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;
 
-            /* Assert FORCE_RESET */
-            DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x1;
-            delay(100);
-            /* release reset to memory here, set INIT_FORCE_RESET to 0 */
-            DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x0;
-            delay(500000);
+        	/* Assert FORCE_RESET */
+        	DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x1;
+        	delay(100);
+        	/* release reset to memory here, set INIT_FORCE_RESET to 0 */
+        	DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x0;
+        	delay(500000);
 
-            /* Enable CKE */
-            DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x0;
-            delay(1000);
+        	/* Enable CKE */
+        	DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x0;
+        	delay(1000);
 
             /* reset pin is bit [1] */
             CFG_DDR_SGMII_PHY->training_reset.training_reset    = 0x00000002U;
@@ -805,7 +797,7 @@ static int32_t ddr_setup(void)
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x4;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x64;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66; // increment
-            for (uint32_t d=0; d< LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET;d++)
+            for (uint32_t d=0;d < LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET;d++)
             {
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x67;
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66;
@@ -896,13 +888,15 @@ static int32_t ddr_setup(void)
                                                                 tip_cfg_params;
                 timeout = 0xFFFF;
 
-                if(USE_SW_BCLK_SCK_TRAINING)
+                if(use_software_bclk_sclk_training(ddr_type) == 1U)
                 {
                     /*
                      * Initiate software training
                      */
+#ifdef     SOFT_RESET_PRE_TAG_172
                     DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  =\
                                                                     0x00000001U;
+#endif
                     ddr_training_state = DDR_TRAINING_IP_SM_BCLKSCLK_SW;
                 }
                 else
@@ -990,7 +984,7 @@ static int32_t ddr_setup(void)
                          * refclk phase offset manually
                          * We may need to sweep this
                          */
-                        refclk_phase = ((answer+SW_TRAING_BCLK_SCLK_OFFSET + 5U + LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET ) << 2U);
+                        refclk_phase = (uint32_t)((answer+SW_TRAING_BCLK_SCLK_OFFSET + 5U + LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET ) << 2U);
                         bclk_phase  = ((answer+SW_TRAING_BCLK_SCLK_OFFSET)    & 0x07UL ) << 8U;
                         bclk90_phase= ((answer+SW_TRAING_BCLK_SCLK_OFFSET+2U)  & 0x07UL ) << 11U;
                         MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | bclk_phase | bclk90_phase | refclk_phase);
@@ -1593,13 +1587,6 @@ static int32_t ddr_setup(void)
 }
 
 
-/* todo: adding here as a test during verification- will remove */
-void ddr_recalib_io_test(void)
-{
-    ddr_pvt_recalibration();
-}
-
-
 /**
  * get_num_lanes(void)
  * @return number of lanes used, 2(16 bit), 3(16 bit + ecc), 4(32 bit) or 5
@@ -1635,6 +1622,7 @@ static uint8_t get_num_lanes(void)
  */
 static void set_ddr_mode_reg_and_vs_bits(uint32_t dpc_bits)
 {
+    DDR_TYPE ddr_type = LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_MASK;
     /*
      * R1.6
      * Write DDR phy mode reg (eg DDR3)
@@ -1683,18 +1671,24 @@ static void set_ddr_mode_reg_and_vs_bits(uint32_t dpc_bits)
             Command_Address_Pipe :2;
     */
     {
-        /*
-         * Data mask turned off if on.
-         * Will be reverted to Libero setting once training complete
-         * in the DDR_TRAINING_SET_FINAL_MODE state
-         * fixme: setting mode reg here does not work, regs not updated
-         * Will remove this code as do not think required, was only in place for
-         * for ddr3 when using ECC and data mask, but no requirement for data mask
-         * in this configuration. Libero may need to be updated to remove data mask
-         * for this config (using ECC).
-         */
-         CFG_DDR_SGMII_PHY->DDRPHY_MODE.DDRPHY_MODE =
-             (LIBERO_SETTING_DDRPHY_MODE /* & DMI_DBI_MASK */);
+        if ((ddr_type == DDR4) &&\
+                (LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_ECC_MASK) ==\
+                    DDRPHY_MODE_ECC_ON)
+        {
+            /*
+             * For ECC on when DDR4, and data mask on during training, training
+             * will not pass
+             * This will eventually be handled by the configurator
+             * DM will not be allowed for DDR4 with ECC
+             */
+            CFG_DDR_SGMII_PHY->DDRPHY_MODE.DDRPHY_MODE  =\
+                             (LIBERO_SETTING_DDRPHY_MODE  & DMI_DBI_MASK );
+        }
+        else
+        {
+            CFG_DDR_SGMII_PHY->DDRPHY_MODE.DDRPHY_MODE  =\
+                                                     LIBERO_SETTING_DDRPHY_MODE;
+        }
         delay((uint32_t) 100U);
         CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS        = dpc_bits;
     }
@@ -1866,19 +1860,23 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
                      * address, etc.
                      */
                     /* OVRT_EN_ADDCMD1 (default 0xF00), register named ovrt11 */
-                    CFG_DDR_SGMII_PHY->ovrt10.ovrt10 =\
-                            LIBERO_SETTING_RPC_EN_ADDCMD1_OVRT10;
-					
+#ifndef LIBERO_SETTING_RPC_EN_ADDCMD0_OVRT9
+                    /*
+                     * If this define is not present, indicates older
+                     * Libero core (pre 2.0.109)
+                     * So we run this code
+                     */
+                    CFG_DDR_SGMII_PHY->ovrt10.ovrt10 = LIBERO_SETTING_RPC_EN_ADDCMD1_OVRT10;
                     {
                         /* Use pull-ups to set the CMD/ADD ODT */
                         CFG_DDR_SGMII_PHY->rpc245.rpc245 = 0x00000000;
-
                         CFG_DDR_SGMII_PHY->rpc237.rpc237 = 0xffffffff;
                     }
 
                     /* OVRT_EN_ADDCMD2 (default 0xE06), register named ovrt12 */
                     CFG_DDR_SGMII_PHY->ovrt11.ovrt11 =\
                             LIBERO_SETTING_RPC_EN_ADDCMD2_OVRT11;
+#endif
                     /* Required when rank x 2 */
                     if ((LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_RANK_MASK) ==\
                             DDRPHY_MODE_TWO_RANKS)
@@ -1956,6 +1954,12 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
         CFG_DDR_SGMII_PHY->rpc20.rpc20 = 0x00U;     /* bclk_sel_clkp */
 
     }
+
+    /*
+     *  Override RPC bits for weak PU and PD's
+     *  Set over-ride bit for unused I/O
+     */
+    config_ddr_io_pull_up_downs_rpc_bits();
 }
 
 /**
@@ -2053,6 +2057,7 @@ static void ddr_off_mode(void)
      CFG_DDR_SGMII_PHY->rpc96.rpc96 = 0x07;     /* clk */
      CFG_DDR_SGMII_PHY->rpc97.rpc97 = 0x07;     /* dq */
      CFG_DDR_SGMII_PHY->rpc98.rpc98 = 0x07;     /* dqs */
+
      /*
       * Default  WPU, modify If user wants Weak Pull Up
       */
@@ -2364,9 +2369,9 @@ static void load_dq(uint8_t lane)
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = \
-            (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1\
-                                                & ~0x0F);
+        CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = 
+            (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1
+                                                & (uint32_t)~0x0F);
     }
     //set expert_dfi_status_override_to_shim = 0x7
     CFG_DDR_SGMII_PHY->expert_dfi_status_override_to_shim.expert_dfi_status_override_to_shim = 0x07U;
@@ -2375,12 +2380,12 @@ static void load_dq(uint8_t lane)
     //set dyn_ovr_dlycnt_dq_load* = 1
     if(lane < 4U)
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg0.expert_dlycnt_load_reg0 =\
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg0.expert_dlycnt_load_reg0 =
                 (0xFFU << (lane * 8U));
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 |=\
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 |=
                 0x0FU;
     }
     //set dyn_ovr_dlycnt_dq_load* = 0
@@ -2391,9 +2396,9 @@ static void load_dq(uint8_t lane)
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = \
-            (CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1\
-                                                                    & ~0x0F);
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 
+            (CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1
+                                                             & (uint32_t)~0x0F);
     }
     //set expert_mode_en = 0x8
     CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x8U;
@@ -2603,7 +2608,7 @@ static void set_write_calib(uint8_t user_lanes)
         temp = calib_data.write_cal.lower[lane_to_set];
         calib_data.write_cal.lane_calib_result =   \
                 calib_data.write_cal.lane_calib_result | (temp << (shift));
-        shift = shift + 0x04;
+        shift = (uint8_t)(shift + 0x04U);
     }
 
     /*
@@ -2762,13 +2767,12 @@ static uint8_t write_calibration_lpddr4_using_mtc(uint8_t num_lanes_to_cal)
  * @param number_of_lanes_to_calibrate
  * @return
  */
-static uint8_t \
-    write_calibration_using_mtc(uint32_t number_of_lanes_to_calibrate)
+static uint8_t write_calibration_using_mtc(uint8_t number_of_lanes_to_calibrate)
 {
     uint8_t laneToTest, result = 0U;
     uint32_t cal_data;
-    uint64_t start_address = 0x0000000000001000;
-    uint64_t size = 0x8U;  /* Number of reads for each iteration */
+    uint64_t start_address = 0x0000000000001000ULL;
+    uint32_t size = 0x8U;  /* Number of reads for each iteration */
 
     calib_data.write_cal.status_lower = 0U;
     /*
@@ -2795,10 +2799,13 @@ static uint8_t \
              * read once to flush MTC. During write calibration the first MTC read
              * must be discarded as it is unreliable after a series of bad writes.
              */
-            result = MTC_test(1U<<laneToTest, start_address, size);
+
+            uint8_t mask = (uint8_t)(1U<<laneToTest);
+            result = MTC_test(mask, start_address, size);
+
             /* Read twice, two different patterns will be used */
-            result = MTC_test(1U<<laneToTest, start_address, size);
-            result |= MTC_test(1U<<laneToTest, start_address, size);
+            result = MTC_test(mask, start_address, size);
+            result |= MTC_test(mask, start_address, size);
 
             SIM_FEEDBACK1(0x40000000);
             SIM_FEEDBACK1(result);
@@ -4042,12 +4049,12 @@ static void init_ddrc(void)
  */
 static void setup_ddr_segments(void)
 {
-    SEG[0].u[0].raw = LIBERO_SETTING_SEG0_0;
-    SEG[0].u[1].raw = LIBERO_SETTING_SEG0_1;
-    SEG[1].u[2].raw = LIBERO_SETTING_SEG1_2;
-    SEG[1].u[3].raw = LIBERO_SETTING_SEG1_3;
-    SEG[1].u[4].raw = LIBERO_SETTING_SEG1_4;
-    SEG[1].u[5].raw = LIBERO_SETTING_SEG1_5;
+    SEG[0].u[0].raw = (LIBERO_SETTING_SEG0_0 & 0x7FFFUL);
+    SEG[0].u[1].raw = (LIBERO_SETTING_SEG0_1 & 0x7FFFUL);
+    SEG[1].u[2].raw = (LIBERO_SETTING_SEG1_2 & 0x7FFFUL);
+    SEG[1].u[3].raw = (LIBERO_SETTING_SEG1_3 & 0x7FFFUL);
+    SEG[1].u[4].raw = (LIBERO_SETTING_SEG1_4 & 0x7FFFUL);
+    SEG[1].u[5].raw = (LIBERO_SETTING_SEG1_5 & 0x7FFFUL);
     /*
      * disable ddr blocker
      * Is cleared at reset. When written to ‘1’ disables the blocker function
@@ -4057,6 +4064,82 @@ static void setup_ddr_segments(void)
      */
     SEG[0].u[7].raw = 0x01U;
 }
+
+/**
+ * use_software_bclk_sclk_training()
+ * @param ddr_type
+ * @return returns 1U if required, otherwise 0U
+ */
+static uint8_t use_software_bclk_sclk_training(DDR_TYPE ddr_type)
+{
+    uint8_t result = 0U;
+    switch (ddr_type)
+    {
+        default:
+        case DDR_OFF_MODE:
+            break;
+        case DDR3L:
+            break;
+        case DDR3:
+            break;
+        case DDR4:
+            break;
+        case LPDDR3:
+            break;
+        case LPDDR4:
+            result = 1U;
+            break;
+    }
+    return(result);
+}
+
+/**
+ * config_ddr_io_pull_up_downs_rpc_bits()
+ *
+ * This function overrides the RPC bits related to weak pull up and
+ * weak pull downs. It also sets the override bit if the I/O is disabled.
+ * The settings come fro m Libero
+ *
+ * Note: If LIBERO_SETTING_RPC_EN_ADDCMD0_OVRT9 is not present, indicates older
+ * Libero core (pre 2.0.109)
+ * Post 2.0.109 version of Libero MSS core, weak pull up and pull down
+ * settings come from Libero, along with setting unused MSS DDR I/O to
+ * override.
+ *
+ */
+static void config_ddr_io_pull_up_downs_rpc_bits(void)
+{
+#ifdef LIBERO_SETTING_RPC_EN_ADDCMD0_OVRT9
+    /* set over-rides (associated bit set to 1 if I/O not being used */
+    CFG_DDR_SGMII_PHY->ovrt9.ovrt9   = LIBERO_SETTING_RPC_EN_ADDCMD0_OVRT9;
+    CFG_DDR_SGMII_PHY->ovrt10.ovrt10 = LIBERO_SETTING_RPC_EN_ADDCMD1_OVRT10;
+    CFG_DDR_SGMII_PHY->ovrt11.ovrt11 = LIBERO_SETTING_RPC_EN_ADDCMD2_OVRT11;
+    CFG_DDR_SGMII_PHY->ovrt12.ovrt12 = LIBERO_SETTING_RPC_EN_DATA0_OVRT12;
+    CFG_DDR_SGMII_PHY->ovrt13.ovrt13 = LIBERO_SETTING_RPC_EN_DATA1_OVRT13;
+    CFG_DDR_SGMII_PHY->ovrt14.ovrt14 = LIBERO_SETTING_RPC_EN_DATA2_OVRT14;
+    CFG_DDR_SGMII_PHY->ovrt15.ovrt15 = LIBERO_SETTING_RPC_EN_DATA3_OVRT15;
+    CFG_DDR_SGMII_PHY->ovrt16.ovrt16 = LIBERO_SETTING_RPC_EN_ECC_OVRT16;
+    /* set the required wpu state- note: associated I/O bit 1=> off, 0=> on */
+    CFG_DDR_SGMII_PHY->rpc235.rpc235 = LIBERO_SETTING_RPC235_WPD_ADD_CMD0;
+    CFG_DDR_SGMII_PHY->rpc236.rpc236 = LIBERO_SETTING_RPC236_WPD_ADD_CMD1;
+    CFG_DDR_SGMII_PHY->rpc237.rpc237 = LIBERO_SETTING_RPC237_WPD_ADD_CMD2;
+    CFG_DDR_SGMII_PHY->rpc238.rpc238 = LIBERO_SETTING_RPC238_WPD_DATA0;
+    CFG_DDR_SGMII_PHY->rpc239.rpc239 = LIBERO_SETTING_RPC239_WPD_DATA1;
+    CFG_DDR_SGMII_PHY->rpc240.rpc240 = LIBERO_SETTING_RPC240_WPD_DATA2;
+    CFG_DDR_SGMII_PHY->rpc241.rpc241 = LIBERO_SETTING_RPC241_WPD_DATA3;
+    CFG_DDR_SGMII_PHY->rpc242.rpc242 = LIBERO_SETTING_RPC242_WPD_ECC;
+    /* set the required wpd state- note: associated I/O bit 1=> off, 0=> on */
+    CFG_DDR_SGMII_PHY->rpc243.rpc243 = LIBERO_SETTING_RPC243_WPU_ADD_CMD0;
+    CFG_DDR_SGMII_PHY->rpc244.rpc244 = LIBERO_SETTING_RPC244_WPU_ADD_CMD1;
+    CFG_DDR_SGMII_PHY->rpc245.rpc245 = LIBERO_SETTING_RPC245_WPU_ADD_CMD2;
+    CFG_DDR_SGMII_PHY->rpc246.rpc246 = LIBERO_SETTING_RPC246_WPU_DATA0;
+    CFG_DDR_SGMII_PHY->rpc247.rpc247 = LIBERO_SETTING_RPC247_WPU_DATA1;
+    CFG_DDR_SGMII_PHY->rpc248.rpc248 = LIBERO_SETTING_RPC248_WPU_DATA2;
+    CFG_DDR_SGMII_PHY->rpc249.rpc249 = LIBERO_SETTING_RPC249_WPU_DATA3;
+    CFG_DDR_SGMII_PHY->rpc250.rpc250 = LIBERO_SETTING_RPC250_WPU_ECC;
+#endif
+}
+
 
 /**
  * get the best sweep value

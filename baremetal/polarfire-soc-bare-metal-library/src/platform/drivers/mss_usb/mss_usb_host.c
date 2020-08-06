@@ -14,7 +14,7 @@
  * SVN $Date$
  */
 
-#include "../../hal/hal_assert.h"
+#include "mss_assert.h"
 #include <string.h>
 #include <stdio.h>
 #include "mss_usb_common_cif.h"
@@ -461,11 +461,11 @@ MSS_USBH_write_out_pipe
     /* TODO: Error check for all the parameters. */
     tdev_id_t tid = (tdev_id_t)0u;
 
-    HAL_ASSERT(target_addr);
-    HAL_ASSERT(outpipe_num);
-    HAL_ASSERT(tdev_ep_num);
-    HAL_ASSERT(maxpktsz);
-    HAL_ASSERT(buf);
+    ASSERT(target_addr);
+    ASSERT(outpipe_num);
+    ASSERT(tdev_ep_num);
+    ASSERT(maxpktsz);
+    ASSERT(buf);
 
     if ((target_addr != 0) && (outpipe_num != 0) && (tdev_ep_num != 0) &&
        (maxpktsz != 0u) && (buf != NULL) )
@@ -524,11 +524,11 @@ MSS_USBH_read_in_pipe
     /* TODO: Error check for all the parameters. */
     tdev_id_t tid = (tdev_id_t)0u;
 
-    HAL_ASSERT(target_addr);
-    HAL_ASSERT(inpipe_num);
-    HAL_ASSERT(tdev_ep_num);
-    HAL_ASSERT(tdev_ep_maxpktsz);
-    HAL_ASSERT(buf);
+    ASSERT(target_addr);
+    ASSERT(inpipe_num);
+    ASSERT(tdev_ep_num);
+    ASSERT(tdev_ep_maxpktsz);
+    ASSERT(buf);
 
     if ((target_addr != 0) && (inpipe_num != 0) && (tdev_ep_num != 0) &&
        (tdev_ep_maxpktsz != 0u) && (buf != NULL))
@@ -598,7 +598,7 @@ MSS_USBH_get_tdev_state
         tid = (tdev_id_t)(target_addr & 0x03u);
     }
 
-    HAL_ASSERT(g_tdev[tid].addr == target_addr);
+    ASSERT(g_tdev[tid].addr == target_addr);
 
     return (g_tdev[tid].state);
 }
@@ -632,11 +632,11 @@ MSS_USBH_start_control_xfr
 {
     mss_usb_ep_t* cep_ptr = &gh_tx_ep[MSS_USB_CEP];
 
-    HAL_ASSERT(cbuf_addr != (uint8_t*)0);
-    HAL_ASSERT(dbuf_addr != (uint8_t*)0);
-    HAL_ASSERT(!(((ptrdiff_t)cbuf_addr) & 0x00000002U));
-    HAL_ASSERT(!(((ptrdiff_t)dbuf_addr) & 0x00000002U));
-    HAL_ASSERT((data_dir == USB_STD_REQ_DATA_DIR_IN) ||
+    ASSERT(cbuf_addr != (uint8_t*)0);
+    ASSERT(dbuf_addr != (uint8_t*)0);
+    ASSERT(!(((ptrdiff_t)cbuf_addr) & 0x00000002U));
+    ASSERT(!(((ptrdiff_t)dbuf_addr) & 0x00000002U));
+    ASSERT((data_dir == USB_STD_REQ_DATA_DIR_IN) ||
            (data_dir == USB_STD_REQ_DATA_DIR_OUT));
 
     cep_ptr->buf_addr = dbuf_addr;
@@ -1373,7 +1373,7 @@ mss_usbh_enum_fsm
 
         case ENUM_ERROR:
         default:
-            HAL_ASSERT(0);          /* Should never happen */
+            ASSERT(0);          /* Should never happen */
         break;
     }
 }
@@ -1445,7 +1445,7 @@ mss_usbh_control_xfr_fsm
                         }
                         else
                         {
-                            HAL_ASSERT(0);                  /* DataDir not valid */
+                            ASSERT(0);                  /* DataDir not valid */
                         }
                     }
                 }
@@ -1487,7 +1487,7 @@ mss_usbh_control_xfr_fsm
             else
             {
                 cep_ptr->state = cep_event_st;
-                HAL_ASSERT(0);/* Flush fifo, if RxpktRdy is set.MUSB:21.2.2 */
+                ASSERT(0);/* Flush fifo, if RxpktRdy is set.MUSB:21.2.2 */
             }
         break;
 
@@ -1518,7 +1518,7 @@ mss_usbh_control_xfr_fsm
             else
             {
                 cep_ptr->state = cep_event_st;
-                HAL_ASSERT(0); /* Error response received in INTR */
+                ASSERT(0); /* Error response received in INTR */
             }
             /* TODO: Check if more data needs to Transmitted */
             /* Initiate IN status phase. */
@@ -1547,7 +1547,7 @@ mss_usbh_control_xfr_fsm
                     }
                     else
                     {
-                        HAL_ASSERT(0);/* invalid pointer */
+                        ASSERT(0);/* invalid pointer */
                     }
                 }
 
@@ -1556,7 +1556,7 @@ mss_usbh_control_xfr_fsm
             else
             {
                 cep_ptr->state = cep_event_st;
-                HAL_ASSERT(0);
+                ASSERT(0);
             }
         break;
 
@@ -1583,7 +1583,7 @@ mss_usbh_control_xfr_fsm
                     }
                     else
                     {
-                        HAL_ASSERT(0); /* invalid pointer */
+                        ASSERT(0); /* invalid pointer */
                     }
                 }
 
@@ -1592,7 +1592,7 @@ mss_usbh_control_xfr_fsm
             else
             {
                 cep_ptr->state = cep_event_st;
-                HAL_ASSERT(0);
+                ASSERT(0);
             }
         break;
 
@@ -1618,7 +1618,7 @@ mss_usbh_control_xfr_fsm
                 }
                 else
                 {
-                    HAL_ASSERT(0); /* invalid pointer */
+                    ASSERT(0); /* invalid pointer */
                 }
 
                 cep_ptr->state = MSS_USB_CEP_IDLE;
@@ -1628,7 +1628,7 @@ mss_usbh_control_xfr_fsm
 
         default:
         {
-            HAL_ASSERT(0); /* Invalid CEP state */
+            ASSERT(0); /* Invalid CEP state */
             break;
         }
     }
@@ -1702,7 +1702,7 @@ mss_usbh_ep_tx_complete_cb
 
                 txep_ptr->xfr_count = MSS_USB_CIF_dma_read_addr(txep_ptr->dma_channel) -
                                               ((ptrdiff_t)txep_ptr->buf_addr);
-                HAL_ASSERT(txep_ptr->xfr_count == txep_ptr->xfr_length);
+                ASSERT(txep_ptr->xfr_count == txep_ptr->xfr_length);
                 transfer_complete = 1u;
             }
             else
@@ -1742,7 +1742,7 @@ mss_usbh_ep_tx_complete_cb
                     {
                         /* If xfr_count is more than xfr_lenght then something
                          * has seriously gone bad.*/
-                        HAL_ASSERT(0);
+                        ASSERT(0);
                     }
                 }
             }
@@ -1759,7 +1759,7 @@ mss_usbh_ep_tx_complete_cb
                 /* call-back class driver */
                 if (0u == txep_ptr->xfr_count)
                 {
-                    HAL_ASSERT(0);
+                    ASSERT(0);
                 }
                 else
                 {
@@ -1771,13 +1771,13 @@ mss_usbh_ep_tx_complete_cb
             }
             else
             {
-                HAL_ASSERT(0); /* Invalid function pointer */
+                ASSERT(0); /* Invalid function pointer */
             }
         }
         else
         {
             txep_ptr->txn_count = 0u;/* reset txn_count for next txn */
-            HAL_ASSERT(txep_ptr->xfr_length >= txep_ptr->xfr_count);
+            ASSERT(txep_ptr->xfr_length >= txep_ptr->xfr_count);
 
             if ((txep_ptr->xfr_length - txep_ptr->xfr_count) >= txep_ptr->max_pkt_size)
             {
@@ -1808,7 +1808,7 @@ mss_usbh_ep_tx_complete_cb
             }
             else
             {
-                HAL_ASSERT(0);
+                ASSERT(0);
             }
         }
     }
@@ -1926,7 +1926,7 @@ mss_usbh_ep_rx_cb
                 }
                 else
                 {
-                    HAL_ASSERT(0);
+                    ASSERT(0);
                 }
             }
         }
@@ -1944,7 +1944,7 @@ mss_usbh_ep_rx_cb
         }
         else
         {
-            HAL_ASSERT(0); /* Invalid pointer */
+            ASSERT(0); /* Invalid pointer */
         }
 
     }
@@ -2049,7 +2049,7 @@ static void mss_usbh_dma_handler_cb
 
     if (DMA_XFR_ERROR == status)
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
     else
     {

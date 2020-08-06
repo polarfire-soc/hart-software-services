@@ -57,6 +57,7 @@ __attribute__((weak)) void copy_switch_code(void);
  * Instance definitions                                                        *
  ******************************************************************************/
 
+
 /*******************************************************************************
  Local functions                                 *
 *******************************************************************************/
@@ -71,18 +72,14 @@ __attribute__((weak)) void copy_switch_code(void);
  * @return
  */
 
-uint8_t set_RTC_divisor(void)
+void set_RTC_divisor(void)
 {
-    uint8_t ret_state = (uint8_t)0;
-
     SYSREG->RTC_CLOCK_CR &= ~(0x01U<<16); /* disable RTC clock */
 
     SYSREG->RTC_CLOCK_CR = (LIBERO_SETTING_MSS_EXT_SGMII_REF_CLK / \
             LIBERO_SETTING_MSS_RTC_TOGGLE_CLK);
 
     SYSREG->RTC_CLOCK_CR |= (0x01U<<16); /* enable RTC clock */
-
-    return (ret_state);
 }
 
 
@@ -376,11 +373,6 @@ void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option)
     sgmii_mux_config_via_scb(option);
 }
 
-void post_configure_sgmii_and_ddr_pll_via_scb(void)
-{
-
-}
-
 
 /***************************************************************************//**
  *
@@ -622,7 +614,7 @@ uint8_t ddr_pll_lock_scb(void)
 void ddr_pll_config_scb_turn_off(void)
 {
     /* PERIPH / periph_reset_b */
-    MSS_SCB_DDR_PLL->PLL_CTRL       &= ~0x00000001UL;
+    MSS_SCB_DDR_PLL->PLL_CTRL       &= (uint32_t)~0x00000001UL;
 }
 
 
@@ -711,14 +703,6 @@ uint8_t sgmii_pll_lock_scb(void)
     result = 0U;
 #endif
     return (result);
-}
-
-/***************************************************************************//**
- *
- ******************************************************************************/
-void rotate_clk_by_ninty_deg(void)
-{
-
 }
 
 /***************************************************************************//**

@@ -12,7 +12,7 @@
 #include "drivers/mss_sys_services/mss_sys_services.h"
 #include "drivers/mss_sys_services/mss_sys_services_regs.h"
 #include "mpfs_hal/mss_hal.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -574,9 +574,9 @@ MSS_SYS_secure_nvm_write
     uint16_t index = 0;
     uint16_t status = MSS_SYS_PARAM_ERR;
 
-    HAL_ASSERT(!(NULL_BUFFER == p_data));
-    HAL_ASSERT(!(NULL_BUFFER == p_user_key));
-    HAL_ASSERT(!(snvm_module >= 221u));
+    ASSERT(!(NULL_BUFFER == p_data));
+    ASSERT(!(NULL_BUFFER == p_user_key));
+    ASSERT(!(snvm_module >= 221u));
 
     *p_frame = snvm_module; /*SNVMADDR - SNVM module*/
     p_frame += 4; /* Next 3 bytes RESERVED - For alignment */
@@ -681,11 +681,11 @@ MSS_SYS_secure_nvm_read
     uint16_t status = MSS_SYS_PARAM_ERR;
     uint8_t response[256] = {0x00};
 
-    HAL_ASSERT(!(NULL_BUFFER == p_data));
-    HAL_ASSERT(!(NULL_BUFFER == p_admin));
-    HAL_ASSERT(!(snvm_module > 221u));
+    ASSERT(!(NULL_BUFFER == p_data));
+    ASSERT(!(NULL_BUFFER == p_admin));
+    ASSERT(!(snvm_module > 221u));
 
-    HAL_ASSERT((data_len == 236u) || (data_len == 252u));
+    ASSERT((data_len == 236u) || (data_len == 252u));
 
     *p_frame = snvm_module; /*SNVMADDR - SNVM module*/
     p_frame += 4u; /* RESERVED - For alignment */
@@ -695,7 +695,7 @@ MSS_SYS_secure_nvm_read
     {
         for (index = 0u; index < 12u; index++)
         {
-            HAL_ASSERT(p_user_key !=  NULL_BUFFER);
+            ASSERT(p_user_key !=  NULL_BUFFER);
             *p_frame = p_user_key[index];
             p_frame++;
         }
@@ -944,7 +944,7 @@ MSS_SYS_authenticate_iap_image
 {
     uint16_t status = MSS_SYS_PARAM_ERR;
 
-    HAL_ASSERT(!(spi_idx == 1u));
+    ASSERT(!(spi_idx == 1u));
 
     if (MSS_SYS_SERVICE_INTERRUPT_MODE == g_service_mode)
     {
@@ -1030,7 +1030,7 @@ MSS_SYS_execute_iap
     if ((MSS_SYS_IAP_PROGRAM_BY_SPIIDX_CMD == iap_cmd)
     || (MSS_SYS_IAP_VERIFY_BY_SPIIDX_CMD == iap_cmd))
     {
-        HAL_ASSERT(!(1u == spiaddr));
+        ASSERT(!(1u == spiaddr));
     }
 
     if (MSS_SYS_SERVICE_INTERRUPT_MODE == g_service_mode)

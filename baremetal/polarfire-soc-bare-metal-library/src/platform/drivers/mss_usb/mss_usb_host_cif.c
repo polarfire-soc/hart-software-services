@@ -16,7 +16,7 @@
  * SVN $Date$
  */
 
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mpfs_hal/mss_plic.h"
 #include "mss_usb_host_cif.h"
 #include "mss_usb_common_cif.h"
@@ -80,13 +80,13 @@ MSS_USBH_CIF_cep_configure
         MSS_USBH_CIF_cep_enable_ping();
     }
 
-    HAL_ASSERT(cep->interval <= 32768u);
+    ASSERT(cep->interval <= 32768u);
 
     /* Value 0 or 1 disables the NAKTIMEOUT functionality.*/
     if (cep->interval <= 32768u)
     {
         /*Value must be true and power of 2*/
-        HAL_ASSERT(((cep->interval != 0U) &&
+        ASSERT(((cep->interval != 0U) &&
                 (!(cep->interval & (cep->interval- 1)))));
 
         /*2 pow (m-1)*/
@@ -331,7 +331,7 @@ MSS_USBH_CIF_cep_write_pkt
     mss_usb_ep_t* hcep
 )
 {
-    HAL_ASSERT((hcep->num == MSS_USB_CEP) &&
+    ASSERT((hcep->num == MSS_USB_CEP) &&
            (hcep->buf_addr != 0) &&
            (hcep->xfr_type == MSS_USB_XFR_CONTROL));
 
@@ -360,13 +360,13 @@ MSS_USBH_CIF_cep_read_pkt
 {
        uint16_t received_count = 0u;
 
-    HAL_ASSERT((hcep->num == MSS_USB_CEP) &&
+    ASSERT((hcep->num == MSS_USB_CEP) &&
            (hcep->buf_addr != 0) &&
            (hcep->xfr_type == MSS_USB_XFR_CONTROL));
 
     /* TODO: check stalled, null buffer, xfr type, transaction type */
     received_count = MSS_USB_CIF_cep_rx_byte_count();
-    HAL_ASSERT(received_count <= hcep->txn_length);
+    ASSERT(received_count <= hcep->txn_length);
     MSS_USB_CIF_read_rx_fifo(MSS_USB_CEP, hcep->buf_addr, received_count);
     hcep->buf_addr += received_count;
     MSS_USBH_CIF_cep_clr_rxpktrdy();

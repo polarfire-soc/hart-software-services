@@ -64,6 +64,7 @@ extern "C" {
 typedef struct {
   volatile uint32_t *  ipi;
   volatile int         mipi_pending;
+  volatile int         padding;
   volatile uint64_t *  timecmp;
   volatile uint32_t *  plic_m_thresh;
   volatile uintptr_t * plic_m_ie;

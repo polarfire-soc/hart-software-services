@@ -18,7 +18,6 @@
 #include "mpfs_hal/mss_hal.h"
 
 /*******************************************************************************
- * external functions
  */
 
 /*
@@ -94,7 +93,7 @@ MSSIO_BANK2_CONFIG mssio_bank2_io_config = {
 /*******************************************************************************
  * Local functions
  */
-static int32_t io_mux_and_bank_config(void);
+static uint8_t io_mux_and_bank_config(void);
 
 /***************************************************************************//**
  *    MSSIO OFF Mode
@@ -125,9 +124,10 @@ static int32_t io_mux_and_bank_config(void);
  *
  * @return 0 => pass
  */
-int32_t mssio_setup(void)
+uint8_t mssio_setup(void)
 {
-    uint32_t ret_status = io_mux_and_bank_config();
+    uint8_t ret_status = 0U;
+    ret_status = io_mux_and_bank_config();
     set_bank2_and_bank4_volts();
     return (ret_status);
 }
@@ -137,7 +137,7 @@ int32_t mssio_setup(void)
  * sets up the IOMUX and bank 2 and 4 pcodes and n codes
  * @return 0 => OK
  */
-static int32_t io_mux_and_bank_config(void)
+static uint8_t io_mux_and_bank_config(void)
 {
     /* Configure IO mux's
      *

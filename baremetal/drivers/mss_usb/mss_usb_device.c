@@ -20,7 +20,7 @@
 #include "mss_usb_device_cif.h"
 #include "mss_usb_std_def.h"
 #include "mpfs_hal/mss_plic.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -409,7 +409,7 @@ MSS_USBD_tx_ep_configure
         err_check = USB_FAIL;
     }
 
-    HAL_ASSERT(err_check == USB_SUCCESS);
+    ASSERT(err_check == USB_SUCCESS);
 
     if(USB_SUCCESS == err_check)
     {
@@ -504,7 +504,7 @@ MSS_USBD_rx_ep_configure
         err_check = USB_FAIL;
     }
 
-    HAL_ASSERT(err_check == USB_SUCCESS);
+    ASSERT(err_check == USB_SUCCESS);
 
     if(USB_SUCCESS == err_check)
     {
@@ -546,15 +546,15 @@ MSS_USBD_rx_ep_read_prepare
 {
     mss_usb_ep_t* rxep_ptr = &gd_rx_ep[ep_num];
 
-    HAL_ASSERT(ep_num);
-    HAL_ASSERT(addr != 0);
+    ASSERT(ep_num);
+    ASSERT(addr != 0);
 
     rxep_ptr->buf_addr = addr;
     rxep_ptr->xfr_length = length;
     rxep_ptr->xfr_count = 0u;
     rxep_ptr->txn_count = 0u;
 
-    /*HAL_HAL_ASSERT when length is 0, address is null or ep number is wrong*/
+    /*HAL_ASSERT when length is 0, address is null or ep number is wrong*/
     if(length > 0u)
     {
         /*
@@ -598,9 +598,9 @@ MSS_USBD_tx_ep_write
     uint8_t dpb = 1u;
     mss_usb_ep_t* txep_ptr = &gd_tx_ep[ep_num];
 
-    /* HAL_HAL_ASSERT if uneven value for BULK transfers */
-    HAL_ASSERT(ep_num);
-    HAL_ASSERT(addr != 0);
+    /* HAL_ASSERT if uneven value for BULK transfers */
+    ASSERT(ep_num);
+    ASSERT(addr != 0);
 
     if((ep_num) && (addr != 0))
     {
@@ -923,7 +923,7 @@ mss_usbd_cep_setup_cb
         }
         else
         {
-            HAL_ASSERT(0);/*in this transaction the txn_length must be SETUP_PKT_SIZE*/
+            ASSERT(0);/*in this transaction the txn_length must be SETUP_PKT_SIZE*/
         }
 
         if(result)  //USB_SUCCESS
@@ -985,7 +985,7 @@ mss_usbd_cep_setup_cb
                     cep_ptr->state = MSS_USB_CEP_TX;
                     if((uint8_t*)0 == buf)
                     {
-                        HAL_ASSERT(0);
+                        ASSERT(0);
                     }
 
                     if(length > g_setup_pkt.length)
@@ -1099,7 +1099,7 @@ mss_usbd_cep_rx_cb
         else
         {
             /*at this stage CEP stage must not be other than MSS_USB_CEP_RX*/
-            HAL_ASSERT(0);
+            ASSERT(0);
         }
     }
 #else /*MSS_USB_DEVICE_TEST_MODE*/
@@ -1303,7 +1303,7 @@ mss_usbd_ep_rx_cb
                         {
                             /*If xfr_count is more than xfr_lenght then something
                             has seriously gone bad.*/
-                            HAL_ASSERT(0);
+                            ASSERT(0);
                         }
                     }
                     else // no zlp
@@ -1320,7 +1320,7 @@ mss_usbd_ep_rx_cb
                         {
                             /*If xfr_count is more than xfr_lenght then something
                             has seriously gone bad.*/
-                            HAL_ASSERT(0);
+                            ASSERT(0);
                         }
                     }
                 }
@@ -1336,7 +1336,7 @@ mss_usbd_ep_rx_cb
                     }
                     else
                     {
-                        HAL_ASSERT(0);/*TODO: replace this with stall EP*/
+                        ASSERT(0);/*TODO: replace this with stall EP*/
                     }
                 }
             }
@@ -1346,7 +1346,7 @@ mss_usbd_ep_rx_cb
 
     if(transfer_complete == 0)
     {
-        HAL_ASSERT(rxep_ptr->xfr_length >= rxep_ptr->xfr_count);
+        ASSERT(rxep_ptr->xfr_length >= rxep_ptr->xfr_count);
 
         if((rxep_ptr->xfr_length - rxep_ptr->xfr_count) >= rxep_ptr->max_pkt_size)
         {
@@ -1437,7 +1437,7 @@ mss_usbd_ep_tx_complete_cb
             increamented_addr = MSS_USB_CIF_dma_read_addr(txep_ptr->dma_channel);
             txep_ptr->xfr_count = increamented_addr - ((ptrdiff_t)txep_ptr->buf_addr);
 
-            HAL_ASSERT(txep_ptr->xfr_count == txep_ptr->xfr_length);
+            ASSERT(txep_ptr->xfr_count == txep_ptr->xfr_length);
 
             /*TODO: Move the decision to transmit ZLP from CIFL to here*/
             transfer_complete = 1u;
@@ -1482,7 +1482,7 @@ mss_usbd_ep_tx_complete_cb
                 {
                     /*If xfr_count is more than xfr_lenght then something
                       has seriously gone bad.*/
-                    HAL_ASSERT(0);
+                    ASSERT(0);
                 }
             }
             else    /*ISO/INTERRUPT XRF*/
@@ -1490,7 +1490,7 @@ mss_usbd_ep_tx_complete_cb
                 if(txep_ptr->txn_count != txep_ptr->txn_length)
                 {
                     /*The ISO/Interrupt every transfer must be single transaction*/
-                    HAL_ASSERT(0);
+                    ASSERT(0);
                 }
                 transfer_complete = 1u;
             }
@@ -1515,7 +1515,7 @@ mss_usbd_ep_tx_complete_cb
          is completed now
          */
         txep_ptr->txn_count = 0u;
-        HAL_ASSERT(txep_ptr->xfr_length >= txep_ptr->xfr_count);
+        ASSERT(txep_ptr->xfr_length >= txep_ptr->xfr_count);
 
         if((txep_ptr->xfr_length - txep_ptr->xfr_count) >= txep_ptr->max_pkt_size)
         {
@@ -2137,7 +2137,7 @@ mss_usbd_set_feature
             {
                 /*Enable Remote wakeup capability for the device*/
                 g_usbd_dev_conf.remote_wakeup = 0x01u;
-                HAL_ASSERT(0);  //RemoteWakeup Not enabled by Config Descr.
+                ASSERT(0);  //RemoteWakeup Not enabled by Config Descr.
             }
             else
             {
@@ -2269,7 +2269,7 @@ static void mss_usbd_dma_handler_cb
 
     if(DMA_XFR_ERROR == status)
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
     else
     {

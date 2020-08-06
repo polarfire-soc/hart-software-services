@@ -54,11 +54,14 @@ void display_address_of_interest(uint64_t * address_of_interest, int nb_location
 
 void exit_simulation(void);
 
+void enable_interrupts(void);
+uint64_t disable_interrupts(void);
+void restore_interrupts(uint64_t saved_psr);
 void __disable_irq(void);
 void __disable_all_irqs(void);
 void __enable_irq(void);
-void __enable_local_irq(int8_t local_interrupt);
-void __disable_local_irq(int8_t local_interrupt);
+void __enable_local_irq(uint8_t local_interrupt);
+void __disable_local_irq(uint8_t local_interrupt);
 
 void mss_init_mutex(uint64_t address);
 void mss_take_mutex(uint64_t address);

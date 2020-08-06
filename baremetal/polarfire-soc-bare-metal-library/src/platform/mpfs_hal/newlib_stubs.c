@@ -15,7 +15,9 @@
  */
 #include <sys/times.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
+#include <unistd.h>
 #include "mss_hal.h"
 
 /*==============================================================================
@@ -75,16 +77,22 @@ char **environ = __env;
 /*==============================================================================
  * Close a file.
  */
+int _close(int file);
 int _close(int file)
 {
+    (void)file;
     return -1;
 }
 
 /*==============================================================================
  * Transfer control to a new process.
  */
+int _execve(char *name, char **argv, char **env);
 int _execve(char *name, char **argv, char **env)
 {
+    (void)name;
+    (void)argv;
+    (void)env;
     errno = ENOMEM;
     return -1;
 }
@@ -94,6 +102,7 @@ int _execve(char *name, char **argv, char **env)
  */
 void _exit( int code )
 {
+    (void)code;
     /* Should we force a system reset? */
     while( 1 )
     {
@@ -104,6 +113,7 @@ void _exit( int code )
 /*==============================================================================
  * Create a new process.
  */
+int _fork(void);
 int _fork(void)
 {
     errno = EAGAIN;
@@ -113,8 +123,10 @@ int _fork(void)
 /*==============================================================================
  * Status of an open file.
  */
+int _fstat(int file, struct stat *st);
 int _fstat(int file, struct stat *st)
 {
+    (void)file;
     st->st_mode = S_IFCHR;
     return (0);
 }
@@ -122,6 +134,7 @@ int _fstat(int file, struct stat *st)
 /*==============================================================================
  * Process-ID
  */
+int _getpid(void);
 int _getpid(void)
 {
     return (1);
@@ -130,16 +143,21 @@ int _getpid(void)
 /*==============================================================================
  * Query whether output stream is a terminal.
  */
+int _isatty(int file);
 int _isatty(int file)
 {
+    (void)file;
     return (1);
 }
 
 /*==============================================================================
  * Send a signal.
  */
+int _kill(int pid, int sig);
 int _kill(int pid, int sig)
 {
+    (void)pid;
+    (void)sig;
     errno = EINVAL;
     return (-1);
 }
@@ -147,8 +165,11 @@ int _kill(int pid, int sig)
 /*==============================================================================
  * Establish a new name for an existing file.
  */
+int _link(char *old, char *new);
 int _link(char *old, char *new)
 {
+    (void)old;
+    (void)new;
     errno = EMLINK;
     return (-1);
 }
@@ -156,24 +177,36 @@ int _link(char *old, char *new)
 /*==============================================================================
  * Set position in a file.
  */
+int _lseek(int file, int ptr, int dir);
 int _lseek(int file, int ptr, int dir)
 {
+    (void)file;
+    (void)ptr;
+    (void)dir;
     return (0);
 }
 
 /*==============================================================================
  * Open a file.
  */
+int _open(const char *name, int flags, int mode);
 int _open(const char *name, int flags, int mode)
 {
+    (void)name;
+    (void)flags;
+    (void)mode;
     return (-1);
 }
 
 /*==============================================================================
  * Read from a file.
  */
+int _read(int file, char *ptr, int len);
 int _read(int file, char *ptr, int len)
 {
+    (void)file;
+    (void)ptr;
+    (void)len;
     return (0);
 }
 
@@ -183,8 +216,13 @@ int _read(int file, char *ptr, int len)
  * example to a serial port for debugging, you should make your minimal write
  * capable of doing this.
  */
+int _write_r( void * reent, int file, char * ptr, int len );
 int _write_r( void * reent, int file, char * ptr, int len )
 {
+    (void)reent;
+    (void)file;
+    (void)ptr;
+    (void)len;
 #ifdef MICROCHIP_STDIO_THRU_UART
     /*--------------------------------------------------------------------------
      * Initialize the UART driver if it is the first time this function is
@@ -216,6 +254,7 @@ int _write_r( void * reent, int file, char * ptr, int len )
  * standalone system; it exploits the symbol _end automatically defined by the
  * GNU linker.
  */
+caddr_t _sbrk(int incr);
 caddr_t _sbrk(int incr)
 {
     extern char _end;       /* Defined by the linker */
@@ -223,6 +262,9 @@ caddr_t _sbrk(int incr)
     extern char __heap_end;
     static char *heap_end;
     char *prev_heap_end;
+
+    (void)__heap_start;
+    (void)__heap_end;
 #ifdef DEBUG_HEAP_SIZE
     char * stack_ptr = NULL;
 #endif
@@ -297,8 +339,10 @@ caddr_t _sbrk(int incr)
 /*==============================================================================
  * Status of a file (by name).
  */
+int _stat(char *file, struct stat *st);
 int _stat(char *file, struct stat *st)
 {
+    (void)file;
     st->st_mode = S_IFCHR;
     return 0;
 }
@@ -306,16 +350,20 @@ int _stat(char *file, struct stat *st)
 /*==============================================================================
  * Timing information for current process.
  */
+int _times(struct tms *buf);
 int _times(struct tms *buf)
 {
+    (void)buf;
     return (-1);
 }
 
 /*==============================================================================
  * Remove a file's directory entry.
  */
+int _unlink(char *name);
 int _unlink(char *name)
 {
+    (void)name;
     errno = ENOENT;
     return (-1);
 }
@@ -323,8 +371,10 @@ int _unlink(char *name)
 /*==============================================================================
  * Wait for a child process.
  */
+int _wait(int *status);
 int _wait(int *status)
 {
+    (void)status;
     errno = ECHILD;
     return (-1);
 }

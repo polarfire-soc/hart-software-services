@@ -125,6 +125,28 @@ mss_nwc_init
 );
 
 
+/***************************************************************************//**
+  mtime_delay(x) delay function, passes microseconds
+  waits x microseconds
+  Assumption 1 is we have ensured clock is 1MHz
+  Assumption 2 is we have not setup tick timer when using this function. It is
+  only used by the startup code.
+
+  Example:
+  @code
+
+      mtime_delay(100UL);
+
+  @endcode
+
+ */
+void
+mtime_delay
+(
+    uint32_t microseconds
+);
+
+
 #ifdef __cplusplus
 }
 #endif

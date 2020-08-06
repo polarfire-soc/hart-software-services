@@ -8,7 +8,7 @@
  * SVN $Revision: 10589 $
  * SVN $Date: 2018-11-23 05:49:09 +0000 (Fri, 23 Nov 2018) $
  */
-#include "hal_assert.h"
+#include "mss_assert.h"
 #include "mss_sysreg.h"
 #include "mss_hart_ints.h"
 #include "mss_plic.h"

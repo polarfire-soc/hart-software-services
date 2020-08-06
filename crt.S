@@ -34,7 +34,7 @@ _start:
         // RISC-V Relaxing and the Global Pointer, GP
         //
         // The gp (Global Pointer) register optimises memory accesses within a single 4KB region.
-        // This size is 4K because RISC-V immediate values ar 12-bit signed values (+/- 2048)
+        // This size is 4K because RISC-V immediate values are 12-bit signed values (+/- 2048)
         //
         // The linker uses the __global_pointer$ symbol definition to compare memory addresses
         // and, if within range, it replaces absolute/pc-relative addressing with gp-relative

@@ -395,7 +395,40 @@ typedef enum DDR_MEMORY_ACCESS_
  * sanity check state
  */
 #if !defined (EN_RETRY_ON_FIRST_TRAIN_PASS)
-#define EN_RETRY_ON_FIRST_TRAIN_PASS    1
+#define EN_RETRY_ON_FIRST_TRAIN_PASS    0
+#endif
+
+#if !defined (DDR_FULL_32BIT_NC_CHECK_EN)
+#define DDR_FULL_32BIT_NC_CHECK_EN  1
+#endif
+
+/* This is a fixed setting, will move into driver in next commit */
+#if !defined (SW_TRAING_BCLK_SCLK_OFFSET)
+#define SW_TRAING_BCLK_SCLK_OFFSET                  0x00000000UL
+#endif
+/*
+ * 0x6DU => setting vref_ca to 40%
+ * This (0x6DU) is the default setting.
+ * Currently not being used, here for possible future use.
+ * */
+#if !defined (DDR_MODE_REG_VREF_VALUE)
+#define DDR_MODE_REG_VREF_VALUE       0x6DU
+#endif
+
+/* number of test writes to perform */
+#if !defined (SW_CFG_NUM_READS_WRITES)
+#define SW_CFG_NUM_READS_WRITES        0x20000U
+#endif
+/*
+ * what test patterns to write/read on start-up
+ * */
+#if !defined (SW_CONFIG_PATTERN)
+#define SW_CONFIG_PATTERN (PATTERN_INCREMENTAL|\
+                                        PATTERN_WALKING_ONE|\
+                                        PATTERN_WALKING_ZERO|\
+                                        PATTERN_RANDOM|\
+                                        PATTERN_0xCCCCCCCC|\
+                                        PATTERN_0x55555555)
 #endif
 
 

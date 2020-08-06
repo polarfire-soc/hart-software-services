@@ -51,8 +51,8 @@ typedef enum {
 } mss_mpu_mport_t;
 
 typedef enum {
-    MSS_MPU_AM_OFF    = 0x00,
-    MSS_MPU_AM_NAPOT  = 0x03,
+    MSS_MPU_AM_OFF    = 0x00U,
+    MSS_MPU_AM_NAPOT  = 0x03U,
 } mss_mpu_addrm_t;
 
 typedef enum {
@@ -87,13 +87,17 @@ extern uint8_t num_pmp_lut[10];
 #endif
 
 
-
-typedef struct
-{
-    __IO uint64_t  pmp   : 38;
-    __IO uint64_t  rsrvd : 18;
-    __IO uint64_t  mode  : 8;
-} MPUCFG_TypeDef;
+typedef struct {
+    union {
+        struct
+        {
+            __IO uint64_t  pmp   : 38;
+            __IO uint64_t  rsrvd : 18;
+            __IO uint64_t  mode  : 8;
+        } MPUCFG_TypeDef;
+        uint64_t raw;
+    };
+} MCU_CFG;
 
 typedef struct
 {
@@ -101,11 +105,12 @@ typedef struct
     __IO uint64_t  rw     : 1;
     __IO uint64_t  id     : 4;
     __IO uint64_t  failed : 1;
+    __IO uint64_t  padding : (64-44);
 } MPU_FailStatus_TypeDef;
 
 typedef struct
 {
-    MPUCFG_TypeDef               PMPCFG[16U];
+    MCU_CFG               PMPCFG[16U];
     __IO MPU_FailStatus_TypeDef  STATUS;
 } MPU_TypeDef;
 
@@ -138,7 +143,7 @@ static inline uint8_t MSS_MPU_lock_region(mss_mpu_mport_t master_port,
 {
     if(pmp_region < num_pmp_lut[master_port])
     {
-        MSS_MPU(master_port)->PMPCFG[pmp_region].mode |= (0x1U << 7U);
+        MSS_MPU(master_port)->PMPCFG[pmp_region].MPUCFG_TypeDef.mode |= (0x1U << 7U);
         return (0U);
     }
     else
@@ -159,7 +164,7 @@ static inline uint8_t MSS_MPU_set_permission(mss_mpu_mport_t master_port,
 {
     if(pmp_region < num_pmp_lut[master_port])
     {
-        MSS_MPU(master_port)->PMPCFG[pmp_region].mode |= permission;
+        MSS_MPU(master_port)->PMPCFG[pmp_region].MPUCFG_TypeDef.mode |= permission;
         return (0U);
     }
     else
@@ -174,7 +179,7 @@ static inline uint8_t MSS_MPU_get_permission(mss_mpu_mport_t master_port,
 {
     if(pmp_region < num_pmp_lut[master_port])
     {
-        *permission = MSS_MPU(master_port)->PMPCFG[pmp_region].mode & 0x7U;
+        *permission = MSS_MPU(master_port)->PMPCFG[pmp_region].MPUCFG_TypeDef.mode & 0x7U;
         return (0U);
     }
     else

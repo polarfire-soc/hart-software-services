@@ -426,7 +426,7 @@ extern "C" {
     #define SUBBLK_CLOCK_CR_CFM_OFFSET                           0x1D
     #define SUBBLK_CLOCK_CR_CFM_MASK                             (0x01 << 0x1D)
 
-/*"Holds the MSS peripherals in reset. Whenin reset the peripheral should
+/*"Holds the MSS peripherals in reset. When in reset the peripheral should
     not be accessed the acess may be ignored return unspecified data or result
     in bus response error."*/
 #define SOFT_RESET_CR_OFFSET                                     0x88

@@ -117,7 +117,7 @@
 extern "C" {
 #endif 
 
-#include "hal_assert.h"
+#include "mss_assert.h"
 #include "mss_sysreg.h"
 #include <stdint.h>
 #include "mss_hart_ints.h"

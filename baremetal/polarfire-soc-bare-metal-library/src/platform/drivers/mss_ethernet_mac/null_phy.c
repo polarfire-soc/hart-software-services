@@ -24,7 +24,7 @@
 #include "drivers/mss_mac/mss_ethernet_mac.h"
 #include "drivers/mss_mac/phy.h"
 #include "hal/hal.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 
 #ifdef __cplusplus
 extern "C" {

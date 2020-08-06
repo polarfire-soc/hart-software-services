@@ -178,13 +178,11 @@ _start:
     # Also, stops x propagation in simulation, when cache/stack reads unused
     # area
     #
-    li  a4, 0x01000000
-    li  a5, 0x01002000
-.init_dtim:
-    #csrw mepc, zero
-    STORE x0, 0(a4)
-    add a4, a4, __SIZEOF_POINTER__
-    blt a4, a5, .init_dtim
+    li a2, MPFS_HAL_CLEAR_MEMORY
+    beq x0, a2, .skip_mem_clear
+    call    .clear_dtim
+    call    .clear_l2lim
+.skip_mem_clear:
     # now core MPFS_HAL_FIRST_HART jumps to main_first_hart
 .main_hart:
     j main_first_hart
@@ -337,4 +335,39 @@ restore_regs:
     csrs mstatus, a2        # enable interrupts
     /* flush the instruction cache */
     fence.i
+    ret
+
+
+/*******************************************************************************
+ *
+ */
+
+.clear_l2lim:
+    // Clear the LIM
+    //
+    // On reset, the first 15 ways are L2 and the last way is cache
+    // We can initialize all, as cache write through to DDR is blocked
+    // until DDR in initialized, so will have no effect other than clear ECC
+    //
+    // NOTE: we need to check if we are debugging from LIM,if so do not
+    // initialize.
+    //
+    la a2, __text_start
+    la a4, __stack_top_h4$      # start of unallocated LIM address
+    and a2, a2, a4
+    bnez a2, .done_clear
+    la  a5, 0x08200000          # end of LIM address
+    j   1f
+.clear_dtim:
+    //
+    // Clear the E51 DTIM to prevent any ECC memory errors on initial access
+    //
+    la  a4, 0x01000000          # DTIM start
+    la  a5, 0x01002000          # DTIM end
+1:
+    // common loop used by both .clear_l2lim and .clear_dtim
+    sd   x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, 1b
+.done_clear:
     ret

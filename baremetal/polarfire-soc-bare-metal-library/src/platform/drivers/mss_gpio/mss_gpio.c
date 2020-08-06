@@ -9,7 +9,7 @@
  *
  */
 
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mpfs_hal/mss_plic.h"
 #include "mpfs_hal/mss_sysreg.h"
 #include "mss_gpio.h"
@@ -139,7 +139,7 @@ void MSS_GPIO_init( GPIO_TypeDef * gpio )
         SYSREG->SOFT_RESET_CR |= ( (1u << 22u));
     }
     else
-        HAL_ASSERT(0);
+        ASSERT(0);
 
     /* Clear any previously pended MSS GPIO interrupts*/
 
@@ -246,7 +246,7 @@ void MSS_GPIO_drive_inout
             break;
 
             default:
-                HAL_ASSERT(0);
+                ASSERT(0);
             break;
         }
     }
@@ -291,7 +291,7 @@ void MSS_GPIO_enable_irq
                 PLIC_EnableIRQ(GPIO2_NON_DIRECT_PLIC);
         }
         else
-            HAL_ASSERT(0);
+            ASSERT(0);
     }
 }
 
@@ -335,7 +335,7 @@ void MSS_GPIO_disable_irq
                 PLIC_DisableIRQ(GPIO2_NON_DIRECT_PLIC);
         }
         else
-            HAL_ASSERT(0);
+            ASSERT(0);
     }
 }
 
@@ -360,17 +360,17 @@ static uint8_t gpio_number_validate(GPIO_TypeDef * gpio, mss_gpio_id_t gpio_idx)
 {
     if(((GPIO0_LO == gpio) || (GPIO0_HI == gpio)) && (gpio_idx >= NB_OF_GPIO_GPIO0))
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
         return 1;
     }
     if(((GPIO1_LO == gpio) || (GPIO1_HI == gpio)) && (gpio_idx >= NB_OF_GPIO_GPIO1))
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
         return 1;
     }
     if(((GPIO2_LO == gpio) || (GPIO2_HI == gpio)) && (gpio_idx >= NB_OF_GPIO_GPIO2))
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
         return 1;
     }
 

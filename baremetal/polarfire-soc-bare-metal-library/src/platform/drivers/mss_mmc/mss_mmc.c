@@ -12,7 +12,7 @@
 #include "mss_mmc_if.h"
 #include "mss_mmc_regs.h"
 #include "mss_mmc_types.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mpfs_hal/mss_hal.h"
 #include "mpfs_hal/mss_sysreg.h"
 #include "mpfs_hal/mss_plic.h"

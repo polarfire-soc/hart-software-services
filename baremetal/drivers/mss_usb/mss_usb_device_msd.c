@@ -15,7 +15,7 @@
 #include "mpfs_hal/mss_plic.h"
 #include "mss_usb_device.h"
 #include "mss_usb_device_msd.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mss_usb_std_def.h"
 #include "mpfs_hal/mss_clint.h"
 
@@ -377,7 +377,7 @@ usbd_msc_get_descriptor_cb
     }
     else
     {
-        HAL_ASSERT(0);      //user must select FS or HS, nothing else.
+        ASSERT(0);      //user must select FS or HS, nothing else.
     }
 
     if(USB_STD_REQ_RECIPIENT_DEVICE == recepient)
@@ -389,7 +389,7 @@ usbd_msc_get_descriptor_cb
         }
         else if(USB_OTHER_SPEED_CONFIG_DESCRIPTOR_TYPE == type)
         {
-            HAL_ASSERT(os_conf_desc != NULL);
+            ASSERT(os_conf_desc != NULL);
             *length = os_conf_desc_len;
 
             return(os_conf_desc);
@@ -467,7 +467,7 @@ usbd_msc_init_cb
     }
     else
     {
-        HAL_ASSERT(0); /*speed value can not be any other than FS or HS*/
+        ASSERT(0); /*speed value can not be any other than FS or HS*/
     }
 
     MSS_USBD_rx_ep_configure(MSC_CLASS_BULK_RX_EP,
@@ -548,7 +548,7 @@ usbd_msc_process_request_cb
         {
             case USB_MSC_BOT_REQ_GET_MAX_LUN:
                 /*Return the max LUN index, not the actual number of LUNs*/
-                HAL_ASSERT(g_usbd_msc_media_ops->media_get_max_lun != NULL);
+                ASSERT(g_usbd_msc_media_ops->media_get_max_lun != NULL);
 
                 if(0 != g_usbd_msc_media_ops->media_get_max_lun)
                 {
@@ -711,7 +711,7 @@ usbd_msc_bot_fsm
                         }
                         else
                         {
-                            HAL_ASSERT(0); /*invalid req_type value*/
+                            ASSERT(0); /*invalid req_type value*/
                         }
                     break;
 
@@ -746,7 +746,7 @@ usbd_msc_bot_fsm
                         }
                         else
                         {
-                            HAL_ASSERT(0);/*invalid req_type value*/
+                            ASSERT(0);/*invalid req_type value*/
                         }
                     break;
 
@@ -761,7 +761,7 @@ usbd_msc_bot_fsm
                             }
                             else
                             {
-                                HAL_ASSERT(0);   //shouldn't happen
+                                ASSERT(0);   //shouldn't happen
                             }
                         }
                         else if(SCSI_IN == g_req_type)
@@ -772,7 +772,7 @@ usbd_msc_bot_fsm
                         }
                         else
                         {
-                            HAL_ASSERT(0);
+                            ASSERT(0);
                         }
                     break;
 
@@ -887,7 +887,7 @@ usbd_msc_bot_fsm
         }
         else
         {
-            HAL_ASSERT(0);
+            ASSERT(0);
         }
 
     break;
@@ -910,7 +910,7 @@ usbd_msc_bot_fsm
                     }
                     else
                     {
-                        HAL_ASSERT(0);/*corrupt/invalid data_residue value*/
+                        ASSERT(0);/*corrupt/invalid data_residue value*/
                     }
 
                     if(0u == g_current_command_csw.data_residue)
@@ -940,7 +940,7 @@ usbd_msc_bot_fsm
                                                                                g_current_command_csw.data_residue);
                             if (actual_read_len > g_current_command_csw.data_residue)
                             {
-                                HAL_ASSERT(0);/*App should not read more data than asked for*/
+                                ASSERT(0);/*App should not read more data than asked for*/
                             }
                             else
                             {
@@ -966,7 +966,7 @@ usbd_msc_bot_fsm
                 }
                 else
                 {
-                    HAL_ASSERT(0); //should never come there with Phase Error status
+                    ASSERT(0); //should never come there with Phase Error status
                 }
             }
             else if(BOT_EVENT_TX_ERROR == g_bottx_events)
@@ -974,12 +974,12 @@ usbd_msc_bot_fsm
                 /* Stall Error*/
                 if(status & TX_EP_STALL_ERROR)
                 {
-                    HAL_ASSERT(0); //should never get a stall in this state
+                    ASSERT(0); //should never get a stall in this state
                 }
             }
             else
             {
-                HAL_ASSERT(0);/*corrupt g_bottx_events value*/
+                ASSERT(0);/*corrupt g_bottx_events value*/
             }
         break;
 
@@ -1004,7 +1004,7 @@ usbd_msc_bot_fsm
                     }
                     else
                     {
-                        HAL_ASSERT(0);/*corrupt/invalid data_residue value*/
+                        ASSERT(0);/*corrupt/invalid data_residue value*/
                     }
 
                     /*Write the received data on flash*/
@@ -1098,12 +1098,12 @@ usbd_msc_bot_fsm
                 /* Stall Error*/
                 if(status & 0x02u)
                 {
-                    HAL_ASSERT(0); //should never get a stall in this state
+                    ASSERT(0); //should never get a stall in this state
                 }
             }
             else
             {
-                HAL_ASSERT(0); //invalid g_botrx_events
+                ASSERT(0); //invalid g_botrx_events
             }
         break;
 
@@ -1148,7 +1148,7 @@ usbd_msc_bot_fsm
 
         default:
         {
-            HAL_ASSERT(0);  //invalid BOT state
+            ASSERT(0);  //invalid BOT state
         }
         break;
     }
@@ -1198,7 +1198,7 @@ usbd_msc_process_cbw
     {
         if(g_current_command_csw.data_residue != 0u)
         {
-            HAL_ASSERT(0);
+            ASSERT(0);
         }
 
 

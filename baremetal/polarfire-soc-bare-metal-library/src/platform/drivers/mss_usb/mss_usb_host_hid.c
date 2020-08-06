@@ -20,7 +20,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 #include "mpfs_hal/mss_plic.h"
 #ifdef __cplusplus
 extern "C" {
@@ -433,7 +433,7 @@ MSS_USBH_HID_task
 
         default:
         {
-            HAL_ASSERT(0);  /*Reset recovery should be tried.*/
+            ASSERT(0);  /*Reset recovery should be tried.*/
         }
         break;
     }
@@ -558,7 +558,7 @@ usbh_hid_rx_cb
         }
         else
         {
-            HAL_ASSERT(0);/* Handling any other error. Not yet supported */
+            ASSERT(0);/* Handling any other error. Not yet supported */
         }
     }
 

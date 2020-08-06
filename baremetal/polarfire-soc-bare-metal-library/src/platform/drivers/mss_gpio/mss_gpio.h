@@ -397,15 +397,15 @@ static inline void MSS_GPIO_config_byte
 
     if(((GPIO0_LO == gpio) || (GPIO0_HI == gpio)) && (byte_num >= 1 ))
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
     if(((GPIO1_LO == gpio) || (GPIO1_HI == gpio)) && (byte_num > 2 ))
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
     if(((GPIO2_LO == gpio) || (GPIO2_HI == gpio)) && (byte_num > 3 ))
     {
-        HAL_ASSERT(0);
+        ASSERT(0);
     }
     else
         gpio->GPIO_CFG_BYTE[byte_num] = config;

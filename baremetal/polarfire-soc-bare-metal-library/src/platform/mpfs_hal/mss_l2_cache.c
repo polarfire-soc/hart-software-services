@@ -107,7 +107,7 @@ typedef struct {
  * Local functions.
  */
 static void config_l2_scratchpad(void);
-static void reserve_scratchpad_ways(int nways, uint64_t * scratchpad_start);
+static void reserve_scratchpad_ways(uint8_t nways, uint64_t * scratchpad_start);
 
 /**
  * \brief L2 waymask configuration settings from Libero
@@ -153,7 +153,7 @@ static void config_l2_scratchpad(void)
 {
     extern char __l2_scratchpad_vma_start;
     extern char __l2_scratchpad_vma_end;
-    int n_scratchpad_ways;
+    uint8_t n_scratchpad_ways;
     const uint64_t end = (const uint64_t)&__l2_scratchpad_vma_end;
     const uint64_t start = (const uint64_t)&__l2_scratchpad_vma_start;
     uint64_t modulo;
@@ -162,7 +162,7 @@ static void config_l2_scratchpad(void)
      * Figure out how many cache ways will be required from linker script
      * symbols.
      */
-    n_scratchpad_ways = (end - start) / WAY_BYTE_LENGTH;
+    n_scratchpad_ways = (uint8_t)((end - start) / WAY_BYTE_LENGTH);
     modulo = (end - start) % WAY_BYTE_LENGTH;
     if(modulo > 0)
     {
@@ -185,13 +185,13 @@ static void config_l2_scratchpad(void)
  *  Start address within the Zero Device memory range in which the scratchpad
  *  will be located.
  */
-static void reserve_scratchpad_ways(int nways, uint64_t * scratchpad_start)
+static void reserve_scratchpad_ways(uint8_t nways, uint64_t * scratchpad_start)
 {
-    uint64_t way_enable;
+    uint8_t way_enable;
     uint64_t available_ways = 1;
     uint64_t scratchpad_ways = 0;
     uint64_t non_scratchpad_ways;
-    int inc;
+    uint32_t inc;
     int ways_inc;
 
     ASSERT(scratchpad_start >= (uint64_t *)ZERO_DEVICE_BOTTOM);

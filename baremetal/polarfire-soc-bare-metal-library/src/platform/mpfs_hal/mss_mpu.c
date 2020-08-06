@@ -348,7 +348,6 @@ uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
 {
     uint64_t temp = size, cnt=0ULL;
     uint64_t range;
-    volatile uint64_t baddr=0ULL;
 
     /*size must be minimum 4k
       Size must be power of 2
@@ -363,15 +362,11 @@ uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
 
         range = (1ULL << (cnt-1U))-1U;
 
-        MSS_MPU(master_port)->PMPCFG[pmp_region].pmp = (base | range) >> 2U;
+        MSS_MPU(master_port)->PMPCFG[pmp_region].raw = (base | range) >> 2U;
 
-        MSS_MPU(master_port)->PMPCFG[pmp_region].mode = permission |
-                                                        (matching_mode << 3U) |
-                                                        (lock_en << 0x7U);
-
-        baddr = (MSS_MPU(master_port)->PMPCFG[pmp_region].mode);
-        baddr = (MSS_MPU(master_port)->PMPCFG[pmp_region].pmp);
-        (void)baddr; // reference baddr to avoid compiler warning
+        MSS_MPU(master_port)->PMPCFG[pmp_region].MPUCFG_TypeDef.mode = (uint8_t)(permission |
+                                              (uint8_t)(matching_mode << 3U) |
+                                                        (lock_en << 0x7U));
 
         return ((uint8_t)0);
     }
@@ -394,10 +389,10 @@ uint8_t MSS_MPU_get_config(mss_mpu_mport_t master_port,
     /*All AXI external masters dont have same number of PMP regions*/
     if(pmp_region < num_pmp_lut[master_port])
     {
-        reg = MSS_MPU(master_port)->PMPCFG[pmp_region].pmp;
+        reg = MSS_MPU(master_port)->PMPCFG[pmp_region].MPUCFG_TypeDef.pmp;
         *base = pmp_get_napot_base_and_range(reg, size);
 
-        reg = MSS_MPU(master_port)->PMPCFG[pmp_region].mode;
+        reg = MSS_MPU(master_port)->PMPCFG[pmp_region].MPUCFG_TypeDef.mode;
         *lock_en = ( reg >> 0x7U) & 0x1U;
         *matching_mode = (mss_mpu_addrm_t)( (reg >> 3ULL) & 0x3U);
         *permission = reg & 0x7U;

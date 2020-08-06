@@ -67,7 +67,7 @@ __attribute__((weak))\
     /* Turn on UART0 clock */
     SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_MMUART0_MASK);
     /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= ~(SUBBLK_CLOCK_CR_MMUART0_MASK);
+    SYSREG->SOFT_RESET_CR   &= (uint32_t)(~SUBBLK_CLOCK_CR_MMUART0_MASK);
     MSS_UART_init( uart,
         MSS_UART_115200_BAUD,
             MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
@@ -111,6 +111,26 @@ __attribute__((weak))\
 }
 
 /***************************************************************************//**
+ *
+ * @param uart
+ * @param msg
+ * @param d
+ */
+__attribute__((weak))\
+        void uprint64(mss_uart_instance_t * uart, const char* msg, uint64_t d)
+{
+    MSS_UART_polled_tx_string(uart, (const uint8_t *)msg);
+    for (unsigned i=4; i < 8; i++)
+    {
+        dumpbyte(uart, (d >> (8*(3-i))) & 0xffu);
+    }
+    for (unsigned i=0; i < 4; i++)
+    {
+        dumpbyte(uart, (d >> (8*(3-i))) & 0xffu);
+    }
+}
+
+/***************************************************************************//**
  * dump a number of 32bit contiguous registers
  * @param uart
  * @param reg_pointer
@@ -122,7 +142,7 @@ void print_reg_array(mss_uart_instance_t * uart, uint32_t *reg_pointer,\
 #ifdef DEBUG_DDR_INIT
     while(no_of_regs > 0U)
     {
-        uprint32(uart, "\n\rRegister, 0x", (uintptr_t)reg_pointer);
+        uprint64(uart, "\n\rRegister, 0x", (uint64_t)reg_pointer);
         uprint32(uart, "  ,Value, 0x", *reg_pointer);
         reg_pointer++;
         no_of_regs--;
@@ -154,7 +174,7 @@ static uint32_t ddr_write
 )
 {
     uint32_t i;
-    uint64_t DATA = 0lu; //, read_data;
+    uint64_t DATA;
     uint32_t error_count = 0U;
 
     switch (data_ptrn)
@@ -165,7 +185,7 @@ static uint32_t ddr_write
                  DATA = ~ DATA; break;
 #ifndef HSS
         case PATTERN_RANDOM :
-            DATA = rand ( );
+            DATA = (uint64_t)rand();
             break;
 #endif
         case PATTERN_0xCCCCCCCC :
@@ -177,7 +197,9 @@ static uint32_t ddr_write
         case PATTERN_ZEROS :
             DATA = 0x00000000;
             break;
-        default :  break;
+        default :
+            DATA = 0x00000000;
+            break;
     }
 
     for( i = 0; i< (no_of_access); i++)
@@ -187,7 +209,7 @@ static uint32_t ddr_write
 #ifdef DEBUG_DDR_INIT
         if((i%0x1000000UL) ==0UL)
         {
-            MSS_UART_polled_tx(g_debug_uart, "w", (uint32_t)1UL);
+            MSS_UART_polled_tx(g_debug_uart, (const uint8_t*)"w", (uint32_t)1UL);
         }
 #endif
         switch (data_ptrn)
@@ -211,7 +233,7 @@ static uint32_t ddr_write
                 break;
 #ifndef HSS
             case PATTERN_RANDOM :
-                DATA = rand ( );
+                DATA = (uint64_t)rand();
                 break;
 #endif
             case PATTERN_0xCCCCCCCC :
@@ -245,15 +267,14 @@ uint32_t ddr_read
 )
 {
     uint32_t i;
-    uint64_t DATA = 0lu;
+    uint64_t DATA;
     uint32_t err_cnt;
     volatile uint64_t ddr_data;
     volatile uint64_t *DDR_word_pt_t;
-#ifndef HSS
-    volatile uint64_t *first_DDR_word_pt_t;
-    uint32_t rand_addr_offset;
 
-    first_DDR_word_pt_t = DDR_word_ptr;
+#ifndef HSS
+    uint32_t rand_addr_offset;
+    volatile uint64_t **first_DDR_word_pt_t = DDR_word_ptr;
 #endif
 
     err_cnt = 0U;
@@ -265,20 +286,22 @@ uint32_t ddr_read
             DATA = ~ DATA; break;
 #ifndef HSS
         case PATTERN_RANDOM :
-            DATA = rand ( );
+            DATA = (uint64_t)rand ( );
             *DDR_word_ptr = DATA;
-        break;
+            break;
 #endif
         case PATTERN_0xCCCCCCCC :
             DATA = 0xCCCCCCCCCCCCCCCC;
-        break;
+            break;
         case PATTERN_0x55555555 :
             DATA = 0x5555555555555555;
-        break;
+            break;
         case PATTERN_ZEROS :
             DATA = 0x00000000;
         break;
-        default :  break;
+        default :
+           DATA = 0x00000000;
+           break;
     }
     if (data_ptrn == '4')
     {
@@ -292,7 +315,7 @@ uint32_t ddr_read
 #ifdef DEBUG_DDR_INIT
         if((i%0x1000000UL) ==0UL)
         {
-            MSS_UART_polled_tx(g_debug_uart, "r", (uint32_t)1UL);
+            MSS_UART_polled_tx(g_debug_uart, (const uint8_t*)"r", (uint32_t)1UL);
         }
 #endif
 
@@ -302,13 +325,13 @@ uint32_t ddr_read
 #ifdef DEBUG_DDR_RD_RW_FAIL
             if (err_cnt <=0xF)
             {
-                uprint32(g_debug_uart,\
+                uprint64(g_debug_uart,\
                         "\n\r READ/ WRITE ACCESS FAILED AT ADDR: 0x ",\
                             (uintptr_t)DDR_word_ptr);
-                uprint32(g_debug_uart,"\t Expected Data 0x ", DATA);
-                uprint32(g_debug_uart,"\t READ DATA: 0x ", ddr_data);
-                uprint32(g_debug_uart,"\t READ DATA: 0x ", *DDR_word_ptr);
-                uprint32(g_debug_uart,"\t READ DATA: 0x ", *DDR_word_ptr);
+                uprint64(g_debug_uart,"\t Expected Data 0x ", DATA);
+                uprint64(g_debug_uart,"\t READ DATA: 0x ", ddr_data);
+                uprint64(g_debug_uart,"\t READ DATA: 0x ", *DDR_word_ptr);
+                uprint64(g_debug_uart,"\t READ DATA: 0x ", *DDR_word_ptr);
             }
 #endif
 #endif
@@ -318,8 +341,10 @@ uint32_t ddr_read
         {
 #ifdef DEBUG_DDR_RD_RW_PASS
             //printf("\n\r READ/ WRITE ACCESS passED AT ADDR: 0x%x expected data = 0x%x, Data read 0x%x",DDR_word_ptr, DATA, *DDR_word_ptr);
-            uprint32(&g_debug_uart, "\n\r READ/ WRITE ACCESS PASSED AT ADDR: 0x", DDR_word_ptr);
-            uprint32(&g_debug_uart,"\t READ DATA: 0x", *DDR_word_ptr);
+
+            uprint64(g_debug_uart, "\n\r READ/ WRITE ACCESS PASSED AT ADDR: 0x"\
+                    , (uintptr_t)DDR_word_ptr);
+            uprint64(g_debug_uart,"\t READ DATA: 0x", *DDR_word_ptr);
 #endif
         }
         DDR_word_ptr = DDR_word_ptr + 1U;
@@ -346,7 +371,7 @@ uint32_t ddr_read
                 break;
 #ifndef HSS
             case PATTERN_RANDOM :
-                DATA = rand ( );
+                DATA = (uint64_t)rand();
                 rand_addr_offset = (uint32_t)(rand() & 0xFFFFCUL);
                 DDR_word_ptr = first_DDR_word_pt_t + rand_addr_offset;
                 *DDR_word_ptr = DATA;
@@ -375,17 +400,15 @@ uint32_t ddr_read
  * @param pattern bit mask with patterns you want to test against
  * @return
  */
-uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access,\
-                                                               uint32_t pattern)
+uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access, uint32_t pattern)
 {
     uint32_t error_cnt = 0U;
-    uint32_t pattern_mask;
+    uint8_t pattern_mask;
     for (unsigned i=0; i < 1; i++)
     {
-        for (uint32_t pattern_shift=0U; pattern_shift < MAX_NO_PATTERNS;\
-                                                                pattern_shift++)
+        for (uint32_t pattern_shift=0U; pattern_shift < MAX_NO_PATTERNS; pattern_shift++)
         {
-            pattern_mask = (0x01U << pattern_shift);
+            pattern_mask = (uint8_t)(0x01U << pattern_shift);
             if(pattern & pattern_mask)
             {
 #ifdef DEBUG_DDR_INIT
@@ -439,37 +462,35 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
 
     uint32_t t_status = 0u;
     uint32_t MSS_DDR_APB_ADDR;
-    //uint32_t lane_sel; //unused
     uint32_t ddr_lane_sel;
     uint32_t dq0_dly, dq1_dly, dq2_dly, dq3_dly, dq4_dly, dq5_dly;
-    //uint64_t uart_lock; //unused
 
     /*  MSS_UART_polled_tx_string(g_mss_uart_debug_pt, "\n\n\r TIP register status \n");
     delay(1000);*/
-    uprint32(g_mss_uart_debug_pt,  "\n\r\n\r training status = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r\n\r training status = ",
                             CFG_DDR_SGMII_PHY->training_status.training_status);
-    uprint32(g_mss_uart_debug_pt,  "\n\r PCODE = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r PCODE = ",
                                 (CFG_DDR_SGMII_PHY->IOC_REG2.IOC_REG2 & 0x7F));
-    uprint32(g_mss_uart_debug_pt,  "\n\r NCODE = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r NCODE = ",
                         (((CFG_DDR_SGMII_PHY->IOC_REG2.IOC_REG2) >> 7) & 0x7F));
-    uprint32(g_mss_uart_debug_pt,  "\n\r WRCALIB_RESULT: "\
+    uprint32(g_mss_uart_debug_pt,  "\n\r WRCALIB_RESULT: "
                             , CFG_DDR_SGMII_PHY->expert_wrcalib.expert_wrcalib);
-    uprint32(g_mss_uart_debug_pt,  "\n\r sro_ref_slewr  = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r sro_ref_slewr  = ",
                         (((CFG_DDR_SGMII_PHY->IOC_REG5.IOC_REG5) >> 0) & 0x3F));
-    uprint32(g_mss_uart_debug_pt,  "\n\r sro_ref_slewf  = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r sro_ref_slewf  = ",
                        (((CFG_DDR_SGMII_PHY->IOC_REG5.IOC_REG5) >> 6) & 0xFFF));
-    uprint32(g_mss_uart_debug_pt,  "\n\r sro_slewr  = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r sro_slewr  = ",
                        (((CFG_DDR_SGMII_PHY->IOC_REG5.IOC_REG5) >> 18) & 0x3F));
-    uprint32(g_mss_uart_debug_pt,  "\n\r sro_slewf  = ",\
+    uprint32(g_mss_uart_debug_pt,  "\n\r sro_slewf  = ",
             (((CFG_DDR_SGMII_PHY->IOC_REG5.IOC_REG5) >> 24) & 0x3F));
 
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt, \
-            (const uint8_t *)"\n\n\r lane_select \t gt_err_comb \t gt_txdly \t gt_steps_180 \t gt_state \t wl_delay_0 \t dqdqs_err_done \t dqdqs_state \t delta0 \t delta1");
+    MSS_UART_polled_tx_string(g_mss_uart_debug_pt, 
+            (const uint8_t*)"\n\n\r lane_select \t gt_err_comb \t gt_txdly \t gt_steps_180 \t gt_state \t wl_delay_0 \t dqdqs_err_done \t dqdqs_state \t delta0 \t delta1");
 
     for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED; ddr_lane_sel++)
     {
         CFG_DDR_SGMII_PHY->lane_select.lane_select = ddr_lane_sel;
-        uprint32(g_mss_uart_debug_pt, "\n\r ",\
+        uprint32(g_mss_uart_debug_pt, "\n\r ",
                 CFG_DDR_SGMII_PHY->lane_select.lane_select);
         delay(1000);
         MSS_DDR_APB_ADDR = CFG_DDR_SGMII_PHY->gt_err_comb.gt_err_comb;
@@ -479,10 +500,14 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
         MSS_DDR_APB_ADDR = CFG_DDR_SGMII_PHY->gt_txdly.gt_txdly;
         uprint32(g_mss_uart_debug_pt, "\t ", MSS_DDR_APB_ADDR);
 
-        if((MSS_DDR_APB_ADDR & 0xFF) == 0)    t_status = 1;
-        if((MSS_DDR_APB_ADDR & 0xFF00) == 0)  t_status = 1;
-        if((MSS_DDR_APB_ADDR & 0xFF0000) == 0) t_status = 1;
-        if((MSS_DDR_APB_ADDR & 0xFF000000) == 0) t_status = 1;
+        if((MSS_DDR_APB_ADDR & 0xFF) == 0)
+            t_status = 1;
+        if((MSS_DDR_APB_ADDR & 0xFF00) == 0)
+            t_status = 1;
+        if((MSS_DDR_APB_ADDR & 0xFF0000) == 0)
+            t_status = 1;
+        if((MSS_DDR_APB_ADDR & 0xFF000000) == 0)
+            t_status = 1;
 
         uprint32(g_mss_uart_debug_pt, "\t ",\
                 CFG_DDR_SGMII_PHY->gt_steps_180.gt_steps_180);
@@ -508,8 +533,6 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
         dq5_dly = (MSS_DDR_APB_ADDR & 0xFF00) >> 8;
         dq2_dly = (MSS_DDR_APB_ADDR & 0xFF0000) >> 16;
         dq3_dly = (MSS_DDR_APB_ADDR & 0xFF000000) >> 24;
-
-        (void)t_status; // reference to avoid compiler warning
     }
 
     MSS_UART_polled_tx_string(g_mss_uart_debug_pt, (const uint8_t *)"\n\r\n\r lane_select\t rdqdqs_status2\t addcmd_status0\t addcmd_status1\t addcmd_answer1\t dqdqs_status1\n\r");

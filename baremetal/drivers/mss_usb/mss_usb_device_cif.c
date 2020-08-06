@@ -20,7 +20,7 @@
 #include "mss_usb_device_reg_io.h"
 #include "mss_usb_common_reg_io.h"
 #include "mpfs_hal/mss_plic.h"
-#include "hal/hal_assert.h"
+#include "mss_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
