@@ -126,41 +126,7 @@
 /*
  * DDR software options
  */
-#define DDR_FULL_32BIT_NC_CHECK_EN
 
-#define PATTERN_INCREMENTAL     (0x01U << 0U)
-#define PATTERN_WALKING_ONE     (0x01U << 1U)
-#define PATTERN_WALKING_ZERO    (0x01U << 2U)
-#define PATTERN_RANDOM          (0x01U << 3U)
-#define PATTERN_0xCCCCCCCC      (0x01U << 4U)
-#define PATTERN_0x55555555      (0x01U << 5U)
-#define PATTERN_ZEROS           (0x01U << 6U)
-#define MAX_NO_PATTERNS         7U
-/* number of test writes to perform */
-#define SW_CFG_NUM_READS_WRITES        0x20000U
-/*
- * what test patterns to write/read on start-up
- * */
-#define SW_CONFIG_PATTERN (PATTERN_INCREMENTAL|\
-                                        PATTERN_WALKING_ONE|\
-                                        PATTERN_WALKING_ZERO|\
-                                        PATTERN_RANDOM|\
-                                        PATTERN_0xCCCCCCCC|\
-                                        PATTERN_0x55555555)
-/* Training types status offsets */
-#define BCLK_SCLK_BIT                   (0x1U<<0U)
-#define ADDCMD_BIT                      (0x1U<<1U)
-#define WRLVL_BIT                       (0x1U<<2U)
-#define RDGATE_BIT                      (0x1U<<3U)
-#define DQ_DQS_BIT                      (0x1U<<4U)
-/*  The first five bits represent the currently supported training in the TIP */
-/*  This value will not change unless more training possibilities are added to
- *  the TIP */
-#define TRAINING_MASK                   (BCLK_SCLK_BIT|\
-                                        ADDCMD_BIT|\
-                                        WRLVL_BIT|\
-                                        RDGATE_BIT|\
-                                        DQ_DQS_BIT)
 /*
  * Debug DDR startup through a UART
  * Comment out in normal operation. May be useful for debug purposes in bring-up
@@ -175,13 +141,6 @@
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG
 
-/*
- * 1 implies sw BCLK_SCK traing carried out before IP training. This should be
- * the default
- * setting.
- */
-#define USE_SW_BCLK_SCK_TRAINING                    0x00000001UL
-#define SW_TRAING_BCLK_SCLK_OFFSET                  0x00000000UL
 /*
  * Set up 1MiB of L2 cache
  */
