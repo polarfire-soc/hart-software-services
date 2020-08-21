@@ -175,7 +175,7 @@ $(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
-	$(CMD_PREFIX)$(OBJCOPY) -O binary $@ `basename $@ .elf`.bin
+	$(CMD_PREFIX)$(OBJCOPY) -O binary $@ Default/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
-	$(CMD_PREFIX)$(OBJCOPY) -O ihex $@ `basename $@ .elf`.hex
+	$(CMD_PREFIX)$(OBJCOPY) -O ihex $@ Default/`basename $@ .elf`.hex
 	$(CMD_PREFIX)$(SIZE) $(TARGET) 2>/dev/null

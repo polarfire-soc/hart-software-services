@@ -148,6 +148,7 @@ endif
 %.hex: %.elf
 	@$(ECHO) " HEX       $@";
 	$(CMD_PREFIX)$(OBJCOPY) -O ihex $< $@
+	$(CMD_PREFIX)$(OBJCOPY) -O ihex $< Default/$@
 
 %.lss: %.elf
 	@$(ECHO) " LSS       $@";
