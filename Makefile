@@ -83,6 +83,7 @@ else
 endif
 
 RISCV_TARGET=hss.elf
+BINDIR=Default
 
 SRCS-y= \
     hss_state_machine.c \
@@ -171,11 +172,11 @@ endif
 
 $(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS)
 	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=output.map -Wl,--gc-sections -o $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=$(BINDIR)/output.map -Wl,--gc-sections -o $(BINDIR)/$@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
-	$(CMD_PREFIX)$(NM) -n $@ > `basename $@ .elf`.sym
+	$(CMD_PREFIX)$(NM) -n $(BINDIR)/$@ > $(BINDIR)/`basename $@ .elf`.sym
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
-	$(CMD_PREFIX)$(OBJCOPY) -O binary $@ Default/`basename $@ .elf`.bin
+	$(CMD_PREFIX)$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
-	$(CMD_PREFIX)$(OBJCOPY) -O ihex $@ Default/`basename $@ .elf`.hex
-	$(CMD_PREFIX)$(SIZE) $(TARGET) 2>/dev/null
+	$(CMD_PREFIX)$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
+	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$@ 2>/dev/null
