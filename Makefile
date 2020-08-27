@@ -64,6 +64,9 @@ all: ${TARGET}
 
 include .config
 
+RISCV_TARGET:=hss.elf
+TARGET:=$(RISCV_TARGET)
+
 ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
   include boards/${BOARD}/Makefile
 else
@@ -82,7 +85,6 @@ else
   $(error Linker Script >>${LINKER_SCRIPT}<< not found)
 endif
 
-RISCV_TARGET=hss.elf
 
 SRCS-y= \
     hss_state_machine.c \
@@ -105,7 +107,6 @@ EXTRA_OBJS += $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(EXTRA_OBJS-y)
 
 MCMODEL=-mcmodel=medany
 
-TARGET:=$(RISCV_TARGET)
 include rules.mk
 include targets.mk
 include init/Makefile
