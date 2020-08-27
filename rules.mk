@@ -39,6 +39,7 @@ READELF=$(CROSS_COMPILE)readelf
 NM=$(CROSS_COMPILE)nm
 ECHO=echo
 MAKE=make
+CP=cp
 MAKEDEP=makedepend
 
 PLATFORM_RISCV_ABI=lp64

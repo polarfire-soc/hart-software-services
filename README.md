@@ -50,9 +50,7 @@ Source code is found under the `hart-software-services` folder.
     │   └── ipi
     └── thirdparty
         ├── fastlz (fast lossless compression library)
-        ├── opensbi (RISC-V OpenSBI)
-        └── riscv-pk (RISC-V Proxy Kernel - legacy)
-            └── machine
+        └── opensbi (RISC-V OpenSBI)
 
 ## Building
 
@@ -78,7 +76,7 @@ Once configured, to build, run `make`:
 
     $ make BOARD=icicle-kit-es
 
-The standard build will create `hss.elf` and various binary formats (`hss.hex` and `hss.bin`).  Also generated are `output.map`, which is a mapfile for the build, and  `hss.sym`, which is a list of symbols.
+In the `Default` subdirectory, the standard build will create `hss.elf` and various binary formats (`hss.hex` and `hss.bin`).  Also generated are `output.map`, which is a mapfile for the build, and  `hss.sym`, which is a list of symbols.  (The name `Default` is required by SoftConsole for programming purposes.)
 
 A variety of alternative build options can be seen by running `make help`:
 

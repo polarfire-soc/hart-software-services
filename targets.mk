@@ -94,6 +94,7 @@ clean:
 ifdef CONFIG_OPENSBI
 	+$(CMD-PREFIX)$(MAKE) -C thirdparty/opensbi CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CC) clean V=$(V)
 endif
+	$(CMD_PREFIX)$(RM) $(BINDIR)/hss* $(BINDIR)/output.map
 
 distclean:
 	$(CMD_PREFIX)$(RM) $(OBJS) $(TARGET) cppcheck.log splint.log valgrind.log \
