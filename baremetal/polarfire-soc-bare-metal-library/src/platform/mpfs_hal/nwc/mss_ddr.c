@@ -2369,7 +2369,7 @@ static void load_dq(uint8_t lane)
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = 
+        CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 =
             (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1
                                                 & (uint32_t)~0x0F);
     }
@@ -2396,7 +2396,7 @@ static void load_dq(uint8_t lane)
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 =
             (CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1
                                                              & (uint32_t)~0x0F);
     }
