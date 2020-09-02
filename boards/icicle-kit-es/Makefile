@@ -34,19 +34,20 @@ $(info ICICLE-KIT-ES selected)
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
+BOARD_DIR=boards/icicle-kit-es
 
 INCLUDES += \
-	-Iboards/icicle-kit-es/mpfs_hal_config/\
-	-Iboards/icicle-kit-es/soc_config/\
-	-Iboards/icicle-kit-es/ \
+	-I$(BOARD_DIR)/mpfs_hal_config/\
+	-I$(BOARD_DIR)/soc_config/\
+	-I$(BOARD_DIR)/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 
 EXTRA_SRCS-y += \
-	boards/icicle-kit-es/hss_uart_init.c \
-        boards/icicle-kit-es/uart_helper.c \
-        boards/icicle-kit-es/hss_board_init.c \
+	$(BOARD_DIR)/hss_uart_init.c \
+        $(BOARD_DIR)/uart_helper.c \
+        $(BOARD_DIR)/hss_board_init.c \
 
-boards/icicle-kit-es/hss_uart_init.o: boards/icicle-kit-es/hss_uart_init.c config.h
+$(BOARD_DIR)/hss_uart_init.o: $(BOARD_DIR)/hss_uart_init.c config.h
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
@@ -90,45 +91,48 @@ baremetal/drivers/mss_envm/mss_envm.o: baremetal/drivers/mss_envm/mss_envm.c con
 #
 
 SOC_CONFIG_FILES =  \
-	boards/icicle-kit-es/soc_config/clocks/hw_clk_ddr_pll.h \
-	boards/icicle-kit-es/soc_config/clocks/hw_clk_mss_cfm.h \
-	boards/icicle-kit-es/soc_config/clocks/hw_clk_mss_pll.h \
-	boards/icicle-kit-es/soc_config/clocks/hw_clk_sgmii_cfm.h \
-	boards/icicle-kit-es/soc_config/clocks/hw_clk_sgmii_pll.h \
-	boards/icicle-kit-es/soc_config/clocks/hw_clk_sysreg.h \
-	boards/icicle-kit-es/soc_config/clocks/hw_mss_clks.h \
-	boards/icicle-kit-es/soc_config/ddr/hw_ddr_io_bank.h \
-	boards/icicle-kit-es/soc_config/ddr/hw_ddr_mode.h \
-	boards/icicle-kit-es/soc_config/ddr/hw_ddr_off_mode.h \
-	boards/icicle-kit-es/soc_config/ddr/hw_ddr_options.h \
-	boards/icicle-kit-es/soc_config/ddr/hw_ddr_segs.h \
-	boards/icicle-kit-es/soc_config/ddr/hw_ddrc.h \
-	boards/icicle-kit-es/soc_config/general/hw_gen_peripherals.h \
-	boards/icicle-kit-es/soc_config/hw_platform.h \
-	boards/icicle-kit-es/soc_config/io/hw_hsio_mux.h \
-	boards/icicle-kit-es/soc_config/io/hw_mssio_mux.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_apb_split.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_cache.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_memory.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_crypto.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_fic0.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_fic1.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_fic2.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_gem0.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_gem1.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_mmc.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_scb.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_trace.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_mpu_usb.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_pmp_hart0.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_pmp_hart1.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_pmp_hart2.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_pmp_hart3.h \
-	boards/icicle-kit-es/soc_config/memory_map/hw_pmp_hart4.h \
-	boards/icicle-kit-es/soc_config/sgmii/hw_sgmii_tip.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_clk_ddr_pll.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_clk_mss_cfm.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_clk_mss_pll.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_clk_sgmii_cfm.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_clk_sgmii_pll.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_clk_sysreg.h \
+	$(BOARD_DIR)/soc_config/clocks/hw_mss_clks.h \
+	$(BOARD_DIR)/soc_config/ddr/hw_ddr_io_bank.h \
+	$(BOARD_DIR)/soc_config/ddr/hw_ddr_mode.h \
+	$(BOARD_DIR)/soc_config/ddr/hw_ddr_off_mode.h \
+	$(BOARD_DIR)/soc_config/ddr/hw_ddr_options.h \
+	$(BOARD_DIR)/soc_config/ddr/hw_ddr_segs.h \
+	$(BOARD_DIR)/soc_config/ddr/hw_ddrc.h \
+	$(BOARD_DIR)/soc_config/general/hw_gen_peripherals.h \
+	$(BOARD_DIR)/soc_config/hw_platform.h \
+	$(BOARD_DIR)/soc_config/io/hw_hsio_mux.h \
+	$(BOARD_DIR)/soc_config/io/hw_mssio_mux.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_apb_split.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_cache.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_memory.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_crypto.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_fic0.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_fic1.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_fic2.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_gem0.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_gem1.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_mmc.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_scb.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_trace.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_mpu_usb.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_pmp_hart0.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_pmp_hart1.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_pmp_hart2.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_pmp_hart3.h \
+	$(BOARD_DIR)/soc_config/memory_map/hw_pmp_hart4.h \
+	$(BOARD_DIR)/soc_config/sgmii/hw_sgmii_tip.h \
 
-$(SOC_CONFIG_FILES): boards/icicle-kit-es/soc_fpga_design/xml/ICICLE_MSS_0.xml
+#$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_config
+#$(BOARD_DIR)/soc_config: $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_0.xml
+config.h: $(SOC_CONFIG_FILES)
+$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_0.xml
 	@$(ECHO) " CFGGEN    $<";
-	@$(CMD_PREFIX)python3 tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< boards/icicle-kit-es
+	@$(CMD_PREFIX)python3 tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
