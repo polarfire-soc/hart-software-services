@@ -1,0 +1,12 @@
+*.d
+*.o
+*.bin
+*.elf
+*.hex
+*.map
+*.sym
+
+.config
+.config.old
+config.h
+include/tool_versions.h
