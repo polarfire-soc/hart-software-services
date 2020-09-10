@@ -116,10 +116,13 @@ extern struct HSS_BootImage bootImage;
 
 static size_t calculate_padding(size_t size, size_t pad)
 {
-	assert(size);
 	assert(pad);
 
-	size_t result = ((size + (pad - 1)) / pad) * pad;
+	//
+	// given an actual size, and a desired pad, calculate
+	// how many additional bytes are required to bring size up
+	// to a multiple of the pad size...
+	size_t result = (((size + (pad - 1)) / pad) * pad) - size;
 
 	return result;
 }
@@ -130,6 +133,7 @@ static void write_pad(FILE *pFileOut, size_t pad)
 
 	size_t i;
 
+printf(" - requested pad: %lu bytes\n", pad);
 	for (i = 0u; i < pad; i++) {
 		fputc(0, pFileOut);
 
@@ -171,25 +175,30 @@ static void generate_chunks(FILE *pFileOut)
 
 	assert(pFileOut);
 
-        off_t posn = ftello(pFileOut);
-	bootImage.chunkTableOffset = (size_t)posn;
+	bootImage.chunkTableOffset = (size_t)ftello(pFileOut);
 
 	size_t cumulativeBlobSize = 0u;
-	for (size_t i = 0u; i < numChunks; i++) {
-		debug_printf(4, "\t- Processing chunk %lu (%lu bytes)\n", i, chunkTable[i].chunk.size);
 
+	for (size_t i = 0u; i < numChunks; i++) {
 		// calculate offset for chunk blob in file:
-		//   = len(header) + len(chunkTable + len(ziChunkTable) + len(all previous blobs)
+		//   = len(header) + len(chunkTable) + len(ziChunkTable) + len(all previous blobs)
 		chunkTable[i].chunk.loadAddr =
 			bootImage.chunkTableOffset
 			+ (numChunks * sizeof(struct HSS_BootChunkDesc))
-			+ calculate_padding(sizeof(struct HSS_BootChunkDesc) * numChunks, PAD_SIZE)
+			+ sizeof(struct HSS_BootChunkDesc) // account for sentinel
+			+ calculate_padding(sizeof(struct HSS_BootChunkDesc) * (numChunks + 1), PAD_SIZE)
 			+ (numZIChunks * sizeof(struct HSS_BootZIChunkDesc))
-			+ calculate_padding(sizeof(struct HSS_BootZIChunkDesc) * numZIChunks, PAD_SIZE)
+			+ sizeof(struct HSS_BootZIChunkDesc) // account for sentinel
+			+ calculate_padding(sizeof(struct HSS_BootZIChunkDesc) * (numZIChunks +1), PAD_SIZE)
 			+ cumulativeBlobSize
-			+ calculate_padding(cumulativeBlobSize, PAD_SIZE);
+			+ 0; //+ calculate_padding(cumulativeBlobSize, PAD_SIZE);
 
-		cumulativeBlobSize += chunkTable[i].chunk.size;
+		cumulativeBlobSize += chunkTable[i].chunk.size + calculate_padding(chunkTable[i].chunk.size, PAD_SIZE);
+
+        	off_t posn = ftello(pFileOut);
+		debug_printf(4, "\t- Processing chunk %lu (%lu bytes) at file position %lu "
+			"(blob is expected at %lu)\n",
+			i, chunkTable[i].chunk.size, posn, chunkTable[i].chunk.loadAddr);
 
 		fwrite((char *)&(chunkTable[i].chunk), sizeof(struct HSS_BootChunkDesc), 1, pFileOut);
 		if (ferror(pFileOut) || feof(pFileOut)) {
@@ -198,7 +207,7 @@ static void generate_chunks(FILE *pFileOut)
 		}
 	}
 
-	// sentinel
+	// terminating sentinel
 	struct HSS_BootChunkDesc bootChunk = {
 		.owner = 0u,
 		.loadAddr = 0u,
@@ -214,9 +223,9 @@ static void generate_chunks(FILE *pFileOut)
 	}
 
 	write_pad(pFileOut,
-		calculate_padding(sizeof(struct HSS_BootChunkDesc) * numChunks, PAD_SIZE));
+		calculate_padding(sizeof(struct HSS_BootChunkDesc) * (numChunks + 1), PAD_SIZE));
 
-	chunkTablePaddedSize = ftello(pFileOut) - posn;
+	chunkTablePaddedSize = ftello(pFileOut) - (off_t)bootImage.chunkTableOffset;
 }
 
 static void generate_ziChunks(FILE *pFileOut)
@@ -225,20 +234,29 @@ static void generate_ziChunks(FILE *pFileOut)
 
 	assert(pFileOut);
 
-        off_t posn = ftello(pFileOut);
-	bootImage.ziChunkTableOffset = (size_t)posn;
+	bootImage.ziChunkTableOffset = (size_t)ftello(pFileOut);
+
+	// sanity check we are were we expecte to be, vis-a-vis file padding
+	assert(bootImage.ziChunkTableOffset ==
+			bootImage.chunkTableOffset
+			+ (numChunks * sizeof(struct HSS_BootChunkDesc))
+			+ sizeof(struct HSS_BootChunkDesc)
+			+ calculate_padding(sizeof(struct HSS_BootChunkDesc) * (numChunks+1), PAD_SIZE));
 
 	for (size_t i = 0u; i < numZIChunks; i++) {
-		debug_printf(4, "\t- Processing ziChunk %lu (%lu bytes)\n", i, ziChunkTable[i].ziChunk.size);
+        	off_t posn = ftello(pFileOut);
+		debug_printf(4, "\t- Processing ziChunk %lu (%lu bytes) at file position %lu\n",
+			i, ziChunkTable[i].ziChunk.size, posn);
 
-		fwrite((char *)&ziChunkTable[i].ziChunk, sizeof(struct HSS_BootZIChunkDesc), 1, pFileOut);
+		fwrite((char *)&ziChunkTable[i].ziChunk,
+			sizeof(struct HSS_BootZIChunkDesc), 1, pFileOut);
 		if (ferror(pFileOut) || feof(pFileOut)) {
 			perror("fwrite()");
 			exit(EXIT_SUCCESS);
 		}
 	}
 
-	// sentinel
+	// terminating sentinel
 	struct HSS_BootZIChunkDesc ziChunk = {
 		.owner = 0u,
 		.execAddr = 0u,
@@ -252,17 +270,26 @@ static void generate_ziChunks(FILE *pFileOut)
 	}
 
 	write_pad(pFileOut,
-		calculate_padding(sizeof(struct HSS_BootZIChunkDesc), PAD_SIZE));
+		calculate_padding(sizeof(struct HSS_BootZIChunkDesc) * (numZIChunks + 1), PAD_SIZE));
 
-	ziChunkTablePaddedSize = ftello(pFileOut) - posn;
+	ziChunkTablePaddedSize = ftello(pFileOut) - (off_t)bootImage.ziChunkTableOffset;
 }
 
 static void generate_blobs(FILE *pFileOut)
 {
 	debug_printf(0, "Outputting Binary Data\n");
 
+	// sanity check we are were we expecte to be, vis-a-vis file padding
+	assert(chunkTable[0].chunk.loadAddr ==
+			bootImage.ziChunkTableOffset
+			+ (numZIChunks * sizeof(struct HSS_BootZIChunkDesc))
+			+ sizeof(struct HSS_BootZIChunkDesc) // account for sentinel
+			+ calculate_padding(sizeof(struct HSS_BootZIChunkDesc) * (numZIChunks +1), PAD_SIZE));
+
 	for (size_t i = 0u; i < numChunks; i++) {
-		debug_printf(4, "\t- Processing chunk %lu (%lu bytes)\n", i, chunkTable[i].chunk.size);
+        	off_t posn = ftello(pFileOut);
+		debug_printf(4, "\t- Processing blob %lu (%lu bytes) at file position %lu\n",
+			i, chunkTable[i].chunk.size, posn);
 		fflush(stdout);
 
 		fwrite((char *)chunkTable[i].pBuffer, chunkTable[i].chunk.size, 1, pFileOut);
@@ -296,12 +323,15 @@ void generate_payload(char const * const filename_output)
 	generate_ziChunks(pFileOut);
 
 	bootImage.headerLength = (size_t)ftello(pFileOut);
-	assert(bootImage.headerLength == bootImagePaddedSize + chunkTablePaddedSize + ziChunkTablePaddedSize);
+	assert(bootImage.headerLength ==
+		bootImagePaddedSize + chunkTablePaddedSize + ziChunkTablePaddedSize);
+	debug_printf(4, "End of header is %lu\n", bootImage.headerLength);
 
 	generate_blobs(pFileOut);
 	bootImage.bootImageLength = (size_t)ftello(pFileOut);
 
-    	bootImage.headerCrc = CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
+    	bootImage.headerCrc =
+		CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
 	generate_header(pFileOut, &bootImage); // rewrite header...
 
 	if (fclose(pFileOut) != 0) {
@@ -315,10 +345,10 @@ size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *pBuffer)
 	assert(pBuffer);
 	numChunks++;
 
-	debug_printf(4, "Attempting to realloc %lu at %p",
+	debug_printf(6, "\nAttempting to realloc %lu at %p",
 		numChunks * sizeof(struct chunkTableEntry), chunkTable);
 	void *tmpPtr = realloc(chunkTable, numChunks * sizeof(struct chunkTableEntry));
-	debug_printf(4, " => %p\n", tmpPtr);
+	debug_printf(6, " => %p\n", tmpPtr);
 	if (!tmpPtr) {
 		perror("realloc()");
 		exit(EXIT_FAILURE);
@@ -329,7 +359,7 @@ size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *pBuffer)
 	chunkTable[numChunks-1].chunk = chunk;
 	chunkTable[numChunks-1].pBuffer = pBuffer;
 
-	debug_printf(4, "generate_add_chunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 "\n",
+	debug_printf(4, "chunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 "\n",
 		chunk.execAddr, chunk.size);
 
 	return numChunks;
@@ -339,10 +369,10 @@ size_t generate_add_ziChunk(struct HSS_BootZIChunkDesc ziChunk)
 {
 	numZIChunks++;
 
-	debug_printf(4, "Attempting to realloc %lu at %p",
+	debug_printf(6, "\nAttempting to realloc %lu at %p",
 		numZIChunks * sizeof(struct ziChunkTableEntry), ziChunkTable);
 	void *tmpPtr = realloc(ziChunkTable, numZIChunks * sizeof(struct ziChunkTableEntry));
-	debug_printf(4, " => %p\n", tmpPtr);
+	debug_printf(6, " => %p\n", tmpPtr);
 	if (!tmpPtr) {
 		perror("realloc()");
 		exit(EXIT_FAILURE);
@@ -352,7 +382,7 @@ size_t generate_add_ziChunk(struct HSS_BootZIChunkDesc ziChunk)
 
 	ziChunkTable[numZIChunks-1].ziChunk = ziChunk;
 
-	debug_printf(4, "generate_add_ziChunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 "\n",
+	debug_printf(4, "ziChunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 "\n",
 		ziChunk.execAddr, ziChunk.size);
 
 	return numZIChunks;

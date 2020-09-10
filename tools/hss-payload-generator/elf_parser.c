@@ -111,7 +111,7 @@ static void process_sections_in_segment(Elf *pElf, GElf_Phdr *pPhdr, size_t owne
 		if (is_section_in_segment(&shdr, pPhdr)) {
 			name = elf_strptr(pElf, shstrndx, shdr.sh_name);
 			if (name != NULL) {
-				debug_printf(4, "SECTION:: Name: %s, sh_type: %lx, sh_flags: %lx,"
+				debug_printf(5, "SECTION:: Name: %s, sh_type: %lx, sh_flags: %lx,"
 					" sh_addr: %lx, sh_offset: %lx, sh_size: %lx, sh_link: %lx,"
 					" sh_info: %lx, sh_addralign: %lx, sh_entsize: %lx\n",
 					 name, shdr.sh_type, shdr.sh_flags, shdr.sh_addr, shdr.sh_offset,

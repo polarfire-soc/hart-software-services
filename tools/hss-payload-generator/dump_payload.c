@@ -106,7 +106,8 @@ void dump_payload(const char *filename_input)
 		} else if (bootChunk.owner == lastOwner) {
 			localChunkCount++;
 		} else {
-			printf(" - %lu chunks found for owner %u\n", (unsigned long)localChunkCount, lastOwner);
+			printf(" - %lu chunk%s found for owner %u\n",
+				(unsigned long)localChunkCount, (localChunkCount != 1) ? "s":"", lastOwner);
 			localChunkCount = 1u;
 			lastOwner = bootChunk.owner;
 		}
@@ -132,12 +133,13 @@ void dump_payload(const char *filename_input)
 		} else if (ziChunk.owner == lastOwner) {
 			localChunkCount++;
 		} else {
-			printf(" - %lu chunks found for owner %u\n", (unsigned long)localChunkCount, lastOwner);
+			printf(" - %lu ZI chunk%s found for owner %u\n",
+				(unsigned long)localChunkCount, (localChunkCount != 1) ? "s":"", lastOwner);
 			localChunkCount = 1u;
 			lastOwner = ziChunk.owner;
 		}
 
-		chunkOffset += (off_t) sizeof(struct HSS_BootChunkDesc);
+		chunkOffset += (off_t) sizeof(struct HSS_BootZIChunkDesc);
 		totalChunkCount++;
 		if (ziChunk.size==0u) { break;}
 	}
