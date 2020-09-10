@@ -1,0 +1,131 @@
+% HSS Payload Generator
+% 2020-09-09
+
+# Introduction 
+
+This tool creates a formatted payload image for the Hart Software Service zero-stage bootloader on PolarFire SoC, given a configuration file and a set of ELF binaries.
+
+The configuration file is used to map the ELF binaries to the individual application harts (U54s).
+
+The tool does perform basic sanity checks on the structure of the config file itself, and also on the ELF images.  ELF images must be RISC-V executables.
+
+## Example Run
+
+To run this with the sample config file and ELF files:
+
+    $ ./hss-payload-generator -c test/config.yaml output.bin
+
+To increase the verbosity, add `-v`.
+
+    $ ./hss-payload-generator -c test/config.yaml -v output.bin
+
+Multiple `-v` arguments increase verbosity level.
+
+    $ ./hss-payload-generator -c test/config.yaml -v -v output.bin
+    $ ./hss-payload-generator -c test/config.yaml -v -v -v output.bin
+
+For wide output, use a `-w` argument.
+
+    $ ./hss-payload-generator -c test/config.yaml -v -v -w output.bin
+
+Arguments can also be combined, as follows:
+
+    $ ./hss-payload-generator -vvvwc test/config.yaml output.bin
+
+To print diagnostics about a pre-existing image, use `-d`:
+
+    $ ./hss-payload-generator -d output.bin
+
+## Config File example
+
+First, we can optionally set a name for our image, otherwise one will be created dynamically:
+
+    set-name: 'PolarFire-SoC-HSS::TestImage'
+
+Next, we'll define the entry point addresses for each hart, as follows:
+
+    hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
+
+Finally, we'll define some payloads (source ELF files) that will be placed at certain regions in memory.  The payload section is defined with the keyword payloads, and then a number of individual payload descriptors.
+
+Each payload has a name (path to its ELF file), an owner-hart, and optionally 1-3 secondary-harts.
+
+Additionally, it has a privilege mode in which it will start execution.
+ * Valid privilege modes are `PRV_M`, `PRV_S` and `PRV_U`.
+
+
+In the following example:
+ * `test/baremetal` is assumed to be a bare metal application that runs in `U54_3`, and expects to start in `PRV_M`.
+ * `test/u-boot` is the Das U-Boot bootloader, and it runs on `U54_1`, `U54_2` and `U54_4`.  It expects to start in `PRV_S`.
+ 
+    payloads:
+      test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
+      test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
+
+Case only matters for the ELF path names, not the keywords. So, for instance, `u54_1` is considered the same as `U54_1` and `exec-addr` is considered the same as `EXEC-ADDR`.
+
+### Complete Example
+
+Here is the complete example:
+
+    set-name: 'PolarFire-SoC-HSS::TestImage'
+    hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
+    payloads:
+      test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
+      test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
+
+## File Structure
+
+````
+.
+├── crc32.c            // CRC32 calculation routines
+├── crc32.h
+├── debug_printf.c     // Simple debug Logging routines
+├── ebug_printf.h
+├── dump_payload.c     // Print diagnostics for payload binary
+├── dump_payload.h
+├── elf_parser.c       // ELF file processing
+├── elf_parser.h
+├── elf_strings.c      // Convert ELF enums to strings
+├── elf_strings.h
+├── generate_payload.c // payload binary output
+├── generate_payload.h
+├── hss_types.h
+├── main.c             // main entry point, command line parsing
+├── yaml_parser.c      // YAML config file parsing
+└── yaml_parser.h
+````
+
+## Dependencies
+
+This software uses libelf and libyaml, as well as zlib (a dependency of libelf).
+
+### libelf
+
+libelf provides a shared library which allows reading and writing of ELF files on a high level.
+
+libelf is part of elfutils, a collection of utilities and libraries to read, create and modify ELF binary files, find and handle DWARF debug data, symbols, thread state and stacktraces for processes and core files on GNU/Linux.
+
+**Homepage:** [https://sourceware.org/elfutils/](https://sourceware.org/elfutils/)
+
+### LibYAML
+
+LibYAML is a C library for parsing and emitting data in YAML 1.1, a human-readable data serialization format.
+
+**Homepage:** [http://pyyaml.org/wiki/LibYAML](http://pyyaml.org/wiki/LibYAML)
+
+### zlib
+
+zlib is a library implementing the deflate compression method found in gzip and PKZIP.
+
+**Homepage:** [http://zlib.net/](http://zlib.net/)
+
+### Installing Dependencies
+
+To install libyaml-dev and libelf-dev in Ubuntu, use:
+
+    $ apt install libyaml-dev libelf-dev zlib1g-dev
+
+To install libyaml and libelf in MSYS2, use:
+
+    $ pacman -S libyaml libyaml-devel libelf libelf-devel zlib zlib-devel
