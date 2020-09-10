@@ -7,11 +7,11 @@ This tool creates a formatted payload image for the Hart Software Service zero-s
 
 The configuration file is used to map the ELF binaries to the individual application harts (U54s).
 
-The tool does perform basic sanity checks on the structure of the config file itself, and also on the ELF images.  ELF images must be RISC-V executables.
+The tool does perform basic sanity checks on the structure of the configuration file itself, and also on the ELF images.  ELF images must be RISC-V executables.
 
 ## Example Run
 
-To run this with the sample config file and ELF files:
+To run this with the sample configuration file and ELF files:
 
     $ ./hss-payload-generator -c test/config.yaml output.bin
 
@@ -46,23 +46,27 @@ Next, we'll define the entry point addresses for each hart, as follows:
 
     hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
 
+The ELF source images can specify an entry point, but we want to be able to support secondary entry points for harts if needed -- i.e., if multiple harts are intended to boot the same image, they might have individual entry points. To support this, we specify the actual entry point addresses in the configuration file itself.
+
 Finally, we'll define some payloads (source ELF files) that will be placed at certain regions in memory.  The payload section is defined with the keyword payloads, and then a number of individual payload descriptors.
 
 Each payload has a name (path to its ELF file), an owner-hart, and optionally 1-3 secondary-harts.
 
 Additionally, it has a privilege mode in which it will start execution.
- * Valid privilege modes are `PRV_M`, `PRV_S` and `PRV_U`.
-
+ * Valid privilege modes are `PRV_M`, `PRV_S` and `PRV_U`, where these are defined as:
+     - PRV_M: Machine mode;
+     - PRV_S: Supervisor mode;
+     - PRV_U: User mode.
 
 In the following example:
- * `test/baremetal` is assumed to be a bare metal application that runs in `U54_3`, and expects to start in `PRV_M`.
- * `test/u-boot` is the Das U-Boot bootloader, and it runs on `U54_1`, `U54_2` and `U54_4`.  It expects to start in `PRV_S`.
+ * `test/baremetal.elf` is assumed to be a bare metal application that runs in `U54_3`, and expects to start in `PRV_M`.
+ * `test/u-boot` is the Das U-Boot bootloader application, and it runs on `U54_1`, `U54_2` and `U54_4`.  It expects to start in `PRV_S`.  (Note that the output of U-Boot creates an ELF file, but typically it does not prepend the `.elf` extension.)
  
     payloads:
-      test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
+      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
       test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
 
-Case only matters for the ELF path names, not the keywords. So, for instance, `u54_1` is considered the same as `U54_1` and `exec-addr` is considered the same as `EXEC-ADDR`.
+Case only matters for the ELF path names, not the keywords. So, for instance, `u54_1` is considered the same as `U54_1` and `exec-addr` is considered the same as `EXEC-ADDR`. If the `.elf` extension is present, it needs to be included in the configuration file.
 
 ### Complete Example
 
@@ -71,7 +75,7 @@ Here is the complete example:
     set-name: 'PolarFire-SoC-HSS::TestImage'
     hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
     payloads:
-      test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
+      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
       test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
 
 ## File Structure
@@ -92,7 +96,7 @@ Here is the complete example:
 ├── generate_payload.h
 ├── hss_types.h
 ├── main.c             // main entry point, command line parsing
-├── yaml_parser.c      // YAML config file parsing
+├── yaml_parser.c      // YAML configuration file parsing
 └── yaml_parser.h
 ````
 
