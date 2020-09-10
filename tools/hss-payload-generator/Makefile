@@ -48,6 +48,7 @@ CFLAGS= -g3 -ggdb -std=gnu11 -O3 \
 
 INCLUDES=\
 	-I. \
+	-I../../include \
 
 LIBS=\
 	-lyaml \
@@ -88,8 +89,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS) $(LIBS)
 	@$(ECHO) " LD        $@";
-	#$(CMD_PREFIX)$(CC) $(CFLAGS) -static -o $@ $(OBJS) $(LIBS)
-	$(CMD_PREFIX)$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) $(CFLAGS) -static -o $@ $(OBJS) $(LIBS)
 
 README.docx: README.md
 	pandoc -o README.docx README.md
