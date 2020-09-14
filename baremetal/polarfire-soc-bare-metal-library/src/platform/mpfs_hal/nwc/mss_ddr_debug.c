@@ -484,7 +484,7 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
     uprint32(g_mss_uart_debug_pt,  "\n\r sro_slewf  = ",
             (((CFG_DDR_SGMII_PHY->IOC_REG5.IOC_REG5) >> 24) & 0x3F));
 
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt, 
+    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,
             (const uint8_t*)"\n\n\r lane_select \t gt_err_comb \t gt_txdly \t gt_steps_180 \t gt_state \t wl_delay_0 \t dqdqs_err_done \t dqdqs_state \t delta0 \t delta1");
 
     for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED; ddr_lane_sel++)

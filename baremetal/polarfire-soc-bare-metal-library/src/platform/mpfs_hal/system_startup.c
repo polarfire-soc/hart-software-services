@@ -107,15 +107,21 @@ __attribute__((weak)) int main_first_hart(void)
         while( hard_idx <= MPFS_HAL_LAST_HART)
         {
             uint32_t wait_count = 0u; // initialize to avoid compiler warning
+            ptrdiff_t stack_bottom;
+            ptrdiff_t stack_top;
+            ptrdiff_t stack_size;
 
             switch(sm_check_thread)
             {
                 default:
                 case INIT_THREAD_PR:
-                    hls = (HLS_DATA*)((uint8_t *)&__stack_bottom_h1$
-                            + (((uint8_t *)&__stack_top_h1$ -
-                                    (uint8_t *)&__stack_bottom_h1$) * hard_idx)
-                                - (uint8_t *)(HLS_DEBUG_AREA_SIZE));
+                    stack_bottom = (ptrdiff_t)((uint8_t *)&__stack_bottom_h1$);
+                    stack_top = (ptrdiff_t)((uint8_t *)&__stack_top_h1$);
+                    stack_size = stack_top - stack_bottom;
+
+                    // set hls data structure to offset from top of stack,
+                    // but ensure alignment...
+                    hls = (HLS_DATA*)((stack_bottom + (stack_size * hard_idx) - HLS_DEBUG_AREA_SIZE) & ~0x3);
                     sm_check_thread = CHECK_WFI;
                     wait_count = 0U;
                     break;
