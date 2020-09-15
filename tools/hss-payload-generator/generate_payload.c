@@ -133,7 +133,6 @@ static void write_pad(FILE *pFileOut, size_t pad)
 
 	size_t i;
 
-printf(" - requested pad: %lu bytes\n", pad);
 	for (i = 0u; i < pad; i++) {
 		fputc(0, pFileOut);
 
@@ -177,6 +176,11 @@ static void generate_chunks(FILE *pFileOut)
 
 	bootImage.chunkTableOffset = (size_t)ftello(pFileOut);
 
+	// sanity check we are were we expected to be, vis-a-vis file padding
+	assert(bootImage.chunkTableOffset ==
+			sizeof(struct HSS_BootImage)
+			+ calculate_padding(sizeof(struct HSS_BootImage), PAD_SIZE));
+
 	size_t cumulativeBlobSize = 0u;
 
 	for (size_t i = 0u; i < numChunks; i++) {
@@ -193,7 +197,8 @@ static void generate_chunks(FILE *pFileOut)
 			+ cumulativeBlobSize
 			+ 0; //+ calculate_padding(cumulativeBlobSize, PAD_SIZE);
 
-		cumulativeBlobSize += chunkTable[i].chunk.size + calculate_padding(chunkTable[i].chunk.size, PAD_SIZE);
+		cumulativeBlobSize += chunkTable[i].chunk.size
+			+ calculate_padding(chunkTable[i].chunk.size, PAD_SIZE);
 
         	off_t posn = ftello(pFileOut);
 		debug_printf(4, "\t- Processing chunk %lu (%lu bytes) at file position %lu "
@@ -236,7 +241,7 @@ static void generate_ziChunks(FILE *pFileOut)
 
 	bootImage.ziChunkTableOffset = (size_t)ftello(pFileOut);
 
-	// sanity check we are were we expecte to be, vis-a-vis file padding
+	// sanity check we are were we expected to be, vis-a-vis file padding
 	assert(bootImage.ziChunkTableOffset ==
 			bootImage.chunkTableOffset
 			+ (numChunks * sizeof(struct HSS_BootChunkDesc))
@@ -279,7 +284,7 @@ static void generate_blobs(FILE *pFileOut)
 {
 	debug_printf(0, "Outputting Binary Data\n");
 
-	// sanity check we are were we expecte to be, vis-a-vis file padding
+	// sanity check we are were we expected to be, vis-a-vis file padding
 	assert(chunkTable[0].chunk.loadAddr ==
 			bootImage.ziChunkTableOffset
 			+ (numZIChunks * sizeof(struct HSS_BootZIChunkDesc))
@@ -356,6 +361,7 @@ size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *pBuffer)
 		chunkTable = tmpPtr;
 	}
 
+	memset(&chunkTable[numChunks-1], 0, sizeof(struct chunkTableEntry));
 	chunkTable[numChunks-1].chunk = chunk;
 	chunkTable[numChunks-1].pBuffer = pBuffer;
 

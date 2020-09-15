@@ -412,7 +412,7 @@ static void Handle_STATE_SET_NAME(yaml_event_t *pEvent)
 
 	case YAML_SCALAR_EVENT:
 		override_set_name_flag = true;
-		strncpy(bootImage.set_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN-1);
+		strncpy(bootImage.set_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN-2);
 		bootImage.set_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
 		Do_State_Transition(STATE_MAPPING);
 		break;
@@ -608,7 +608,7 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 	case YAML_SCALAR_EVENT:
 		debug_printf(0, "Parsing payload >>%s<<\n", pEvent->data.scalar.value);
 
-		strncpy(base_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN);
+		strncpy(base_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN-2);
 		base_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
 
 		base_exec_addr = 0u;
@@ -740,7 +740,7 @@ static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)
 		case TOKEN_HART_U54_4:
 			base_owner = (token_idx - TOKEN_HART_U54_1 + 1u);
 
-			strncat(bootImage.hart[base_owner].name, base_name, BOOT_IMAGE_MAX_NAME_LEN-1);
+			strncat(bootImage.hart[base_owner].name, base_name, BOOT_IMAGE_MAX_NAME_LEN-2);
 			bootImage.hart[base_owner-1].name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
 
 
@@ -886,7 +886,7 @@ void yaml_parser(char const * const input_filename)
 		exit(EXIT_FAILURE);
 	}
 
-	strncpy(bootImage.set_name, "PolarFireSOC-HSS::", BOOT_IMAGE_MAX_NAME_LEN-1);
+	strncpy(bootImage.set_name, "PolarFireSOC-HSS::", BOOT_IMAGE_MAX_NAME_LEN-2);
 	bootImage.hart[0].privMode = PRV_ILLEGAL;
 	bootImage.hart[1].privMode = PRV_ILLEGAL;
 	bootImage.hart[2].privMode = PRV_ILLEGAL;

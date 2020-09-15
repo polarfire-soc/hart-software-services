@@ -44,6 +44,7 @@ CFLAGS= -g3 -ggdb -std=gnu11 -O3 \
 	-Wformat-y2k -Winit-self -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition \
 	-Wtype-limits -Wstrict-prototypes -Wimplicit-fallthrough=5 \
 	-Wmissing-prototypes -Wconversion -ftrapv \
+	-Wno-stringop-truncation \
 	-fstack-protector-strong
 
 INCLUDES=\
@@ -87,7 +88,7 @@ all: $(TARGET)
 
 .PHONY: clean cppcheck
 
-$(TARGET): $(OBJS) $(LIBS)
+$(TARGET): $(OBJS)
 	@$(ECHO) " LD        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS) -static -o $@ $(OBJS) $(LIBS)
 

@@ -40,6 +40,7 @@
 #include <sys/mman.h>
 
 #include "hss_types.h"
+#include "debug_printf.h"
 #include "dump_payload.h"
 
 /*
@@ -65,7 +66,7 @@ void dump_payload(const char *filename_input)
 	struct HSS_BootImage *pBootImage;
 
 	pBootImage = mmap(NULL, fileSize, PROT_READ,
-		MAP_PRIVATE | MAP_POPULATE, fdIn, 0);
+		MAP_PRIVATE, fdIn, 0);
 	assert(pBootImage);
 
 	if (pBootImage->magic != mHSS_BOOT_MAGIC) {
@@ -81,10 +82,13 @@ void dump_payload(const char *filename_input)
 	for (unsigned int i = 0u; i < NR_CPUs; i++) {
 		printf("name[%u]:            >>%s<<\n", i, pBootImage->hart[i].name);
 		printf("entryPoint[%u]:      0x%lx\n",	i, pBootImage->hart[i].entryPoint);
-		printf("privMode[%u]:        %u\n",	 i, pBootImage->hart[i].privMode);
-		printf("firstChunk[%u]       %lu\n",	i, (unsigned long)pBootImage->hart[i].firstChunk);
-		printf("lastChunk[%u]        %lu\n",	i, (unsigned long)pBootImage->hart[i].lastChunk);
-		printf("numChunks[%u]        %lu\n",	i, (unsigned long)pBootImage->hart[i].numChunks);
+		printf("privMode[%u]:        %u\n",	i, pBootImage->hart[i].privMode);
+		printf("firstChunk[%u]       %lu\n",	i, 
+			(unsigned long)pBootImage->hart[i].firstChunk);
+		printf("lastChunk[%u]        %lu\n",	i, 
+			(unsigned long)pBootImage->hart[i].lastChunk);
+		printf("numChunks[%u]        %lu\n",	i, 
+			(unsigned long)pBootImage->hart[i].numChunks);
 	}
 
 	printf("set_name            >>%s<<\n", pBootImage->set_name);
@@ -98,7 +102,8 @@ void dump_payload(const char *filename_input)
 
 	while (1) {
 		struct HSS_BootChunkDesc bootChunk;
-		memcpy(&bootChunk, ((char *)pBootImage) + pBootImage->chunkTableOffset + chunkOffset, sizeof(struct HSS_BootChunkDesc));
+		memcpy(&bootChunk, ((char *)pBootImage) + pBootImage->chunkTableOffset + chunkOffset,
+			sizeof(struct HSS_BootChunkDesc));
 
 		if (totalChunkCount == 0) {
 			lastOwner = bootChunk.owner;
@@ -107,16 +112,22 @@ void dump_payload(const char *filename_input)
 			localChunkCount++;
 		} else {
 			printf(" - %lu chunk%s found for owner %u\n",
-				(unsigned long)localChunkCount, (localChunkCount != 1) ? "s":"", lastOwner);
+				(unsigned long)localChunkCount, (localChunkCount != 1) ? "s":"",
+				lastOwner);
 			localChunkCount = 1u;
 			lastOwner = bootChunk.owner;
 		}
+
+		debug_printf(3, "\t%d / %lx / %lx / %lx / %x\n",
+			bootChunk.owner, bootChunk.loadAddr, bootChunk.execAddr,
+			bootChunk.size, bootChunk.crc32);
 
 		chunkOffset += (off_t)sizeof(struct HSS_BootChunkDesc);
 		totalChunkCount++;
 		if (bootChunk.size==0u) { break;}
 	}
-	printf("Boot Chunks: total of %lu chunk%s found\n", (unsigned long)totalChunkCount, (totalChunkCount != 1u) ? "s":"");
+	printf("Boot Chunks: total of %lu chunk%s found\n", (unsigned long)totalChunkCount,
+		(totalChunkCount != 1u) ? "s":"");
 
 	chunkOffset = 0u;
 	totalChunkCount = 0u;
@@ -125,7 +136,8 @@ void dump_payload(const char *filename_input)
 
 	while (1) {
 		struct HSS_BootZIChunkDesc ziChunk;
-		memcpy(&ziChunk, ((char *)pBootImage) + pBootImage->ziChunkTableOffset + chunkOffset, sizeof(struct HSS_BootZIChunkDesc));
+		memcpy(&ziChunk, ((char *)pBootImage) + pBootImage->ziChunkTableOffset + chunkOffset,
+			sizeof(struct HSS_BootZIChunkDesc));
 
 		if (totalChunkCount == 0) {
 			lastOwner = ziChunk.owner;
@@ -134,16 +146,20 @@ void dump_payload(const char *filename_input)
 			localChunkCount++;
 		} else {
 			printf(" - %lu ZI chunk%s found for owner %u\n",
-				(unsigned long)localChunkCount, (localChunkCount != 1) ? "s":"", lastOwner);
+				(unsigned long)localChunkCount, (localChunkCount != 1) ? "s":"",
+				lastOwner);
 			localChunkCount = 1u;
 			lastOwner = ziChunk.owner;
 		}
+
+		debug_printf(0, "\t%d / %lx / %lx\n", ziChunk.owner, ziChunk.execAddr, ziChunk.size);
 
 		chunkOffset += (off_t) sizeof(struct HSS_BootZIChunkDesc);
 		totalChunkCount++;
 		if (ziChunk.size==0u) { break;}
 	}
-	printf("ZI Chunks: total of %lu chunk%s found\n", (unsigned long)totalChunkCount, (totalChunkCount != 1u) ? "s":"");
+	printf("ZI Chunks: total of %lu chunk%s found\n", (unsigned long)totalChunkCount,
+		(totalChunkCount != 1u) ? "s":"");
 
 	// skipping binary fie array
 
