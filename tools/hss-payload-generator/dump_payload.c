@@ -83,11 +83,11 @@ void dump_payload(const char *filename_input)
 		printf("name[%u]:            >>%s<<\n", i, pBootImage->hart[i].name);
 		printf("entryPoint[%u]:      0x%lx\n",	i, pBootImage->hart[i].entryPoint);
 		printf("privMode[%u]:        %u\n",	i, pBootImage->hart[i].privMode);
-		printf("firstChunk[%u]       %lu\n",	i, 
+		printf("firstChunk[%u]       %lu\n",	i,
 			(unsigned long)pBootImage->hart[i].firstChunk);
-		printf("lastChunk[%u]        %lu\n",	i, 
+		printf("lastChunk[%u]        %lu\n",	i,
 			(unsigned long)pBootImage->hart[i].lastChunk);
-		printf("numChunks[%u]        %lu\n",	i, 
+		printf("numChunks[%u]        %lu\n",	i,
 			(unsigned long)pBootImage->hart[i].numChunks);
 	}
 

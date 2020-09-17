@@ -24,8 +24,12 @@ The HSS software is released under the following software license:
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  IN THE SOFTWARE.
 
+## The HSS Payload Generator
 
-# RISC-V OpenSBI License
+The HSS Payload Generator is dual licensed under the MIT license and the GNU GPL.
+See tools/hss-payload-generator/LICENSE.md for details.
+
+## RISC-V OpenSBI License
 
 This software includes the RISC-V OpenSBI code, which is released under the following license:
 
@@ -55,7 +59,7 @@ This software includes the RISC-V OpenSBI code, which is released under the foll
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-# FastLZ License
+## FastLZ License
 
 This software includes the FastLZ - lightning-fast lossless compression library, which is released
 under the following license:
