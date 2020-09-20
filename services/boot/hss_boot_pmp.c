@@ -78,21 +78,20 @@ bool HSS_PMP_Init(void)
     return result;
 }
 
-bool HSS_PMP_CheckWrite(enum HSSHartId target, void *addr, size_t length)
+bool HSS_PMP_CheckWrite(enum HSSHartId target, const ptrdiff_t regionStartAddr, size_t length)
 {
     bool result = true;
     unsigned int pmpIndex;
 
-    const uint64_t regionStartAddr = (uint64_t)(addr);
-    const uint64_t regionEndAddr = regionStartAddr + length;
+    const ptrdiff_t regionEndAddr = regionStartAddr + length;
 
     for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {
         struct PmpEntry *pPmpEntry = &(pmpEntry[target][pmpIndex]);
 
         if (!pPmpEntry->A) { continue; } // inactive PMP
 
-        const uint64_t pmpStartAddr = pPmpEntry->baseAddr;
-        const uint64_t pmpEndAddr = pmpStartAddr + pPmpEntry->size;
+        const ptrdiff_t pmpStartAddr = pPmpEntry->baseAddr;
+        const ptrdiff_t pmpEndAddr = pmpStartAddr + pPmpEntry->size;
 
         if ((pmpStartAddr <= regionStartAddr) && (pmpEndAddr > regionEndAddr)) {
             if (pPmpEntry->W == 0) {
@@ -108,21 +107,20 @@ bool HSS_PMP_CheckWrite(enum HSSHartId target, void *addr, size_t length)
     return result;
 }
 
-bool HSS_PMP_CheckRead(enum HSSHartId target, void *addr, size_t length)
+bool HSS_PMP_CheckRead(enum HSSHartId target, const ptrdiff_t regionStartAddr, size_t length)
 {
     bool result = false;
     unsigned int pmpIndex;
 
-    const uint64_t regionStartAddr = (uint64_t)(addr);
-    const uint64_t regionEndAddr = regionStartAddr + length;
+    const ptrdiff_t regionEndAddr = regionStartAddr + length;
 
     for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {
         struct PmpEntry *pPmpEntry = &(pmpEntry[target][pmpIndex]);
 
         if (!pPmpEntry->A) { continue; } // inactive PMP
 
-        const uint64_t pmpStartAddr = pPmpEntry->baseAddr;
-        const uint64_t pmpEndAddr = pmpStartAddr + pPmpEntry->size;
+        const ptrdiff_t pmpStartAddr = pPmpEntry->baseAddr;
+        const ptrdiff_t pmpEndAddr = pmpStartAddr + pPmpEntry->size;
 
         if ((pmpStartAddr <= regionStartAddr) && (pmpEndAddr > regionEndAddr)) {
             if (pPmpEntry->R == 0) {

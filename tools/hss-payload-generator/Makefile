@@ -59,6 +59,7 @@ LIBS=\
 SRCS=\
 	main.c \
 	yaml_parser.c \
+	blob_handler.c \
 	elf_parser.c \
 	elf_strings.c \
 	crc32.c \

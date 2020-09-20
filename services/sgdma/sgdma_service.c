@@ -53,7 +53,17 @@ static const struct StateDesc sgdma_state_descs[] = {
  * \brief SGDMA Driver State Machine
  */
 struct StateMachine sgdma_service = {
-    (stateType_t)SGDMA_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)SGDMA_NUM_STATES, (const char *)"sgdma_service", 0u, 0u, 0u, sgdma_state_descs, false, 0u, NULL
+    .state             = (stateType_t)SGDMA_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)SGDMA_NUM_STATES,
+    .pMachineName      = (const char *)"sgdma_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = sgdma_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL
 };
 
 
@@ -111,8 +121,8 @@ static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
        }
 
        // check PMPs - todo - check MPRs also
-       if (HSS_PMP_CheckWrite(activeHart, pBlockDesc->dest_phys_addr, chunk_size)
-           && HSS_PMP_CheckRead(activeHart, pBlockDesc->src_phys_addr, chunk_size)) {
+       if (HSS_PMP_CheckWrite(activeHart, (ptrdiff_t)pBlockDesc->dest_phys_addr, chunk_size)
+           && HSS_PMP_CheckRead(activeHart, (ptrdiff_t)pBlockDesc->src_phys_addr, chunk_size)) {
            memcpy_via_pdma(pBlockDesc->dest_phys_addr, pBlockDesc->src_phys_addr, chunk_size);
        }
 

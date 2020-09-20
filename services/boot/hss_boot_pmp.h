@@ -45,8 +45,8 @@ enum PMP_Priv_S {
 
 bool HSS_PMP_Init(void);
 
-bool HSS_PMP_CheckWrite(enum HSSHartId target, void *addr, size_t length);
-bool HSS_PMP_CheckRead(enum HSSHartId target, void *addr, size_t length);
+bool HSS_PMP_CheckWrite(enum HSSHartId target, const ptrdiff_t regionStartAddr, size_t length);
+bool HSS_PMP_CheckRead(enum HSSHartId target, const ptrdiff_t regionStartAddr, size_t length);
 
 /* TODO: the following enum could be removed from this header and kept local in scope */
 enum AddressMatchingMode

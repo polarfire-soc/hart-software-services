@@ -48,6 +48,7 @@
 #ifdef CONFIG_PLATFORM_MPFS
 #  include "mss_sysreg.h"
 #endif
+
 #include "hss_memcpy_via_pdma.h"
 
 /* Timeouts */
@@ -62,7 +63,8 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachine);
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine);
-//static void boot_setup_l2cache_handler(struct StateMachine * const pMyMachine);
+static void boot_zero_init_chunks_onEntry(struct StateMachine * const pMyMachine);
+static void boot_zero_init_chunks_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine);
@@ -71,7 +73,9 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine);
 static void boot_error_handler(struct StateMachine * const pMyMachine);
 static void boot_idle_handler(struct StateMachine * const pMyMachine);
 
-static void boot_do_download_chunk(enum HSSHartId target, struct HSS_BootChunkDesc *pChunk);
+static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk,
+	ptrdiff_t subChunkOffset, size_t subChunkSize);
+static void boot_do_zero_init_chunk(struct HSS_BootZIChunkDesc const *pZiChunk);
 
 /*!
  * \brief Boot Driver States
@@ -81,6 +85,7 @@ enum BootStatesEnum {
     BOOT_INITIALIZATION,
     BOOT_SETUP_PMP,
     BOOT_SETUP_PMP_COMPLETE,
+    BOOT_ZI_CHUNKS,
     BOOT_DOWNLOAD_CHUNKS,
     BOOT_WAIT,
     BOOT_IDLE,
@@ -96,6 +101,7 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_INITIALIZATION,     (const char *)"Init",             NULL,                             NULL,                         &boot_init_handler },
     { (const stateType_t)BOOT_SETUP_PMP,          (const char *)"SetupPMP",         &boot_setup_pmp_onEntry,          NULL,                         &boot_setup_pmp_handler },
     { (const stateType_t)BOOT_SETUP_PMP_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_pmp_complete_onEntry, NULL,                         &boot_setup_pmp_complete_handler },
+    { (const stateType_t)BOOT_ZI_CHUNKS,          (const char *)"ZeroInit",         &boot_zero_init_chunks_onEntry,   NULL,                         &boot_zero_init_chunks_handler },
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
     { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             NULL,                             NULL,                         &boot_idle_handler },
@@ -108,8 +114,11 @@ static const struct StateDesc boot_state_descs[] = {
  */
 struct HSS_Boot_LocalData {
     enum HSSHartId target;
-    struct HSS_BootChunkDesc *pChunk;
+    struct HSS_BootChunkDesc const *pChunk;
+    struct HSS_BootZIChunkDesc const *pZiChunk;
     size_t chunkCount;
+    size_t ziChunkCount;
+    size_t subChunkOffset;
     uint32_t msgIndex;
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
     uint32_t msgIndexAux;
@@ -123,11 +132,10 @@ struct HSS_Boot_LocalData {
 #endif
 
 static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
-    //{ HSS_HART_E51,   NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX }, // unused
-    { HSS_HART_U54_1, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_2, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_3, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_4, NULL, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
 };
 
 struct HSS_BootImage *pBootImage = NULL;
@@ -221,18 +229,28 @@ const struct {
  * write. Otherwise, a boot image could be constructed to circumvent these
  * protections.
  *
+ * This checks are done outside this function.
+ *
  */
-static void boot_do_download_chunk(enum HSSHartId target, struct HSS_BootChunkDesc *pChunk)
+static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk, ptrdiff_t subChunkOffset,
+    size_t subChunkSize)
 {
+    assert(pChunk);
     assert(pChunk->size);
 
-    if (HSS_PMP_CheckWrite(target, (void *)pChunk->execAddr, pChunk->size)) {
-        memcpy_via_pdma((void *)pChunk->execAddr,
-            (void*)((size_t)pBootImage + (size_t)pChunk->loadAddr), pChunk->size);
-    } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Target %d is skipping chunk %p due to invalid permissions" CRLF,
-            target, pChunk);
-    }
+    const ptrdiff_t execAddr = (ptrdiff_t)pChunk->execAddr + subChunkOffset;
+    const ptrdiff_t loadAddr = (ptrdiff_t)pBootImage + (ptrdiff_t)pChunk->loadAddr + subChunkOffset;
+    memcpy_via_pdma((void *)execAddr, (void*)loadAddr, subChunkSize);
+}
+
+static void boot_do_zero_init_chunk(struct HSS_BootZIChunkDesc const *pZiChunk)
+{
+    assert(pZiChunk);
+
+    const ptrdiff_t execAddr = (ptrdiff_t)pZiChunk->execAddr;
+    const size_t ziChunkSize = pZiChunk->size;
+
+    memset((void *)execAddr, 0, ziChunkSize);
 }
 
 static void free_msg_index(struct HSS_Boot_LocalData * const pInstanceData)
@@ -339,8 +357,8 @@ static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachi
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
 {
     if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_SETUP_PMP_COMPLETE_TIMEOUT)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF, pMyMachine->pMachineName,
-            pMyMachine->executionCount);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
+            pMyMachine->pMachineName, pMyMachine->executionCount);
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
@@ -354,10 +372,45 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
 
         if (check_for_ipi_acks(pMyMachine)) {
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
 
-            pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
+            pMyMachine->state = BOOT_ZI_CHUNKS;
         }
+    }
+}
+
+/////////////////
+
+static void boot_zero_init_chunks_onEntry(struct StateMachine * const pMyMachine)
+{
+    struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+
+    assert(pBootImage != NULL);
+
+    pInstanceData->pZiChunk =
+            (struct HSS_BootZIChunkDesc const *)((char *)pBootImage + pBootImage->ziChunkTableOffset);
+}
+
+static void boot_zero_init_chunks_handler(struct StateMachine * const pMyMachine)
+{
+    struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+    enum HSSHartId const target = pInstanceData->target;
+
+    assert(pBootImage != NULL);
+    struct HSS_BootZIChunkDesc const *pZiChunk = pInstanceData->pZiChunk;
+
+    if (pZiChunk->size != 0u) {
+        if (target == pZiChunk->owner) {
+#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ziChunk->0x%X, %u bytes" CRLF,
+                pMyMachine->pMachineName, pInstanceData->ziChunkCount,
+                (uint64_t)pZiChunk->execAddr, pZiChunk->size);
+#endif
+            boot_do_zero_init_chunk(pZiChunk);
+        }
+        pInstanceData->pZiChunk++;
+    } else {
+        pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
     }
 }
 
@@ -371,17 +424,22 @@ static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
     assert(pBootImage != NULL);
 
     if (pBootImage->hart[target-1].numChunks) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image:" CRLF "  \"%s\"" CRLF,
-            pMyMachine->pMachineName, pBootImage->hart[target-1].name);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image:" CRLF "  \"%s\"" CRLF,
+        //    pMyMachine->pMachineName, pBootImage->hart[target-1].name);
         pInstanceData->pChunk =
             (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
 
 #ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::firstChunk is %u" CRLF, pMyMachine->pMachineName, pBootImage->hart[target-1].firstChunk);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::lastChunk is %u" CRLF, pMyMachine->pMachineName, pBootImage->hart[target-1].lastChunk);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::firstChunk is %u" CRLF,
+            pMyMachine->pMachineName, pBootImage->hart[target-1].firstChunk);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::lastChunk is %u" CRLF,
+            pMyMachine->pMachineName, pBootImage->hart[target-1].lastChunk);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::numChunks is %u" CRLF,
+            pMyMachine->pMachineName, pBootImage->hart[target-1].numChunks);
 #endif
 
         pInstanceData->chunkCount = 0u;
+        pInstanceData->subChunkOffset = 0u;
         pInstanceData->pChunk += pBootImage->hart[target-1].firstChunk;
     } else {
         // nothing to do for this machine, numChunks is zero...
@@ -393,25 +451,47 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
 
+    assert(pBootImage != NULL);
+
     if (pBootImage->hart[target-1].numChunks) {
         //
         // end of image is denoted by sentinel chunk with zero size...
         // so if we're not on the sentinel chunk
-        if ((pInstanceData->chunkCount <= pBootImage->hart[target-1].lastChunk)
-            && (pInstanceData->pChunk->size)) {
+        struct HSS_BootChunkDesc const *pChunk = pInstanceData->pChunk;
+        if ((pInstanceData->chunkCount <= pBootImage->hart[target-1].lastChunk) && (pChunk->size)) {
             //
-            // and it is for us, then download it
-            if (pInstanceData->pChunk->owner == target) {
+            // and it is for us, then download it if we have permission
+            if ((pChunk->owner == target) && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
 #ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:chunk@0x%X->0x%X, %u bytes" CRLF, pMyMachine->pMachineName,
-                    pInstanceData->chunkCount, (uint64_t)pInstanceData->pChunk->loadAddr,
-                    (uint64_t)pInstanceData->pChunk->execAddr, pInstanceData->pChunk->size);
+                if (!pInstanceData->subChunkOffset) {
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:chunk@0x%X->0x%X, %u bytes" CRLF,
+                        pMyMachine->pMachineName,
+                        pInstanceData->chunkCount, (uint64_t)pChunk->loadAddr,
+                        (uint64_t)pChunk->execAddr, pChunk->size);
+                } 
 #endif
                 // check each hart to see if it wants to transmit
-                boot_do_download_chunk(pInstanceData->pChunk->owner, pInstanceData->pChunk);
+#define SUB_CHUNK_SIZE 256u
+#ifdef SUB_CHUNK_SIZE
+                boot_do_download_chunk(pChunk, pInstanceData->subChunkOffset, SUB_CHUNK_SIZE);
+
+                pInstanceData->subChunkOffset += SUB_CHUNK_SIZE;
+                if (pInstanceData->subChunkOffset > pChunk->size) {
+                    pInstanceData->subChunkOffset = 0u;
+                    pInstanceData->chunkCount++;
+                    pInstanceData->pChunk++;
+                }
+#else
+                boot_do_download_chunk(pChunk, 0u, pChunk->size);
                 pInstanceData->chunkCount++;
                 pInstanceData->pChunk++;
+#endif
             } else {
+                // if (pChunk->owner == target) {
+                //     mHSS_DEBUG_PRINTF(LOG_ERROR,
+                //         "Target %d is skipping chunk %p due to invalid permissions" CRLF, target, pChunk);
+                // }
+
                 pInstanceData->pChunk++;
             }
             //
@@ -433,10 +513,15 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
 
+    assert(pBootImage != NULL);
+
     // otherwise if it has a valid entry point, allocate a message for it and send a GOTO IPI
     if (pBootImage->hart[target-1].entryPoint) {
         bool result;
 
+        //
+        // TODO: refactor this into separate states, as it currently takes reasonable time to start all
+        // Harts using the SBI.
         if (pBootImage->hart[target-1].numChunks) {
 #ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
             // in interrupts-always-enabled world of the HSS, it would appear less
@@ -458,16 +543,10 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
                     mb_i();
 
                     result = IPI_MessageDeliver(pInstanceData->msgIndexAux, peer,
-#if 0
-                        IPI_MSG_GOTO,
-#else
                         IPI_MSG_OPENSBI_INIT,
-#endif
                         pBootImage->hart[peer-1].privMode,
                         &(pBootImage->hart[peer-1].entryPoint));
                     assert(result);
-
-                    //HSS_SpinDelay_MilliSecs(1);
                 }
             }
 #endif
@@ -479,14 +558,8 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
             mb();
             mb_i();
 
-            //HSS_SpinDelay_MilliSecs(50); //TBD
-
             result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
-#if 0
-                IPI_MSG_GOTO,
-#else
                 IPI_MSG_OPENSBI_INIT,
-#endif
                 pBootImage->hart[target-1].privMode, &(pBootImage->hart[target-1].entryPoint));
             assert(result);
         }
@@ -576,13 +649,10 @@ bool HSS_Boot_Harts(enum HSSHartId const source)
         if ((source == HSS_HART_ALL) || (source == bootMachine[i].hartId)) {
             struct StateMachine * const pMachine = bootMachine[i].pMachine;
 
-#if 1
             if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) { // TBD
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
                result = true;
-            } else
-#endif
-            if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
+            } else if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
                result = true;
             } else {

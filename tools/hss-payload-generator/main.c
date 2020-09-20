@@ -31,13 +31,14 @@
 #include <getopt.h>
 
 #include "hss_types.h"
+#include "blob_handler.h"
 #include "elf_parser.h"
 #include "yaml_parser.h"
 #include "generate_payload.h"
 #include "dump_payload.h"
 #include "debug_printf.h"
 
-#define GEN_VERSION_STRING "20.09"
+#define GEN_VERSION_STRING "20.09.1"
 
 struct HSS_BootImage bootImage;
 struct HSS_BootChunkDesc *pChunkDescs;
@@ -67,8 +68,9 @@ int main(int argc, char **argv)
 {
 	intro_banner();
 
-	// these two must come before we run the YAML parser to ensure all correctly setup
-	elf_init();
+	// these must come before we run the YAML parser to ensure all correctly setup
+	elf_parser_init();
+	blob_handler_init();
 	generate_init();
 
 	//

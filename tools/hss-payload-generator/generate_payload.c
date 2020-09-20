@@ -195,7 +195,7 @@ static void generate_chunks(FILE *pFileOut)
 			+ sizeof(struct HSS_BootZIChunkDesc) // account for sentinel
 			+ calculate_padding(sizeof(struct HSS_BootZIChunkDesc) * (numZIChunks +1), PAD_SIZE)
 			+ cumulativeBlobSize
-			+ 0; //+ calculate_padding(cumulativeBlobSize, PAD_SIZE);
+			+ calculate_padding(cumulativeBlobSize, PAD_SIZE);
 
 		cumulativeBlobSize += chunkTable[i].chunk.size
 			+ calculate_padding(chunkTable[i].chunk.size, PAD_SIZE);
@@ -295,6 +295,7 @@ static void generate_blobs(FILE *pFileOut)
         	off_t posn = ftello(pFileOut);
 		debug_printf(4, "\t- Processing blob %lu (%lu bytes) at file position %lu\n",
 			i, chunkTable[i].chunk.size, posn);
+		debug_printf(4, "\t\tCRC32: %x\n", CRC32_calculate((uint8_t *)chunkTable[i].pBuffer, chunkTable[i].chunk.size));
 		fflush(stdout);
 
 		fwrite((char *)chunkTable[i].pBuffer, chunkTable[i].chunk.size, 1, pFileOut);
@@ -365,8 +366,9 @@ size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *pBuffer)
 	chunkTable[numChunks-1].chunk = chunk;
 	chunkTable[numChunks-1].pBuffer = pBuffer;
 
-	debug_printf(4, "chunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 "\n",
-		chunk.execAddr, chunk.size);
+	debug_printf(4, "chunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 ", CRC32=%x\n",
+		chunk.execAddr, chunk.size,
+		CRC32_calculate((const unsigned char *)pBuffer, chunk.size));
 
 	return numChunks;
 }

@@ -270,7 +270,7 @@ static void parse_elf_program_headers(Elf *pElf, size_t owner)
 // Module Inteface
 //
 
-void elf_init(void)
+void elf_parser_init(void)
 {
 	if (elf_version(EV_CURRENT) == EV_NONE) {
 		perror("elf_version()");
@@ -278,12 +278,16 @@ void elf_init(void)
 	}
 }
 
-void elf_parser(char const * const filename, size_t owner)
+bool elf_parser(char const * const filename, size_t owner)
 {
+	bool result = true;
+
 	assert(filename);
 
 	debug_printf(1, "\nProcessing ELF >>%s<<\n", filename);
-	bootImage.hart[owner].firstChunk = numChunks;
+	if (!bootImage.hart[owner-1].firstChunk) {
+		bootImage.hart[owner-1].firstChunk= numChunks;
+	}
 
 	int fd = open(filename, O_RDONLY, 0);
 	if (fd < 0) {
@@ -299,18 +303,17 @@ void elf_parser(char const * const filename, size_t owner)
 
 	if (elf_kind(pElf) != ELF_K_ELF) {
 		fprintf(stderr, ">>%s<< is not an ELF object\n", filename);
-		exit(EXIT_FAILURE);
+		result = false;
+	} else {
+		parse_elf_program_headers(pElf, owner);
+
+		bootImage.hart[owner-1].lastChunk = numChunks - 1u;
+		bootImage.hart[owner-1].numChunks = bootImage.hart[owner-1].lastChunk - bootImage.hart[owner-1].firstChunk + 1u;
+
+		elf_end(pElf);
 	}
 
-	parse_elf_program_headers(pElf, owner);
-
-	bootImage.hart[owner].lastChunk = numChunks - 1u;
-	bootImage.hart[owner].numChunks = bootImage.hart[owner].lastChunk - bootImage.hart[owner].firstChunk + 1u;
-
-	elf_end(pElf);
-
-	//
-	// all done
-	//
 	close(fd);
+
+	return result;
 }

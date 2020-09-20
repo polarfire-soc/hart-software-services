@@ -129,7 +129,7 @@ int main(int argc, char **argv)
             lastOwner = ziChunk.owner;
         }
 
-        chunkOffset += sizeof(struct HSS_BootChunkDesc);
+        chunkOffset += sizeof(struct HSS_BootZIChunkDesc);
         totalChunkCount++;
         if (ziChunk.size==0u) { break;}
     }

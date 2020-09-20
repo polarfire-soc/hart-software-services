@@ -38,6 +38,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #ifndef CONFIG_OPENSBI
 #  ifndef __ssize_t_defined
 #    define __ssize_t_defined
@@ -45,7 +46,6 @@ extern "C" {
 #  endif
 
 #  include <sys/types.h>  // for size_t
-#  include <stddef.h>
 #  include <stdbool.h> // for bool, true, false
 #  include <stdint.h>
 #else

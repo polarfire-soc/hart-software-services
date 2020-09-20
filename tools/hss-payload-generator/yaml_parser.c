@@ -37,6 +37,7 @@
 #include <yaml.h>
 #include "yaml_parser.h"
 #include "elf_parser.h"
+#include "blob_handler.h"
 #include "generate_payload.h"
 
 #include "debug_printf.h"
@@ -261,7 +262,9 @@ static void report_illegal_token(char const * const stateName, yaml_event_t *pEv
 	assert(stateName);
 	assert(pEvent);
 
-	fprintf(stderr, "In %s: illegal token >>%s<< (%d)\n", (char *)stateName,
+	fprintf(stderr, "In %s: illegal token >>%s<< (%d)\n"
+		"Please check configuration file\n",
+		 (char *)stateName,
 		(char *)pEvent->data.scalar.value,
 		string_to_scalar(pEvent->data.scalar.value));
 }
@@ -271,7 +274,9 @@ static void report_illegal_event(char const * const stateName, yaml_event_t *pEv
 	assert(stateName);
 	assert(pEvent);
 
-	fprintf(stderr, "In %s: illegal event %d\n", (char *)stateName, pEvent->type);
+	fprintf(stderr, "In %s: illegal event %d\n"
+		"Please check configuration file\n",
+		(char *)stateName, pEvent->type);
 }
 
 
@@ -328,7 +333,9 @@ static void Handle_STATE_STREAM(yaml_event_t *pEvent)
 		break;
 
 	default:
-		fprintf(stderr, "In %s: illegal event %d\n", (char *)stateNames[parser_state], pEvent->type);
+		fprintf(stderr, "In %s: illegal event %d\n"
+			"Please check configuration file\n",
+			(char *)stateNames[parser_state], pEvent->type);
 		exit(EXIT_FAILURE);
 		break;
 	}
@@ -348,7 +355,9 @@ static void Handle_STATE_DOC(yaml_event_t *pEvent)
 		break;
 
 	default:
-		fprintf(stderr, "In %s: illegal event %d\n", (char *)stateNames[parser_state], pEvent->type);
+		fprintf(stderr, "In %s: illegal event %d\n"
+			"Please check configuration file\n",
+			(char *)stateNames[parser_state], pEvent->type);
 		exit(EXIT_FAILURE);
 		break;
 	}
@@ -648,7 +657,12 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 			bootImage.set_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
 		}
 
-		elf_parser(base_name, base_owner);
+		bool retVal = elf_parser(base_name, base_owner);
+		if (!retVal) {
+			// assume it is a binary file, so just embed the entire thing...
+			blob_handler(base_name, base_exec_addr, base_owner);	
+		}
+
 		payload_idx++;
 		Do_State_Transition(STATE_PAYLOAD_MAPPINGS);
 		break;
@@ -740,7 +754,7 @@ static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)
 		case TOKEN_HART_U54_4:
 			base_owner = (token_idx - TOKEN_HART_U54_1 + 1u);
 
-			strncat(bootImage.hart[base_owner].name, base_name, BOOT_IMAGE_MAX_NAME_LEN-2);
+			strncat(bootImage.hart[base_owner-1].name, base_name, BOOT_IMAGE_MAX_NAME_LEN-2);
 			bootImage.hart[base_owner-1].name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
 
 
@@ -843,7 +857,8 @@ static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)
 						debug_printf(2, "\tSetting priv mode for %d to %d\n", base_secondary[i], base_priv_mode);
 						bootImage.hart[base_secondary[i]-1].privMode = base_priv_mode;
 					} else {
-						fprintf(stderr, "Attempted to set U54_%" PRIu64 " to priv_mode %u, but it is already set to %u\n",
+						fprintf(stderr, "Attempted to set U54_%" PRIu64 " to priv_mode %u, but it is already set to %u\n"
+							"Please check configuration file\n",
 							base_secondary[i], base_priv_mode, bootImage.hart[base_secondary[i]-1].privMode);
 						exit(EXIT_FAILURE);
 					}
