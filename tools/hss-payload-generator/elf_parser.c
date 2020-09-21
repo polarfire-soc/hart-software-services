@@ -291,7 +291,10 @@ bool elf_parser(char const * const filename, size_t owner)
 
 	int fd = open(filename, O_RDONLY, 0);
 	if (fd < 0) {
-		perror("open()");
+		char buffer[300];
+		snprintf(buffer, 299, "open(\"%s\")", filename);
+		buffer[299] = 0;
+		perror(buffer);
 		exit(EXIT_FAILURE);
 	}
 
