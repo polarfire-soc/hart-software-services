@@ -37,6 +37,12 @@ else
 	CMD_PREFIX:=@
 endif
 
+ifdef O
+	build_dir=$(O)
+else
+	build_dir=$(CURDIR)
+endif
+
 CFLAGS= -g3 -ggdb -std=gnu11 -O3 \
 	-Wall -Werror -Wshadow -fno-builtin-printf \
 	-fomit-frame-pointer -Wredundant-decls -Wall -Wundef -Wwrite-strings -fno-strict-aliasing \
@@ -67,15 +73,14 @@ SRCS=\
 	dump_payload.c \
 	debug_printf.c \
 
-OBJS=$(SRCS:.c=.o)
-
+OBJS := $(patsubst %.c,$(build_dir)/%.o,$(SRCS))
 
 ################################################################################
 #
 # Build Rules
 #
 
-%.o: %.c
+$(build_dir)/%.o: %.c
 	@$(ECHO) " CC        $@";
 	$(CMD_PREFIX)$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
@@ -84,7 +89,7 @@ OBJS=$(SRCS:.c=.o)
 # Targets
 #
 
-TARGET := hss-payload-generator
+TARGET := $(build_dir)/hss-payload-generator
 all: $(TARGET)
 
 .PHONY: clean cppcheck
