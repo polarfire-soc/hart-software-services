@@ -52,7 +52,7 @@ ifdef CONFIG_WITH_ARCH
 endif
 
 # Debug options
-CORE_CFLAGS+=-g3 -fdebug-prefix-map=/= -DDEBUG -pipe -grecord-gcc-switches
+CORE_CFLAGS+=-g3 -DDEBUG -pipe -grecord-gcc-switches
 
 
 # Warning / Code Quality
