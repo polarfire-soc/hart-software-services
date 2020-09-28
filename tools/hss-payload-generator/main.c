@@ -38,7 +38,7 @@
 #include "dump_payload.h"
 #include "debug_printf.h"
 
-#define GEN_VERSION_STRING "0.99.11.1"
+#define GEN_VERSION_STRING "0.99.12"
 
 struct HSS_BootImage bootImage;
 struct HSS_BootChunkDesc *pChunkDescs;
