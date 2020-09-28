@@ -47,6 +47,22 @@
 extern "C" {
 #endif
 
+#ifndef TEST_64BIT_ACCESS
+#  define TEST_64BIT_ACCESS 1
+#endif
+
+#ifndef TEST_32BIT_ACCESS
+#  define TEST_32BIT_ACCESS 1
+#endif
+
+typedef enum DDR_ACCESS_SIZE_
+{
+    DDR_8_BIT,
+    DDR_16_BIT,
+    DDR_32_BIT,
+    DDR_64_BIT
+} DDR_ACCESS_SIZE;
+
 
 /***************************************************************************//**
  The ddr_read_write_fn function is used to write/read test patterns to the DDR

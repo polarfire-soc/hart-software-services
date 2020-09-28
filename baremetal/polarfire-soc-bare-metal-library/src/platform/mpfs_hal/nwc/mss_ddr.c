@@ -24,9 +24,16 @@
  * Local Defines
  */
 /* This string is updated if any change to ddr driver */
-#define DDR_DRIVER_VERSION_STRING   "0.1.001"
+#define DDR_DRIVER_VERSION_STRING   "0.1.004"
 /* Version     |  Change                                                      */
-/* 0.1.001     |  Reset modified- corrects softreset on retry issue           */
+/* 0.1.004     |  Corrected default RPC220 setting so dq/dqs window centred   */
+/* 0.1.003     |  refclk_phase correctly masked during bclk sclk sw training  */
+/* 0.1.002     |  Reset modified- corrects softreset on retry issue  (1.8.x)  */
+/* 0.1.001     |  Reset modified- corrects softreset on retry issue  (1.7.2)  */
+/* 0.0.016     |  Added #define DDR_FULL_32BIT_NC_CHECK_EN to mss_ddr.h       */
+/* 0.0.016     |  updated mss_ddr_debug.c with additio of 32-bit write test   */
+/* 0.0.015     |  DDR3L - Use Software Bclk Sclk training                     */
+/* 0.0.014     |  DDR3 and DDR update to sync with SVG proven golden version  */
 /* 0.0.013     |  Added code to turn off DM if DDR4 and using ECC             */
 /* 0.0.012     |  Added support for turning off unused I/O from Libero        */
 
@@ -797,7 +804,7 @@ static uint32_t ddr_setup(void)
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x4;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x64;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66; // increment
-            for (uint32_t d=0;d < LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET;d++)
+            for (uint32_t d=0;d < LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET; d++)
             {
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x67;
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66;
@@ -905,10 +912,14 @@ static uint32_t ddr_setup(void)
                      * Initiate IP training and wait for dfi_init_complete
                      */
                     /*asserting training_reset */
-
-                    CFG_DDR_SGMII_PHY->training_reset.training_reset =\
-                            0x00000000U;
-
+                    if (ddr_type != DDR3)
+                    {
+                        CFG_DDR_SGMII_PHY->training_reset.training_reset = 0x00000000U;
+                    }
+                    else
+                    {
+                        DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  = 0x00000001U;
+                    }
                     ddr_training_state = DDR_TRAINING_IP_SM_START;
                 }
             }
@@ -984,7 +995,7 @@ static uint32_t ddr_setup(void)
                          * refclk phase offset manually
                          * We may need to sweep this
                          */
-                        refclk_phase = (uint32_t)((answer+SW_TRAING_BCLK_SCLK_OFFSET + 5U + LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET ) << 2U);
+                        refclk_phase = (uint32_t)(((answer+SW_TRAING_BCLK_SCLK_OFFSET + 5U + LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET ) & 0x07UL) << 2U);
                         bclk_phase  = ((answer+SW_TRAING_BCLK_SCLK_OFFSET)    & 0x07UL ) << 8U;
                         bclk90_phase= ((answer+SW_TRAING_BCLK_SCLK_OFFSET+2U)  & 0x07UL ) << 11U;
                         MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | bclk_phase | bclk90_phase | refclk_phase);
@@ -1104,6 +1115,7 @@ static uint32_t ddr_setup(void)
             }
             else if(CFG_DDR_SGMII_PHY->training_status.training_status & ADDCMD_BIT)
             {
+                timeout = 0xFFFFF;
                 ddr_training_state = DDR_TRAINING_IP_SM_WRLVL;
             }
             if(--timeout == 0U)
@@ -1132,6 +1144,7 @@ static uint32_t ddr_setup(void)
             }
             else if(CFG_DDR_SGMII_PHY->training_status.training_status & WRLVL_BIT)
             {
+                timeout = 0xFFFFF;
                 ddr_training_state = DDR_TRAINING_IP_SM_RDGATE;
             }
             if(--timeout == 0U)
@@ -1329,6 +1342,8 @@ static uint32_t ddr_setup(void)
                 if (ddr_type == LPDDR4)
                 {
                     uint8_t lane;
+                    /* Changed default value to centre dq/dqs on window */
+                    CFG_DDR_SGMII_PHY->rpc220.rpc220 = 0xCUL;
                     for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++)
                     {
                         load_dq(lane);
@@ -4079,12 +4094,16 @@ static uint8_t use_software_bclk_sclk_training(DDR_TYPE ddr_type)
         case DDR_OFF_MODE:
             break;
         case DDR3L:
+            result = 1U;
             break;
         case DDR3:
+            result = 1U;
             break;
         case DDR4:
+            result = 1U;
             break;
         case LPDDR3:
+            result = 1U;
             break;
         case LPDDR4:
             result = 1U;

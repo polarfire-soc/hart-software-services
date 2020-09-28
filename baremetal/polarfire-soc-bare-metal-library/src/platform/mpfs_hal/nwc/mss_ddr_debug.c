@@ -47,11 +47,13 @@ extern void delay(uint32_t n);
 /*******************************************************************************
  * Local function declarations
  */
-static uint32_t ddr_write ( volatile uint64_t *DDR_word_ptr,\
-        uint32_t no_of_access, uint8_t data_ptrn );
-static uint32_t ddr_read ( volatile uint64_t *DDR_word_ptr,\
-        uint32_t no_of_access, uint8_t data_ptrn );
-
+static uint32_t ddr_write ( volatile uint64_t *DDR_word_ptr,
+        uint32_t no_of_access, uint8_t data_ptrn, DDR_ACCESS_SIZE data_size );
+static uint32_t ddr_read ( volatile uint64_t *DDR_word_ptr,
+        uint32_t no_of_access, uint8_t data_ptrn,  DDR_ACCESS_SIZE data_size );
+#ifdef DEBUG_DDR_INIT
+extern mss_uart_instance_t *g_debug_uart;
+#endif
 
 #ifdef DEBUG_DDR_INIT
 /***************************************************************************//**
@@ -170,12 +172,17 @@ static uint32_t ddr_write
 (
     volatile uint64_t *DDR_word_ptr,
     uint32_t no_of_access,
-    uint8_t data_ptrn
+    uint8_t data_ptrn,
+    DDR_ACCESS_SIZE data_size
 )
 {
     uint32_t i;
     uint64_t DATA;
     uint32_t error_count = 0U;
+
+    uint32_t *DDR_32_ptr = (uint32_t *)DDR_word_ptr;
+    uint16_t *DDR_16_ptr = (uint16_t *)DDR_word_ptr;
+    uint8_t *DDR_8_ptr   = (uint8_t *)DDR_word_ptr;
 
     switch (data_ptrn)
     {
@@ -204,8 +211,30 @@ static uint32_t ddr_write
 
     for( i = 0; i< (no_of_access); i++)
     {
-        *DDR_word_ptr = DATA;
-        DDR_word_ptr = DDR_word_ptr + 1;
+        switch(data_size)
+        {
+            case DDR_8_BIT:
+                DATA &= 0xFFUL;
+                *DDR_8_ptr = (uint8_t)DATA;
+                DDR_8_ptr = DDR_8_ptr + 1;
+                break;
+            case DDR_16_BIT:
+                DATA &= 0xFFFFUL;
+                *DDR_16_ptr = (uint16_t)DATA;
+                DDR_16_ptr = DDR_16_ptr + 1;
+                break;
+            case DDR_32_BIT:
+                DATA &= 0xFFFFFFFFUL;
+                *DDR_32_ptr = (uint32_t)DATA;
+                DDR_32_ptr = DDR_32_ptr + 1;
+                break;
+            default:
+            case DDR_64_BIT:
+                *DDR_word_ptr = DATA;
+                DDR_word_ptr = DDR_word_ptr + 1;
+                break;
+        }
+
 #ifdef DEBUG_DDR_INIT
         if((i%0x1000000UL) ==0UL)
         {
@@ -263,7 +292,8 @@ uint32_t ddr_read
 (
     volatile uint64_t *DDR_word_ptr,
     uint32_t no_of_access,
-    uint8_t data_ptrn
+    uint8_t data_ptrn,
+    DDR_ACCESS_SIZE data_size
 )
 {
     uint32_t i;
@@ -273,11 +303,21 @@ uint32_t ddr_read
     volatile uint64_t *DDR_word_pt_t;
 
 #ifndef HSS
+    volatile uint64_t *first_DDR_word_pt_t;
     uint32_t rand_addr_offset;
-    volatile uint64_t **first_DDR_word_pt_t = DDR_word_ptr;
 #endif
+    uint8_t *DDR_8_pt_t;
+    uint16_t *DDR_16_pt_t;
+    uint32_t *DDR_32_pt_t;
 
     err_cnt = 0U;
+#ifndef HSS
+    first_DDR_word_pt_t = DDR_word_ptr;
+#endif
+    DDR_8_pt_t = (uint8_t *)DDR_word_ptr;
+    DDR_16_pt_t = (uint16_t *)DDR_word_ptr;
+    DDR_32_pt_t = (uint32_t *)DDR_word_ptr;
+
     switch (data_ptrn)
     {
         case PATTERN_INCREMENTAL : DATA = 0x00000000; break;
@@ -288,6 +328,9 @@ uint32_t ddr_read
         case PATTERN_RANDOM :
             DATA = (uint64_t)rand ( );
             *DDR_word_ptr = DATA;
+            *DDR_8_pt_t =  (uint8_t)DATA;
+            *DDR_16_pt_t = (uint16_t)DATA;
+            *DDR_32_pt_t = (uint32_t)DATA;
             break;
 #endif
         case PATTERN_0xCCCCCCCC :
@@ -309,8 +352,26 @@ uint32_t ddr_read
     }
     for( i = 0; i< (no_of_access); i++)
     {
-        DDR_word_pt_t = DDR_word_ptr;
-        ddr_data = *DDR_word_pt_t;
+        switch(data_size)
+        {
+            case DDR_8_BIT:
+                DATA &= 0xFFUL;
+                ddr_data = *DDR_8_pt_t;
+                break;
+            case DDR_16_BIT:
+                DATA &= 0xFFFFUL;
+                ddr_data = *DDR_16_pt_t;
+                break;
+            case DDR_32_BIT:
+                DATA &= 0xFFFFFFFFUL;
+                ddr_data = *DDR_32_pt_t;
+                break;
+            default:
+            case DDR_64_BIT:
+                DDR_word_pt_t = DDR_word_ptr;
+                ddr_data = *DDR_word_pt_t;
+                break;
+        }
 
 #ifdef DEBUG_DDR_INIT
         if((i%0x1000000UL) ==0UL)
@@ -348,6 +409,9 @@ uint32_t ddr_read
 #endif
         }
         DDR_word_ptr = DDR_word_ptr + 1U;
+        DDR_8_pt_t   = DDR_8_pt_t +1U;
+        DDR_16_pt_t  = DDR_16_pt_t +1U;
+        DDR_32_pt_t  = DDR_32_pt_t +1U;
         switch (data_ptrn)
         {
             case PATTERN_INCREMENTAL : DATA = DATA + 0x01; break;
@@ -374,7 +438,13 @@ uint32_t ddr_read
                 DATA = (uint64_t)rand();
                 rand_addr_offset = (uint32_t)(rand() & 0xFFFFCUL);
                 DDR_word_ptr = first_DDR_word_pt_t + rand_addr_offset;
-                *DDR_word_ptr = DATA;
+                DDR_8_pt_t   = (uint8_t *)(first_DDR_word_pt_t + rand_addr_offset);
+                DDR_16_pt_t  = (uint16_t *)(first_DDR_word_pt_t + rand_addr_offset);
+                DDR_32_pt_t  = (uint32_t *)(first_DDR_word_pt_t + rand_addr_offset);
+                *DDR_word_ptr   = DATA;
+                *DDR_8_pt_t     = (uint8_t)DATA;
+                *DDR_16_pt_t    = (uint16_t)DATA;
+                *DDR_32_pt_t    = (uint32_t)DATA;
                 break;
 #endif
             case PATTERN_0xCCCCCCCC :
@@ -414,10 +484,24 @@ uint32_t ddr_read_write_fn (uint64_t* DDR_word_ptr, uint32_t no_access, uint32_t
 #ifdef DEBUG_DDR_INIT
                 uprint32(g_debug_uart,"\n\r\t Pattern: 0x", pattern_shift);
 #endif
+
+#if TEST_64BIT_ACCESS == 1
                 /* write the pattern */
-                error_cnt += ddr_write ((uint64_t *)DDR_word_ptr, no_access, pattern_mask);
+                error_cnt += ddr_write ((uint64_t *)DDR_word_ptr,
+                        no_access, pattern_mask, DDR_64_BIT);
                 /* read back and verifies */
-                error_cnt += ddr_read ((uint64_t *)DDR_word_ptr, no_access, pattern_mask);
+                error_cnt += ddr_read ((uint64_t *)DDR_word_ptr, 
+                        no_access, pattern_mask, DDR_64_BIT);
+#endif
+
+#if TEST_32BIT_ACCESS == 1
+                /* write the pattern */
+                error_cnt += ddr_write ((uint64_t *)DDR_word_ptr,
+                        no_access, pattern_mask, DDR_32_BIT);
+                /* read back and verifies */
+                error_cnt += ddr_read ((uint64_t *)DDR_word_ptr, 
+                        no_access, pattern_mask, DDR_32_BIT);
+#endif
             }
         }
         DDR_word_ptr++; /* increment the address */
@@ -500,34 +584,33 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
         MSS_DDR_APB_ADDR = CFG_DDR_SGMII_PHY->gt_txdly.gt_txdly;
         uprint32(g_mss_uart_debug_pt, "\t ", MSS_DDR_APB_ADDR);
 
-        if((MSS_DDR_APB_ADDR & 0xFF) == 0)
+        if (((MSS_DDR_APB_ADDR & 0xFF) == 0)
+            || ((MSS_DDR_APB_ADDR & 0xFF00) == 0)
+            || ((MSS_DDR_APB_ADDR & 0xFF0000) == 0)
+            || ((MSS_DDR_APB_ADDR & 0xFF000000) == 0))
+        {
             t_status = 1;
-        if((MSS_DDR_APB_ADDR & 0xFF00) == 0)
-            t_status = 1;
-        if((MSS_DDR_APB_ADDR & 0xFF0000) == 0)
-            t_status = 1;
-        if((MSS_DDR_APB_ADDR & 0xFF000000) == 0)
-            t_status = 1;
+        }
 
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->gt_steps_180.gt_steps_180);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->gt_state.gt_state);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->wl_delay_0.wl_delay_0);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->dq_dqs_err_done.dq_dqs_err_done);
         t_status = t_status | (MSS_DDR_APB_ADDR  != 8);
 
-        uprint32(g_mss_uart_debug_pt, "\t\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t\t ",
                 CFG_DDR_SGMII_PHY->dqdqs_state.dqdqs_state);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->delta0.delta0);
         dq0_dly = (MSS_DDR_APB_ADDR & 0xFF);
         dq1_dly = (MSS_DDR_APB_ADDR & 0xFF00) >> 8;
         dq2_dly = (MSS_DDR_APB_ADDR & 0xFF0000) >> 16;
         dq3_dly = (MSS_DDR_APB_ADDR & 0xFF000000) >> 24;
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->delta1.delta1);
         dq4_dly = (MSS_DDR_APB_ADDR & 0xFF);
         dq5_dly = (MSS_DDR_APB_ADDR & 0xFF00) >> 8;
@@ -536,11 +619,11 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
     }
 
     MSS_UART_polled_tx_string(g_mss_uart_debug_pt, (const uint8_t *)"\n\r\n\r lane_select\t rdqdqs_status2\t addcmd_status0\t addcmd_status1\t addcmd_answer1\t dqdqs_status1\n\r");
-    for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED;\
+    for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED;
                                                                 ddr_lane_sel++)
     {
         CFG_DDR_SGMII_PHY->lane_select.lane_select = ddr_lane_sel;
-        uprint32(g_mss_uart_debug_pt, "\n\r ",\
+        uprint32(g_mss_uart_debug_pt, "\n\r ",
                                     CFG_DDR_SGMII_PHY->lane_select.lane_select);
         delay(1000);
 
@@ -551,16 +634,16 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
         if(dq4_dly > 20) t_status = 1;
         if(dq5_dly > 20) t_status = 1;
 
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->dqdqs_status2.dqdqs_status2);
 
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->addcmd_status0.addcmd_status0);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->addcmd_status1.addcmd_status1);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->addcmd_answer.addcmd_answer);
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 CFG_DDR_SGMII_PHY->dqdqs_status1.dqdqs_status1);
 
     }
@@ -585,46 +668,45 @@ void sweep_status (mss_uart_instance_t *g_mss_uart_debug_pt)
     uint8_t dpc_vgen_h_index;
     uint8_t dpc_vgen_vs_index;
 
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
+    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,
                     "\n\n\r dpc_vgen_vs dpc_vgen_h \t dpc_vgen_v \t bclk_sclk");
-    for (cmd_index=0U; cmd_index < MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS; \
+    for (cmd_index=0U; cmd_index < MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS; 
                                                                     cmd_index++)
     {
-        uprint32(g_mss_uart_debug_pt, "\t ",\
+        uprint32(g_mss_uart_debug_pt, "\t ",
                 cmd_index + LIBERO_SETTING_MIN_ADDRESS_CMD_OFFSET);
     }
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
+    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,
     "\n\r--------------------------------------------------------------------");
 
     for (dpc_vgen_vs_index=0U; dpc_vgen_vs_index<MAX_NUMBER_DPC_VS_GEN_SWEEPS;\
                                                             dpc_vgen_vs_index++)
     {
-        for (dpc_vgen_h_index=0U; dpc_vgen_h_index < \
+        for (dpc_vgen_h_index=0U; dpc_vgen_h_index < 
                                 MAX_NUMBER_DPC_H_GEN_SWEEPS; dpc_vgen_h_index++)
         {
-            for (dpc_vgen_index=0U; dpc_vgen_index < \
+            for (dpc_vgen_index=0U; dpc_vgen_index < 
                                 MAX_NUMBER_DPC_V_GEN_SWEEPS; dpc_vgen_index++)
             {
-                for (bclk_sclk_index=0U; bclk_sclk_index < \
+                for (bclk_sclk_index=0U; bclk_sclk_index < 
                         MAX_NUMBER__BCLK_SCLK_OFFSET_SWEEPS; bclk_sclk_index++)
                 {
-                    uprint32(g_mss_uart_debug_pt, "\n\r ", dpc_vgen_vs_index + \
+                    uprint32(g_mss_uart_debug_pt, "\n\r ", dpc_vgen_vs_index + 
                                                 LIBERO_SETTING_MIN_DPC_VS_GEN);
-                    uprint32(g_mss_uart_debug_pt, "\t ", dpc_vgen_h_index + \
+                    uprint32(g_mss_uart_debug_pt, "\t ", dpc_vgen_h_index + 
                                                   LIBERO_SETTING_MIN_DPC_H_GEN);
-                    uprint32(g_mss_uart_debug_pt, "\t ", dpc_vgen_index + \
+                    uprint32(g_mss_uart_debug_pt, "\t ", dpc_vgen_index + 
                                                     LIBERO_SETTING_MIN_DPC_V_GEN);
-                    uprint32(g_mss_uart_debug_pt, "\t ", bclk_sclk_index + \
+                    uprint32(g_mss_uart_debug_pt, "\t ", bclk_sclk_index + 
                                     LIBERO_SETTING_MIN_ADDRESS_BCLK_SCLK_OFFSET);
                     for (cmd_index=0U; cmd_index < \
                                 MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS; cmd_index++)
                     {
-                        if(sweep_results[dpc_vgen_vs_index][dpc_vgen_h_index]\
-                                [dpc_vgen_index][bclk_sclk_index][cmd_index] ==\
+                        if (sweep_results[dpc_vgen_vs_index][dpc_vgen_h_index]
+                                [dpc_vgen_index][bclk_sclk_index][cmd_index] ==
                                      CALIBRATION_PASSED)
                         {
-                            MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
-                                                                   "\t\t pass");
+                            MSS_UART_polled_tx_string(g_mss_uart_debug_pt, "\t\t pass");
                         }
                         else
                         {
@@ -632,8 +714,7 @@ void sweep_status (mss_uart_instance_t *g_mss_uart_debug_pt)
                              * easier to see if not printed
                              * todo: may add detail to fail
                              * */
-                            MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
-                                                                      "\t\t F");
+                            MSS_UART_polled_tx_string(g_mss_uart_debug_pt, "\t\t F");
                         }
 
                     }
