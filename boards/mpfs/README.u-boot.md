@@ -1,9 +1,9 @@
 # Hart Software Services for HiFive Unleashed (SiFive FU540)
 
-This repository is a port of the Hart Software Services to the HiFive Unleashed/HiFive Unleashed 
+This repository is a port of the Hart Software Services to the HiFive Unleashed/HiFive Unleashed
 Expansion Board.
 
-As the FU540 does not have exactly the same functionality as Microchip PolarFIre SoC, this version is a limited-functionality HSS, which demonstrates using the E51 to boot the U54s. 
+As the FU540 does not have exactly the same functionality as Microchip PolarFIre SoC, this version is a limited-functionality HSS, which demonstrates using the E51 to boot the U54s.
 
 It uses an in-built payload of U-Boot as its boot image.
 
@@ -52,7 +52,7 @@ From the toplevel `hart-software-services` directory, build the HSS Payload Gene
 
 Next, using this generator tool, we will create the payload from our U-Boot binary:
 
-    $ ./tools/hss-payload-generator/hss-payload-generator -c boards/mpfs/u-boot.yaml boards/mpfs/payload.bin  
+    $ ./tools/hss-payload-generator/hss-payload-generator -c boards/mpfs/u-boot.yaml boards/mpfs/payload.bin
 
 The HSS Payload Generator uses a YAML configuration file that specifies what binaries to include (bin or ELF files), where to place them, what Hart "owns" them, what address to start each Hart, what mode to start each Hart in, etc.  See `tools/hss-payload-generator/README.md` for more details.
 
@@ -65,4 +65,3 @@ At this point, we can build the HSS binary image:
 This HSS binary can be used instead of U-Boot from riscv-yocto to boot a Linux image. To use it, prepare an SDCARD as usual using the riscv-yocto flow. Then, overwrite the U-Boot partition using:
 
     $ sudo dd if=hss.bin of=/dev/mmcblk0p2 bs=4096
-
