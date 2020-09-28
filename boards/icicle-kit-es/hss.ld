@@ -164,6 +164,8 @@ SECTIONS
         KEEP (*crtend.o(.dtors))
 
         *(.rodata .rodata.* .gnu.linkonce.r.*)
+        *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2)
+        *(.srodata*)
         *(.sdata2.*)
         *(.gcc_except_table)
         *(.eh_frame_hdr)
@@ -244,8 +246,6 @@ SECTIONS
          * Perhaps we should add check/warning to linker script if sdata is > 4k
          */
         __global_pointer$ = . + 0x800;
-        *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2)
-        *(.srodata*)
         *(.sdata .sdata.* .gnu.linkonce.s.*)
         . = ALIGN(0x10);
         __sdata_end = .;
