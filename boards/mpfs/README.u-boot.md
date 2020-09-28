@@ -46,19 +46,15 @@ We will be creating a payload from `u-boot-dtb.bin`. Copy this file to the tople
 
 ## Creating the HSS payload
 
-From the toplevel `hart-software-services` directory, build the bin2chunks tool, which is a sample tool used to create a HSS bootable payload. bin2chunks relies on config.h, so first we configure the HSS:
+From the toplevel `hart-software-services` directory, build the HSS Payload Generator tool, which is a sample tool used to create a bootable payload:
 
-    $ cp boards/mpfs/def_config .config
-    $ make BOARD=mpfs genconfig
+    $ make -C tools/hss-payload-generator
 
-Now, built the bin2chunks tool:
-    $ make -C tools/bin2chunks
+Next, using this generator tool, we will create the payload from our U-Boot binary:
 
-Next, we will create the payload:
+    $ ./tools/hss-payload-generator/hss-payload-generator -c boards/mpfs/u-boot.yaml boards/mpfs/payload.bin  
 
-    $ ./tools/bin2chunks/bin2chunks 0x80200000 0x80200000 0x80200000 0x80200000 32768 payload.bin  1 u-boot-dtb.bin 0x80200000
-
-The arguments to bin2chunks are the entrypoints for U54s 1 through 4, a chunk size (values of 4096 to 32768 are useful), the output binary name, and then a number of 3-tuples specifying owner U54 hart (in term of PMP memory), input binary, and the initial load-address for this binary.
+The HSS Payload Generator uses a YAML configuration file that specifies what binaries to include (bin or ELF files), where to place them, what Hart "owns" them, what address to start each Hart, what mode to start each Hart in, etc.  See `tools/hss-payload-generator/README.md` for more details.
 
 ## Finally, building the HSS image
 
@@ -66,7 +62,7 @@ At this point, we can build the HSS binary image:
 
     $ make BOARD=mpfs
 
-This HSS binary can be used instead of U-Boot from riscv-yocto to boot a Linux image. To use it, pprepare an SDCARD as usual using the riscv-yocto flow. Then, overwrite the U-Boot partition using:
+This HSS binary can be used instead of U-Boot from riscv-yocto to boot a Linux image. To use it, prepare an SDCARD as usual using the riscv-yocto flow. Then, overwrite the U-Boot partition using:
 
     $ sudo dd if=hss.bin of=/dev/mmcblk0p2 bs=4096
 
