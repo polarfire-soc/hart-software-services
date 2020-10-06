@@ -33,6 +33,14 @@ config SERVICE_BOOT_USE_PAYLOAD
         help
                 This feature enables booting a directly contained payload.
 
+config SERVICE_BOOT_CUSTOM_FLOW
+        bool "Use Custom Boot Flow"
+        default  n
+        depends on SERVICE_BOOT
+        help
+                This feature enables custom booting flow where all HARTs
+                will jump to same entry point in M-mode.
+
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for BOOT to DDR copy"
 	default 0xB0000000
