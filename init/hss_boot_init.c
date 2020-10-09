@@ -153,11 +153,15 @@ bool HSS_BootInit(void)
             HSS_Register_Boot_Image(pBootImage);
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered..." CRLF);
 
+#  if defined(CONFIG_SERVICE_BOOT_CUSTOM_FLOW)
+            result = HSS_Boot_Custom();
+#  else
             if (HSS_Boot_RestartCore(HSS_HART_ALL) == IPI_SUCCESS) {
                 result = true;
             } else {
                 result = false;
             }
+#  endif
         } else {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "%s boot image failed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");

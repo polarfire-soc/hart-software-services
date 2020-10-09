@@ -702,6 +702,100 @@ void HSS_Register_Boot_Image(struct HSS_BootImage *pImage)
     pBootImage = pImage;
 }
 
+static uintptr_t Custom_entryPoint;
+static uint8_t Custom_privMode = PRV_M;
+
+bool HSS_Boot_Custom(void)
+{
+    int i;
+    size_t numChunks = 0;
+    size_t firstChunk = 0;
+    size_t chunkNum;
+    size_t subChunkOffset;
+    enum HSSHartId target = 0;
+    struct HSS_BootChunkDesc const *pChunk;
+    struct HSS_BootZIChunkDesc const *pZiChunk;
+
+    if (!pBootImage)
+        return false;
+
+    for (i = 0; i < (MAX_NUM_HARTS-1); i++) {
+        if (pBootImage->hart[i].numChunks) {
+            target = i + 1;
+            numChunks = pBootImage->hart[i].numChunks;
+            firstChunk = pBootImage->hart[i].firstChunk;
+        }
+    }
+
+    if (!numChunks || !target) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to find target HART" CRLF);
+        return false;
+    }
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Zeroing chunks for HART%d" CRLF, target);
+    pZiChunk = (struct HSS_BootZIChunkDesc const *)((char *)pBootImage + pBootImage->ziChunkTableOffset);
+    chunkNum = 0u;
+    while (pZiChunk->size != 0u) {
+        if (target == pZiChunk->owner) {
+#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:ziChunk->0x%X, %u bytes" CRLF,
+                chunkNum, (uint64_t)pZiChunk->execAddr, pZiChunk->size);
+#endif
+            boot_do_zero_init_chunk(pZiChunk);
+            chunkNum++;
+        }
+        pZiChunk++;
+    }
+
+    pChunk = (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
+    chunkNum = 0u;
+    subChunkOffset = 0u;
+    pChunk += firstChunk;
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Downloading chunks for HART%d at 0x%X" CRLF, target, (uint64_t)pChunk->execAddr);
+    while (pChunk->size != 0u) {
+        if ((pChunk->owner == target) && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
+#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+           if (!subChunkOffset) {
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:chunk@0x%X->0x%X, %u bytes" CRLF,
+                        chunkNum, (uint64_t)pChunk->loadAddr,
+                        (uint64_t)pChunk->execAddr, pChunk->size);
+            }
+#endif
+            // check each hart to see if it wants to transmit
+#define SUB_CHUNK_SIZE 256u
+#ifdef SUB_CHUNK_SIZE
+            boot_do_download_chunk(pChunk, subChunkOffset, SUB_CHUNK_SIZE);
+
+            subChunkOffset += SUB_CHUNK_SIZE;
+            if (subChunkOffset > pChunk->size) {
+                subChunkOffset = 0u;
+                chunkNum++;
+                pChunk++;
+            }
+#else
+            boot_do_download_chunk(pChunk, 0u, pChunk->size);
+            chunkNum++;
+            pChunk++;
+#endif
+        } else {
+            pChunk++;
+        }
+    }
+
+    // For custom boot-flow, all U54 HARTs and E51 HART
+    // should jump to commong entry point in M-mode
+    Custom_entryPoint = pBootImage->hart[target - 1].entryPoint;
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "All HARTs jumping to entry address 0x%lx in M-mode" CRLF, Custom_entryPoint);
+    for (i = 0; i < (MAX_NUM_HARTS-1); i++) {
+        IPI_Send(i + 1, IPI_MSG_OPENSBI_INIT, 0,
+                 Custom_privMode, &Custom_entryPoint);
+    }
+
+    ((void (*)(uintptr_t, uintptr_t))Custom_entryPoint)(current_hartid(), 0);
+
+    return true;
+}
+
 /*!
  * \brief PMP Setup Handler
  *
