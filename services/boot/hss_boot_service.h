@@ -54,6 +54,8 @@ void HSS_Register_Boot_Image(struct HSS_BootImage *pImage);
 
 bool HSS_Boot_Harts(enum HSSHartId const source);
 
+bool HSS_Boot_Custom(void);
+
 extern struct StateMachine boot_service1;
 extern struct StateMachine boot_service2;
 extern struct StateMachine boot_service3;
