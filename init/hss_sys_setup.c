@@ -45,6 +45,7 @@
 #  include "mss_sysreg.h"
 #  include "mss_plic.h"
 #  include "mss_util.h"
+#  include "mss_mpu.h"
 #  include "mss_l2_cache.h"
 #  include "nwc/mss_io_config.h"
 #  include "system_startup.h"
@@ -135,45 +136,7 @@ bool HSS_Setup_PLIC(void)
 bool HSS_Setup_MPU(void)
 {
 #ifdef CONFIG_PLATFORM_MPFS
-#if 0
-    static const struct HSS_MPU_Config {
-        uint64_t fic0;
-        uint64_t fic1;
-        uint64_t fic2;
-        uint64_t crypto;
-        uint64_t ethernet0;
-        uint64_t ethernet1;
-        uint64_t usb;
-        uint64_t mmc;
-        uint64_t scb;
-        uint64_t seg0;
-        uint64_t seg1;
-    } hss_MPU_Config = {
-        0x0u, // fic0
-        0x0u, // fic1
-        0x0u, // fic2
-        0x0u, // crypto
-        0x0u, // ethernet0
-        0x0u, // ethernet1
-        0x0u, // usb
-        0x0u, // mmc
-        0x0u, // scb
-        0x0u, // seg0
-        0x0u, // seg1
-    };
-
-    mHSS_WriteRegU64(MPU, FIC0,		hss_MPU_Config.fic0);
-    mHSS_WriteRegU64(MPU, FIC1,		hss_MPU_Config.fic1);
-    mHSS_WriteRegU64(MPU, FIC2,		hss_MPU_Config.fic2);
-    mHSS_WriteRegU64(MPU, CRYPTO,	hss_MPU_Config.crypto);
-    mHSS_WriteRegU64(MPU, ETHERNET0,	hss_MPU_Config.ethernet0);
-    mHSS_WriteRegU64(MPU, ETHERNET1,	hss_MPU_Config.ethernet1);
-    mHSS_WriteRegU64(MPU, USB,		hss_MPU_Config.usb);
-    mHSS_WriteRegU64(MPU, MMC,		hss_MPU_Config.mmc);
-    mHSS_WriteRegU64(MPU, SCB,		hss_MPU_Config.scb);
-    mHSS_WriteRegU64(MPU, SEG0,		hss_MPU_Config.seg0);
-    mHSS_WriteRegU64(MPU, SEG1,		hss_MPU_Config.seg1);
-#endif
+    mpu_configure();
 #endif
 
     return true;
