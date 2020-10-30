@@ -17,7 +17,6 @@
 #include "mpfs_hal/mss_hal.h"
 #include "mss_assert.h"
 #include "flash_drive_app.h"
-#include "drivers/mss_gpio/mss_gpio.h"
 #include "mss_plic.h"
 #include "uart_helper.h"
 
@@ -34,12 +33,6 @@ void USBDMSC_Init(void)
 
     PLIC_EnableIRQ(USB_DMA_PLIC);
     PLIC_EnableIRQ(USB_MC_PLIC);
-
-    MSS_GPIO_init(GPIO2_LO);
-    MSS_GPIO_config(GPIO2_LO, MSS_GPIO_0, MSS_GPIO_OUTPUT_MODE | MSS_GPIO_IRQ_EDGE_NEGATIVE);
-
-    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0x1);
-    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0x0);
 
     PLIC_SetPriority(MMC_main_PLIC, 2u);
     PLIC_SetPriority(MMC_wakeup_PLIC, 2u);

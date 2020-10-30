@@ -25,6 +25,7 @@
 #include "mmc_service.h"
 #include "encoding.h"
 #include "mss_mmc.h"
+#include "mss_gpio.h"
 
 /*
  * MMC doesn't need a "service" to run every super-loop, but it does need to be
@@ -32,67 +33,115 @@
  */
 
 
-#if defined(CONFIG_SERVICE_MMC_MODE_EMMC) && defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
-#  error Both MMC Modes defined! These are mutually exclusive.
+//#if defined(CONFIG_SERVICE_MMC_MODE_EMMC) && defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+//#  error Both MMC Modes defined! These are mutually exclusive.
+//#endif
+
+#if !defined(CONFIG_SERVICE_MMC_MODE_EMMC) && !defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+#  error Unknown MMC mode (eMMC or SDcard)
 #endif
 
 #if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8) && defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
 #  error Both MMC Bus Voltages defined! These are mutually exclusive.
 #endif
 
+
 #include "mpfs_hal/mss_sysreg.h"
+
+static void mmc_reset_block(void)
+{
+    SYSREG->SUBBLK_CLOCK_CR |= 
+        (uint32_t)(SUBBLK_CLOCK_CR_MMC_MASK | SUBBLK_CLOCK_CR_GPIO2_MASK);
+    SYSREG->SOFT_RESET_CR |=
+        (uint32_t)(SOFT_RESET_CR_MMC_MASK | SOFT_RESET_CR_GPIO2_MASK);
+    SYSREG->SOFT_RESET_CR &= 
+        ~(uint32_t)(SOFT_RESET_CR_MMC_MASK | SOFT_RESET_CR_GPIO2_MASK);
+
+    MSS_GPIO_init(GPIO2_LO);
+    MSS_GPIO_config(GPIO2_LO, MSS_GPIO_0, MSS_GPIO_OUTPUT_MODE);
+    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0x0);
+}
+
+static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
+{
+    bool result = false;
+    mss_mmc_status_t retval = MSS_MMC_init(p_mmcConfig);
+
+    if (retval != MSS_MMC_INIT_SUCCESS) {
+        mmc_reset_block();
+
+        HSS_SpinDelay_Secs(1u); // delay for 1 second
+        retval = MSS_MMC_init(p_mmcConfig);
+    }
+
+    if (retval != MSS_MMC_INIT_SUCCESS) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, result);
+    } else {
+        result = true;
+    }
+
+    return result;
+}
+
+#if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
+static bool mmc_init_emmc(void)
+{
+    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0);
+
+    static mss_mmc_cfg_t emmcConfig =
+    {
+        .clk_rate = MSS_MMC_CLOCK_50MHZ,
+        .card_type = MSS_MMC_CARD_TYPE_MMC,
+        .bus_speed_mode = MSS_MMC_MODE_SDR,
+        .data_bus_width = MSS_MMC_DATA_WIDTH_8BIT,
+#if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
+        .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
+#elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
+        .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE
+#endif
+    };
+
+    return mmc_init_common(&emmcConfig);
+}
+#endif
+
+#if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+static bool mmc_init_sdcard(void)
+{
+    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 1);
+
+    static mss_mmc_cfg_t sdcardConfig =
+    {
+        .clk_rate = MSS_MMC_CLOCK_50MHZ,
+        .card_type = MSS_MMC_CARD_TYPE_SD,
+        .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
+        .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
+#if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
+        .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
+#elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
+        .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE
+#endif
+    };
+
+    return mmc_init_common(&sdcardConfig);
+}
+#endif
 
 bool HSS_MMCInit(void)
 {
-    SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
-    SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
+    bool result = false;
+    mmc_reset_block();
 
-    //static bool initialized = false;
-    mss_mmc_status_t result = MSS_MMC_INIT_SUCCESS;
-
-    //if (!initialized) {
-    {
-        static mss_mmc_cfg_t g_mmc =
-        {
-            .clk_rate = MSS_MMC_CLOCK_50MHZ,
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
-            .card_type = MSS_MMC_CARD_TYPE_MMC,
-            .bus_speed_mode = MSS_MMC_MODE_SDR,
-#elif defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
-            .card_type = MSS_MMC_CARD_TYPE_SD,
-            .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
-#else
-#  error Unknown MMC mode (eMMC or SDcard)
+    result = mmc_init_emmc();
 #endif
-            .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
-#if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
-            .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
-#elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
-            .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE
-#else
-#  error Unknown MMC Bus Voltage
-#endif
-        };
-
-        result = MSS_MMC_init(&g_mmc);
-        if (result != MSS_MMC_INIT_SUCCESS) {
-            SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)SUBBLK_CLOCK_CR_MMC_MASK;
-            SYSREG->SOFT_RESET_CR   |= (uint32_t)SOFT_RESET_CR_MMC_MASK;
-            SYSREG->SOFT_RESET_CR   &= ~(uint32_t)SOFT_RESET_CR_MMC_MASK;
-
-            HSS_SpinDelay_Secs(1u); // delay for 1 second
-
-            result = MSS_MMC_init(&g_mmc);
-        }
-
-        if (result != MSS_MMC_INIT_SUCCESS) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, result);
-        }
-        //initialized = true;
+#if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+    if (!result) {
+        result = mmc_init_sdcard();
     }
+#endif
 
-    return (result == MSS_MMC_INIT_SUCCESS);
+    return result;
 }
 
 #define HSS_MMC_SECTOR_SIZE (512u)
