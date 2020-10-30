@@ -33,10 +33,5 @@ SRCS-$(CONFIG_SERVICE_TINYCLI) += \
 INCLUDES +=\
 	-I./services/tinycli \
 
-services/tinycli/tinycli_api.o: services/tinycli/tinycli_api.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-services/tinycli/tinycli_service.o: services/tinycli/tinycli_service.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+services/tinycli/tinycli_api.o: CFLAGS=$(CFLAGS_GCCEXT)
+services/tinycli/tinycli_service.o: CFLAGS=$(CFLAGS_GCCEXT)

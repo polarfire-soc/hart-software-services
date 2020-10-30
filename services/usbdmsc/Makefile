@@ -36,15 +36,7 @@ INCLUDES +=\
 	-I./services/usbdmsc \
 	-I./services/usbdmsc/flash_drive \
 
-services/usbdmsc/flash_drive/flash_drive_app.o: services/usbdmsc/flash_drive/flash_drive_app.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-services/usbdmsc/usbdmsc_api.o: services/usbdmsc/usbdmsc_api.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-services/usbdmsc/flash_drive/usb_user_descriptors.o: services/usbdmsc/flash_drive/usb_user_descriptors.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+services/usbdmsc/flash_drive/flash_drive_app.o: CFLAGS=$(CFLAGS_GCCEXT)
+services/usbdmsc/usbdmsc_api.o: CFLAGS=$(CFLAGS_GCCEXT)
+services/usbdmsc/flash_drive/usb_user_descriptors.o: CFLAGS=$(CFLAGS_GCCEXT)
 

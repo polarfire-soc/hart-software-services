@@ -33,7 +33,5 @@ SRCS-y += \
 INCLUDES +=\
 	-I./services/ddr \
 
-services/ddr/ddr_api.o: services/ddr/ddr_api.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+services/ddr/ddr_api.o: CFLAGS=$(CFLAGS_GCCEXT)
 

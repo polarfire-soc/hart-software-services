@@ -32,6 +32,4 @@ SRCS-$(CONFIG_SERVICE_GOTO) += \
 INCLUDES +=\
 	-I./services/goto \
 
-services/goto/goto_service.o: services/goto/goto_service.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+services/goto/goto_service.o: CFLAGS=$(CFLAGS_GCCEXT)

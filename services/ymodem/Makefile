@@ -35,6 +35,4 @@ endif
 INCLUDES +=\
 	-I./services/ymodem \
 
-services/ymodem/hss_ymodem_loader.o: services/ymodem/hss_ymodem_loader.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+services/ymodem/hss_ymodem_loader.o: CFLAGS=$(CFLAGS_GCCEXT)
