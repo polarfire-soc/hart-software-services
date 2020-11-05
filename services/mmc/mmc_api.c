@@ -132,12 +132,12 @@ bool HSS_MMCInit(void)
     bool result = false;
     mmc_reset_block();
 
-#if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
-    result = mmc_init_emmc();
-#endif
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+    result = mmc_init_sdcard();
+#endif
+#if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
     if (!result) {
-        result = mmc_init_sdcard();
+        result = mmc_init_emmc();
     }
 #endif
 
