@@ -52,7 +52,7 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source);
 
 void HSS_Register_Boot_Image(struct HSS_BootImage *pImage);
 
-bool HSS_Boot_Harts(enum HSSHartId const source);
+bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask);
 
 bool HSS_Boot_Custom(void);
 

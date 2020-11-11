@@ -85,7 +85,7 @@ enum BootStatesEnum {
     BOOT_INITIALIZATION,
     BOOT_SETUP_PMP,
     BOOT_SETUP_PMP_COMPLETE,
-    BOOT_ZI_CHUNKS,
+    BOOT_ZERO_INIT_CHUNKS,
     BOOT_DOWNLOAD_CHUNKS,
     BOOT_WAIT,
     BOOT_IDLE,
@@ -101,7 +101,7 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_INITIALIZATION,     (const char *)"Init",             NULL,                             NULL,                         &boot_init_handler },
     { (const stateType_t)BOOT_SETUP_PMP,          (const char *)"SetupPMP",         &boot_setup_pmp_onEntry,          NULL,                         &boot_setup_pmp_handler },
     { (const stateType_t)BOOT_SETUP_PMP_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_pmp_complete_onEntry, NULL,                         &boot_setup_pmp_complete_handler },
-    { (const stateType_t)BOOT_ZI_CHUNKS,          (const char *)"ZeroInit",         &boot_zero_init_chunks_onEntry,   NULL,                         &boot_zero_init_chunks_handler },
+    { (const stateType_t)BOOT_ZERO_INIT_CHUNKS,          (const char *)"ZeroInit",         &boot_zero_init_chunks_onEntry,   NULL,                         &boot_zero_init_chunks_handler },
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
     { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             NULL,                             NULL,                         &boot_idle_handler },
@@ -374,7 +374,7 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
 
-            pMyMachine->state = BOOT_ZI_CHUNKS;
+            pMyMachine->state = BOOT_ZERO_INIT_CHUNKS;
         }
     }
 }
@@ -639,17 +639,17 @@ static void boot_idle_handler(struct StateMachine * const pMyMachine)
 // PUBLIC API
 //
 
-bool HSS_Boot_Harts(enum HSSHartId const source)
+bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask) 
 {
     bool result = false;
 
     // TODO: should it restart all, or one the non-busy boot state machines??
     //
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-        if ((source == HSS_HART_ALL) || (source == bootMachine[i].hartId)) {
+        if (restartHartBitmask.uint && (1u << bootMachine[i].hartId)) {
             struct StateMachine * const pMachine = bootMachine[i].pMachine;
 
-            if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) { // TBD
+            if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) { 
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
                result = true;
             } else if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
@@ -676,7 +676,25 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts" CRLF);
     }
 
-    if (HSS_Boot_Harts(source)) {
+    union HSSHartBitmask restartHartBitmask = { .uint = 0u };
+
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
+    // in interrupts-always-enabled world of the HSS, it would appear less
+    // racey to boot secondary cores first and have them all wait...
+    for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+        enum HSSHartId peer = bootMachine[i].hartId;
+
+        if (peer == source) { continue; } // skip myself
+
+        if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[source-1].entryPoint) {
+            // found another hart in same boot set as me...
+            restartHartBitmask.uint |= (1u << peer);
+        }
+    }
+#endif
+    restartHartBitmask.uint |= (1u << source);
+
+    if (HSS_Boot_Harts(restartHartBitmask)) {
         result = IPI_SUCCESS;
     }
 
@@ -701,9 +719,6 @@ void HSS_Register_Boot_Image(struct HSS_BootImage *pImage)
 {
     pBootImage = pImage;
 }
-
-static uintptr_t Custom_entryPoint;
-static uint8_t Custom_privMode = PRV_M;
 
 bool HSS_Boot_Custom(void)
 {
@@ -782,16 +797,19 @@ bool HSS_Boot_Custom(void)
         }
     }
 
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_CUSTOM_FLOW)
     // For custom boot-flow, all U54 HARTs and E51 HART
-    // should jump to commong entry point in M-mode
-    Custom_entryPoint = pBootImage->hart[target - 1].entryPoint;
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "All HARTs jumping to entry address 0x%lx in M-mode" CRLF, Custom_entryPoint);
+    // should jump to common entry point in M-mode
+    uintptr_t custom_entryPoint = pBootImage->hart[target - 1].entryPoint;
+    uint8_t custom_privMode = PRV_M;
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "All HARTs jumping to entry address 0x%lx in M-mode" CRLF, custom_entryPoint);
     for (i = 0; i < (MAX_NUM_HARTS-1); i++) {
-        IPI_Send(i + 1, IPI_MSG_OPENSBI_INIT, 0,
-                 Custom_privMode, &Custom_entryPoint);
+        IPI_Send(i + 1, IPI_MSG_OPENSBI_INIT, 0, custom_privMode, &custom_entryPoint);
     }
 
-    ((void (*)(uintptr_t, uintptr_t))Custom_entryPoint)(current_hartid(), 0);
+    ((void (*)(uintptr_t, uintptr_t))custom_entryPoint)(current_hartid(), 0);
+#endif
 
     return true;
 }

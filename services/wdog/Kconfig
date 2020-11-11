@@ -1,8 +1,38 @@
 config SERVICE_WDOG
-	bool "Virtual watchdog support"
-	default n
+	bool "Virtual Watchdog support"
+	default y
 	help
                 This feature enables support for E51-delegated virtual watchdog monitoring of the
                 U54 application harts.
 
 		If you do not know what to do here, say Y.
+
+menu "Watchdog Service"
+
+config SERVICE_WDOG_DEBUG
+	bool "Virtual Watchdog Debug Messages"
+	default n
+	depends on SERVICE_WDOG
+	help
+		This feature enabled support for debug messages from the virtual watchdog service.
+
+		If you do not know what to do here, say N.
+
+config SERVICE_WDOG_DEBUG_TIMEOUT_SEC
+	int "Time delay for debug output (seconds)"
+	default 240
+	depends on SERVICE_WDOG
+	help
+		This feature determines the maximum number of queue messages
+		supported for IPIs from different harts.
+
+config SERVICE_WDOG_ENABLE_E51
+	bool "Enable watchdog on E51"
+	default y
+	depends on SERVICE_WDOG
+	help
+		This feature enables the watchdog for the E51 Hart. This will cause the entire Hart
+		Coreplex to restart if, for some reason, the E51 becomes unable to periodically update
+		its watchdog.
+
+endmenu

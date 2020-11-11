@@ -18,12 +18,12 @@
 #include "hss_debug.h"
 #include "hss_clock.h"
 
-#include <string.h> //memset
 #include <assert.h>
 
 #include "wdog_service.h"
-#include "mpfs_reg_map.h"
 #include "hss_boot_service.h"
+
+#include "mss_watchdog.h"
 
 static void wdog_init_handler(struct StateMachine * const pMyMachine);
 static void wdog_idle_handler(struct StateMachine * const pMyMachine);
@@ -56,19 +56,27 @@ static const struct StateDesc wdog_state_descs[] = {
  *
  */
 struct StateMachine wdog_service = {
-    (stateType_t)WDOG_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)WDOG_NUM_STATES, (const char *)"wdog_service", 0u, 0u, 0u, wdog_state_descs, false, 0u, NULL
+    (stateType_t)WDOG_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)WDOG_NUM_STATES, (const char *)"wdog_service",  0u, 0u, 0u, wdog_state_descs, false, 0u, NULL
 };
 
 // --------------------------------------------------------------------------------------------------
 // Handlers for each state in the state machine
 //
 static union HSSHartBitmask hartBitmask = { .uint = 0u };
-
 static HSSTicks_t wdogInitTime[MAX_NUM_HARTS] = { 0u };
 
 static void wdog_init_handler(struct StateMachine * const pMyMachine)
 {
-    //memset(&hartBitmask, 0, sizeof(hartBitmask));
+#if IS_ENABLED(CONFIG_SERVICE_WDOG_ENABLE_E51)
+    mss_watchdog_config_t wd0lo_config;
+    MSS_WD_get_config(MSS_WDOG0_LO, &wd0lo_config);
+
+    wd0lo_config.forbidden_en = MSS_WDOG_ENABLE;
+    wd0lo_config.mvrp_val = 0xFFFF000;
+
+    MSS_WD_configure(MSS_WDOG0_LO, &wd0lo_config);
+#endif
+
     pMyMachine->state = WDOG_IDLE;
 }
 
@@ -96,7 +104,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
         }
 
         //mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%X" CRLF, hartBitmask.uint);
-        wdog_service.state = WDOG_MONITORING;
+        pMyMachine->state = WDOG_MONITORING;
     }
 
     // nothing to do in this state
@@ -105,14 +113,22 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-#define WDOG_OUTPUT_TIMEOUT_SEC  240u
 static HSSTicks_t lastEntryTime = 0u;
 static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 {
     (void) pMyMachine;
 
-    if ((hartBitmask.uint)
-        && (HSS_Timer_IsElapsed(lastEntryTime, WDOG_OUTPUT_TIMEOUT_SEC * TICKS_PER_SEC))) {
+#if IS_ENABLED(CONFIG_SERVICE_WDOG_ENABLE_E51)
+    // tickle the E51 WDog to prevent it from firing...
+    if (!MSS_WD_forbidden_status(MSS_WDOG0_LO)) {
+        MSS_WD_reload(MSS_WDOG0_LO);
+    }
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_WDOG_DEBUG)
+    if ((hartBitmask.uint) 
+        && (HSS_Timer_IsElapsed(lastEntryTime,
+            (HSSTicks_t)CONFIG_SERVICE_WDOG_DEBUG_TIMEOUT_SEC * TICKS_PER_SEC))) {
         lastEntryTime = HSS_GetTime();
 
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog Status Update: ");
@@ -136,9 +152,10 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
             mHSS_DEBUG_PRINTF_EX("U54_4 (%lu sec) ",
                 (lastEntryTime - wdogInitTime[HSS_HART_U54_4]) / TICKS_PER_SEC);
         }
-        mHSS_DEBUG_PRINTF_EX(CRLF);
 
+        mHSS_DEBUG_PRINTF_EX(CRLF);
     }
+#endif
 
     uint32_t status = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
     status = (status >> 4) & mHSS_BITMASK_ALL_U54; // move bits[8:4] to [4:0]
@@ -204,18 +221,30 @@ void HSS_Wdog_MonitorHart(enum HSSHartId target)
     }
 }
 
-#if 0
-#include "mss_watchdog.h"
-void HSS_Wdog_Configure(void)
+void HSS_Wdog_Reboot(enum HSSHartId target)
 {
-    mss_watchdog_config_t wd0lo_config;
-    MSS_WD_get_config(MSS_WDOG0_LO, &wd0lo_config);
+    switch (target) {
+    case HSS_HART_E51:
+        MSS_WD_force_reset(MSS_WDOG0_LO);
+        break;
 
-    wd0l0_config.forbidden_en = WDOG_ENABLE;
-    wd0l0_config.mvrp_intr_en = WDOG_DISABLE;
-    wd0l0_config.mvrp_intr_in_sleep = WDOG_DISABLE;
-    wd0l0_config.mvrp_val = 0xFFFF000;
+    case HSS_HART_U54_1:
+        MSS_WD_force_reset(MSS_WDOG1_LO);
+        break;
 
-    MSS_WD_configure(MSS_WDOG0_LO, &wd0lo_config);
+    case HSS_HART_U54_2:
+        MSS_WD_force_reset(MSS_WDOG2_LO);
+        break;
+
+    case HSS_HART_U54_3:
+        MSS_WD_force_reset(MSS_WDOG3_LO);
+        break;
+
+    case HSS_HART_U54_4:
+        MSS_WD_force_reset(MSS_WDOG4_LO);
+        break;
+
+    default:
+        break;
+    }
 }
-#endif
