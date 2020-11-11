@@ -1,31 +1,21 @@
-/*******************************************************************************
- * (c) Copyright 2018 Microsemi-PRO Embedded Systems Solutions.  All rights reserved.
- * 
- * PolarFire SoC(PSE) microcontroller subsystem Watchdog bare metal software driver
- * implementation.
+/***************************************************************************//**
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * PolarFire SoC (MPFS) Microprocessor SubSystem Watchdog bare metal software
+ * driver implementation.
  *
  *
- * SVN $Revision: 10589 $
- * SVN $Date: 2018-11-23 05:49:09 +0000 (Fri, 23 Nov 2018) $
  */
-#include "mss_assert.h"
-#include "mss_sysreg.h"
-#include "mss_hart_ints.h"
-#include "mss_plic.h"
-//#include "pse_util.h"
-
-// TODO : stub this for now, resolve using full HAL when in git repo
-void __enable_local_irq(int8_t intr);
-void __disable_local_irq(int8_t intr);
-// end TODO
-
+ 
+#include "mpfs_hal/mss_hal.h"
 #include "mss_watchdog.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif 
 
-/*These addresses are derived from http://homestead/asic/regmap/mss/html/g5soc_mss_regmap_AXID.html*/
 WATCHDOG_TypeDef* wdog_hw_base[10] = {(WATCHDOG_TypeDef*)0x20001000,
                                       (WATCHDOG_TypeDef*)0x20101000,
                                       (WATCHDOG_TypeDef*)0x20103000,
@@ -40,43 +30,79 @@ WATCHDOG_TypeDef* wdog_hw_base[10] = {(WATCHDOG_TypeDef*)0x20001000,
 /***************************************************************************//**
  * See mss_watchdog.h for details of how to use this function.
  */
-void MSS_WD_get_config(mss_watchdog_num_t wd_num, mss_watchdog_config_t* config)
+uint8_t MSS_WD_configure
+(
+    mss_watchdog_num_t wd_num,
+    const mss_watchdog_config_t * config
+)
 {
-    config->time_val = wdog_hw_base[wd_num]->TIME;
-    config->trigger_val = wdog_hw_base[wd_num]->TRIGGER;
-    config->mvrp_val = wdog_hw_base[wd_num]->MSVP;
+    uint8_t error = 0u;
 
-    config->forbidden_en = ((wdog_hw_base[wd_num]->CONTROL & MSS_WDOG_ENA_FORBIDDEN_MASK)
-    						>> MSS_WDOG_ENA_FORBIDDEN);
+    /* Note that the MSVP register value must always be <= TIMER register value.
+      After any write to register from offset 0x00 to 0x0c the TRIGGER,MSVP and
+      TIME registers are locked. Hence write them in proper sequence.
+     */
+    if (config->timeout_val <= MSS_WDOG_TRIGGER_MAX)
+    {
+        wdog_hw_base[wd_num]->TRIGGER = config->timeout_val;
+    }
+    else
+    {
+        error = 1u;
+    }
 
-    config->mvrp_intr_en = ((wdog_hw_base[wd_num]->CONTROL & MSS_WDOG_INTEN_MVRP_MASK)
-    						>> MSS_WDOG_INTEN_MVRP);
+    if (config->time_val <= MSS_WDOG_TIMER_MAX)
+    {
+        wdog_hw_base[wd_num]->MSVP = config->mvrp_val;
+    }
+    else
+    {
+        error = 1u;
+    }
+
+    if (config->time_val <= MSS_WDOG_TIMER_MAX)
+    {
+        wdog_hw_base[wd_num]->TIME = config->time_val;
+    }
+    else
+    {
+        error = 1u;
+    }
+
+    wdog_hw_base[wd_num]->CONTROL =  (uint32_t)(config->forbidden_en <<
+                                                         MSS_WDOG_ENA_FORBIDDEN);
+
+    /* Reload watchdog with new load if it is not in forbidden window. */
+    if (!(MSS_WDOG_FORBIDDEN_MASK & wdog_hw_base[wd_num]->STATUS))
+    {
+        wdog_hw_base[wd_num]->REFRESH = MSS_WDOG_REFRESH_KEY;
+    }
+    else
+    {
+        error = 1u;
+    }
+
+    return(error);
 }
 
 /***************************************************************************//**
  * See mss_watchdog.h for details of how to use this function.
  */
-void MSS_WD_configure(mss_watchdog_num_t wd_num, mss_watchdog_config_t* config)
+void MSS_WD_get_config
+(
+    mss_watchdog_num_t wd_num, mss_watchdog_config_t* config
+)
 {
-    /*Note that the MSVP register value must always be <= TIMER register value.
-     After any write to register from offset 0x00 to 0x0c the TRIGGER,MSVP and
-     TIME registers are locked. Hence write them in proper sequence.
-     */
-    if(config->trigger_val <= WDOG_TRIGGER_MAX)
-        wdog_hw_base[wd_num]->TRIGGER = config->trigger_val;
+    if((WATCHDOG_TypeDef*)0 != wdog_hw_base[wd_num])
+    {
+        config->time_val = wdog_hw_base[wd_num]->TIME;
+        config->timeout_val = wdog_hw_base[wd_num]->TRIGGER;
+        config->mvrp_val = wdog_hw_base[wd_num]->MSVP;
 
-    if(config->time_val <= WDOG_TIMER_MAX)
-        wdog_hw_base[wd_num]->MSVP = config->mvrp_val;
-
-    if(config->time_val <= WDOG_TIMER_MAX)
-        wdog_hw_base[wd_num]->TIME = config->time_val;
-
-    wdog_hw_base[wd_num]->CONTROL =  ((config->mvrp_intr_en << MSS_WDOG_INTEN_MVRP) |
-                                     (config->forbidden_en << MSS_WDOG_ENA_FORBIDDEN));
-
-    /* Reload watchdog with new load if not in forbidden window. */
-    if(!(MSS_WDOG_FORBIDDEN_MASK & wdog_hw_base[wd_num]->STATUS))
-        wdog_hw_base[wd_num]->REFRESH = MSS_WDOG_REFRESH_KEY;
+        config->forbidden_en = (uint8_t)((wdog_hw_base[wd_num]->CONTROL &
+                                MSS_WDOG_ENA_FORBIDDEN_MASK)
+                                                        >> MSS_WDOG_ENA_FORBIDDEN);
+    }
 }
 
 #ifdef __cplusplus
