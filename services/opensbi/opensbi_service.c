@@ -29,13 +29,13 @@
 
 #include "opensbi_service.h"
 
-#ifdef CONFIG_SERVICE_BOOT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  include "hss_boot_pmp.h"
 #endif
 
 #include "mpfs_reg_map.h"
 
-#ifndef CONFIG_OPENSBI
+#if !IS_ENABLED(CONFIG_OPENSBI)
 #  error OPENSBI needed for this module
 #endif
 
@@ -186,7 +186,7 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
         scratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
 
         // set arg1 (A1) to point to device tree blob
-#ifdef CONFIG_PROVIDE_DTB
+#if IS_ENABLED(CONFIG_PROVIDE_DTB)
 #  if defined(CONFIG_PLATFORM_MPFS)
         extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
         scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;

@@ -142,6 +142,7 @@ bool FLASH_DRIVE_init(void)
   Local function definitions
 */
 
+#define IS_ENABLED defined
 #include "hss_clock.h"
 static size_t writeCount = 0u, readCount = 0u;
 HSSTicks_t last_sec_time = 0u;
@@ -180,6 +181,7 @@ uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len)
 uint8_t usb_flash_media_release(uint8_t cfgidx)
 {
     (void)cfgidx;
+
     g_host_connection_detected = 0u;
     return 1u;
 }
@@ -198,7 +200,7 @@ uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32
 {
     uint8_t result;
 
-    if (lun != 0 ) {
+    if (lun != 0) {
         result = 0u;
     } else {
         *no_of_blocks = lun_data[lun].number_of_blocks;
@@ -211,23 +213,23 @@ uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32
     return result;
 }
 
-static void physical_device_read(uint64_t address, uint8_t * rx_buffer, size_t size_in_bytes)
+static void physical_device_read(uint64_t byte_address, uint8_t *p_rx_buffer,
+    size_t size_in_bytes)
 {
     update_read_count(size_in_bytes);
 #if 0 // #ifdef USE_SDMA_OPERATIONS
-    uint64_t p_address = (address / 512);
-    uint8_t* p_rx_buffer = rx_buffer;
+    uint64_t lba_address = (byte_address / 512);
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
 
     // wait for any in-flight transactions to complete
-    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS ) {
+    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
             ret_status = mmc_main_plic_IRQHandler();
         } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 
     // now setup next read transaction
-    ret_status = MSS_MMC_sdma_read((uint32_t)p_address, p_rx_buffer, size_in_bytes);
+    ret_status = MSS_MMC_sdma_read((uint32_t)lba_address, p_rx_buffer, size_in_bytes);
     if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
             ret_status = mmc_main_plic_IRQHandler();
@@ -235,7 +237,7 @@ static void physical_device_read(uint64_t address, uint8_t * rx_buffer, size_t s
     }
 #else
     bool HSS_MMC_ReadBlock(void * pDest, size_t srcOffset, size_t byteCount);
-    (void) HSS_MMC_ReadBlock((void *)rx_buffer, (size_t)address, size_in_bytes);
+    (void) HSS_MMC_ReadBlock((void *)p_rx_buffer, (size_t)byte_address, size_in_bytes);
 #endif
 }
 
@@ -267,24 +269,24 @@ uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr, uint3
     return result;
 }
 
-static void physical_device_program(uint64_t address, uint8_t * write_buffer, uint32_t size_in_bytes)
+static void physical_device_program(uint64_t byte_address, uint8_t * p_write_buffer,
+    uint32_t size_in_bytes)
 {
     update_write_count(size_in_bytes);
 
 #ifdef USE_SDMA_OPERATIONS
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
-    uint64_t p_address = (address/LBA_BLOCK_SIZE);
-    uint8_t * p_write_buffer = write_buffer;
+    uint64_t lba_address = byte_address / LBA_BLOCK_SIZE;
 
     // wait for any in-flight transactions to complete
-    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS ) {
+    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
             ret_status = mmc_main_plic_IRQHandler();
         } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 
     // setup new transaction...
-    ret_status = MSS_MMC_sdma_write(p_write_buffer, (uint32_t)p_address, size_in_bytes);
+    ret_status = MSS_MMC_sdma_write(p_write_buffer, (uint32_t)lba_address, size_in_bytes);
     if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
             ret_status = mmc_main_plic_IRQHandler();
@@ -292,7 +294,8 @@ static void physical_device_program(uint64_t address, uint8_t * write_buffer, ui
     }
 #else
     bool HSS_MMC_WriteBlock(size_t dstOffset, void * pSrc, size_t byteCount);
-    (void) HSS_MMC_WriteBlock((size_t)address, (void *)write_buffer, (size_t) size_in_bytes);
+    (void)HSS_MMC_WriteBlock((size_t)byte_address, (void *)p_write_buffer,
+        (size_t) size_in_bytes);
 #endif
 }
 
@@ -314,11 +317,13 @@ uint32_t usb_flash_media_write_ready(uint8_t lun, uint64_t blk_addr, uint32_t le
 
 uint8_t usb_flash_media_is_ready(uint8_t lun)
 {
+    (void)lun;
     return 1u;
 }
 
 uint8_t usb_flash_media_is_write_protected(uint8_t lun)
 {
+    (void)lun;
     return 1u;
 }
 

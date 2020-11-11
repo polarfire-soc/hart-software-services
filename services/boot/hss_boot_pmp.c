@@ -52,7 +52,7 @@ bool HSS_PMP_Init(void)
     for (target = HSS_HART_U54_1; target <HSS_HART_NUM_PEERS; target++) {
         for (pmpIndex = 0u; pmpIndex < MAX_NUM_PMPS; pmpIndex++) {
 #if 0
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
             const uint64_t configVal = pmp_getConfigVal(pmpIndex);
             const uint64_t addrVal = pmp_getAddrVal(pmpIndex);
 

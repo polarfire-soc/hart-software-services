@@ -43,7 +43,7 @@ extern "C" {
 #include "hss_types.h"
 #include "hss_debug.h"
 
-#ifdef CONFIG_OPENSBI
+#if IS_ENABLED(CONFIG_OPENSBI)
 #  include "sbi/riscv_asm.h"
 #  include "sbi/sbi_bitops.h"
 #  include "sbi/sbi_hart.h"
@@ -52,8 +52,8 @@ extern "C" {
 #  define mHSS_CSR_READ csr_read
 #  define mHSS_CSR_WRITE csr_write
 #else
-#  include "machine/encoding.h"
-#  include "machine/bits.h"
+#  include "mpfs_hal/encoding.h"
+#  include "mpfs_hal/bits.h"
 #  define mHSS_CSR_READ read_csr
 #  define mHSS_CSR_WRITE write_csr
 #endif

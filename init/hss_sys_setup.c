@@ -39,7 +39,7 @@
 
 #include "csr_helper.h"
 
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 #  define RISCV_CSR_ENCODING_H
 #  define RISCV_ENCODING_H
 #  include "mss_sysreg.h"
@@ -85,7 +85,7 @@
  */
 bool HSS_Setup_PAD_IO(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     (void)mssio_setup();
 #endif
 
@@ -114,7 +114,7 @@ bool HSS_Setup_PAD_IO(void)
  */
 bool HSS_Setup_PLIC(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     __disable_all_irqs();
     PLIC_init_on_reset();
 #endif
@@ -135,7 +135,7 @@ bool HSS_Setup_PLIC(void)
  */
 bool HSS_Setup_MPU(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     mpu_configure();
 #endif
 
@@ -160,7 +160,7 @@ bool HSS_Setup_MPU(void)
  */
 bool HSS_Setup_PMP(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 #if 0
     static const struct HSS_PMP_Config {
         uint64_t pmpcfg0;
@@ -207,7 +207,7 @@ bool HSS_Setup_PMP(void)
 
     const enum HSSHartId myHartId = current_hartid();
     //mHSS_DEBUG_PRINTF("myHartId is %d\n", myHartId);
-    assert(myHartId <= mSPAN_OF(hss_PMP_Config));
+    assert(myHartId <= ARRAY_SIZE(hss_PMP_Config));
 
     const struct HSS_PMP_Config *pConfig = &hss_PMP_Config[myHartId];
 
@@ -244,7 +244,7 @@ bool HSS_Setup_PMP(void)
  */
 bool HSS_Setup_L2Cache(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     config_l2_cache();
 #endif
 
@@ -259,7 +259,7 @@ bool HSS_Setup_L2Cache(void)
  */
 bool HSS_Setup_Clocks(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     static const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
     const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
         ~( SOFT_RESET_CR_ENVM_MASK |
@@ -298,7 +298,7 @@ bool HSS_Setup_Clocks(void)
  */
 bool HSS_Setup_BusErrorUnit(void)
 {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     (void)init_bus_error_unit();
 #endif
 

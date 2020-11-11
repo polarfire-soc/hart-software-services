@@ -47,7 +47,7 @@ enum CmdIndex {
     CMD_RESET,
     CMD_HELP,
     CMD_VERSION,
-#ifdef CONFIG_MEMTEST
+#if IS_ENABLED(CONFIG_MEMTEST)
     CMD_MEMTEST,
 #endif
 #if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
@@ -68,7 +68,7 @@ static void   tinyCLI_CmdHandler_(int cmdIndex);
 static bool   tinyCLI_GetCmdIndex_(char *pCmdToken, size_t *index);
 static void   tinyCLI_PrintVersion_(void);
 static void   tinyCLI_PrintHelp_(void);
-#ifdef CONFIG_MEMTEST
+#if IS_ENABLED(CONFIG_MEMTEST)
 static void   tinyCLI_MemTest_(void);
 #endif
 
@@ -79,7 +79,7 @@ static struct {
     const char * const name;
     const char * const helpString;
 } commands[] = {
-#ifdef CONFIG_SERVICE_YMODEM
+#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     { CMD_YMODEM,  tinyCLI_CmdHandler_, "YMODEM",  "Run YMODEM utility to download an image to DDR." },
 #endif
     { CMD_QUIT,    tinyCLI_CmdHandler_, "QUIT",    "Quit TinyCLI and return to regular boot process." },
@@ -87,7 +87,7 @@ static struct {
     { CMD_RESET,   tinyCLI_CmdHandler_, "RESET",   "Reset the E51." },
     { CMD_HELP,    tinyCLI_CmdHandler_, "HELP",    "Display command summary / command help information." },
     { CMD_VERSION, tinyCLI_CmdHandler_, "VERSION", "Display system version information." },
-#ifdef CONFIG_MEMTEST
+#if IS_ENABLED(CONFIG_MEMTEST)
     { CMD_MEMTEST, tinyCLI_CmdHandler_, "MEMTEST", "Full DDR memory test." },
 #endif
 #if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
@@ -113,7 +113,7 @@ static bool tinyCLI_GetCmdIndex_(char *pCmdToken, size_t *index)
     bool result = false;
     size_t i;
 
-    for (i = 0u; i < mSPAN_OF(commands); i++) {
+    for (i = 0u; i < ARRAY_SIZE(commands); i++) {
         if (strcasecmp(commands[i].name, pCmdToken) == 0) {
             result = true;
             *index = i;
@@ -129,7 +129,7 @@ static void tinyCLI_PrintVersion_(void)
     (void)HSS_E51_Banner();
 }
 
-#ifdef CONFIG_MEMTEST
+#if IS_ENABLED(CONFIG_MEMTEST)
 static void tinyCLI_MemTest_(void)
 {
     bool status = HSS_MemTestDDRFull();
@@ -157,7 +157,7 @@ static void tinyCLI_PrintHelp_(void)
     } else {
         mHSS_PUTS("Supported Commands:" CRLF "\t");
 
-        for (size_t i = 0u; i < mSPAN_OF(commands); i++) {
+        for (size_t i = 0u; i < ARRAY_SIZE(commands); i++) {
             mHSS_PUTS(commands[i].name);
             mHSS_PUTC(' ');
         }
@@ -167,7 +167,7 @@ static void tinyCLI_PrintHelp_(void)
 
 static void tinyCLI_CmdHandler_(int cmdIndex)
 {
-#ifdef CONFIG_SERVICE_YMODEM
+#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     void hss_loader_ymodem_loop(void);
 #endif
     void _start(void);
@@ -182,7 +182,7 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
         tinyCLI_PrintVersion_();
         break;
 
-#ifdef CONFIG_SERVICE_YMODEM
+#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     case CMD_YMODEM:
         hss_loader_ymodem_loop();
         break;
@@ -200,7 +200,7 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
         quitFlag = true;
         break;
 
-#ifdef CONFIG_MEMTEST
+#if IS_ENABLED(CONFIG_MEMTEST)
     case CMD_MEMTEST:
         tinyCLI_MemTest_();
         break;

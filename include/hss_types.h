@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
+#include <stddef.h>     // ptrdiff_t
 #ifndef CONFIG_OPENSBI
 #  ifndef __ssize_t_defined
 #    define __ssize_t_defined
@@ -158,14 +158,30 @@ struct HSS_CompressedImage {
     uint8_t ecdsaSig[32];
 };
 
-#define mSPAN_OF(x)          (sizeof(x)/sizeof(x[0]))
-#define mMIN(A,B)            ((A) < (B) ? A : B)
+/*
+ * We'll use the same trick as used by Linux for its Kconfig options...
+ *
+ * With variable arguments to our macro, if our config option is defined, it will cause
+ * the insertion of "0, " as a prefix the arguments to ___IS_ENABLED(CONFIG_), which will
+ * then cause __IS_ENABLED(CONFIG_) itself to resolve to 1, otherwise 0
+ *
+ */
+#define _ARG_SHUFFLE_RIGHT_IF_1                 0,
+#define IS_ENABLED(cfg)                         _IS_ENABLED(cfg)
+#define _IS_ENABLED(val)                        __IS_ENABLED(_ARG_SHUFFLE_RIGHT_IF_##val)
+#define __IS_ENABLED(shuffle_or_blank)          ___IS_ENABLED(shuffle_or_blank 1, 0)
+#define ___IS_ENABLED(ignored, desiredVal, ...) desiredVal
 
-#define mHSS_BOOT_MAGIC       (0xB007C0DEu)
-#define mHSS_COMPRESSED_MAGIC (0xC08B8355u)
+#define ARRAY_SIZE(x)		(sizeof(x)/sizeof(x[0]))
 
-#define mLIKELY(x)            __builtin_expect((x), 1)
-#define mUNLIKELY(x)          __builtin_expect((x), 0)
+#define mHSS_BOOT_MAGIC		(0xB007C0DEu)
+#define mHSS_COMPRESSED_MAGIC	(0xC08B8355u)
+
+#ifndef CONFIG_OPENSBI
+#  define MIN(A,B)		((A) < (B) ? A : B)
+#  define likely(x)		__builtin_expect((x), 1)
+#  define unlikely(x)		__builtin_expect((x), 0)
+#endif
 
 #ifdef __cplusplus
 }

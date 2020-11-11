@@ -33,7 +33,7 @@
  * or other)
  */
 
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 #  include "nwc/mss_nwc_init.h"
 #endif
 
@@ -43,14 +43,8 @@
 bool HSS_DDRInit(void)
 {
     //mHSS_DEBUG_PRINTF(lOG_NORMAL, "Initializing DDR..." CRLF);
-#ifdef CONFIG_PLATFORM_MPFS
-#  if 0
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     assert(mss_nwc_init() == 0);
-#  else
-    while (mss_nwc_init() != 0) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "mss_nwc_init() returned 0... retrying..." CRLF);
-    }
-#  endif
 #endif
 
     return true;

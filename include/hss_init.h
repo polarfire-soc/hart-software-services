@@ -43,21 +43,21 @@ bool HSS_E51_Banner(void);
 
 bool HSS_QueuesInit(void);
 
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
 bool HSS_QSPIInit(void);
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 #  include "mmc_service.h"
 #endif
 
-#ifdef CONFIG_OPENSBI
+#if IS_ENABLED(CONFIG_OPENSBI)
 bool HSS_OpenSBIInit(void);
 #endif
 
 bool HSS_DDRInit(void);
 bool HSS_UARTInit(void);
-#ifdef CONFIG_USE_LOGO
+#if IS_ENABLED(CONFIG_USE_LOGO)
 bool HSS_LogoInit(void);
 #endif
 

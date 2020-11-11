@@ -97,7 +97,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
         pCurrentMachine->executionCount++;
         //}
 
-#ifdef CONFIG_DEBUG_LOG_STATE_TRANSITIONS
+#if IS_ENABLED(CONFIG_DEBUG_LOG_STATE_TRANSITIONS)
         // debug print any state transitions...
         if (pCurrentMachine->debugFlag) {
             const char *pLastStateName;
@@ -249,7 +249,7 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
                 uint8_t rcvBuf;
 
                 bool keyPressedFlag = HSS_ShowTimeout("Init failed, press a key to prevent restart" CRLF, 5u, &rcvBuf);
-#ifdef CONFIG_SERVICE_TINYCLI
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
                 if (keyPressedFlag) {
                     bool HSS_TinyCLI_Parser(void);
 

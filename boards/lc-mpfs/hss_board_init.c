@@ -51,7 +51,7 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = { };
 
 bool HSS_BoardInit(void)
 {
-    RunInitFunctions(mSPAN_OF(boardInitFunctions), boardInitFunctions);
+    RunInitFunctions(ARRAY_SIZE(boardInitFunctions), boardInitFunctions);
 
     return true;
 }

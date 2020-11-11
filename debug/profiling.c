@@ -53,7 +53,7 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFu
     }
 
     if (!pNode) {
-        assert(allocationCount < mSPAN_OF(functionNode));
+        assert(allocationCount < ARRAY_SIZE(functionNode));
         pNode = &(functionNode[allocationCount]);
         allocationCount++;
         mATOMIC_ENTER;

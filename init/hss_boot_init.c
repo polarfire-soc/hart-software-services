@@ -20,17 +20,17 @@
 #include "hss_sys_setup.h"
 #include "hss_progress.h"
 
-#ifdef CONFIG_SERVICE_OPENSBI
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI)
 #  include "opensbi_service.h"
 #endif
 
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
 //#  include "encoding.h"
 //#  include <mss_qspi.h>
 #  include "qspi_service.h"
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 #  include "mmc_service.h"
 #  include "gpt.h"
 #endif
@@ -42,7 +42,7 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef CONFIG_COMPRESSION
+#if IS_ENABLED(CONFIG_COMPRESSION)
 #  include "hss_decompress.h"
 #endif
 
@@ -97,7 +97,7 @@ bool HSS_BootInit(void)
 
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image.." CRLF);
 
-#ifdef CONFIG_SERVICE_BOOT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
     result = getBootImageFunction(&pBootImage);
     //
     // check if this image is compressed...
@@ -221,7 +221,7 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
 
     const size_t maxChunkSize = 512u;
     size_t bytesLeft = pBootImage->bootImageLength;
-    size_t chunkSize = mMIN(pBootImage->bootImageLength, maxChunkSize);
+    size_t chunkSize = MIN(pBootImage->bootImageLength, maxChunkSize);
 
 #ifdef DEBUG_COPY
     const char throbber[] = { '|', '/', '-', '\\' };
@@ -244,7 +244,7 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
         pDest += chunkSize;
         bytesLeft -= chunkSize;
 
-        chunkSize = mMIN(bytesLeft, maxChunkSize);
+        chunkSize = MIN(bytesLeft, maxChunkSize);
     }
 
 #ifdef DEBUG_COPY
@@ -279,7 +279,7 @@ static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
 struct HSS_BootImage bootImage __attribute__((aligned(8)));
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
 {
     bool result = true;
@@ -294,7 +294,7 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
 
     size_t srcOffset = 0u;
 
-#ifdef CONFIG_SERVICE_BOOT_MMC_USE_GPT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_MMC_USE_GPT)
     // For now, GPT needs a 3-sector buffer (~1.5KB) - one for GPT header,
     // and two for partition entity
     char lbaBuffer[3][GPT_LBA_SIZE] __attribute__((aligned(8)));
@@ -372,7 +372,7 @@ void HSS_BootSelectMMC(void)
 }
 #endif
 
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
 static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
 {
     bool result = false;
@@ -413,7 +413,7 @@ void HSS_BootSelectQSPI(void)
 }
 #endif
 
-#ifdef CONFIG_SERVICE_BOOT_USE_PAYLOAD
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage)
 {
     bool result = false;

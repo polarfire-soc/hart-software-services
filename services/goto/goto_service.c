@@ -27,7 +27,7 @@
 
 #include "goto_service.h"
 
-#ifdef CONFIG_SERVICE_BOOT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  include "hss_boot_pmp.h"
 #endif
 
@@ -160,7 +160,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             // and x PP is set to U (or M if user-mode is not supported).
             const uint32_t next_mode = immediate_arg;
 
-#ifdef CONFIG_OPENSBI
+#if IS_ENABLED(CONFIG_OPENSBI)
             sbi_hart_switch_mode(0u, 0u, *(unsigned long *)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
 #else
             // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1

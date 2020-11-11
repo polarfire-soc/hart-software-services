@@ -49,13 +49,13 @@
 #include "drivers/mss_sys_services/mss_sys_services.h"
 #include "mss_sysreg.h"
 
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
 #  include "qspi_service.h"
 //#  include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
 #  include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 #  include "mmc_service.h"
 #  include "mss_mmc.h"
 #endif
@@ -64,18 +64,18 @@
 //
 // Local prototypes
 //
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
 static bool hss_loader_qspi_init(void);
 static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
 static bool hss_loader_qspi_erase(void);
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 static bool hss_loader_mmc_init(void);
 static bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
 #endif
 
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
 static bool hss_loader_qspi_init(void)
 {
     static bool initialized = false;
@@ -103,7 +103,7 @@ static bool hss_loader_qspi_erase(void)
 }
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 bool hss_loader_mmc_init(void)
 {
     bool result = false;
@@ -136,27 +136,27 @@ void hss_loader_ymodem_loop(void)
 
     while (!done) {
         static const char menuText[] = CRLF
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
             "QSPI"
 #endif
 #if defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_MMC)
            "/"
 #endif
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
            "MMC"
 #endif
            " Utility" CRLF
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
             " 1. QSPI Erase Bulk -- erase all sectors" CRLF
 #endif
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
             " 2. MMC Init -- initialize MMC driver" CRLF
 #endif
             " 3. YMODEM Receive -- receive application file" CRLF
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
             " 4. QSPI Write -- write application file to the Device" CRLF
 #endif
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
             " 5. MMC Write -- write application file to the Device" CRLF
 #endif
             " 6. Quit -- quit QSPI Utility" CRLF CRLF
@@ -166,7 +166,7 @@ void hss_loader_ymodem_loop(void)
 
         if (uart_getchar(&rx_byte, -1, false)) {
             switch (rx_byte) {
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
             case '1':
                 mHSS_PUTS(CRLF "Initializing QSPI ... ");
                 result = hss_loader_qspi_init();
@@ -190,7 +190,7 @@ void hss_loader_ymodem_loop(void)
                 break;
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
             case '2':
                 mHSS_PUTS(CRLF "Initializing MMC ... ");
                 result = hss_loader_mmc_init();
@@ -217,7 +217,7 @@ void hss_loader_ymodem_loop(void)
                 }
                 break;
 
-#ifdef CONFIG_SERVICE_QSPI
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
             case '4':
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
                 mHSS_PUTS(CRLF "Initializing QSPI ... ");
@@ -242,7 +242,7 @@ void hss_loader_ymodem_loop(void)
                 break;
 #endif
 
-#ifdef CONFIG_SERVICE_MMC
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
             case '5':
                 mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
                 mHSS_PUTS(CRLF "Initializing MMC ... ");

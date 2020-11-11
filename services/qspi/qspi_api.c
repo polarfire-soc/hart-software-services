@@ -33,7 +33,7 @@
 
 bool HSS_QSPIInit(void)
 {
-#ifdef CONFIG_SERVICE_QSPI_USE_XIP
+#if IS_ENABLED(CONFIG_SERVICE_QSPI_USE_XIP)
     static mss_qspi_config_t qspiConfig =
     {
         .xip = 1,
@@ -83,7 +83,7 @@ bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     // Temporary code for ICICLE Bringup
     if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
 
-#ifdef CONFIG_SERVICE_QSPI_USE_XIP
+#if IS_ENABLED(CONFIG_SERVICE_QSPI_USE_XIP)
     memcpy_via_pdma(pDest, srcOffset + QSPI_BASE, byteCount);
 #else
     /* temporary code to bring up Icicle board */

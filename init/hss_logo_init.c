@@ -22,8 +22,8 @@
 // A variety of colored pixels are needed - red, white, black
 // define these as ASCII characters if color output is not enabled
 //
-#ifdef CONFIG_COLOR_OUTPUT
-#  ifdef CONFIG_LOGO_INVERT_COLORS
+#if IS_ENABLED(CONFIG_COLOR_OUTPUT)
+#  if IS_ENABLED(CONFIG_LOGO_INVERT_COLORS)
   const char B0_str[] ="\033[48;5;188m ";
   const char W0_str[] ="\033[0m ";
   const char r1_str[] ="\033[48;5;217m ";
@@ -187,7 +187,7 @@ bool HSS_LogoInit(void)
     int i;
 
     // decode and output our RLE Logo
-    for (i = 0; i < mSPAN_OF(rleLogoElements); i++) {
+    for (i = 0; i < ARRAY_SIZE(rleLogoElements); i++) {
         uint8_t j;
 
         for (j = 0u; j < rleLogoElements[i].count; j++) {

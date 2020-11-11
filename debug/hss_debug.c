@@ -28,7 +28,7 @@ void HSS_Debug_Timestamp(void)
 
 void HSS_Debug_Highlight(HSS_Debug_LogLevel_t logLevel)
 {
-#ifdef CONFIG_COLOR_OUTPUT
+#if IS_ENABLED(CONFIG_COLOR_OUTPUT)
     static const char fancyTimestampHighlight[]       = "\033[32m";
     static const char fancyFunctionHighlight[]        = "\033[33m";
 

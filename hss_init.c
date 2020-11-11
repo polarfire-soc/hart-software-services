@@ -24,17 +24,17 @@
 #include "hss_atomic.h"
 #include "hss_init.h"
 #include "hss_version.h"
-#ifdef CONFIG_SERVICE_TINYCLI
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
 #  include "tinycli_service.h"
 #endif
 
 #include "csr_helper.h"
 
-#ifdef CONFIG_SERVICE_BOOT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  include "hss_boot_service.h"
 #endif
 
-#ifdef CONFIG_OPENSBI
+#if IS_ENABLED(CONFIG_OPENSBI)
 #  include "sbi/riscv_asm.h"
 #  include "sbi/sbi_version.h"
 #endif
@@ -100,7 +100,7 @@ asm(".align 3\n"
 extern const uint64_t hss_init_ddr_end;
 #define DDR_END                (&hss_init_ddr_end)
 
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 #  include "mss_sysreg.h"
 #endif
 
@@ -108,8 +108,8 @@ extern const uint64_t hss_init_ddr_end;
 
 bool HSS_ZeroDDR(void)
 {
-#ifdef CONFIG_INITIALIZE_MEMORIES
-#  ifdef CONFIG_USE_ZERO_DEVICE
+#if IS_ENABLED(CONFIG_INITIALIZE_MEMORIES)
+#  if IS_ENABLED(CONFIG_USE_ZERO_DEVICE)
     uint8_t *pChar = (uint8_t *)DDR_START;
 
     while (pChar < (uint8_t * const)DDR_END) {
@@ -135,8 +135,8 @@ bool HSS_ZeroDDR(void)
 /* Init memories.. */
 bool HSS_ZeroTIMs(void)
 {
-#ifdef CONFIG_INITIALIZE_MEMORIES
-#  ifdef CONFIG_USE_ZERO_DEVICE
+#if IS_ENABLED(CONFIG_INITIALIZE_MEMORIES)
+#  if IS_ENABLED(CONFIG_USE_ZERO_DEVICE)
     memcpy_via_pdma((void *)E51_DTIM_START,   (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(E51_DTIM));
     memcpy_via_pdma((void *)E51_ITIM_START,   (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(E51_ITIM));
     memcpy_via_pdma((void *)U54_1_ITIM_START, (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(U54_1_ITIM));
@@ -164,7 +164,7 @@ bool HSS_Init_RWDATA_BSS(void)
     //UART not setup at this point
     //mHSS_DEBUG_PRINTF("Setting up RW Data and BSS sections" CRLF);
 
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     init_memory();
 #endif
 
@@ -172,7 +172,7 @@ bool HSS_Init_RWDATA_BSS(void)
 }
 
 
-#ifdef CONFIG_CC_USE_GNU_BUILD_ID
+#if IS_ENABLED(CONFIG_CC_USE_GNU_BUILD_ID)
 void HSS_PrintBuildId(void);
 void HSS_PrintBuildId(void)
 {
@@ -197,7 +197,7 @@ void HSS_PrintBuildId(void)
 }
 #endif
 
-#ifdef CONFIG_DISPLAY_TOOL_VERSIONS
+#if IS_ENABLED(CONFIG_DISPLAY_TOOL_VERSIONS)
 #include "tool_versions.h"
 void HSS_PrintToolVersions(void)
 {
@@ -219,11 +219,11 @@ bool HSS_E51_Banner(void)
         "(c) Copyright 2019-2020 Western Digital Corporation." CRLF CRLF,
         OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
 
-#ifdef CONFIG_CC_USE_GNU_BUILD_ID
+#if IS_ENABLED(CONFIG_CC_USE_GNU_BUILD_ID)
     HSS_PrintBuildId();
 #endif
 
-#ifdef CONFIG_DISPLAY_TOOL_VERSIONS
+#if IS_ENABLED(CONFIG_DISPLAY_TOOL_VERSIONS)
     HSS_PrintToolVersions();
 #endif
 

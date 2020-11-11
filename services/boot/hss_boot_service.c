@@ -27,7 +27,7 @@
 
 #include "mpfs_reg_map.h"
 
-#ifdef CONFIG_OPENSBI
+#if IS_ENABLED(CONFIG_OPENSBI)
 #  include "sbi/riscv_asm.h"
 //#  include "sbi/sbi_bits.h"
 #  include "sbi/sbi_bitops.h"
@@ -45,7 +45,7 @@
 
 #include "hss_atomic.h"
 
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 #  include "mss_sysreg.h"
 #endif
 
@@ -120,12 +120,12 @@ struct HSS_Boot_LocalData {
     size_t ziChunkCount;
     size_t subChunkOffset;
     uint32_t msgIndex;
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     uint32_t msgIndexAux;
 #endif
 };
 
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
 #    define mDEFAULT_MSG_INDEX_AUX 0u
 #else
 #    define mDEFAULT_MSG_INDEX_AUX
@@ -263,7 +263,7 @@ static void free_msg_index(struct HSS_Boot_LocalData * const pInstanceData)
 
 static void free_msg_index_aux(struct HSS_Boot_LocalData * const pInstanceData)
 {
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     if (pInstanceData->msgIndexAux != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
         IPI_MessageFree(pInstanceData->msgIndexAux);
         pInstanceData->msgIndexAux = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
@@ -277,7 +277,7 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     bool result = true;
 
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     // TODO: this works for 2 cores, but needs to be extended for up to 4...
     //
     if (pInstanceData->msgIndexAux != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
@@ -326,7 +326,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
 
     pInstanceData->msgIndex = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     pInstanceData->msgIndexAux = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
 #endif
 }
@@ -361,7 +361,7 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
         free_msg_index_aux(pInstanceData);
 #endif
         free_msg_index(pInstanceData);
@@ -401,7 +401,7 @@ static void boot_zero_init_chunks_handler(struct StateMachine * const pMyMachine
 
     if (pZiChunk->size != 0u) {
         if (target == pZiChunk->owner) {
-#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+#if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ziChunk->0x%X, %u bytes" CRLF,
                 pMyMachine->pMachineName, pInstanceData->ziChunkCount,
                 (uint64_t)pZiChunk->execAddr, pZiChunk->size);
@@ -429,7 +429,7 @@ static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
         pInstanceData->pChunk =
             (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
 
-#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+#if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::firstChunk is %u" CRLF,
             pMyMachine->pMachineName, pBootImage->hart[target-1].firstChunk);
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::lastChunk is %u" CRLF,
@@ -462,7 +462,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
             //
             // and it is for us, then download it if we have permission
             if ((pChunk->owner == target) && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
-#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+#if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
                 if (!pInstanceData->subChunkOffset) {
                     mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:chunk@0x%X->0x%X, %u bytes" CRLF,
                         pMyMachine->pMachineName,
@@ -523,10 +523,10 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
         // TODO: refactor this into separate states, as it currently takes reasonable time to start all
         // Harts using the SBI.
         if (pBootImage->hart[target-1].numChunks) {
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
             // in interrupts-always-enabled world of the HSS, it would appear less
             // racey to boot secondary cores first and have them all wait...
-            for (unsigned int i = 0u; i < mSPAN_OF(bootMachine); i++) {
+            for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
                 enum HSSHartId peer = bootMachine[i].hartId;
 
                 if (peer == target) { continue; } // skip myself
@@ -589,7 +589,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
-#ifdef CONFIG_SERVICE_BOOT_SETS_SUPPORT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
         free_msg_index_aux(pInstanceData);
 #endif
         free_msg_index(pInstanceData);
@@ -598,7 +598,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
     } else {
         // need to free as received, not all at once...
         if (check_for_ipi_acks(pMyMachine)) {
-#ifdef CONFIG_PLATFORM_MPFS
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
             // turn appropriate bit on in SYSREGSCB:MSS_STATUS:BOOT_STATUS to indicate it is up
             // note: this bit is a status indicator to SW only, and is not functional/does not have side effects
             mHSS_ReadModWriteRegU32(SYSREGSCB, MSS_STATUS, 0xFFFFu, 1u << (target-1));
@@ -645,7 +645,7 @@ bool HSS_Boot_Harts(enum HSSHartId const source)
 
     // TODO: should it restart all, or one the non-busy boot state machines??
     //
-    for (unsigned int i = 0u; i < mSPAN_OF(bootMachine); i++) {
+    for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
         if ((source == HSS_HART_ALL) || (source == bootMachine[i].hartId)) {
             struct StateMachine * const pMachine = bootMachine[i].pMachine;
 
@@ -737,7 +737,7 @@ bool HSS_Boot_Custom(void)
     chunkNum = 0u;
     while (pZiChunk->size != 0u) {
         if (target == pZiChunk->owner) {
-#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+#if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:ziChunk->0x%X, %u bytes" CRLF,
                 chunkNum, (uint64_t)pZiChunk->execAddr, pZiChunk->size);
 #endif
@@ -754,7 +754,7 @@ bool HSS_Boot_Custom(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Downloading chunks for HART%d at 0x%X" CRLF, target, (uint64_t)pChunk->execAddr);
     while (pChunk->size != 0u) {
         if ((pChunk->owner == target) && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
-#ifdef CONFIG_DEBUG_CHUNK_DOWNLOADS
+#if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
            if (!subChunkOffset) {
                 mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:chunk@0x%X->0x%X, %u bytes" CRLF,
                         chunkNum, (uint64_t)pChunk->loadAddr,

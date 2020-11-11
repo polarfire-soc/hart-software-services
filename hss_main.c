@@ -43,7 +43,7 @@
 #include "hss_init.h"
 #include "hss_registry.h"
 
-#ifdef CONFIG_SERVICE_WDOG
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
 #  include "wdog_service.h"
 #endif
 
@@ -55,7 +55,7 @@
 
 void hss_main(void)
 {
-#ifdef CONFIG_SERVICE_WDOG
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
     HSS_Wdog_MonitorHart(HSS_HART_ALL);
 #endif
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
         sbi_hart_hang();
     }
 
-#ifdef CONFIG_SUPERLOOP_IN_U_MODE
+#if IS_ENABLED(CONFIG_SUPERLOOP_IN_U_MODE)
     sbi_hart_switch_mode(current_hartid(), 0lu, (unsigned long)hss_main, PRV_U, false);
 #else
     hss_main();

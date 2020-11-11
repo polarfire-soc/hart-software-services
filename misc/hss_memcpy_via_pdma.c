@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef CONFIG_USE_PDMA
+#if IS_ENABLED(CONFIG_USE_PDMA)
 #include "drivers/mss_pdma/mss_pdma.h"
 
 static char const * const pdmaErrorTable[] = {
@@ -53,7 +53,7 @@ void *memcpy_via_pdma(void *dest, void *src, size_t num_bytes)
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copy from %p to %p (%x bytes)" CRLF, src, dest, num_bytes);
 
 
-#ifdef CONFIG_USE_PDMA
+#if IS_ENABLED(CONFIG_USE_PDMA)
     // num_bytes must be multiple of 16 or more
     if (!(num_bytes & 0xFu)) {
         uint8_t pdma_error_code = 0u;
@@ -79,7 +79,7 @@ void *memcpy_via_pdma(void *dest, void *src, size_t num_bytes)
         }
 
         if (pdma_error_code != 0) {
-            if (pdma_error_code < mSPAN_OF(pdmaErrorTable)) {
+            if (pdma_error_code < ARRAY_SIZE(pdmaErrorTable)) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "PDMA Error: %s" CRLF, pdmaErrorTable[pdma_error_code]);
             }
             // fall back to traditional memcpy()
@@ -91,7 +91,7 @@ void *memcpy_via_pdma(void *dest, void *src, size_t num_bytes)
 #endif
         // fall back to traditional memcpy()
         result = memcpy(dest, src, num_bytes);
-#ifdef CONFIG_USE_PDMA
+#if IS_ENABLED(CONFIG_USE_PDMA)
     }
 #endif
 

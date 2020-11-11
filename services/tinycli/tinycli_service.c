@@ -83,7 +83,7 @@ static void tinycli_init_handler(struct StateMachine * const pMyMachine)
 #define HSS_UART_HELPER_MAX_GETLINE 80
 
 static char myBuffer[HSS_UART_HELPER_MAX_GETLINE];
-const size_t bufferLen = mSPAN_OF(myBuffer);
+const size_t bufferLen = ARRAY_SIZE(myBuffer);
 ssize_t readStringLen = 0;
 
 /////////////////
@@ -195,7 +195,7 @@ static void tinycli_parseline_handler(struct StateMachine * const pMyMachine)
 
 static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine)
 {
-#ifdef CONFIG_SERVICE_USBDMSC
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
     bool done = false;
     uint8_t cBuf[1];
 

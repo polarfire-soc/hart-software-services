@@ -175,7 +175,7 @@ bool IPI_MessageCheckIfComplete(uint32_t index);
 void IPI_MessageFree(uint32_t index);
 
 TxId_t IPI_DebugGetTxId(void);
-#ifdef CONFIG_DEBUG_IPI_STATS
+#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS)
 void IPI_DebugDumpStats(void);
 #endif
 

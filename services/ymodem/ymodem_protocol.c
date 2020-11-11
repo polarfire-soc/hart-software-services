@@ -388,7 +388,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
             if (!pState->status.done) {
                 if ((pState->protocol == HSS_XYMODEM_PROTOCOL_YMODEM) && (pState->lastReceivedBlkNum == 0) && (pState->numReceivedPackets == 1u)) {
                     memcpy(pState->filename, packet.buffer, HSS_XYMODEM_MAX_FILENAME_LENGTH-1);
-                    pState->expectedSize = XYMODEM_GetFileSize(packet.buffer, packet.buffer + mSPAN_OF(packet.buffer));
+                    pState->expectedSize = XYMODEM_GetFileSize(packet.buffer, packet.buffer + ARRAY_SIZE(packet.buffer));
 
                     // if expected file size is known a priori, ensure we have enough buffer
                     // space to receive and abort transfer early
@@ -433,7 +433,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
     }
 
     if (pState->expectedSize != 0u) {
-        result = mMIN(pState->expectedSize, pState->totalReceivedSize);
+        result = MIN(pState->expectedSize, pState->totalReceivedSize);
     } else {
         result = pState->totalReceivedSize;
     }

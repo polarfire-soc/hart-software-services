@@ -27,7 +27,7 @@
 
 #include "goto_service.h"
 
-#ifdef CONFIG_SERVICE_BOOT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  include "hss_boot_pmp.h"
 #endif
 
@@ -48,22 +48,22 @@ bool HSS_U54_HandleIPI(void)
 
     mb();
 
-#ifdef CONFIG_SERVICE_BOOT
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
     /*if (!intentFound)*/
     { intentFound = IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_PMP_SETUP); }
 #endif
 
-#ifdef CONFIG_SERVICE_GOTO
+#if IS_ENABLED(CONFIG_SERVICE_GOTO)
     if (!intentFound) { intentFound =  IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_GOTO); }
 #endif
 
-#ifdef CONFIG_SERVICE_OPENSBI
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI)
     if (!intentFound) { intentFound =  IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_OPENSBI_INIT); }
 #endif
 
      CLINT_Clear_MSIP(current_hartid());
 
-#ifdef CONFIG_DEBUG_IPI_STATS
+#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS)
     {
         enum HSSHartId myHartId = current_hartid();
         static size_t count[5]; count[myHartId]++;

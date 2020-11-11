@@ -40,11 +40,11 @@
 
 // IPI queues - to be placed at well known address in memory and PMP protected
 
-#define mSIZE_OF_IPI_QUEUES    (sizeof(struct IPI_Outbox_Queue) * IPI_OUTBOX_NUM_QUEUES)
-#define mSIZE_OF_IPI_COMPLETES (sizeof(struct IPI_Complete) * IPI_MAX_NUM_OUTSTANDING_COMPLETES)
+#define SIZE_OF_IPI_QUEUES    (sizeof(struct IPI_Outbox_Queue) * IPI_OUTBOX_NUM_QUEUES)
+#define SIZE_OF_IPI_COMPLETES (sizeof(struct IPI_Complete) * IPI_MAX_NUM_OUTSTANDING_COMPLETES)
 
 
-#define mIPI_VERSION (0x0101u)
+#define IPI_VERSION (0x0101u)
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -68,18 +68,18 @@ struct IPI_Data {
     } mpfs_ipi_privateData[MAX_NUM_HARTS];
 };
 
-#define mIPI_SIZE sizeof(struct IPI_Data)
+#define IPI_SIZE sizeof(struct IPI_Data)
 
-#ifdef CONFIG_IPI_BASE_ADDR
+#if IS_ENABLED(CONFIG_IPI_BASE_ADDR)
    static struct IPI_Data *ipi_data = (struct IPI_Data *)CONFIG_IPI_BASE_ADDR;
-#  define mIPI_DATA (*ipi_data)
+#  define IPI_DATA (*ipi_data)
 #else
    static struct IPI_Data ipi_data_array;
    static struct IPI_Data *ipi_data = (struct IPI_Data *)&ipi_data_array;
-#  define mIPI_DATA (*ipi_data)
+#  define IPI_DATA (*ipi_data)
 #endif
 
-#ifdef CONFIG_DEBUG_MSCGEN_IPI
+#if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
 // TODO... this code needs to move to tabular searches, and needs to move into a debug
 // module
 static const char * const hartName[] = { // MAX_NUM_HARTS
@@ -118,21 +118,21 @@ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
 //
 // @brief Dump IPI Debug Statistics and Counters
 //
-#ifdef CONFIG_DEBUG_IPI_STATS
+#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS)
 void IPI_DebugDumpStats(void)
 {
     enum HSSHartId myHartId = current_hartid();
 
     mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 CRLF,
-        mIPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
+        IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
     mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 CRLF,
-        mIPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
+        IPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
     mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 CRLF,
-        mIPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
+        IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
     mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 CRLF,
-        mIPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
+        IPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
     mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 CRLF,
-        mIPI_DATA.mpfs_ipi_privateData[myHartId].ipi_sends);
+        IPI_DATA.mpfs_ipi_privateData[myHartId].ipi_sends);
 }
 #endif
 
@@ -172,8 +172,8 @@ inline uint32_t IPI_CalculateQueueIndex(enum HSSHartId source, enum HSSHartId ta
 uint32_t IPI_GetQueuePendingCount(uint32_t queueIndex)
 {
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called - queueIndex is %u, count is %u" CRLF, queueIndex,
-    //    mIPI_DATA.ipi_queues[queueIndex].count);
-    return (mIPI_DATA.ipi_queues[queueIndex].count);
+    //    IPI_DATA.ipi_queues[queueIndex].count);
+    return (IPI_DATA.ipi_queues[queueIndex].count);
 }
 
 //
@@ -229,7 +229,7 @@ bool CLINT_Raise_MSIP(enum HSSHartId const target)
     bool result = clint_set_MSIP(target, 1u);
 
     if (result) {
-        mIPI_DATA.mpfs_ipi_privateData[target].ipi_sends++;
+        IPI_DATA.mpfs_ipi_privateData[target].ipi_sends++;
     }
 
     return result;
@@ -259,10 +259,10 @@ inline struct IPI_Outbox_Msg *IPI_DirectionToFirstMsgInQueue(enum HSSHartId sour
 
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Resolved (%d, %d) to index %u" CRLF, source, target, index);
     //mHSS_DEBUG_PRINTF(WARN, "WARNING: queue %u is %u" CRLF, index,
-    //    mIPI_DATA.ipi_queues[index].count);
+    //    IPI_DATA.ipi_queues[index].count);
 
     uint32_t index = IPI_CalculateQueueIndex(source, target);
-    struct IPI_Outbox_Msg *pMsgResult = &(mIPI_DATA.ipi_queues[index].msgQ[0]);
+    struct IPI_Outbox_Msg *pMsgResult = &(IPI_DATA.ipi_queues[index].msgQ[0]);
 
     return pMsgResult;
 }
@@ -286,7 +286,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
 
     // find where to put the message
     uint32_t index = IPI_CalculateQueueIndex(current_hartid(), target);
-    struct IPI_Outbox_Msg *pMsg = &(mIPI_DATA.ipi_queues[index].msgQ[0]);
+    struct IPI_Outbox_Msg *pMsg = &(IPI_DATA.ipi_queues[index].msgQ[0]);
     bool space_available = false;
 
     assert(pMsg != NULL);
@@ -308,7 +308,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
         pMsg->p_extended_buffer_in_ddr = (void *)p_extended_buffer_in_ddr;
         pMsg->immediate_arg = immediate_arg;
 
-        mIPI_DATA.txId_per_queue.last[index] = transaction_id;
+        IPI_DATA.txId_per_queue.last[index] = transaction_id;
 
         mb();
         result = CLINT_Raise_MSIP(target);
@@ -316,7 +316,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
         mHSS_DEBUG_PRINTF(LOG_ERROR, "No space in queue!!!!!!" CRLF);
     }
 
-#ifdef CONFIG_DEBUG_MSCGEN_IPI
+#if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
     {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "::mscgen: %s->%s %s %u %u %p" CRLF,
             hartName[current_hartid()], hartName[target],
@@ -350,26 +350,26 @@ bool IPI_PollReceive(union HSSHartBitmask hartMask)
 
         // myHartId => target, i => source
         uint32_t const index = IPI_CalculateQueueIndex(i, myHartId);
-        if (mIPI_DATA.txId_per_queue.shadow[index] == mIPI_DATA.txId_per_queue.last[index]) {
+        if (IPI_DATA.txId_per_queue.shadow[index] == IPI_DATA.txId_per_queue.last[index]) {
             // nothing new since last time, so continue
             continue;
         } else {
-            mIPI_DATA.txId_per_queue.shadow[index] = mIPI_DATA.txId_per_queue.last[index];
+            IPI_DATA.txId_per_queue.shadow[index] = IPI_DATA.txId_per_queue.last[index];
 
             uint32_t countPerQueue = 0u;
             uint32_t j;
 
             for (j = 0u; j < IPI_MAX_NUM_QUEUE_MESSAGES; j++) {
-                if (mIPI_DATA.ipi_queues[index].msgQ[j].msg_type != IPI_MSG_NO_MESSAGE) {
+                if (IPI_DATA.ipi_queues[index].msgQ[j].msg_type != IPI_MSG_NO_MESSAGE) {
                     result = true; // incoming message to handle
                     countPerQueue++;
 
                     //if (result) { mHSS_DEBUG_PRINTF(NLOG_ORMAL, "q(%u)/msg(%u): received IPI (type %d)"
-                    //     CRLF, index, j, mIPI_DATA.ipi_queues[index].msgQ[j].msg_type); }
+                    //     CRLF, index, j, IPI_DATA.ipi_queues[index].msgQ[j].msg_type); }
                 }
             }
 
-            mIPI_DATA.ipi_queues[index].count = countPerQueue;
+            IPI_DATA.ipi_queues[index].count = countPerQueue;
             result = true;
         }
     }
@@ -388,7 +388,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
     {
         // find appropriate starting point
         uint32_t const index = IPI_CalculateQueueIndex(source, myHartId);
-        struct IPI_Outbox_Msg *pMsg = &(mIPI_DATA.ipi_queues[index].msgQ[0]);
+        struct IPI_Outbox_Msg *pMsg = &(IPI_DATA.ipi_queues[index].msgQ[0]);
         IPI_handlerFunction pHandler = NULL;
 
         assert(pMsg != NULL);
@@ -411,7 +411,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
         // check the queue for a message of the required type
         for (j = 0u; j < IPI_MAX_NUM_QUEUE_MESSAGES; j++) {
             if (pMsg->msg_type == msg_type) {
-#ifdef CONFIG_DEBUG_MSCGEN_IPI
+#if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
                 mHSS_DEBUG_PRINTF(LOG_NORMAL, "::mscgen: %s->%s %s %u %u %p" CRLF,
                     hartName[source], hartName[current_hartid()],
                     ipiName[msg_type], pMsg->transaction_id, pMsg->immediate_arg,
@@ -436,7 +436,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
             enum IPIStatusCode result;
 
             assert(pHandler != NULL);
-            mIPI_DATA.mpfs_ipi_privateData[current_hartid()].consume_intents++;
+            IPI_DATA.mpfs_ipi_privateData[current_hartid()].consume_intents++;
             result = (*pHandler)(pMsg->transaction_id, source,
                 pMsg->immediate_arg, pMsg->p_extended_buffer_in_ddr);
 
@@ -480,38 +480,38 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
     return intentFound;
 }
 
-#ifdef CONFIG_IPI_BASE_ADDR
+#if IS_ENABLED(CONFIG_IPI_BASE_ADDR)
 extern unsigned long _hss_start, _hss_end;
 static bool check_if_ipi_queues_overlap_hss(void)
 {
-    return (((char *)CONFIG_IPI_BASE_ADDR + mIPI_SIZE) >= (char *)&_hss_start)
+    return (((char *)CONFIG_IPI_BASE_ADDR + IPI_SIZE) >= (char *)&_hss_start)
         && ((char *)CONFIG_IPI_BASE_ADDR <= (char *)&_hss_end);
 }
 #endif
 
 bool IPI_QueuesInit(void)
 {
-#ifdef CONFIG_DEBUG_MSCGEN_IPI
-    assert(mSPAN_OF(hartName) == MAX_NUM_HARTS);
-    assert(mSPAN_OF(ipiName) == IPI_MSG_NUM_MSG_TYPES);
+#if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
+    assert(ARRAY_SIZE(hartName) == MAX_NUM_HARTS);
+    assert(ARRAY_SIZE(ipiName) == IPI_MSG_NUM_MSG_TYPES);
 #endif
 
-#ifdef CONFIG_IPI_BASE_ADDR
+#if IS_ENABLED(CONFIG_IPI_BASE_ADDR)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "IPI Queues: %p to %p" CRLF, (char *)CONFIG_IPI_BASE_ADDR,
-        (char*)CONFIG_IPI_BASE_ADDR + mIPI_SIZE);
+        (char*)CONFIG_IPI_BASE_ADDR + IPI_SIZE);
     assert(check_if_ipi_queues_overlap_hss() == false);
 #endif
 
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing IPI Queues (%lu bytes @ %p)..." CRLF,
-        sizeof(struct IPI_Data), (void *)&mIPI_DATA);
+        sizeof(struct IPI_Data), (void *)&IPI_DATA);
 
     memset((void *)ipi_data, 0, sizeof(struct IPI_Data));
 
     for (unsigned int i = 0u; i < MAX_NUM_HARTS; i++) {
-        mIPI_DATA.my_transaction_id[i] = 1u;
+        IPI_DATA.my_transaction_id[i] = 1u;
     }
 
-    mIPI_DATA.ipi_version = mIPI_VERSION;
+    IPI_DATA.ipi_version = IPI_VERSION;
 
     return true;
 }
@@ -524,13 +524,13 @@ bool IPI_MessageAlloc(uint32_t *indexOut)
     assert(indexOut != NULL);
 
     for (index = 0u; index < IPI_MAX_NUM_OUTSTANDING_COMPLETES; index++) {
-        if (!mIPI_DATA.ipi_completes[index].used) {
-            mIPI_DATA.ipi_completes[index].used = true;
-            mIPI_DATA.ipi_completes[index].transaction_id =
-                mIPI_DATA.my_transaction_id[current_hartid()];;
+        if (!IPI_DATA.ipi_completes[index].used) {
+            IPI_DATA.ipi_completes[index].used = true;
+            IPI_DATA.ipi_completes[index].transaction_id =
+                IPI_DATA.my_transaction_id[current_hartid()];;
 
-            mIPI_DATA.ipi_completes[index].status = IPI_PENDING;
-            mIPI_DATA.my_transaction_id[current_hartid()]++;
+            IPI_DATA.ipi_completes[index].status = IPI_PENDING;
+            IPI_DATA.my_transaction_id[current_hartid()]++;
 
             result = true;
             *indexOut = index;
@@ -539,7 +539,7 @@ bool IPI_MessageAlloc(uint32_t *indexOut)
     }
 
     if (result) {
-        mIPI_DATA.mpfs_ipi_privateData[current_hartid()].message_allocs++;
+        IPI_DATA.mpfs_ipi_privateData[current_hartid()].message_allocs++;
     }
 
     return result;
@@ -552,13 +552,13 @@ bool IPI_MessageDeliver(uint32_t index, enum HSSHartId target, enum IPIMessagesE
 
     assert(index < IPI_MAX_NUM_OUTSTANDING_COMPLETES);
 
-    if ((index < IPI_MAX_NUM_OUTSTANDING_COMPLETES) && (mIPI_DATA.ipi_completes[index].used)) {
-        result = IPI_Send(target, message, mIPI_DATA.ipi_completes[index].transaction_id,
+    if ((index < IPI_MAX_NUM_OUTSTANDING_COMPLETES) && (IPI_DATA.ipi_completes[index].used)) {
+        result = IPI_Send(target, message, IPI_DATA.ipi_completes[index].transaction_id,
                           immediate_arg, p_extended_buffer_in_ddr);
     }
 
     if (result) {
-        mIPI_DATA.mpfs_ipi_privateData[current_hartid()].message_delivers++;
+        IPI_DATA.mpfs_ipi_privateData[current_hartid()].message_delivers++;
     }
 
     return result;
@@ -572,8 +572,8 @@ bool IPI_MessageCheckIfComplete(uint32_t index)
 
     if (index == IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
         result = true;
-    } else if ((index < IPI_MAX_NUM_OUTSTANDING_COMPLETES) && (mIPI_DATA.ipi_completes[index].used)) {
-        switch (mIPI_DATA.ipi_completes[index].status) {
+    } else if ((index < IPI_MAX_NUM_OUTSTANDING_COMPLETES) && (IPI_DATA.ipi_completes[index].used)) {
+        switch (IPI_DATA.ipi_completes[index].status) {
         case IPI_PENDING:
             result = false;
             break;
@@ -599,10 +599,10 @@ bool IPI_MessageUpdateStatus(TxId_t transaction_id, enum IPIStatusCode status)
     uint32_t index;
 
     for (index = 0u; index < IPI_MAX_NUM_OUTSTANDING_COMPLETES; index++) {
-        if (mIPI_DATA.ipi_completes[index].transaction_id == transaction_id) {
+        if (IPI_DATA.ipi_completes[index].transaction_id == transaction_id) {
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u, status is %d" CRLF,
             //    index, transaction_id, status);
-            mIPI_DATA.ipi_completes[index].status = status;
+            IPI_DATA.ipi_completes[index].status = status;
 
             result = true;
             break;
@@ -614,18 +614,18 @@ bool IPI_MessageUpdateStatus(TxId_t transaction_id, enum IPIStatusCode status)
 
 void IPI_MessageFree(uint32_t index)
 {
-    assert(mIPI_DATA.ipi_completes[index].used);
-    mIPI_DATA.ipi_completes[index].used = false;
+    assert(IPI_DATA.ipi_completes[index].used);
+    IPI_DATA.ipi_completes[index].used = false;
 
-    mIPI_DATA.mpfs_ipi_privateData[current_hartid()].message_frees++;
+    IPI_DATA.mpfs_ipi_privateData[current_hartid()].message_frees++;
 
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u" CRLF, index,
-    //    mIPI_DATA.ipi_completes[index].transaction_id);
+    //    IPI_DATA.ipi_completes[index].transaction_id);
 }
 
 TxId_t IPI_DebugGetTxId(void)
 {
-    return mIPI_DATA.my_transaction_id[current_hartid()];
+    return IPI_DATA.my_transaction_id[current_hartid()];
 }
 
 enum IPIStatusCode IPI_ACK_IPIHandler(TxId_t transaction_id, enum HSSHartId source,

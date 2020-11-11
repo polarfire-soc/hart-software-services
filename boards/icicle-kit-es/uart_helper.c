@@ -75,7 +75,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
     ssize_t result = 0;
     bool finished = false;
     static char myBuffer[HSS_UART_HELPER_MAX_GETLINE]; // static to be stack friendly
-    const size_t bufferLen = mSPAN_OF(myBuffer);
+    const size_t bufferLen = ARRAY_SIZE(myBuffer);
 
     memset(myBuffer, 0, bufferLen);
 
