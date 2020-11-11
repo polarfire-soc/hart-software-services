@@ -181,7 +181,7 @@
                             							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnumcueclipse.managedbuild.cross.riscv.targetPlatform.999355647" isAbstract="false" osList="all" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.targetPlatform"/>
                             							
-                            <builder arguments="MSYSTEM=MSYS2 PATH=/bin:/usr/bin:/usr/local/bin:/home/${USER}/.local/bin:${SC_INSTALL_DIR}/riscv-unknown-elf-gcc/bin BOARD=icicle-kit-es make" buildPath="${workspace_loc:/hart-software-services}" command="env" id="ilg.gnumcueclipse.managedbuild.cross.riscv.builder.307384927" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.builder"/>
+                            <builder arguments="MSYSTEM=MSYS2 PATH=/bin:/usr/bin:/usr/local/bin:/home/${USER}/.local/bin:${SC_INSTALL_DIR}/riscv-unknown-elf-gcc/bin BOARD=mpfs-icicle-kit-es make" buildPath="${workspace_loc:/hart-software-services}" command="env" id="ilg.gnumcueclipse.managedbuild.cross.riscv.builder.307384927" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.builder"/>
                             							
                             <tool id="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler.1002777624" name="GNU RISC-V Cross Assembler" superClass="ilg.gnumcueclipse.managedbuild.cross.riscv.tool.assembler">
                                 								

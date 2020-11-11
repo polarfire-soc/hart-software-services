@@ -72,7 +72,7 @@ ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
 else
   ifndef BOARD
     $(warning BOARD not specified) # default to icicle if nothing found
-    BOARD:=icicle-kit-es
+    BOARD:=mpfs-icicle-kit-es
     include boards/${BOARD}/Makefile
   else
     $(error Board >>${BOARD}<< not found)
