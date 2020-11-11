@@ -28,13 +28,13 @@
 #
 
 #
-# Confusingly, the ICICLE-KIT-ES is platform MPFS
+# Confusingly, the MPFS-ICICLE-KIT-ES is platform MPFS
 #
-$(info ICICLE-KIT-ES selected)
+$(info MPFS-ICICLE-KIT-ES selected)
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
-BOARD_DIR=boards/icicle-kit-es
+BOARD_DIR=boards/mpfs-icicle-kit-es
 
 INCLUDES += \
 	-I$(BOARD_DIR)/mpfs_hal_config/\

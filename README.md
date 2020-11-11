@@ -19,7 +19,7 @@ Source code is found under the `hart-software-services` folder.
     │   ├── drivers (local modules)
     │   └── polarfire-soc-bare-metal-library (subtree)
     ├── boards
-    │   ├── icicle-kit-es (Icicle Kit)
+    │   ├── mpfs-icicle-kit-es (Icicle Kit)
     │   ├── mpfs (Aloe Vera platform)
     │   └── lc-mpfs (Low-cost Aloe Vera platform)
     ├── compression
@@ -62,19 +62,19 @@ Both Linux and Windows are supported by Kconfiglib.  Kconfiglib is easily instal
  
     $ pip install kconfiglib
 
-The HSS supports a number of board targets - currently including PolarFireSoC-based boards (icicle-kit-es), and SiFive FU540-based boards (lc-mpfs and mpfs).
+The HSS supports a number of board targets - currently including PolarFireSoC-based boards (mpfs-icicle-kit-es), and SiFive FU540-based boards (lc-mpfs and mpfs).
 
-Once Kconfiglib is installed,  you can enter an interactive selection by running `make BOARD=icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
+Once Kconfiglib is installed,  you can enter an interactive selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
 
-    $ make BOARD=icicle-kit-es config
+    $ make BOARD=mpfs-icicle-kit-es config
 
 Alternatively, copy the default config for your board - e.g.,
 
-    $ cp boards/icicle-kit-es/def_config .config
+    $ cp boards/mpfs-icicle-kit-es/def_config .config
 
 Once configured, to build, run `make`:
 
-    $ make BOARD=icicle-kit-es
+    $ make BOARD=mpfs-icicle-kit-es
 
 In the `Default` subdirectory, the standard build will create `hss.elf` and various binary formats (`hss.hex` and `hss.bin`).  Also generated are `output.map`, which is a mapfile for the build, and  `hss.sym`, which is a list of symbols.  (The name `Default` is required by SoftConsole for programming purposes.)
 
