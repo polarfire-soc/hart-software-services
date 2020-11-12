@@ -133,11 +133,16 @@ bool HSS_MMCInit(void)
     mmc_reset_block();
 
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select SDCARD ... ");
     result = mmc_init_sdcard();
+    mHSS_DEBUG_PRINTF_EX("%s" CRLF, result ? "Passed" : "Failed");
+
 #endif
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
     if (!result) {
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select eMMC ... ");
         result = mmc_init_emmc();
+        mHSS_DEBUG_PRINTF_EX("%s" CRLF, result ? "Passed" : "Failed");
     }
 #endif
 
