@@ -10,7 +10,7 @@ menu "MMC Mode"
 config SERVICE_MMC_MODE_EMMC
 	bool "Use eMMC"
 	default y
-        depends on SERVICE_MMC && !SERVICE_MMC_MODE_SDCARD
+        depends on SERVICE_MMC
 	help
                 This feature sets the MMC system to use eMMC.
                 This option is mutually exclusive with SERVICE_MMC_MODE_SDCARD.
