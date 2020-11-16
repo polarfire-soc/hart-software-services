@@ -86,6 +86,14 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
 static bool mmc_init_emmc(void)
 {
+#define LIBERO_SETTING_IOMUX1_CR_eMMC   0x11111111UL
+#define LIBERO_SETTING_IOMUX2_CR_eMMC   0x00FF1111UL
+#define LIBERO_SETTING_IOMUX6_CR_eMMC   0x00000000UL
+
+    SYSREG->IOMUX1_CR = LIBERO_SETTING_IOMUX1_CR_eMMC;
+    SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_eMMC;
+    SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_eMMC;
+
     MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0);
 
     static mss_mmc_cfg_t emmcConfig =
@@ -108,6 +116,14 @@ static bool mmc_init_emmc(void)
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
 static bool mmc_init_sdcard(void)
 {
+#define LIBERO_SETTING_IOMUX1_CR_SD   0x00000000UL
+#define LIBERO_SETTING_IOMUX2_CR_SD   0x00000000UL
+#define LIBERO_SETTING_IOMUX6_CR_SD   0x0000001DUL
+
+    SYSREG->IOMUX1_CR = LIBERO_SETTING_IOMUX1_CR_SD;
+    SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_SD;
+    SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_SD;
+
     MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 1);
 
     static mss_mmc_cfg_t sdcardConfig =
