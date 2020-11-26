@@ -109,21 +109,12 @@ extern const uint64_t hss_init_ddr_end;
 bool HSS_ZeroDDR(void)
 {
 #ifdef CONFIG_INITIALIZE_MEMORIES
-#  ifdef CONFIG_USE_ZERO_DEVICE
-    uint8_t *pChar = (uint8_t *)DDR_START;
-
-    while (pChar < (uint8_t * const)DDR_END) {
-        memcpy_via_pdma(pChar, (void *)L2_ZERO_DEVICE_START, CHUNK_SIZE);
-        pChar += CHUNK_SIZE;
-    }
-#  else
     uint64_t volatile *pDWord = (uint64_t volatile *)DDR_START;
 
     while (pDWord < (uint64_t volatile const * const)DDR_END) {
         *pDWord = 0llu;
         pDWord++;
     }
-#  endif
 #endif
 
     mb();
@@ -136,20 +127,11 @@ bool HSS_ZeroDDR(void)
 bool HSS_ZeroTIMs(void)
 {
 #ifdef CONFIG_INITIALIZE_MEMORIES
-#  ifdef CONFIG_USE_ZERO_DEVICE
-    memcpy_via_pdma((void *)E51_DTIM_START,   (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(E51_DTIM));
-    memcpy_via_pdma((void *)E51_ITIM_START,   (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(E51_ITIM));
-    memcpy_via_pdma((void *)U54_1_ITIM_START, (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(U54_1_ITIM));
-    memcpy_via_pdma((void *)U54_2_ITIM_START, (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(U54_2_ITIM));
-    memcpy_via_pdma((void *)U54_3_ITIM_START, (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(U54_3_ITIM));
-    memcpy_via_pdma((void *)U54_4_ITIM_START, (void *)L2_ZERO_DEVICE_START, mMEM_SIZE(U54_4_ITIM));
-#  else
     memset((void*)E51_DTIM_START, 0, E51_DTIM_END - E51_DTIM_START);       /* 8KiB */
     memset((void*)U54_1_ITIM_START, 0, U54_1_ITIM_END - U54_1_ITIM_START); /* 28KiB */
     memset((void*)U54_2_ITIM_START, 0, U54_2_ITIM_END - U54_2_ITIM_START); /* 28KiB */
     memset((void*)U54_3_ITIM_START, 0, U54_3_ITIM_END - U54_3_ITIM_START); /* 28KiB */
     memset((void*)U54_4_ITIM_START, 0, U54_4_ITIM_END - U54_4_ITIM_START); /* 28KiB */
-#  endif
 #endif
 
     mb();
