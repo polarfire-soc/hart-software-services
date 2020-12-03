@@ -28,7 +28,7 @@
 #define PCIE_IRQn				(FABRIC_F2H_1_PLIC)
 
 //
-// Will constraint base addr of PCIe to 0x43000000u
+// Will constrain base addr of PCIe to 0x43000000u
 // and constrain to use Bridge and Ctrl [1]
 #define PCIE_BASE_ADDR				(uintptr_t)0x43000000u
 
