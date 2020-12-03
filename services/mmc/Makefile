@@ -32,6 +32,4 @@ EXTRA_SRCS-$(CONFIG_SERVICE_MMC) += \
 INCLUDES +=\
 	-Iservices/mmc \
 
-services/mmc/mmc_api.o: services/mmc/mmc_api.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+services/mmc/mmc_api.o: CFLAGS=$(CFLAGS_GCCEXT)

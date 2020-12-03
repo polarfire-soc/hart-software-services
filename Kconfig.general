@@ -78,13 +78,11 @@ config INITIALIZE_MEMORIES
 		
 		If you don't know what to do here, say N for now.
 
-config USE_ZERO_DEVICE
-	bool "Use the Zero Device for initializing memories"
+config USE_PCIE
+	bool "Setup PCIe"
 	default y
-        depends on USE_PDMA && INITIALIZE_MEMORIES
-        help
-		Use the PDMA for memory to memory transfers.
-
+	help
+		Setup the PCIe prior to application load
 endmenu
 
 endmenu

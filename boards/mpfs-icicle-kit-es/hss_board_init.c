@@ -45,6 +45,9 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     { "HSS_Setup_MPU",          HSS_Setup_MPU,          false, false },
     { "HSS_DDRInit",            HSS_DDRInit,            false, false },
     { "HSS_ZeroDDR",            HSS_ZeroDDR,            false, false },
+#ifdef CONFIG_USE_PCIE
+    { "HSS_PCIeInit",           HSS_PCIeInit,           false, false },
+#endif
 };
 
 

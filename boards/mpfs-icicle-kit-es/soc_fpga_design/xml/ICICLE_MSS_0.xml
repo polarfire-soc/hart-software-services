@@ -1,10 +1,10 @@
   <mss xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mpfs_hw_description.xsd">
     <design_information>
-      <libero_version>12.900.0.16-PFSOC_MSS:2.0.108</libero_version>
+      <libero_version>1.0</libero_version>
       <design_name>ICICLE_MSS</design_name>
       <mpfs_part_no>MPFS250T_ES</mpfs_part_no>
-      <mpfs_package>FCVG484_Eval</mpfs_package>
-      <creation_date_time>07-30-2020_19:35:09</creation_date_time>
+      <mpfs_package>FCVG484</mpfs_package>
+      <creation_date_time>11-16-2020_19:07:30</creation_date_time>
       <xml_format_version>0.3.8</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -945,13 +945,13 @@
       <io_mux>
         <registers>
           <register address="0x00000200" description="Selects whether the peripheral is connected to the Fabric or IOMUX structure." name="IOMUX0_CR">
-            <field Type="RW" name="SPI0_FABRIC" offset="0" width="1">0x1</field>
+            <field Type="RW" name="SPI0_FABRIC" offset="0" width="1">0x0</field>
             <field Type="RW" name="SPI1_FABRIC" offset="1" width="1">0x0</field>
             <field Type="RW" name="I2C0_FABRIC" offset="2" width="1">0x0</field>
             <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x1</field>
-            <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x0</field>
+            <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x1</field>
             <field Type="RW" name="CAN1_FABRIC" offset="5" width="1">0x0</field>
-            <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x1</field>
+            <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x0</field>
             <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x1</field>
             <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x1</field>
             <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x1</field>
@@ -1003,9 +1003,9 @@
             <field Type="RW" name="PAD31" offset="4" width="4">0x3</field>
             <field Type="RW" name="PAD32" offset="8" width="4">0x3</field>
             <field Type="RW" name="PAD33" offset="12" width="4">0x3</field>
-            <field Type="RW" name="PAD34" offset="16" width="4">0xF</field>
-            <field Type="RW" name="PAD35" offset="20" width="4">0xF</field>
-            <field Type="RW" name="PAD36" offset="24" width="4">0xF</field>
+            <field Type="RW" name="PAD34" offset="16" width="4">0x7</field>
+            <field Type="RW" name="PAD35" offset="20" width="4">0x7</field>
+            <field Type="RW" name="PAD36" offset="24" width="4">0x7</field>
             <field Type="RW" name="PAD37" offset="28" width="4">0xF</field>
           </register>
           <register address="0x00000218" description="Sets whether the MMC/SD Voltage select lines are inverted on entry to the IOMUX structure" name="IOMUX6_CR">
@@ -2724,7 +2724,7 @@
             <field Type="RW" name="REG_DIVQ0_EN" offset="2" width="1">0x1</field>
             <field Type="RW" name="REG_DIVQ1_EN" offset="3" width="1">0x0</field>
             <field Type="RW" name="REG_DIVQ2_EN" offset="4" width="1">0x1</field>
-            <field Type="RW" name="REG_DIVQ3_EN" offset="5" width="1">0x0</field>
+            <field Type="RW" name="REG_DIVQ3_EN" offset="5" width="1">0x1</field>
             <field Type="RW" name="REG_RFCLK_SEL" offset="6" width="1">0x0</field>
             <field Type="RW" name="RESETONLOCK" offset="7" width="1">0x0</field>
             <field Type="RW" name="BYPCK_SEL" offset="8" width="4">0x0</field>
@@ -2761,7 +2761,7 @@
             <field Type="RO" name="VCO0PH_SEL" offset="0" width="3">0x0</field>
             <field Type="RW" name="DIV0_START" offset="3" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE18" offset="6" width="2">0x0</field>
-            <field Type="RW" name="POST0DIV" offset="8" width="7">0x1</field>
+            <field Type="RW" name="POST0DIV" offset="8" width="7">0x2</field>
             <field Type="RSVD" name="RESERVE19" offset="15" width="1">0x0</field>
             <field Type="RO" name="VCO1PH_SEL" offset="16" width="3">0x0</field>
             <field Type="RW" name="DIV1_START" offset="19" width="3">0x0</field>
@@ -2773,12 +2773,12 @@
             <field Type="RO" name="VCO2PH_SEL" offset="0" width="3">0x0</field>
             <field Type="RW" name="DIV2_START" offset="3" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE22" offset="6" width="2">0x0</field>
-            <field Type="RW" name="POST2DIV" offset="8" width="7">0x3</field>
+            <field Type="RW" name="POST2DIV" offset="8" width="7">0x6</field>
             <field Type="RSVD" name="RESERVE23" offset="15" width="1">0x0</field>
             <field Type="RO" name="VCO3PH_SEL" offset="16" width="3">0x0</field>
             <field Type="RW" name="DIV3_START" offset="19" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE24" offset="22" width="2">0x0</field>
-            <field Type="RW" name="POST3DIV" offset="24" width="7">0x1</field>
+            <field Type="RW" name="POST3DIV" offset="24" width="7">0xF</field>
             <field Type="RW" name="CKPOST3_SEL" offset="31" width="1">0x0</field>
           </register>
           <register address="0x00000018" description="PLL control register" name="PLL_CTRL2">
@@ -2825,7 +2825,7 @@
             <field Type="RSVD" name="RESERVE01" offset="30" width="2">0x0</field>
           </register>
           <register address="0x0000002C" description="SSCG registers 2" name="SSCG_REG_2">
-            <field Type="RW" name="INTIN" offset="0" width="12">0x60</field>
+            <field Type="RW" name="INTIN" offset="0" width="12">0xC0</field>
             <field Type="RO" name="INTMOD" offset="12" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE02" offset="24" width="8">0x0</field>
           </register>

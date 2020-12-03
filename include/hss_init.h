@@ -61,6 +61,10 @@ bool HSS_UARTInit(void);
 bool HSS_LogoInit(void);
 #endif
 
+#ifdef CONFIG_USE_PCIE
+bool HSS_PCIeInit(void);
+#endif
+
 
 #ifdef __cplusplus
 }
