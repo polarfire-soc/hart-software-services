@@ -25,7 +25,9 @@
 #include "mmc_service.h"
 #include "encoding.h"
 #include "mss_mmc.h"
-#include "mss_gpio.h"
+#include "hal/hw_macros.h"
+
+#define SDIO_REGISTER_ADDRESS    0x4f000000
 
 /*
  * MMC doesn't need a "service" to run every super-loop, but it does need to be
@@ -51,15 +53,12 @@
 static void mmc_reset_block(void)
 {
     SYSREG->SUBBLK_CLOCK_CR |= 
-        (uint32_t)(SUBBLK_CLOCK_CR_MMC_MASK | SUBBLK_CLOCK_CR_GPIO2_MASK);
+        (uint32_t)(SUBBLK_CLOCK_CR_MMC_MASK);
     SYSREG->SOFT_RESET_CR |=
-        (uint32_t)(SOFT_RESET_CR_MMC_MASK | SOFT_RESET_CR_GPIO2_MASK);
+        (uint32_t)(SOFT_RESET_CR_MMC_MASK);
     SYSREG->SOFT_RESET_CR &= 
-        ~(uint32_t)(SOFT_RESET_CR_MMC_MASK | SOFT_RESET_CR_GPIO2_MASK);
+        ~(uint32_t)(SOFT_RESET_CR_MMC_MASK);
 
-    MSS_GPIO_init(GPIO2_LO);
-    MSS_GPIO_config(GPIO2_LO, MSS_GPIO_0, MSS_GPIO_OUTPUT_MODE);
-    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0x0);
 }
 
 static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
@@ -94,7 +93,7 @@ static bool mmc_init_emmc(void)
     SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_eMMC;
     SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_eMMC;
 
-    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 0);
+    HW_set_uint32(SDIO_REGISTER_ADDRESS,  0);
 
     static mss_mmc_cfg_t emmcConfig =
     {
@@ -124,7 +123,7 @@ static bool mmc_init_sdcard(void)
     SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_SD;
     SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_SD;
 
-    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_0, 1);
+    HW_set_uint32(SDIO_REGISTER_ADDRESS,  1);
 
     static mss_mmc_cfg_t sdcardConfig =
     {
