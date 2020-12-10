@@ -286,6 +286,7 @@ bool HSS_Setup_Clocks(void)
     SYSREG->SOFT_RESET_CR = 0x3FFFFFFEu; // everything but ENVM
     SYSREG->SOFT_RESET_CR = hss_soft_reset_Config;
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
+	SYSREG->FABRIC_RESET_CR = FABRIC_RESET_CR_ENABLE_MASK;
 #endif
 
     return true;
