@@ -146,5 +146,33 @@
  */
 #define LIBERO_SETTING_WAY_ENABLE    0x00000007UL
 
+/*
+ * Libero v12.6 support
+ */
+#if !defined(LIBERO_SETTING_WAY_MASK_M0)
+/*Way mask register master 0 (hart0) */
+#  define LIBERO_SETTING_WAY_MASK_M0    0x00000000UL
+#endif
+
+#if !defined(LIBERO_SETTING_WAY_MASK_M1)
+/*Way mask register master 1 (hart1) */
+#  define LIBERO_SETTING_WAY_MASK_M1    0x00000000UL
+#endif
+
+#if !defined(LIBERO_SETTING_WAY_MASK_M2)
+/*Way mask register master 2 (hart2) */
+#  define LIBERO_SETTING_WAY_MASK_M2    0x00000000UL
+#endif
+
+#if !defined(LIBERO_SETTING_WAY_MASK_M3)
+/*Way mask register master 3 (hart3) */
+#  define LIBERO_SETTING_WAY_MASK_M3    0x00000000UL
+#endif
+
+#if !defined(LIBERO_SETTING_WAY_MASK_M4)
+/*Way mask register master 4 (hart4) */
+#  define LIBERO_SETTING_WAY_MASK_M4    0x00000000UL
+#endif
+
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 
