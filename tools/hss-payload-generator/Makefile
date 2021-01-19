@@ -96,7 +96,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) -static -o $@ $(OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) $(CFLAGS) $(LDFLAGS) -static -o $@ $(OBJS) $(LIBS)
 
 README.docx: README.md
 	pandoc -o README.docx README.md
