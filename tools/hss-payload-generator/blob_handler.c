@@ -2,7 +2,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020 Microchip Corporation.
+ * Copyright 2020-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
