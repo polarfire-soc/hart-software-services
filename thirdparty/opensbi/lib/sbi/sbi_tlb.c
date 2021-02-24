@@ -209,7 +209,7 @@ static void sbi_tlb_entry_process(struct sbi_scratch *scratch,
                 // forever... also, why the while() loop? that is only going
                 // to mask any races in the design...
                 //
-                // From soak testing, we seem to have better behaviour with high loads when 
+                // From soak testing, we seem to have better behaviour with high loads when
                 // doing the following
 		atomic_raw_xchg_ulong(rtlb_sync, 1);
 	}

@@ -1,20 +1,15 @@
 /***************************************************************************//**
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
  * Driver for MICRON_MT25Q QSPI flash memory.
  * This driver uses the MPFS MSS QSPI driver interface.
  *
- *
- * SVN $Revision:  $
- * SVN $Date:  $
  */
 
 #include "drivers/winbond_w25n01gv/winbond_w25n01gv.h"
-
-#include "mpfs_hal/mss_plic.h"
-
+#include "mss_plic.h"
 #include "drivers/mss_uart/mss_uart.h"
 
 #include "hss_debug.h"
@@ -377,24 +372,6 @@ static void read_status_reg
     MSS_QSPI_polled_transfer_block(1, command_buf, 0, rd_buf, 1,0);
 }
 
-#if 0
-void Flash_read_flagstatusreg
-(
-    uint8_t* rd_buf
-)
-{
-    const uint8_t command_buf[1] __attribute__ ((aligned (4))) = {MICRON_READ_FLAG_STATUS_REG};
-
-    /*This command works for all modes. No Dummy cycles*/
-#ifdef USE_QSPI_INTERRUPT
-    MSS_QSPI_irq_transfer_block(0, command_buf, 0, rd_buf, 1,0);
-    wait_for_rx_complete();
-#else
-    MSS_QSPI_polled_transfer_block(0, command_buf, 0, rd_buf, 1,0);
-#endif
-}
-#endif
-
 void Flash_enter_normal_mode
 (
     void
@@ -568,21 +545,6 @@ uint8_t program_page
 
     wait_for_wip();
 
-#if 0
-    {
-        uint32_t length = 512;
-        volatile uint8_t test_buff[512];
-//        uint8_t command_buf[4] __attribute__ ((aligned (4)));
-
-        command_buf[0] = WINBOND_READ_DATA;
-        command_buf[1] = 0;
-        command_buf[2] = 0;
-
-        MSS_QSPI_polled_transfer_block(2, command_buf, 0, test_buff, length, 8);
-        test_buff[32] = test_buff[64];
-
-    }
-#endif
     /*
      * Send Program Execute command
      */
@@ -619,12 +581,6 @@ uint8_t program_block
     erase_block((page_nb / 4) + 64);
     erase_block((page_nb / 4) + 128);
     erase_block((page_nb / 4) + 192);
-/*
-    erase_block(page_nb * 64);
-    erase_block((page_nb + 1) * 64);
-    erase_block((page_nb + 2) * 64);
-    erase_block((page_nb + 3 * 64));
-*/
 #else
     erase_block(page_nb);
 #endif

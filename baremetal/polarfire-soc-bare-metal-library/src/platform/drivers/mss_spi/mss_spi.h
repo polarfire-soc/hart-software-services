@@ -229,7 +229,7 @@ The MSS SPI driver functions are grouped in following categories:
 
 #include <stddef.h>
 #include <stdint.h>
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 
 /*Register map of the PSE MSS SPI*/
 typedef struct

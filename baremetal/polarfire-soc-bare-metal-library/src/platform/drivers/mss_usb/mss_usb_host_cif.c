@@ -17,7 +17,7 @@
  */
 
 #include "mss_assert.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "mss_usb_host_cif.h"
 #include "mss_usb_common_cif.h"
 #include "mss_usb_common_reg_io.h"

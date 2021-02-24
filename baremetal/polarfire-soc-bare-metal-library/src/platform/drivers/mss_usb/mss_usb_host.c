@@ -23,7 +23,7 @@
 #include "mss_usb_host_cif.h"
 #include "mss_usb_host_reg_io.h"
 #include "mss_usb_std_def.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 
 #ifdef __cplusplus
 extern "C" {

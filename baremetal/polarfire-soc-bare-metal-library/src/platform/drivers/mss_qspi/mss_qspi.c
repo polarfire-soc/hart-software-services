@@ -9,7 +9,7 @@
  */
 
 #include "mss_qspi.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 
 #ifdef __cplusplus
 extern "C" {

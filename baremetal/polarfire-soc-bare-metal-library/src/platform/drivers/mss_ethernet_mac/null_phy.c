@@ -1,6 +1,5 @@
-
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,10 +11,8 @@
  * Also used when setting up the default config so that the pointers for the
  * PHY functions in the config always have some valid values.
  *
- * SVN $Revision$
- * SVN $Date$
  */
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "soc_config/hw_platform.h"
 
 #include "drivers/mss_mac/mss_ethernet_registers.h"

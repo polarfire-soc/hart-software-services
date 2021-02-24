@@ -9,7 +9,7 @@
  *
  */
 
-#include "mpfs_hal/mss_hal.h"
+#include "mss_hal.h"
 #include "mss_gpio.h"
 
 #ifdef __cplusplus

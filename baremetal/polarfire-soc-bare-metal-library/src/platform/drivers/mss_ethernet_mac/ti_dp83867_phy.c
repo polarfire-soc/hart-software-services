@@ -1,6 +1,6 @@
 
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -27,10 +27,8 @@
  * LED_1   - Strap option 2, RGMII Clock Skew TX[2] = 1, ANEG_SEL = 0
  * LED_0   - Strap option 2, SGMII_Enable = 1, Mirror Enable = 0
  *
- * SVN $Revision$
- * SVN $Date$
  */
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "soc_config/hw_platform.h"
 
 #include "drivers/mss_mac/mss_ethernet_registers.h"

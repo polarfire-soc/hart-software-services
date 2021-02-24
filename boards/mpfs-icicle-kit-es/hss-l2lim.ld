@@ -202,7 +202,7 @@ SECTIONS
         . = ALIGN(0x10);
         __l2_scratchpad_end = .;
         __l2_scratchpad_vma_end = .;
-    } >l2lim
+    } >l2zerodevice
 
 
     /*******************************************************************************

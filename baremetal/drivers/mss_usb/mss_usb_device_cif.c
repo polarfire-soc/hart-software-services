@@ -19,7 +19,7 @@
 #include "mss_usb_common_cif.h"
 #include "mss_usb_device_reg_io.h"
 #include "mss_usb_common_reg_io.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "mss_assert.h"
 
 #ifdef __cplusplus

@@ -19,7 +19,7 @@
 #include "mss_assert.h"
 #include "mss_usb_common_reg_io.h"
 #include "mss_usb_core_regs.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 
 #ifdef MSS_USB_HOST_ENABLED
 #include "mss_usb_host_cif.h"

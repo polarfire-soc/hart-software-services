@@ -43,24 +43,25 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_uart/mss_uart.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.c \
 	baremetal/drivers/mss_watchdog/mss_watchdog.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.c \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_mpu.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_plic.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_cache.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_util.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_ddr.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_ddr_debug.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_ddr_test_pattern.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_io.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_pll.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_sgmii.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/system_startup.c \
 
 EXTRA_SRCS-$(CONFIG_PLATFORM_FU540) += \
 	baremetal/sysreg.c \
 
 ASM_SRCS += \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mutex.S
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_mutex.S \
+ 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_utils.S \
 
 INCLUDES += \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc \
@@ -70,7 +71,10 @@ INCLUDES += \
 	-Ibaremetal/drivers/mss_watchdog \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/hal \
-	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal \
+	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/ \
+	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common \
+	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc \
+	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc \
 
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qspi.o: CFLAGS=$(CFLAGS_GCCEXT)
@@ -79,18 +83,18 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdm
 baremetal/drivers/mss_watchdog/mss_watchdog.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/stubs.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/sysreg.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/system_startup.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_nwc_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_ddr_debug.o: CFLAGS=$(CFLAGS_GCCEXT) -DHSS
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_io.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_pll.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/nwc/mss_sgmii.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_l2_cache.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_util.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_stubs.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/system_startup.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_ddr.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_ddr_debug.o: CFLAGS=$(CFLAGS_GCCEXT) -DHSS
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_io.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_pll.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_sgmii.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_cache.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_util.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/mss_mpu.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_mpu.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_plic.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 #################################################################################################
 #

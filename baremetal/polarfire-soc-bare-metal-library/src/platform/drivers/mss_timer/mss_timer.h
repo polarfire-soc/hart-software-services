@@ -114,7 +114,7 @@
 #ifndef __PSE_TIMER_H_
 #define __PSE_TIMER_H_
 
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 
 #include "drivers/mss_timer/mss_timer_regs.h"
 

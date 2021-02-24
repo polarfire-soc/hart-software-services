@@ -361,7 +361,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "mss_i2c_regs.h"
 #include "hal/hal.h"
 

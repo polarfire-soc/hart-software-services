@@ -30,10 +30,10 @@
   const char r2_str[] ="\033[48;5;210m ";
   const char r3_str[] ="\033[48;5;203m ";
   const char r4_str[] ="\033[48;5;196m ";
-  const char b1_str[] ="\033[48;5;188m "; 
-  const char b2_str[] ="\033[48;5;145m "; 
+  const char b1_str[] ="\033[48;5;188m ";
+  const char b2_str[] ="\033[48;5;145m ";
   const char b3_str[] ="\033[48;5;102m ";
-  const char b4_str[] ="\033[48;5;59m "; 
+  const char b4_str[] ="\033[48;5;59m ";
 #  else
   const char B0_str[] = "\033[48;5;188m ";
   const char W0_str[] = "\033[48;5;188m ";

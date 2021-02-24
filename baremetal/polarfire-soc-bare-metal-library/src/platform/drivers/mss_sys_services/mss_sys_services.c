@@ -11,7 +11,7 @@
  */
 #include "drivers/mss_sys_services/mss_sys_services.h"
 #include "drivers/mss_sys_services/mss_sys_services_regs.h"
-#include "mpfs_hal/mss_hal.h"
+#include "mss_hal.h"
 #include "mss_assert.h"
 
 #ifdef __cplusplus

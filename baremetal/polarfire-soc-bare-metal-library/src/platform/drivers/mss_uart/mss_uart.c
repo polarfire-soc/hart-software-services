@@ -10,8 +10,8 @@
 
 #include "mss_uart.h"
 #include "mss_uart_regs.h"
-#include "mpfs_hal/mss_plic.h"
-#include "mpfs_hal/mss_util.h"
+#include "mss_plic.h"
+#include "mss_util.h"
 #include "soc_config/hw_platform.h"
 
 #ifdef __cplusplus
@@ -645,7 +645,7 @@ uint8_t mmuart4_plic_IRQHandler(void)
     return EXT_IRQ_KEEP_ENABLED;
 }
 
-uint8_t mmuart0_e51_local_IRQHandler_11(void)
+void mmuart0_e51_local_IRQHandler_11(void)
 {
     if (g_uart_axi_pos & 0x01u)
     {
@@ -655,11 +655,9 @@ uint8_t mmuart0_e51_local_IRQHandler_11(void)
     {
         uart_isr(&g_mss_uart0_lo);
     }
-
-    return EXT_IRQ_KEEP_ENABLED;
 }
 
-uint8_t mmuart_u54_h1_local_IRQHandler_11(void)
+void mmuart_u54_h1_local_IRQHandler_11(void)
 {
     if (g_uart_axi_pos & 0x01u)
     {
@@ -669,11 +667,9 @@ uint8_t mmuart_u54_h1_local_IRQHandler_11(void)
     {
         uart_isr(&g_mss_uart1_lo);
     }
-
-    return EXT_IRQ_KEEP_ENABLED;
 }
 
-uint8_t mmuart_u54_h2_local_IRQHandler_11(void)
+void mmuart_u54_h2_local_IRQHandler_11(void)
 {
     if (g_uart_axi_pos & 0x01u)
     {
@@ -683,11 +679,9 @@ uint8_t mmuart_u54_h2_local_IRQHandler_11(void)
     {
         uart_isr(&g_mss_uart2_lo);
     }
-
-    return EXT_IRQ_KEEP_ENABLED;
 }
 
-uint8_t mmuart_u54_h3_local_IRQHandler_11(void)
+void mmuart_u54_h3_local_IRQHandler_11(void)
 {
     if (g_uart_axi_pos & 0x01u)
     {
@@ -697,11 +691,9 @@ uint8_t mmuart_u54_h3_local_IRQHandler_11(void)
     {
         uart_isr(&g_mss_uart3_lo);
     }
-
-    return EXT_IRQ_KEEP_ENABLED;
 }
 
-uint8_t mmuart_u54_h4_local_IRQHandler_11(void)
+void mmuart_u54_h4_local_IRQHandler_11(void)
 {
     if (g_uart_axi_pos & 0x01u)
     {
@@ -711,8 +703,6 @@ uint8_t mmuart_u54_h4_local_IRQHandler_11(void)
     {
         uart_isr(&g_mss_uart4_lo);
     }
-
-    return EXT_IRQ_KEEP_ENABLED;
 }
 
 /***************************************************************************//**

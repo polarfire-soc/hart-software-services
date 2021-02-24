@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * 
+ *
  * PolarFire SoC (MPFS) Microprocessor Subsystem Watchdog bare metal software
  * driver public API.
  *
@@ -40,13 +40,13 @@
   adapted for use as part of an operating system, but the implementation of the
   adaptation layer between the driver and the operating system's driver model is
   outside the scope of the driver.
-  
+
   The MSS watchdog driver provides support for the following features:
     - Initialization of the MSS watchdog
     - Reading the current value and status of the watchdog timer
     - Refreshing the watchdog timer value
     - Enabling, disabling and clearing timeout and MVRP interrupts.
-    
+
   ==============================================================================
   Hardware Flow Dependencies
   ==============================================================================
@@ -74,7 +74,7 @@
   are defined as constants in the MPFS HAL. You must ensure that the latest MPFS
   HAL is included in the project settings of the SoftConsole tool chain and that
   it is generated into your project.
-  
+
   ==============================================================================
   Theory of Operation
   ==============================================================================
@@ -83,7 +83,7 @@
     - Reading the current value and status of the watchdog timer
     - Refreshing the watchdog timer value
     - Support for enabling, disabling and clearing time-out and MVRP interrupts.
-    
+
   --------------------------------
   Initialization and Configuration
   --------------------------------
@@ -151,7 +151,7 @@
     - MSS_WD_enable_timeout_irq
     - MSS_WD_disable_timeout_irq
     - MSS_WD_clear_timeout_irq
-    
+
  *//*=========================================================================*/
 
 #ifndef MSS_WATCHDOG_H_
@@ -159,12 +159,12 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #include <stdint.h>
 
 /*
-  The following constants can be used to configure the MSS Watchdog where a 
+  The following constants can be used to configure the MSS Watchdog where a
   zero or non-zero value such as enable or disable is to be provided as input
   parameter as shown below:
       wd0lo_config.forbidden_en = MSS_WDOG_DISABLE;
@@ -423,7 +423,7 @@ uint8_t MSS_WD_configure
   timer with the load value configured through the MSS configurator in the
   hardware flow. This function must be called regularly to avoid a system reset
   or a watchdog interrupt.
- 
+
   Note that the MSS Watchdog is not enabled at reset, calling this function
   will start the watchdog, it cannot then be disabled and must be refreshed
   periodically.
@@ -450,7 +450,7 @@ static inline void MSS_WD_reload(mss_watchdog_num_t wd_num)
 /***************************************************************************//**
   The MSS_WD_current_value() function returns the current value of the
   watchdog's down-counter.
- 
+
  @param wd_num
     The wd_num parameter is the Watchdog module number in the PolarFire SoC MSS
     on which the operation needs to be performed. The Watchdog module number can
@@ -471,7 +471,7 @@ static inline uint32_t MSS_WD_current_value(mss_watchdog_num_t wd_num)
 /***************************************************************************//**
   The MSS_WD_forbidden_status() function returns the refresh status of the
   MSS Watchdog.
- 
+
   @param wd_num
     The wd_num parameter is the Watchdog module number in the PolarFire SoC MSS
     on which the operation needs to be performed. The Watchdog module number can
@@ -480,7 +480,7 @@ static inline uint32_t MSS_WD_current_value(mss_watchdog_num_t wd_num)
     switch Slave 5. The MSS_WDOG0_HI to MSS_WDOG4_HI correspond to the watchdog
     module number 0 to 5 when the appear on the AXI switch Slave 6.
 
-  @return 
+  @return
     This function returns the refresh status of the watchdog. A value of 1
     indicates that watchdog's down-counter is within the forbidden window and
     that a reload should not be done. A value of 0 indicates that the watchdog's
@@ -560,7 +560,7 @@ MSS_WD_enable_mvrp_irq
 /***************************************************************************//**
   The MSS_WD_disable_mvrp_irq() function disables the generation of the
   MVRP interrupt.
- 
+
   Note: This function must be called from appropriate HART context.
 
  @param wd_num
@@ -699,7 +699,7 @@ static inline void MSS_WD_clear_mvrp_irq(mss_watchdog_num_t wd_num)
           log_watchdog_event();
           MSS_WD_clear_timeout_event();
       }
-      
+
       for(;;)
       {
           main_task();

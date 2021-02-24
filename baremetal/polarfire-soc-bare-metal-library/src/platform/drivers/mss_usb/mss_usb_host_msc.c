@@ -26,7 +26,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "mss_assert.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

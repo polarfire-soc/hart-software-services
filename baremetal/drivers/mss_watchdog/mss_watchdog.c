@@ -8,13 +8,13 @@
  *
  *
  */
- 
-#include "mpfs_hal/mss_hal.h"
+
+#include "mss_hal.h"
 #include "mss_watchdog.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 WATCHDOG_TypeDef* wdog_hw_base[10] = {(WATCHDOG_TypeDef*)0x20001000,
                                       (WATCHDOG_TypeDef*)0x20101000,

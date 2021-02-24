@@ -13,13 +13,13 @@
  * handling, distribution of requests to specific class, interface or endpoints.
  *
  */
-#include "mpfs_hal/mss_clint.h"
+#include "mss_clint.h"
 #include "mss_usb_device.h"
 #include "mss_usb_config.h"
 #include "mss_usb_common_cif.h"
 #include "mss_usb_device_cif.h"
 #include "mss_usb_std_def.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "mss_assert.h"
 
 #ifdef __cplusplus

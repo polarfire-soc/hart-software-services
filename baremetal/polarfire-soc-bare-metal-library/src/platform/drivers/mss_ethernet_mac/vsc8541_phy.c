@@ -10,7 +10,7 @@
  * SVN $Revision$
  * SVN $Date$
  */
-#include "mpfs_hal/mss_plic.h"
+#include "mss_plic.h"
 #include "soc_config/hw_platform.h"
 
 #include "drivers/mss_mac/mss_ethernet_registers.h"

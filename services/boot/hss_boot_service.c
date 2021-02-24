@@ -468,7 +468,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
                         pMyMachine->pMachineName,
                         pInstanceData->chunkCount, (uint64_t)pChunk->loadAddr,
                         (uint64_t)pChunk->execAddr, pChunk->size);
-                } 
+                }
 #endif
                 // check each hart to see if it wants to transmit
 #define SUB_CHUNK_SIZE 256u
@@ -639,7 +639,7 @@ static void boot_idle_handler(struct StateMachine * const pMyMachine)
 // PUBLIC API
 //
 
-bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask) 
+bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
 {
     bool result = false;
 
@@ -649,7 +649,7 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
         if (restartHartBitmask.uint && (1u << bootMachine[i].hartId)) {
             struct StateMachine * const pMachine = bootMachine[i].pMachine;
 
-            if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) { 
+            if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) {
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
                result = true;
             } else if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {

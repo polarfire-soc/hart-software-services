@@ -64,6 +64,33 @@ __attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict s
 #endif
 }
 
+__attribute__((weak)) int memcmp(const void * restrict s1, const void * restrict s2, size_t n)
+{
+#ifndef CONFIG_OPENSBI
+    int result;
+
+    const unsigned char *temp1 = s1;
+    const unsigned char *temp2 = s2;
+
+    while (n > 0 && (*temp1 == *temp2)) {
+        temp1++;
+        temp2++;
+        n--;
+    }
+
+    if (n > 0) {
+        result = *temp1 - *temp2;
+    } else {
+    	result = 0;
+    }
+
+    return result;
+#else
+    return sbi_memcmp(s1, s2, n);
+#endif
+}
+
+
 __attribute__((weak)) void *memset(void *dest, int c, size_t n)
 {
 #ifndef CONFIG_OPENSBI

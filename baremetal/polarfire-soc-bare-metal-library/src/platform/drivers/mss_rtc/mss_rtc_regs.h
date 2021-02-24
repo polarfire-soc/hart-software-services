@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#include "mpfs_hal/mss_hal.h"
+#include "mss_hal.h"
 
 /******************************************************************************/
 /*                Device Specific Peripheral registers structures             */

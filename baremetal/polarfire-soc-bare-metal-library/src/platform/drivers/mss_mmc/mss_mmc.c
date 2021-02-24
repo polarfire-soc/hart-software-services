@@ -8,7 +8,7 @@
  * ICICLE KIT test - v7
  *
  */
-#include "mpfs_hal/mss_hal.h"
+#include "mss_hal.h"
 #include "mss_mmc_if.h"
 #include "mss_mmc_regs.h"
 #include "mss_mmc_types.h"

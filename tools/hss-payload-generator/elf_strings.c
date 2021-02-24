@@ -34,7 +34,7 @@
 
 /* elfutils-0.182 has rename EM_ARC_COMPACT2 to EM_ARCV2 */
 #ifndef EM_ARCV2
-#define EM_ARCV2 EM_ARC_COMPACT2
+#  define EM_ARCV2 EM_ARC_COMPACT2
 #endif
 
 static char const * const ClassStrings[] = {

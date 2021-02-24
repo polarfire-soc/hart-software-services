@@ -1,20 +1,18 @@
 /*******************************************************************************
- * Copyright 2019 Microchip Corporation.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
  * PolarFire SoC 10/100/1000 Mbps Ethernet MAC bare metal software driver implementation.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "mpfs_hal/mss_plic.h"
-#include "mpfs_hal/mss_util.h"
-#include "mpfs_hal/mss_ints.h"
+#include "mss_plic.h"
+#include "mss_util.h"
+#include "mss_ints.h"
 #include "soc_config/hw_platform.h"
 
 #include "drivers/mss_mac/mss_ethernet_registers.h"
@@ -29,7 +27,7 @@
 #include "drivers/mss_mac/phy.h"
 #include "hal/hal.h"
 #include "mss_assert.h"
-#include "mpfs_hal/mss_sysreg.h"
+#include "mss_sysreg.h"
 
 #if defined (TI_PHY)
 #include "mss_gpio.h"

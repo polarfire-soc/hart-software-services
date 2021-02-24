@@ -12,9 +12,9 @@
 
 #include "mss_spi.h"
 #include "mss_assert.h"
-#include "mpfs_hal/mss_sysreg.h"
-#include "mpfs_hal/mss_ints.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_sysreg.h"
+#include "mss_ints.h"
+#include "mss_plic.h"
 
 #include <string.h>
 

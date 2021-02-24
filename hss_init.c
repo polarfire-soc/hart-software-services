@@ -43,6 +43,7 @@
 #include "mpfs_reg_map.h"
 
 #include "hss_memcpy_via_pdma.h"
+#include "mpfs_hal_version.h"
 
 /**
  * \brief Main Initialization Function
@@ -55,14 +56,14 @@
 #include <string.h>
 
 #define mMEM_SIZE(REGION)      (REGION##_END - REGION##_START + 1u)
-extern const uint64_t __dtim_start,    __dtim_end;
-extern const uint64_t __e51itim_start,    __e51itim_end;
-extern const uint64_t __u54_1_itim_start, __u54_1_itim_end;
-extern const uint64_t __u54_2_itim_start, __u54_2_itim_end;
-extern const uint64_t __u54_3_itim_start, __u54_3_itim_end;
-extern const uint64_t __u54_4_itim_start, __u54_4_itim_end;
-extern const uint64_t __l2lim_start,      __l2lim_end;
-extern const uint64_t __ddr_start,        __ddr_end;
+//extern const uint64_t __dtim_start,    __dtim_end;
+//extern const uint64_t __e51itim_start,    __e51itim_end;
+//extern const uint64_t __u54_1_itim_start, __u54_1_itim_end;
+//extern const uint64_t __u54_2_itim_start, __u54_2_itim_end;
+//extern const uint64_t __u54_3_itim_start, __u54_3_itim_end;
+//extern const uint64_t __u54_4_itim_start, __u54_4_itim_end;
+//extern const uint64_t __l2lim_start,      __l2lim_end;
+//extern const uint64_t __ddr_start,        __ddr_end;
 
 #define E51_DTIM_START         (&__dtim_start)
 #define E51_DTIM_END           (&__dtim_end)
@@ -194,8 +195,10 @@ bool HSS_E51_Banner(void)
 {
     mHSS_FANCY_PRINTF(LOG_STATUS,
         "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" CRLF
+        "MPFS HAL version %d.%d.%d" CRLF
         "(c) Copyright 2017-2020 Microchip Corporation." CRLF CRLF,
-        HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH);
+        HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
+        MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH);
 
     mHSS_FANCY_PRINTF(LOG_STATUS, "incorporating OpenSBI - version %d.%d" CRLF
         "(c) Copyright 2019-2020 Western Digital Corporation." CRLF CRLF,

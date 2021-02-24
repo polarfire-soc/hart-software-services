@@ -100,7 +100,7 @@ bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner
 
 	debug_printf(1, "\nProcessing blob >>%s<<\n", filename);
 	if (!bootImage.hart[owner-1].firstChunk) {
-		bootImage.hart[owner-1].firstChunk = numChunks; 
+		bootImage.hart[owner-1].firstChunk = numChunks;
 	}
 
 	FILE *fileIn = fopen(filename, "r+");
