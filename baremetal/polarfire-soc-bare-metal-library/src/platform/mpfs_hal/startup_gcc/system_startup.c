@@ -390,8 +390,8 @@ __attribute__((weak)) void u54_4(void)
   * _start() function called invoked
   * This function is called on power up and warm reset.
   */
-__attribute__((weak)) void init_memory( void)
-{
+ __attribute__((weak)) void init_memory( void)
+ {
     extern uint64_t __l2_scratchpad_load;
     extern uint64_t __l2_scratchpad_start;
     extern uint64_t __l2_scratchpad_end;
@@ -410,16 +410,15 @@ __attribute__((weak)) void init_memory( void)
     zero_section(&__bss_start, &__bss_end);
 
     __disable_all_irqs();      /* disables local and global interrupt enable */
-}
+ }
 
  /*-----------------------------------------------------------------------------
    * _start() function called invoked
    * This function is called on power up and warm reset.
    */
-__attribute__((weak)) void init_ddr(void)
-{
-    if ((LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_MASK) != DDR_OFF_MODE)
-    {
+  __attribute__((weak)) void init_ddr(void)
+  {
+    if ((LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_MASK) != DDR_OFF_MODE) {
 #ifdef DDR_SUPPORT
         uint64_t end_address;
 
@@ -429,10 +428,10 @@ __attribute__((weak)) void init_ddr(void)
 #endif
 
         end_address = LIBERO_SETTING_DDR_64_CACHE + LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0 + LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_1;
-       zero_section((uint64_t *)LIBERO_SETTING_DDR_64_CACHE, (uint64_t *)end_address);
+        zero_section((uint64_t *)LIBERO_SETTING_DDR_64_CACHE, (uint64_t *)end_address);
 #endif
     }
-}
+  }
 
  /**
   * This function is configured by editing parameters in

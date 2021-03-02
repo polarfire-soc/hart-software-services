@@ -43,6 +43,13 @@ void delay(uint32_t n);
 /*******************************************************************************
  * extern defined functions
  */
+#ifdef DEBUG_DDR_INIT
+uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
+#endif
+
+/******************************************************************************
+ * Public Functions - API
+ ******************************************************************************/
 
 /**
  * MSS_DDR_init_simulation(void)

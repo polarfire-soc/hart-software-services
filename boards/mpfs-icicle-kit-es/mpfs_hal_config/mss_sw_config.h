@@ -174,5 +174,19 @@
 #  define LIBERO_SETTING_WAY_MASK_M4    0x00000000UL
 #endif
 
+/*
+* We need to redefine the following AXI address range if set incorrectly
+* This is the case for Libero 12.5 and Libero 12.6
+*
+* LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0 is the definition for cached axi addrress
+* LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0 is the address for non-cached Libero address
+* 0x7FFFFFFFUL => 2 GB address range
+*
+*/
+#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0    0x7FFFFFFFUL
+#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_1    0x00000000UL
+#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0    0x7FFFFFFFUL
+#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_1    0x00000000UL
+
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 

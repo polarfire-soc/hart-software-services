@@ -49,7 +49,7 @@
     <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Default/hss.elf"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="hart-software-services"/>
     <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
-    <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1205319340"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.641516001"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
         <listEntry value="/hart-software-services"/>
     </listAttribute>
