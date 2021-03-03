@@ -56,6 +56,7 @@ bool HSS_OpenSBIInit(void);
 #endif
 
 bool HSS_DDRInit(void);
+bool HSS_DDRPrintSegConfig(void);
 bool HSS_UARTInit(void);
 #if IS_ENABLED(CONFIG_USE_LOGO)
 bool HSS_LogoInit(void);
