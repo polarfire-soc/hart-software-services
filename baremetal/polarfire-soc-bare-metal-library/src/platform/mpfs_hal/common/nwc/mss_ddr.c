@@ -901,7 +901,8 @@ static uint32_t ddr_setup(void)
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x4U;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x64U;
             CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66U; /* increment */
-            for (uint32_t d=0;d < LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET; d++)
+            for (uint32_t d=0;d< \
+                LIBERO_SETTING_TIP_CONFIG_PARAMS_BCLK_VCOPHS_OFFSET;d++)
             {
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x67U;
                 CFG_DDR_SGMII_PHY->expert_pllcnt.expert_pllcnt= 0x66U;
@@ -1011,11 +1012,13 @@ static uint32_t ddr_setup(void)
                     /*asserting training_reset */
                     if (ddr_type != DDR3)
                     {
-                        CFG_DDR_SGMII_PHY->training_reset.training_reset = 0x00000000U;
+                        CFG_DDR_SGMII_PHY->training_reset.training_reset =\
+                            0x00000000U;
                     }
                     else
                     {
-                        DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  = 0x00000001U;
+                        DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  =\
+                                                                   0x00000001U;
                     }
                     ddr_training_state = DDR_TRAINING_IP_SM_START;
                 }
@@ -1404,7 +1407,8 @@ static uint32_t ddr_setup(void)
                      if (ddr_type == LPDDR4)
                      {
 #ifdef SET_VREF_LPDDR4_MODE_REGS
-                         mode_register_write(DDR_MODE_REG_VREF, DDR_MODE_REG_VREF_VALUE);
+                         mode_register_write(DDR_MODE_REG_VREF,\
+                             DDR_MODE_REG_VREF_VALUE);
 #endif
                      }
                      ddr_training_state = DDR_TRAINING_SET_FINAL_MODE;
@@ -1474,9 +1478,13 @@ static uint32_t ddr_setup(void)
                     SIM_FEEDBACK1(1U);
 
 #ifdef SW_CONFIG_LPDDR_WR_CALIB_FN
-                    error = write_calibration_lpddr4_using_mtc(number_of_lanes_to_calibrate);
+                    error =\
+                            write_calibration_lpddr4_using_mtc(\
+                                                  number_of_lanes_to_calibrate);
 #else
-                    error = write_calibration_using_mtc(number_of_lanes_to_calibrate);
+                    error =\
+                            write_calibration_using_mtc(\
+                                                  number_of_lanes_to_calibrate);
 #endif
                 }
                 else
@@ -1559,7 +1567,8 @@ static uint32_t ddr_setup(void)
              *  Now start the write calibration if training successful
              */
 #ifdef DEBUG_DDR_INIT
-            (void)uprint32(g_debug_uart, "\n\r\n\r DDR SANITY_CHECKS: ", error);
+            (void)uprint32(g_debug_uart, "\n\r\n\r DDR SANITY_CHECKS: ",\
+                                                                        error);
 #endif
             if(error == 0U)
             {
@@ -1836,7 +1845,8 @@ static uint32_t ddr_setup(void)
 #ifdef DEBUG_DDR_INIT
             {
                 tip_register_status (g_debug_uart);
-                (void)uprint32(g_debug_uart, "\n\r\n\r DDR_TRAINING_PASS: ", ddr_training_state);
+                (void)uprint32(g_debug_uart, "\n\r\n\r DDR_TRAINING_PASS: ",\
+                        ddr_training_state);
                 (void)uprint32(g_debug_uart, "\n ****************************************************", 0);
 
             }
@@ -2144,11 +2154,15 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
                      * Libero core (pre 2.0.109)
                      * So we run this code
                      */
-                    CFG_DDR_SGMII_PHY->ovrt10.ovrt10 = LIBERO_SETTING_RPC_EN_ADDCMD1_OVRT10;
+                    CFG_DDR_SGMII_PHY->ovrt10.ovrt10 =\
+                            LIBERO_SETTING_RPC_EN_ADDCMD1_OVRT10;
                     {
                         /* Use pull-ups to set the CMD/ADD ODT */
-                        CFG_DDR_SGMII_PHY->rpc245.rpc245 = 0x00000000U;
-                        CFG_DDR_SGMII_PHY->rpc237.rpc237 = 0xffffffff;
+                        CFG_DDR_SGMII_PHY->rpc245.rpc245 =\
+                            0x00000000U;
+
+                        CFG_DDR_SGMII_PHY->rpc237.rpc237 =\
+                            0xffffffff;
                     }
 
                     /* OVRT_EN_ADDCMD2 (default 0xE06U), register named ovrt12 */
@@ -2657,8 +2671,8 @@ static void load_dq(uint8_t lane)
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = 
-            (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1
+        CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = \
+            (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1\
                                                 & (uint32_t)~0x0FU);
     }
     //set expert_dfi_status_override_to_shim = 0x7
@@ -2668,12 +2682,12 @@ static void load_dq(uint8_t lane)
     //set dyn_ovr_dlycnt_dq_load* = 1
     if(lane < 4U)
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg0.expert_dlycnt_load_reg0 =
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg0.expert_dlycnt_load_reg0 =\
                 (0xFFU << (lane * 8U));
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 |=
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 |=\
                 0x0FU;
     }
     //set dyn_ovr_dlycnt_dq_load* = 0
@@ -2684,8 +2698,8 @@ static void load_dq(uint8_t lane)
     }
     else
     {
-        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 
-            (CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1
+        CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = \
+            (CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1\
                                                              & (uint32_t)~0x0FU);
     }
     //set expert_mode_en = 0x8
@@ -2892,7 +2906,8 @@ static uint8_t \
 #endif
         CFG_DDR_SGMII_PHY->expert_wrcalib.expert_wrcalib = cal_data;
 
-        for (laneToTest = 0x00U; laneToTest<number_of_lanes_to_calibrate; laneToTest++)
+        for (laneToTest = 0x00U; laneToTest<number_of_lanes_to_calibrate;\
+                                                                laneToTest++)
         {
             /*
              * read once to flush MTC. During write calibration the first MTC read

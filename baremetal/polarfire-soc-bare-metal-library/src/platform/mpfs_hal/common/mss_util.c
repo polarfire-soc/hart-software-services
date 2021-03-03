@@ -91,10 +91,6 @@ void __disable_local_irq(uint8_t local_interrupt)
     }
 }
 
-/*
- * Functions
- */
-
 uint64_t readmcycle(void)
 {
     return (read_csr(mcycle));

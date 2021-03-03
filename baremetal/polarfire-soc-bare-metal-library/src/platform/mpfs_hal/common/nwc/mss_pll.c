@@ -25,13 +25,17 @@
  * address * but above results in error every time we use the function
  */
 
-PLL_TypeDef * const MSS_SCB_MSS_PLL = ((PLL_TypeDef * const ) MSS_SCB_MSS_PLL_BASE);
-PLL_TypeDef * const MSS_SCB_DDR_PLL = ((PLL_TypeDef * const ) MSS_SCB_DDR_PLL_BASE);
-PLL_TypeDef * const MSS_SCB_SGMII_PLL = ((PLL_TypeDef * const ) MSS_SCB_SGMII_PLL_BASE);
-IOSCB_CFM_MSS * const MSS_SCB_CFM_MSS_MUX = ((IOSCB_CFM_MSS * const ) MSS_SCB_MSS_MUX_BASE);
-IOSCB_CFM_SGMII * const MSS_SCB_CFM_SGMII_MUX = ((IOSCB_CFM_SGMII * const ) MSS_SCB_SGMII_MUX_BASE);
-IOSCB_IO_CALIB_STRUCT * const IOSCB_IO_CALIB_SGMII = (IOSCB_IO_CALIB_STRUCT * const )IOSCB_IO_CALIB_SGMII_BASE;
-IOSCB_IO_CALIB_STRUCT * const IOSCB_IO_CALIB_DDR = (IOSCB_IO_CALIB_STRUCT * const )IOSCB_IO_CALIB_DDR_BASE;
+PLL_TypeDef * const MSS_SCB_MSS_PLL = ((PLL_TypeDef *) MSS_SCB_MSS_PLL_BASE);
+PLL_TypeDef * const MSS_SCB_DDR_PLL = ((PLL_TypeDef *) MSS_SCB_DDR_PLL_BASE);
+PLL_TypeDef * const MSS_SCB_SGMII_PLL = ((PLL_TypeDef *) MSS_SCB_SGMII_PLL_BASE);
+IOSCB_CFM_MSS * const MSS_SCB_CFM_MSS_MUX          =\
+        ((IOSCB_CFM_MSS *) MSS_SCB_MSS_MUX_BASE);
+IOSCB_CFM_SGMII * const MSS_SCB_CFM_SGMII_MUX =\
+        ((IOSCB_CFM_SGMII *) MSS_SCB_SGMII_MUX_BASE);
+IOSCB_IO_CALIB_STRUCT * const IOSCB_IO_CALIB_SGMII =\
+        (IOSCB_IO_CALIB_STRUCT *)IOSCB_IO_CALIB_SGMII_BASE;
+IOSCB_IO_CALIB_STRUCT * const IOSCB_IO_CALIB_DDR   =\
+        (IOSCB_IO_CALIB_STRUCT *)IOSCB_IO_CALIB_DDR_BASE;
 
 
 /*******************************************************************************-
@@ -75,12 +79,14 @@ void sgmii_mux_config(uint8_t option);
 
 void set_RTC_divisor(void)
 {
+
     SYSREG->RTC_CLOCK_CR &= ~(0x01U<<16); /* disable RTC clock */
 
-    SYSREG->RTC_CLOCK_CR = (LIBERO_SETTING_MSS_EXT_SGMII_REF_CLK /
+    SYSREG->RTC_CLOCK_CR = (LIBERO_SETTING_MSS_EXT_SGMII_REF_CLK / \
             LIBERO_SETTING_MSS_RTC_TOGGLE_CLK);
 
     SYSREG->RTC_CLOCK_CR |= (0x01U<<16); /* enable RTC clock */
+
 }
 
 
@@ -693,6 +699,7 @@ uint8_t sgmii_pll_lock_scb(void)
 #endif
     return (result);
 }
+
 
 /***************************************************************************//**
  * Copy switch code routine to RAM.

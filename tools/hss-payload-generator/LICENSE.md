@@ -4,7 +4,7 @@ The HSS Payload Generator is released under dual MIT/GPLv2+ licenses
 
 To build this software for Windows, we support the MSYS2 platform.  MSYS2 is a fork of Cygwin, and requires an MSYS-2.0.DLL runtime library, providing POSIX semantics. As a consequence, the HSS Payload Generator is licensed under the GNU GPLv2+ when building with MSYS2 on Windows.  When building for Linux, the HSS Payload Generator is licensed under either the MIT license or the GNU GPLv2+.
 
- Copyright 2019 Microchip Corporation.
+ Copyright 2019-2021 Microchip Corporation.
 
  SPDX-License-Identifier: MIT or GPL-2.0-or-later
 

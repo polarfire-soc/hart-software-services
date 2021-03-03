@@ -18,9 +18,8 @@
 #ifndef MSS_DDR_REGS_H_
 #define MSS_DDR_REGS_H_
 
-
-#include "mss_sysreg.h"
-#include "nwc/mss_ddr_sgmii_phy_defs.h"
+#include "../mss_sysreg.h"
+#include "mss_ddr_sgmii_phy_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -5547,11 +5546,11 @@ typedef struct
 #define SYSREGSCB_BASE                 (0x20003000)         /*!< ( SYSREGSCB ) Base Address */
 #define IOSCBCFG_BASE                  (0x37080000)         /*!< ( IOSCBCFG ) Base Address */
 
-extern CFG_DDR_SGMII_PHY_TypeDef       * const CFG_DDR_SGMII_PHY;
-extern DDR_CSR_APB_TypeDef             * const DDRCFG;
+extern CFG_DDR_SGMII_PHY_TypeDef       * CFG_DDR_SGMII_PHY;
+extern DDR_CSR_APB_TypeDef             * DDRCFG;
 
-extern IOSCBCFG_TypeDef                * const SCBCFG_REGS;
-extern g5_mss_top_scb_regs_TypeDef     * const SCB_REGS;
+extern IOSCBCFG_TypeDef                * SCBCFG_REGS;
+extern g5_mss_top_scb_regs_TypeDef     * SCB_REGS;
 
 #ifdef __cplusplus
 }

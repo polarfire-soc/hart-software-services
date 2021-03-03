@@ -2,7 +2,7 @@
 
 The HSS software is released under the following software license:
 
- Copyright 2019 Microchip Corporation.
+ Copyright 2019-2021 Microchip Corporation.
 
  SPDX-License-Identifier: MIT
 

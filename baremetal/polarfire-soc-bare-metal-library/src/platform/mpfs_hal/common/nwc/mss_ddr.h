@@ -1051,6 +1051,7 @@ MSS_DDR_training
     uint8_t ddr_type
 );
 
+
 /***************************************************************************//**
   The ddr_state_machine() function runs a state machine which initializes and
   monitors the DDR
@@ -1128,3 +1129,5 @@ setup_ddr_segments
 #endif
 
 #endif /* __MSS_DDRC_H_ */
+
+

@@ -852,6 +852,7 @@ uint32_t test_ddr(uint32_t no_of_iterations, uint32_t size)
     uint32_t iteration = 0U;
     uint32_t error = 0U;
 
+
 #ifdef DEBUG_DDR_INIT
     uprint(g_debug_uart, (const char*)"\r\nStarting ddr test\r\n");
 #endif

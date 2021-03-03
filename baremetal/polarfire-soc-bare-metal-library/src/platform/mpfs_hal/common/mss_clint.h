@@ -29,8 +29,6 @@ extern "C" {
 #define SUCCESS 0U
 #define ERROR   1U
 
-#define CLINT_BASE         0x02000000
-#define CLINT_SIZE         0x000c0000
 
 /*==============================================================================
  * CLINT: Core Local Interrupter
@@ -45,6 +43,7 @@ typedef struct CLINT_Type_t
 } CLINT_Type;
 
 #define CLINT    ((CLINT_Type *)CLINT_BASE)
+
 
 /*==============================================================================
  * The function raise_soft_interrupt() raises a synchronous software interrupt by

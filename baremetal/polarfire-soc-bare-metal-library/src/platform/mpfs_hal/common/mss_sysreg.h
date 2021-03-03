@@ -13,6 +13,7 @@
  * @file mss_sysreg.h
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief Hardware register definitions.
+
  *
  */
 #ifndef MSS_SYSREG_H
@@ -30,6 +31,7 @@ extern "C" {
      <strong>IO Type Qualifiers</strong> are used
      \li to specify the access to peripheral variables.
      \li for automatic generation of peripheral register debug information.
+
  */
 #ifndef __I
  #ifdef __cplusplus

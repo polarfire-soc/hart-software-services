@@ -59,6 +59,8 @@ __attribute__((weak)) void config_l2_cache(void)
 
     ASSERT(LIBERO_SETTING_WAY_ENABLE >= LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS);
 
+
+
     /*
      * Compute the mask used to specify ways that will be used by the
      * scratchpad.
@@ -144,6 +146,7 @@ __attribute__((weak)) void config_l2_cache(void)
      */
     CACHE_CTRL->WAY_MASK_E51_DCACHE = LIBERO_SETTING_WAY_MASK_E51_DCACHE;
     mb();
+
 }
 
 
