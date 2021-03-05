@@ -34,7 +34,7 @@
  */
 
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-#  include "hw_ddr_segs.h"
+#  include "ddr/hw_ddr_segs.h"
 #  include "nwc/mss_nwc_init.h"
 #endif
 
