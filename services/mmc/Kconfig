@@ -50,3 +50,23 @@ config SERVICE_MMC_BUS_VOLTAGE_3V3
 
 		If you do not know what to do here, say Y.
 endmenu
+
+menu "SDIO Control"
+config SERVICE_SDIO_REGISTER_PRESENT
+	bool "SDIO register present"
+	default n
+        depends on SERVICE_MMC_MODE_SDCARD && SERVICE_MMC_MODE_EMMC
+	help
+                This feature will enable the use of a register in the FPGA fabric for SDIO control.
+
+		If this register is not present and this option is enabled the HSS will fail to boot.
+
+config SERVICE_SDIO_REGISTER_ADDRESS
+	hex "Memory mapped address of SDIO register"
+	default 0x4f000000
+	depends on SERVICE_MMC_MODE_SDCARD && SERVICE_MMC_MODE_EMMC && SERVICE_SDIO_REGISTER_PRESENT
+        help
+                This value represents the memory mapped address of a register in the FPGA fabric.
+                This register is used to select between eMMC and SD card when a de-mux is present on a board.
+                
+endmenu

@@ -32,6 +32,11 @@
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
+/* elfutils-0.182 has rename EM_ARC_COMPACT2 to EM_ARCV2 */
+#ifndef EM_ARCV2
+#define EM_ARCV2 EM_ARC_COMPACT2
+#endif
+
 static char const * const ClassStrings[] = {
 	[ELFCLASSNONE] =	"Invalid class",
 	[ELFCLASS32]  =		"32-bit objects",
@@ -216,7 +221,7 @@ static char const * const MachineStrings[] = {
 	[EM_CLOUDSHIELD] =	"CloudShield architecture family",
 	[EM_COREA_1ST] =	"KIPO-KAIST Core-A 1st generation processor family",
 	[EM_COREA_2ND] =	"KIPO-KAIST Core-A 2nd generation processor family",
-	[EM_ARC_COMPACT2] =	"Synopsys ARCompact V2",
+	[EM_ARCV2] =		"Synopsys ARCompact V2",
 	[EM_OPEN8] =		"Open8 8-bit RISC soft processor core",
 	[EM_RL78] =		"Renesas RL78 family",
 	[EM_VIDEOCORE5] =	"Broadcom VideoCore V processor",

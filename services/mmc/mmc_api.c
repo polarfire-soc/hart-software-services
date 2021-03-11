@@ -27,8 +27,6 @@
 #include "mss_mmc.h"
 #include "hal/hw_macros.h"
 
-#define SDIO_REGISTER_ADDRESS    0x4f000000
-
 /*
  * MMC doesn't need a "service" to run every super-loop, but it does need to be
  * initialized early...
@@ -93,7 +91,9 @@ static bool mmc_init_emmc(void)
     SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_eMMC;
     SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_eMMC;
 
-    HW_set_uint32(SDIO_REGISTER_ADDRESS,  0);
+#if defined(SERVICE_CONFIG_SDIO_REGISTER_PRESENT)
+    HW_set_uint32(SERVICE_CONFIG_SDIO_REGISTER_ADDRESS,  0);
+#endif
 
     static mss_mmc_cfg_t emmcConfig =
     {
@@ -123,7 +123,9 @@ static bool mmc_init_sdcard(void)
     SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_SD;
     SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_SD;
 
-    HW_set_uint32(SDIO_REGISTER_ADDRESS,  1);
+#if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
+    HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  1);
+#endif    
 
     static mss_mmc_cfg_t sdcardConfig =
     {
