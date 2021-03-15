@@ -125,6 +125,25 @@ static uint8_t gpio_number_validate(GPIO_TypeDef const * gpio, mss_gpio_id_t gpi
  */
 void MSS_GPIO_init(GPIO_TypeDef * gpio)
 {
+    uint32_t clock_mask;
+    uint32_t reset_mask;
+
+    if (GPIO0_LO == gpio || GPIO0_HI == gpio) {
+        clock_mask = (uint32_t)SUBBLK_CLOCK_CR_GPIO0_MASK;
+        reset_mask = (uint32_t)SOFT_RESET_CR_GPIO0_MASK;
+    } else if (GPIO1_LO == gpio || GPIO1_HI == gpio) {
+        clock_mask = (uint32_t)SUBBLK_CLOCK_CR_GPIO1_MASK;
+        reset_mask = (uint32_t)SOFT_RESET_CR_GPIO1_MASK;
+    } else {
+        clock_mask = (uint32_t)SUBBLK_CLOCK_CR_GPIO2_MASK;
+        reset_mask = (uint32_t)SOFT_RESET_CR_GPIO2_MASK;
+    }
+
+    /* Enable clock to GPIO block and toggle reset signal */
+    SYSREG->SUBBLK_CLOCK_CR |= clock_mask;
+    SYSREG->SOFT_RESET_CR |= reset_mask;
+    SYSREG->SOFT_RESET_CR &= ~reset_mask;
+
     /* clear all pending interrupts*/
     gpio->GPIO_IRQ = 0xFFFFFFFFU;
 }
