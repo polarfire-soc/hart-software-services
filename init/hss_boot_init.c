@@ -20,6 +20,12 @@
 #include "hss_sys_setup.h"
 #include "hss_progress.h"
 
+#ifdef CONFIG_SERVICE_BOOT_SPI_FLASH
+#define SPI_FLASH_BOOT_ENABLED (CONFIG_SERVICE_BOOT_SPI_FLASH != 0xFFFFFFFF)
+#else
+#define SPI_FLASH_BOOT_ENABLED 0
+#endif
+
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI)
 #  include "opensbi_service.h"
 #endif
@@ -35,6 +41,10 @@
 #  include "gpt.h"
 #endif
 
+#if SPI_FLASH_BOOT_ENABLED
+#  include "mss_sys_services.h"
+#endif
+
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 #include "hss_crc32.h"
@@ -47,6 +57,7 @@
 #endif
 
 #include "hss_boot_pmp.h"
+#include "hss_atomic.h"
 
 //
 // local module functions
@@ -69,6 +80,9 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage);
 #if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage);
 #endif
+#if defined(CONFIG_SERVICE_BOOT_SPI_FLASH)
+static bool getBootImageFromSpiFlash_(struct HSS_BootImage **ppBootImage);
+#endif
 
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
 static bool validateCrc_(struct HSS_BootImage *pImage);
@@ -79,7 +93,9 @@ static bool validateCrc_(struct HSS_BootImage *pImage);
 typedef bool (*HSS_GetBootImageFnPtr_t)(struct HSS_BootImage **ppBootImage);
 
 static HSS_GetBootImageFnPtr_t getBootImageFunction =
-#if defined(CONFIG_SERVICE_MMC)
+#if defined(SPI_FLASH_BOOT_ENABLED)
+    getBootImageFromSpiFlash_;
+#elif defined(CONFIG_SERVICE_MMC)
     getBootImageFromMMC_;
 #elif defined(CONFIG_SERVICE_QSPI)
     getBootImageFromQSPI_;
@@ -238,7 +254,7 @@ static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
     return result;
 }
 
-#if defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI)
+#if defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || SPI_FLASH_BOOT_ENABLED
 struct HSS_BootImage bootImage __attribute__((aligned(8)));
 #endif
 
@@ -396,5 +412,43 @@ void HSS_BootSelectPayload(void)
 {
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting Payload as boot source ..." CRLF);
     getBootImageFunction = getBootImageFromPayload_;
+}
+#endif
+
+#if SPI_FLASH_BOOT_ENABLED
+static bool SpiFlashReadBlock(void *dst, size_t offs, size_t count) {
+   int ret = MSS_SYS_spi_copy((uintptr_t)dst, offs, count, /* options */ 3, /* mb_offset */ 0);
+   mb();
+   if (ret)
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to read 0x%lx bytes from SPI flash @0x%lx!\n", count, offs);
+   return ret == 0;
+}
+static bool getBootImageFromSpiFlash_(struct HSS_BootImage **ppBootImage) {
+    bool result = false;
+
+    assert(ppBootImage);
+
+    size_t srcOffset = CONFIG_SERVICE_BOOT_SPI_FLASH;
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from SPI Flash +0x%lx to DDR ..." CRLF, srcOffset);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
+        sizeof(struct HSS_BootImage));
+
+    MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+
+    result = SpiFlashReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
+    if (!result)
+        return false;
+
+    result = verifyMagic_(&bootImage);
+    if (!result)
+        return false;
+
+    result = copyBootImageToDDR_(&bootImage,
+        (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR),
+        srcOffset, SpiFlashReadBlock);
+    *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+
+    return result;
 }
 #endif

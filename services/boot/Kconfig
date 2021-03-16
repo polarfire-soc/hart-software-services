@@ -26,6 +26,13 @@ config SERVICE_BOOT_DDR_TARGET_ADDR
         help
                 This feature specifies a scratch address for EMMC/QSPI decompression
 
+config SERVICE_BOOT_SPI_FLASH
+        hex "Copy payload from SPI FLASH at offset"
+        default  0xFFFFFFFF
+        depends on SERVICE_BOOT
+        help
+                This feature enables booting from the SPI flash.
+
 config SERVICE_BOOT_USE_PAYLOAD
         bool "Use Payload file"
         default  y
