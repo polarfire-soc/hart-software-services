@@ -127,11 +127,7 @@ EXTRA_SRCS-y += misc/stack_guard.c
 ifdef CONFIG_OPENSBI
   OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
   $(OPENSBI_LIBS):
-ifdef CONFIG_WITH_ARCH
-	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_WITH_ARCH=$(CONFIG_WITH_ARCH) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
-else
-	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) -r --no-print-directory -C thirdparty/opensbi V=$(V)
-endif
+	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
 
   .PHONY: $(OPENSBI_LIBS)
 else
