@@ -97,7 +97,7 @@ MEMORY
     u54_4_itim (rwx)   : ORIGIN = 0x01820000, LENGTH = 28k
     l2lim (rwx)        : ORIGIN = 0x08000000, LENGTH = 1920k
     l2zerodevice (rwx) : ORIGIN = 0x0A000000, LENGTH = 512k
-    ddr (rwx)          : ORIGIN = 0x80000000, LENGTH = 1024m
+    ddr (rwx)          : ORIGIN = 0x80000000, LENGTH = 768m
 }
 
 PROVIDE(HEAP_SIZE = 0k);               /* needs to be calculated for your application */
@@ -136,10 +136,13 @@ SECTIONS
     PROVIDE(__u54_4_itim_start = ORIGIN(u54_4_itim));
     PROVIDE(__u54_4_itim_end   = ORIGIN(u54_4_itim) + LENGTH(u54_4_itim));
 
+    PROVIDE(__l2lim_start      = ORIGIN(l2lim));
+    PROVIDE(__l2lim_end        = ORIGIN(l2lim) + LENGTH(l2lim));
+
     /*
-     * Code and RO data lives in l2lim
+     * Code and RO data lives in envm (flash)
      */
-    . = __l2lim_start;
+    . = __envm_start;
 
     PROVIDE(_hss_start = .);
 
@@ -183,12 +186,12 @@ SECTIONS
         KEEP (*(SORT(.fini_array.*)))
         PROVIDE_HIDDEN (__fini_array_end = .);
         . = ALIGN(0x10);
-    } >l2lim
+    } >envm
 
     .gnu_build_id : ALIGN(8) {
         PROVIDE(gnu_build_id = .);
         *(.note.gnu.build-id)
-    } >l2lim
+    } >envm
 
     PROVIDE(_hss_end = .);
 
@@ -202,7 +205,7 @@ SECTIONS
         . = ALIGN(0x10);
         __l2_scratchpad_end = .;
         __l2_scratchpad_vma_end = .;
-    } >l2zerodevice
+    } >l2zerodevice AT>envm
 
 
     /*******************************************************************************
@@ -223,7 +226,7 @@ SECTIONS
         *(.ram_coderodata*)
         . = ALIGN (0x10);
         __sc_end = .;
-    } >switch_code
+    } >switch_code AT>envm
 
     /*******************************************************************************
      *
@@ -246,7 +249,7 @@ SECTIONS
         *(.sdata .sdata.* .gnu.linkonce.s.*)
         . = ALIGN(0x10);
         __sdata_end = .;
-    } >l2lim
+    } >l2lim AT >envm
 
     /*******************************************************************************
      *
@@ -262,7 +265,7 @@ SECTIONS
         *(.data .data.* .gnu.linkonce.d.*)
         . = ALIGN(0x10);
         __data_end = .;
-    } >l2lim
+    } >l2lim AT >envm
 
     /*******************************************************************************
      *
