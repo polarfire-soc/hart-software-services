@@ -143,7 +143,7 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
             size_t i;
 
             for (i = 0u; i < MAX_NUM_HARTS; i++) {
-                if (mUNLIKELY(i == myHartId)) { continue; } // don't handle messages if to myself
+                if (unlikely(i == myHartId)) { continue; } // don't handle messages if to myself
 
                 uint32_t index = IPI_CalculateQueueIndex(i, myHartId);
 
@@ -175,16 +175,16 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
         bool dump_flag = false;
         bool max_exceeded_flag = false;
 
-        if (mUNLIKELY(delta > maxLoopTime)) {
+        if (unlikely(delta > maxLoopTime)) {
             maxLoopTime = delta;
             max_exceeded_flag = true;
        }
 
-        if (mUNLIKELY((loopCount % (unsigned long)CONFIG_DEBUG_LOOP_TIMES_THRESHOLD) == 0u)) {
+        if (unlikely((loopCount % (unsigned long)CONFIG_DEBUG_LOOP_TIMES_THRESHOLD) == 0u)) {
             dump_flag = true;
         }
 
-        if (mUNLIKELY(dump_flag || max_exceeded_flag)) {
+        if (unlikely(dump_flag || max_exceeded_flag)) {
 #ifdef    CONFIG_DEBUG_PROFILING_SUPPORT
             dump_profile();
 #endif
