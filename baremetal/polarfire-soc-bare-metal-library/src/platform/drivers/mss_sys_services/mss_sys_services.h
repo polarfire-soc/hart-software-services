@@ -270,7 +270,7 @@ extern "C" {
     Decryption error occurred during UIC SPI Authenticated mode
 
   EXECUTE_UIC_SPI_NOTMASTER_ERR
-    SPI isn’t set as the master
+    SPI isn't set as the master
 
   EXECUTE_UIC_FABRIC_APB_ERR
     A Fabric APB Error was detected during UIC execution
@@ -601,9 +601,9 @@ extern "C" {
 
    MSS_SYS_DEBUG_SNAPSHOT_BUSERR
    A bus error occurred and the snapshot was aborted.  This may occur if:
-       •   the fabric power is off, or
-       •   the fabric APB slave flagged an error, or
-       •   the fabric APB slave was too slow to assert PREADY
+       *   the fabric power is off, or
+       *   the fabric APB slave flagged an error, or
+       *   the fabric APB slave was too slow to assert PREADY
 */
 #define MSS_SYS_DEBUG_SNAPSHOT_SECERR                             1u
 #define MSS_SYS_DEBUG_SNAPSHOT_BUSERR                             2u
@@ -1613,7 +1613,7 @@ MSS_SYS_authenticate_bitstream
 
                     Note: To support recovery SPI_IDX=1 should be an empty slot
                     and the recovery image should be located in SPI_IDX=0. Since
-                    SPI_IDX=1 should be an empty slot it shouldn’t be passed into
+                    SPI_IDX=1 should be an empty slot it shouldn't be passed into
                     the system service.
   @return
                    The MSS_SYS_authenticate_iap_image function returns
@@ -2093,7 +2093,7 @@ MSS_SYS_digest_check
    Note: For the IAP services with command IAP_PROGRAM_BY_SPIIDX_CMD and
          IAP_VERIFY_BY_SPIIDX_CMD To support recovery SPI_IDX=1 should be an
          empty slot and the recovery image should be located in SPI_IDX=0.
-         Since SPI_IDX=1 should be an empty slot it shouldn’t be passed into
+         Since SPI_IDX=1 should be an empty slot it shouldn't be passed into
          the system service.
   @return
                     This function returns a value to indicate whether the
@@ -2303,7 +2303,7 @@ MSS_SYS_debug_read_probe
   @param pwdata
                     The pwdata parameter specifies the value to be written on
                     selected probe registers.
-                    Example: If PWMASK[i] is ‘1’ then probe register i will
+                    Example: If PWMASK[i] is '1' then probe register i will
                     be written to the value specified by PWDATA[i].
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -2373,13 +2373,13 @@ MSS_SYS_debug_write_probe
                     address of probe module.
   @param clear
                     The clear parameter is used to clear the configurations of
-                    local channels a or b. If CLEAR is ‘1’, all local channel
+                    local channels a or b. If CLEAR is '1', all local channel
                     x (the applicable channel a or b) configurations are
                     cleared before applying the new configuration
   @param ioen
                     The ioen parameter is used to activate the probe output
-                    pad. If IOEN is ‘1’ then the corresponding live probe
-                    output pad is activated.  Note that setting IOEN to ‘0’
+                    pad. If IOEN is '1' then the corresponding live probe
+                    output pad is activated.  Note that setting IOEN to '0'
                     does not disable the internal live probe configuration.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -2456,8 +2456,8 @@ MSS_SYS_debug_live_probe
                          2   LSRAM x5    4096               5
                          3   LSRAM x10   2048               10
                          4   LSRAM x20   1024               20
-                         5   µRAM        64                 12
-                         6   µPROM       256                9
+                         5   uRAM        64                 12
+                         6   uPROM       256                9
                          7   LSRAM x20   1024               20
   @param memlock_mode
                     The memlock_mode parameter specifies the the memory
@@ -2767,7 +2767,7 @@ MSS_SYS_debug_write_apb
 
 /*-------------------------------------------------------------------------*//**
   The MSS_SYS_debug_fabric_snapshot() function will service generates a
-  snapshot of the volatile fabric content. Data is read from each LSRAM, µRAM
+  snapshot of the volatile fabric content. Data is read from each LSRAM, uRAM
   and probe module and copied to the fabric APB debug port.
   This function is non-blocking in the interrupt mode , in that, it will exit
   immediately after requesting the service. In polling mode, it becomes a
@@ -2782,7 +2782,7 @@ MSS_SYS_debug_write_apb
                     bus through which debug data is streamed.
   @param apb_fast_write
                     The apb_fast_write parameter specifies whether to use
-                    the fast apb protocol. If apb_fast_write is ‘1’ then,
+                    the fast apb protocol. If apb_fast_write is '1' then,
                     during write transfers, the fast APB protocol is used
                     and the address range is limited to port_addr[15:2]  and
                     port_addr[28:16] is ignored.
@@ -3021,9 +3021,9 @@ MSS_SYS_unlock_debug_passcode
   any interaction with an external intelligence.
   The following conditions must be met for the OWP to proceed and write the
   payload HWM to the device:
-    •   HWM stored in the device must be valid
-    •   OWP passcode matches
-    •   Payload HWM is greater than the HWM stored in the device
+    *   HWM stored in the device must be valid
+    *   OWP passcode matches
+    *   Payload HWM is greater than the HWM stored in the device
   After HWM is written the OWP is successful and SWL_DEBUG is unlocked.
   This function is non-blocking in the interrupt mode , in that, it will exit
   immediately after requesting the service. In polling mode, it becomes a

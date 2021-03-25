@@ -105,14 +105,14 @@ static uint8_t io_mux_and_bank_config(void);
  *
  *      The IO Buffers are disabled.
  *      Output drivers are disabled (set the drv<3:0> bits to 0000, output
- *      enable “mss_oe” bit to 0)
+ *      enable "mss_oe" bit to 0)
  *      Disable the WPU bit set to 0 and enable the WPD bit set to 1.
  *      Receivers are disabled. (Ibufmd<2:0> set to 7)
  *
  *      MSS can enable OFF mode through configurator bit for selective MSSIO
- *      from Bank2/Bank4 by making drv<3:0>/mss_oe bit to “0” for that
+ *      from Bank2/Bank4 by making drv<3:0>/mss_oe bit to "0" for that
  *      particular MSSIO making Output driver disabled and ibufmd <2:0>  bit to
- *      “7” for that particular MSSIO making input receiver disabled.
+ *      "7" for that particular MSSIO making input receiver disabled.
  *
  */
 
@@ -164,7 +164,7 @@ static uint8_t io_mux_and_bank_config(void)
      *    sets pcode and ncode using (mssio_bank2_cfg_cr/mssio_bank4_cfg_cr)
      *
      * The MSS IO pad configuration is provided by nineteen system registers
-     * each configuring two IO’s using 15-bits per IO
+     * each configuring two IO's using 15-bits per IO
      * - (mssio_bank*_io_cfg_*_*_cr).
 
         | mssio_bank*_io_cfg_*_*_cr | offset        | info |

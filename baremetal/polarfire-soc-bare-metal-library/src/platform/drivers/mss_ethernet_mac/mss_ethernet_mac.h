@@ -263,7 +263,7 @@ extern "C" {
 
 /********************************************************************************
   The following definitions are used with function MSS_MAC_get_link_status() to
-  report the link�s status.
+  report the links status.
  */
 #define MSS_MAC_LINK_DOWN                   (0U)
 #define MSS_MAC_LINK_UP                     (1U)
@@ -324,7 +324,7 @@ extern "C" {
 
 /***************************************************************************//**
   The definition below is provided to specify that the MSS_MAC_init() function
-  should attempt to discover the address of the PHY connected to the MAC�s
+  should attempt to discover the address of the PHY connected to the MACs
   management interface.It can be used with mss_mac_cfg_t configuration parameter
   phy_addr and mss_mac_cfg_t as a parameter to a call to the MSS_MAC_init()
   function.

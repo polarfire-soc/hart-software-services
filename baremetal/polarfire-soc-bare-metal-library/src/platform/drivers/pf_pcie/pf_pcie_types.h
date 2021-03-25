@@ -241,40 +241,40 @@ PCIe AXI4 Master ATR table configuration structure.
 
   state
     Enables and disables the translation address table implementation.
-        • PF_PCIE_ATR_TABLE_ENABLE
-        • PF_PCIE_ATR_TABLE_DISABLE
+        * PF_PCIE_ATR_TABLE_ENABLE
+        * PF_PCIE_ATR_TABLE_DISABLE
   bar_type
     Sets the PCIe BAR type memory on AXI4 master ATR table to 32-bit or
     64-bit memory.
-        • PF_PCIE_BAR_TYPE_32BIT_MEM
-        • PF_PCIE_BAR_TYPE_32BIT_PREFET_MEM
-        • PF_PCIE_BAR_TYPE_64BIT_PREFET_MEM
+        * PF_PCIE_BAR_TYPE_32BIT_MEM
+        * PF_PCIE_BAR_TYPE_32BIT_PREFET_MEM
+        * PF_PCIE_BAR_TYPE_64BIT_PREFET_MEM
   bar_size
     Specifies the size of the PCIe BAR space. The pf_pcie_atr_size_t type is
     used assign the bar size.
 
-        • PF_PCIE_SIZE_4KB
-        • PF_PCIE_SIZE_8KB
-        • PF_PCIE_SIZE_16KB
-        • PF_PCIE_SIZE_32KB
-        • PF_PCIE_SIZE_64KB
-        • PF_PCIE_SIZE_128KB
+        * PF_PCIE_SIZE_4KB
+        * PF_PCIE_SIZE_8KB
+        * PF_PCIE_SIZE_16KB
+        * PF_PCIE_SIZE_32KB
+        * PF_PCIE_SIZE_64KB
+        * PF_PCIE_SIZE_128KB
         ............
         ............
-        • PF_PCIE_SIZE_512TB
+        * PF_PCIE_SIZE_512TB
 
   table_size
     Specifies the size of the PCIe AXI4 master address translation table.
     The pf_pcie_atr_size_t type is used to assign the table size.
-        • PF_PCIE_SIZE_4KB
-        • PF_PCIE_SIZE_8KB
-        • PF_PCIE_SIZE_16KB
-        • PF_PCIE_SIZE_32KB
-        • PF_PCIE_SIZE_64KB
-        • PF_PCIE_SIZE_128KB
+        * PF_PCIE_SIZE_4KB
+        * PF_PCIE_SIZE_8KB
+        * PF_PCIE_SIZE_16KB
+        * PF_PCIE_SIZE_32KB
+        * PF_PCIE_SIZE_64KB
+        * PF_PCIE_SIZE_128KB
         ............
         ............
-        • PF_PCIE_SIZE_512TB
+        * PF_PCIE_SIZE_512TB
   src_addr
     Specifies the lower 32-bit source address of the PCIe AXI4 master address
     translation space.
@@ -311,20 +311,20 @@ PCIe AXI4 Slave ATR table configuration structure.
 
   state
     Enables and disables the translation address table implementation.
-        • PF_PCIE_ATR_TABLE_ENABLE
-        • PF_PCIE_ATR_TABLE_DISABLE
+        * PF_PCIE_ATR_TABLE_ENABLE
+        * PF_PCIE_ATR_TABLE_DISABLE
   size
     Specifies the size of the PCIe AXI4 slave address translation table.
     The pf_pcie_atr_size_t type is used to assign the table size.
-        • PF_PCIE_SIZE_4KB
-        • PF_PCIE_SIZE_8KB
-        • PF_PCIE_SIZE_16KB
-        • PF_PCIE_SIZE_32KB
-        • PF_PCIE_SIZE_64KB
-        • PF_PCIE_SIZE_128KB
+        * PF_PCIE_SIZE_4KB
+        * PF_PCIE_SIZE_8KB
+        * PF_PCIE_SIZE_16KB
+        * PF_PCIE_SIZE_32KB
+        * PF_PCIE_SIZE_64KB
+        * PF_PCIE_SIZE_128KB
         ............
         ............
-        • PF_PCIE_SIZE_512TB
+        * PF_PCIE_SIZE_512TB
 
   src_addr
     Specifies the lower 32-bit source address of the PCIe AXI4 slave address

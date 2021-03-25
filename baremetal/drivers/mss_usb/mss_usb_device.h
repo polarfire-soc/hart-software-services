@@ -37,21 +37,21 @@
   stack. The USBD driver implements the core functionality of the USB device
   mode operations. The USBD driver is responsible for the following
   functionalities.
-    •    USB Device Enumeration
-    •    USB Standard request handling
-    •    USB Suspend, Resume and Reset handling
-    •    Endpoint management
-    •    USB transfers management
-    •    USBD-Class call-back interface
-    •    Application call-back interface
+    *    USB Device Enumeration
+    *    USB Standard request handling
+    *    USB Suspend, Resume and Reset handling
+    *    Endpoint management
+    *    USB transfers management
+    *    USBD-Class call-back interface
+    *    Application call-back interface
 
   @section theory_op Theory of Operation
   The following steps are involved in the operation of MSS USB:
-    •    Configuration
-    •    Initialization
-    •    USBD-Class Interface
-    •    Application Interface
-    •    Data transfer
+    *    Configuration
+    *    Initialization
+    *    USBD-Class Interface
+    *    Application Interface
+    *    Data transfer
   The USBD driver operation depends on user configuration provided in
   mss_usb_config.h.
 
@@ -97,7 +97,7 @@
   MSS_USBD_set_desc_cb_handler() function.
 
   Data transfer
-  The USB Device uses ‘Endpoints’ for data transfer. The transmit endpoint and
+  The USB Device uses 'Endpoints' for data transfer. The transmit endpoint and
   receive endpoint need to be configured for their respective configuration
   parameters before using them for data transfer. The functions
   MSS_USBD_tx_ep_configure() and MSS_USBD_rx_ep_configure() must be used to
@@ -505,8 +505,8 @@ MSS_USBD_set_class_cb_handler
     The MSS_USBD_cep_configure() function is used to configure the control
     endpoint (EP0) for the control transactions and enables the control endpoint
     interrupt. Other Properties of the control endpoint are fixed as listed below.
-        Transfer type     – Control Transfer.
-        FIFO address      – 0x00
+        Transfer type     - Control Transfer.
+        FIFO address      - 0x00
         FIFO Size         - 0x40 (64 decimal)
 
     This function must be called before any other function for the control
@@ -708,15 +708,15 @@ MSS_USBD_cep_disable_irq
     The num_usb_pkt parameter has different meanings for different types of
     transfers.
 
-    Low bandwidth ISO/interrupt transfers – This parameter must always be ‘1u’.
+    Low bandwidth ISO/interrupt transfers - This parameter must always be '1u'.
     This parameter represents the number of packets transferred in one (micro)
     frame.
 
-    High bandwidth ISO transfers – This parameter represents the number of
+    High bandwidth ISO transfers - This parameter represents the number of
     packets transferred in one (Micro) frame. In this case, this parameter can
     have a value of 1, 2 or 3. High bandwidth ISO transfers are not yet implemented.
 
-    Bulk transfers. – For Bulk transfer this value must always be ‘1u’. This
+    Bulk transfers. - For Bulk transfer this value must always be '1u'. This
     parameter is used with the auto-amalgamation/auto-split feature where it
     indicates the number of bulk packets to be auto-amalgamated/auto-split in a
     bulk transfer. The auto-amalgamation/auto-split feature is not available yet.
@@ -1077,15 +1077,15 @@ MSS_USBD_clr_isoupdate
     The num_usb_pkt parameter has different meanings for different types of
     transfers.
 
-    Low bandwidth ISO/interrupt transfers – This parameter must always be ‘1u’.
+    Low bandwidth ISO/interrupt transfers - This parameter must always be '1u'.
     This parameter represents the number of packets transferred in one (micro)
     frame.
 
-    High bandwidth ISO transfers – This parameter represents the number of
+    High bandwidth ISO transfers - This parameter represents the number of
     packets transferred in one (Micro) frame. In this case, this parameter can
     have a value of 1 2 or 3. High bandwidth ISO transfers are not yet implemented.
 
-    Bulk transfers. – For Bulk transfer this value must always be ‘1u’. This
+    Bulk transfers. - For Bulk transfer this value must always be '1u'. This
     parameter is used with the auto-amalgamation/auto-split feature where it
     indicates number of bulk packets to be auto-amalgamated/auto-split in bulk
     transfer. The auto-amalgamation/auto-split feature is implemented but not

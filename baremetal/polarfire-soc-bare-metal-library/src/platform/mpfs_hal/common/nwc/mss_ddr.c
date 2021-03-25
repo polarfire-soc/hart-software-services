@@ -1641,7 +1641,7 @@ static uint32_t ddr_setup(void)
              * write and read back test from drr, non cached access
              */
             {
-#ifdef DDR_FULL_32BIT_NC_CHECK_EN
+#if (DDR_FULL_32BIT_NC_CHECK_EN == 1)
 //#ifndef HSS
                 error = ddr_read_write_fn((uint64_t*)LIBERO_SETTING_DDR_32_NON_CACHE,\
                                      SW_CFG_NUM_READS_WRITES,\
@@ -1999,7 +1999,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
      * subsequent step.
      *
      * Question:
-     * Select VS bits (eg DDR3 ) (vs bits not included in mode setup – should
+     * Select VS bits (eg DDR3 ) (vs bits not included in mode setup - should
      * be??)
      * Small wait while state machine transfer takes place required here.
      * (status bit required?)
@@ -2222,7 +2222,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
     {
         /*
          *
-         * We’ll have to pass that one in via E51, meaning APB writes to
+         * We'll have to pass that one in via E51, meaning APB writes to
          * addresses:
          * 0x2000 7384   rpc1_ODT       ODT_CA
          * 0x2000 7388   rpc2_ODT       RPC_ODT_CLK
@@ -2273,7 +2273,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
             Drive bits and ibuff mode
             Ciaran to define what need to be done
               SAR107676
-        DDR – by default put to DDR4 mode so needs active intervention
+        DDR - by default put to DDR4 mode so needs active intervention
             Bills sac spec (DDR PHY SAC spec section 6.1)
             Mode register set to 7
             Ibuff mode set to 7 (rx turned off)
@@ -2281,10 +2281,10 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
             Disable DDR PLL
                Will be off from reset- no need
             Need to reflash
-            DDR APB ( three resets – soft reset bit 0 to 1)
+            DDR APB ( three resets - soft reset bit 0 to 1)
                 Drive odt etc
-       SGMII – from reset nothing to be done
-           See Jeff’s spread sheet- default values listed
+       SGMII - from reset nothing to be done
+           See Jeff's spread sheet- default values listed
            Extn clock off also defined in spread sheet
  */
 
@@ -2318,7 +2318,7 @@ static void ddr_off_mode(void)
      /*
       * set the mode register to 7 => off mode
       * From the DDRPHY training firmware spec.:
-      * If the DDR interface is unused, the firmware will have to write 3’b111
+      * If the DDR interface is unused, the firmware will have to write 3'b111
       * into the APB_DDR_MODE register. This will disable all the DRIVERs, ODT
       * and INPUT  receivers.
       * By default, WPD will be applied to all pads.
@@ -2895,8 +2895,8 @@ static uint8_t \
     /*
      * training carried out here- sweeping write calibration offset from 0 to F
      * Explanation: A register, expert_wrcalib, is described in MSS DDR TIP
-     * Register Map [1], and its purpose is to delay—by X number of memory clock
-     * cycles—the write data, write data mask, and write output enable with the
+     * Register Map [1], and its purpose is to delay--by X number of memory clock
+     * cycles--the write data, write data mask, and write output enable with the
      * respect to the address and command for each lane.
      */
     for (cal_data=0x00000U;cal_data<0xfffffU;cal_data=cal_data+0x11111U)
@@ -3083,8 +3083,8 @@ static uint8_t FPGA_VREFDQ_calibration_using_mtc(void)
     /*
     * training carried out here- sweeping write calibration offset from 0 to F
     * Explanation: A register, expert_wrcalib, is described in MSS DDR TIP
-    * Register Map [1], and its purpose is to delay—by X number of memory
-    * clock cycles—the write data, write data mask, and write output enable
+    * Register Map [1], and its purpose is to delay--by X number of memory
+    * clock cycles--the write data, write data mask, and write output enable
     * with the respect to the address and command for each lane.
     */
     calib_data.fpga_vref.vref_result = 0U;
@@ -3217,8 +3217,8 @@ static uint8_t VREFDQ_calibration_using_mtc(void)
     /*
     * training carried out here- sweeping write calibration offset from 0 to F
     * Explanation: A register, expert_wrcalib, is described in MSS DDR TIP
-    * Register Map [1], and its purpose is to delay—by X number of memory clock
-    * cycles—the write data, write data mask, and write output enable with the
+    * Register Map [1], and its purpose is to delay--by X number of memory clock
+    * cycles--the write data, write data mask, and write output enable with the
     * respect to the address and command for each lane.
     */
     calib_data.mem_vref.vref_result = 0U;
@@ -4202,8 +4202,8 @@ void setup_ddr_segments(SEG_SETUP option)
     }
     /*
      * disable ddr blocker
-     * Is cleared at reset. When written to ‘1’ disables the blocker function
-     * allowing the L2 cache controller to access the DDRC. Once written to ‘1’
+     * Is cleared at reset. When written to '1' disables the blocker function
+     * allowing the L2 cache controller to access the DDRC. Once written to '1'
      * the register cannot be written to 0, only an MSS reset will clear the
      * register
      */

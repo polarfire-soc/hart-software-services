@@ -76,6 +76,7 @@ __attribute__((weak)) int main_first_hart(void)
         (void)init_bus_error_unit();
         (void)init_mem_protection_unit();
         (void)init_pmp((uint8_t)MPFS_HAL_FIRST_HART);
+        (void)mss_set_apb_bus_cr((uint32_t)LIBERO_SETTING_APBBUS_CR);
 #endif  /* MPFS_HAL_HW_CONFIG */
         /*
          * Initialise NWC
@@ -104,7 +105,7 @@ __attribute__((weak)) int main_first_hart(void)
         hard_idx = MPFS_HAL_FIRST_HART + 1U;
         while( hard_idx <= MPFS_HAL_LAST_HART)
         {
-            uint32_t wait_count;
+            uint32_t wait_count = 0U;
 
             switch(sm_check_thread)
             {
@@ -479,6 +480,26 @@ __attribute__((weak)) uint8_t init_pmp(uint8_t hart_id)
 {
     pmp_configure(hart_id);
     return (0U);
+}
+
+/**
+ * set_apb_bus_cr(void)
+ * todo: add check to see if value valid re. mss configurator
+ * @return
+ */
+__attribute__((weak)) uint8_t mss_set_apb_bus_cr(uint32_t reg_value)
+{
+    SYSREG->APBBUS_CR = reg_value;
+    return (0U);
+}
+
+/**
+ * get_apb_bus_cr(void)
+ * @return
+ */
+__attribute__((weak)) uint8_t mss_get_apb_bus_cr(void)
+{
+    return (SYSREG->APBBUS_CR);
 }
 
 __attribute__((weak))  void turn_on_fic0(void)

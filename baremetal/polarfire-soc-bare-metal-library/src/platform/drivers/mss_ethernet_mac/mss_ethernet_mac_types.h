@@ -61,23 +61,23 @@ typedef enum
     This indicates the type of interface between the MAC and the PHY. The
     currently supported values are:
 
-      NULL_PHY   – No PHY involved, usually for direct connection via the
+      NULL_PHY   - No PHY involved, usually for direct connection via the
                    fabric.
-      GMII       – Connection via GMII routed through the fabric to external PHY
+      GMII       - Connection via GMII routed through the fabric to external PHY
                    device.
-      TBI        – Connection via SGMII block to external PHY device.
-      GMII_SGMII – Emulation platform specific option using SGMII to GMII
+      TBI        - Connection via SGMII block to external PHY device.
+      GMII_SGMII - Emulation platform specific option using SGMII to GMII
                    bridge.
 
   phy_type
     This indicates the type of PHY device connected to the MAC. The currently
     supported values are:
 
-      MSS_MAC_DEV_PHY_NULL         – No PHY device.
-      MSS_MAC_DEV_PHY_VSC8575      – VSC8575 with full VTSS  API.
-      MSS_MAC_DEV_PHY_VSC8575_LITE – VSC8757 with Lite VTSS API.
-      MSS_MAC_DEV_PHY_VSC8541      – VSC8541 without VTSS API.
-      MSS_MAC_DEV_PHY_DP83867      – TI DP83867.
+      MSS_MAC_DEV_PHY_NULL         - No PHY device.
+      MSS_MAC_DEV_PHY_VSC8575      - VSC8575 with full VTSS  API.
+      MSS_MAC_DEV_PHY_VSC8575_LITE - VSC8757 with Lite VTSS API.
+      MSS_MAC_DEV_PHY_VSC8541      - VSC8541 without VTSS API.
+      MSS_MAC_DEV_PHY_DP83867      - TI DP83867.
 
   phy_init
   phy_set_link_speed
@@ -321,7 +321,7 @@ typedef enum
  * void MSS_MAC_phy_init(mss_mac_instance_t *this_mac, uint8_t phy_addr);
  *
  *     this_mac - pointer to global structure for the MAC in question.
- *     phy_addr – address of PHY on MDIO interface.
+ *     phy_addr - address of PHY on MDIO interface.
  *
  */
 typedef void (*mss_mac_phy_init_t)(/* mss_mac_instance_t*/ const void *this_mac, uint8_t phy_addr);
@@ -333,7 +333,7 @@ typedef void (*mss_mac_phy_init_t)(/* mss_mac_instance_t*/ const void *this_mac,
  * void MSS_MAC_phy_set_link_speed(mss_mac_instance_t *this_mac, uint32_t speed_duplex_select);
  *
  *     this_mac - pointer to global structure for the MAC in question.
- *     speed_duplex_select – Combined and duplex options mask.
+ *     speed_duplex_select - Combined and duplex options mask.
  */
 typedef void (*mss_mac_phy_set_speed_t)(/* mss_mac_instance_t*/ const void *this_mac, uint32_t speed_duplex_select);
 
@@ -359,8 +359,8 @@ typedef void (*mss_mac_phy_autonegotiate_t)(/* mss_mac_instance_t*/ const void *
  * );
  *
  *     this_mac - pointer to global structure for the MAC in question.
- *     speed – pointer to where to store current speed.
- *     full_duplex – pointer to where to store current duplex mode.
+ *     speed - pointer to where to store current speed.
+ *     full_duplex - pointer to where to store current duplex mode.
  */
 typedef uint8_t (*mss_mac_phy_get_link_status_t)
 (
@@ -377,7 +377,7 @@ typedef uint8_t (*mss_mac_phy_get_link_status_t)
  * uint16_t ti_read_extended_regs(mss_mac_instance_t * this_mac, uint16_t reg);
  *
  *     this_mac - pointer to global structure for the MAC in question.
- *     reg – the register to read from.
+ *     reg - the register to read from.
  */
 typedef uint16_t (*mss_mac_phy_extended_read_t)(/* mss_mac_instance_t*/ const void *this_mac, uint16_t reg);
 
@@ -388,8 +388,8 @@ typedef uint16_t (*mss_mac_phy_extended_read_t)(/* mss_mac_instance_t*/ const vo
  * void ti_write_extended_regs(mss_mac_instance_t * this_mac, uint16_t reg);
  *
  *     this_mac - pointer to global structure for the MAC in question.
- *     reg – the register to write to.
- *     data – the value to write to the register.
+ *     reg - the register to write to.
+ *     data - the value to write to the register.
  */
 typedef void (*mss_mac_phy_extended_write_t)(/* mss_mac_instance_t*/ const void *this_mac, uint16_t reg, uint16_t data);
 #endif

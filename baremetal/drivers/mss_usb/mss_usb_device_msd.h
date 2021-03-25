@@ -147,7 +147,7 @@ extern "C" {
   mss_usbd_msc_state_t
   The mss_usbd_msc_state_t provides a type to identify the current state of the
   MSC class driver.
-    USBD_MSC_NOT_CONFIGURED – The USB MSC class driver is not configured and it
+    USBD_MSC_NOT_CONFIGURED - The USB MSC class driver is not configured and it
                               cannot perform the data transfers.
     USBD_MSC_CONFIGURED    -  The USB MSC class driver is configured by the host
                               and it can perform the data transfers.

@@ -565,7 +565,7 @@ extern "C" {
 #define GPIO_CR_OFFSET                                           0x9C
     /* "This signal selects whether the associated byte is reset by soft re
     set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
-    lues are:• 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.• 1
+    lues are:* 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.* 1
     : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
     controls GPIO0 [7:0]  and bit  1 GPIO[15:8]The master MSS reset will also r
     eset the GPIO register if not configured to use fabric reset."*/
@@ -577,7 +577,7 @@ extern "C" {
     #define GPIO_CR_GPIO0_DEFAULT_MASK                           (0x03 << 0x4)
     /* "This signal selects whether the associated byte is reset by soft re
     set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
-    lues are:• 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.• 1
+    lues are:* 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.* 1
     : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
     controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 2 GPIO[23:16]The master MSS
     reset will also reset the GPIO register if not configured to use fabric res
@@ -590,7 +590,7 @@ extern "C" {
     #define GPIO_CR_GPIO1_DEFAULT_MASK                           (0x07 << 0xC)
     /* "This signal selects whether the associated byte is reset by soft re
     set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
-    lues are:• 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.• 1
+    lues are:* 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.* 1
     : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
     controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 1 GPIO[23:16] and bit 3 GPIO
     [31:24]The master MSS reset will also reset the GPIO register if not config

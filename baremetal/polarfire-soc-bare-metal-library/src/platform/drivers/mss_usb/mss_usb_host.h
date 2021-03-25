@@ -1040,12 +1040,12 @@ MSS_USBH_configure_control_pipe
 
     | Transfer Type    |  Speed     | Valid values                             |
     |------------------|------------|------------------------------------------|
-    |  Interrupt       | LS or FS   | 1 – 255                                  |
-    |  Interrupt       |    HS      | 1,2,4,8,16,32,64…32768 microframes       |
+    |  Interrupt       | LS or FS   | 1 - 255                                  |
+    |  Interrupt       |    HS      | 1,2,4,8,16,32,64...32768 microframes       |
     |                  |            |                                          |
-    |  Isochronous     | FS or HS   | 1,2,4,8,16,32,64…32768 frames/microframes|
+    |  Isochronous     | FS or HS   | 1,2,4,8,16,32,64...32768 frames/microframes|
     |                  |            |                                          |
-    |  Bulk            |    HS      | 0,2,4,8,16,32,64…32768 microframes       |
+    |  Bulk            |    HS      | 0,2,4,8,16,32,64...32768 microframes       |
     |                  |            | Note:Value 0 disables the NAK Timeout    |
     |                  |            | detection on Bulk endpoint               |
 
@@ -1194,12 +1194,12 @@ MSS_USBH_configure_in_pipe
 
     | Transfer Type    |  Speed    | Valid values                              |
     |------------------|-----------|-------------------------------------------|
-    |  Interrupt       | LS or FS  | 1 – 255                                   |
-    |  Interrupt       |    HS     | 1,2,4,8,16,32,64…32768 microframes        |
+    |  Interrupt       | LS or FS  | 1 - 255                                   |
+    |  Interrupt       |    HS     | 1,2,4,8,16,32,64...32768 microframes        |
     |                  |           |                                           |
-    |  Isochronous     | FS or HS  | 1,2,4,8,16,32,64…32768 frames/microframes |
+    |  Isochronous     | FS or HS  | 1,2,4,8,16,32,64...32768 frames/microframes |
     |                  |           |                                           |
-    |  Bulk            |    HS     | 0,2,4,8,16,32,64…32768 microframes        |
+    |  Bulk            |    HS     | 0,2,4,8,16,32,64...32768 microframes        |
     |                  |           | Note:Value 0 disables the NAK Timeout     |
     |                  |           | detection on Bulk endpoint                |
 
@@ -1769,7 +1769,7 @@ MSS_USBH_test_mode
 /*-------------------------------------------------------------------------*//**
   The MSS_USBH_get_std_dev_descr() function can be used to get the 8 byte USB
   standard device descriptor from the attached device. This function is provided
-  specifically for the �Standard Descriptor� test case of USB-IF compliance
+  specifically for the Standard Descriptor test case of USB-IF compliance
   procedure. This function might not be useful In general scenarios.
 
   @param buffer

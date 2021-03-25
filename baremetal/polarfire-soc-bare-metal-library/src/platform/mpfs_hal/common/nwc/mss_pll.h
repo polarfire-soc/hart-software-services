@@ -35,7 +35,7 @@
   There are two bits associated with setting clk source
 
   Note on North West corner clock mux structure ICB
-  The Fabric reference clock inputs source come from the clock mux’s in the
+  The Fabric reference clock inputs source come from the clock mux's in the
   upper  left corner (regular FPGA corner) that provided clocks that can be
   routed in from various places that will include from IOs, from the FPGA
   fabric, etc.

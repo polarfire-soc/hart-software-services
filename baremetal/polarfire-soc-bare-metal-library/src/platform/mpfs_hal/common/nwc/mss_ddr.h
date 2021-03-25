@@ -161,8 +161,8 @@
   -----------
   VREF (DDR4 + LPDDR4 only) Set Remote VREF via mode register writes (MRW).
   In DDR4 and LPDDR4, VREF training may be done by writing to Mode Register 6 as
-  defined by the JEDEC spec and, for example, Micron’s datasheet for its 4Gb
-  DDR4 RAM’s:
+  defined by the JEDEC spec and, for example, Micron's datasheet for its 4Gb
+  DDR4 RAM's:
 
   MR6 register definition from DDR4 datasheet
 

@@ -171,7 +171,7 @@ static void mss_mux_pre_mss_pll_config(void)
      * From SAC spec:
      * Table 9 1: Each gbim bank clock mux programming in MSS corner
      * The DDRPHY bank clocks bclk_horz<5:0> and bclk_vert<5:0> are driven
-     * from mux’s gbim<5:0> in the MSS corner. Each mux uses 5 configuration
+     * from mux's gbim<5:0> in the MSS corner. Each mux uses 5 configuration
      * bits.
      *
      * BCLK mux selections
@@ -234,7 +234,7 @@ __attribute__((section(".ram_codetext"))) \
              leave */
 
     /*
-    * When you’re changing the eNVM clock frequency, there is a bit
+    * When you're changing the eNVM clock frequency, there is a bit
     * (ENVM_CR_clock_okay) in the eNVM_CR which can be polled to check that
     * the frequency change has happened before bumping up the AHB frequency.
     */

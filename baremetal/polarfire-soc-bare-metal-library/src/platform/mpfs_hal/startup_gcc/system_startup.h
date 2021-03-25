@@ -98,6 +98,8 @@ void init_ddr( void);
 uint8_t init_mem_protection_unit(void);
 uint8_t init_pmp(uint8_t hart_id);
 uint8_t init_bus_error_unit( void);
+uint8_t mss_set_apb_bus_cr(uint32_t reg_value);
+uint8_t mss_get_apb_bus_cr(void);
 char * memfill(void *dest, const void * src, size_t len);
 char * config_copy(void *dest, const void * src, size_t len);
 char * config_16_copy(void *dest, const void * src, size_t len);

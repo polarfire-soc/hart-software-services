@@ -59,7 +59,7 @@
   must ensure that the MSS I2C peripherals are enabled and configured in the
   PolarFire SoC MSS configurator if you wish to use them. For more information
   on IOMUXs, refer to the IOMUX section of the PolarFire SoC Microcontroller
-  Subsystem (MSS) User’s Guide.
+  Subsystem (MSS) User's Guide.
 
   On PolarFire SoC an AXI switch forms a bus matrix interconnect among
   multiple masters and multiple slaves. Five RISC-V CPUs connect to the Master
@@ -329,7 +329,7 @@
   --------------------------------
   SMBus Interface Configuration and Control
   --------------------------------
-    The MSS I2C driver enables the MSS I2C peripheral�s SMBus functionality
+    The MSS I2C driver enables the MSS I2C peripherals SMBus functionality
     using the MSS_I2C_smbus_init() function.
 
     The MSS_I2C_suspend_smbus_slave() function is used, with a master mode MSS
@@ -1271,7 +1271,7 @@ void MSS_I2C_set_slave_tx_buffer
     Note:   This buffer size indirectly specifies the maximum I2C write
             transaction length this MSS I2C instance can be the target of.
             This is because this MSS I2C instance responds to further received
-            bytes with a non-acknowledge bit (NACK) as soon as it�s receive
+            bytes with a non-acknowledge bit (NACK) as soon as its receive
             buffer is full. This causes the write transaction to fail.
 
   @return none.
@@ -1381,7 +1381,7 @@ void MSS_I2C_set_slave_mem_offset_length
         transmit buffer with the data that will be transmitted to the I2C master
         as part of the read phase of the write-read transaction. If a write
         handler is not registered, the write data of a write read transaction is
-        interpreted as an offset into the slave�s transmit buffer and handled by
+        interpreted as an offset into the slaves transmit buffer and handled by
         the driver.
   ------------------------------------------------------------------------------
   @param this_i2c:
@@ -1558,7 +1558,7 @@ void MSS_I2C_clear_gca
 
 /*-------------------------------------------------------------------------*//**
   The MSS_I2C_smbus_init() function enables SMBus timeouts and status logic. Set
-  the frequency parameter to the MSS I2C�s PCLK frequency for 25ms SMBus
+  the frequency parameter to the MSS I2Cs PCLK frequency for 25ms SMBus
   timeouts, or to any frequency between 1 MHz and 255 MHz for to adjust the
   timeout.
   ------------------------------------------------------------------------------
@@ -1574,7 +1574,7 @@ void MSS_I2C_clear_gca
 
   @param frequency
     The frequency parameter specifies a frequency in MHz from 1 to 255. It can
-    be the MSS I2C�s PCLK frequency to specify 25ms SMBus timeouts, or a higher
+    be the MSS I2Cs PCLK frequency to specify 25ms SMBus timeouts, or a higher
     or lower frequency than the PCLK for increased or decreased timeouts.
 
   @return
@@ -1599,7 +1599,7 @@ void MSS_I2C_smbus_init
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_I2C_enable_smbus_irq() function is used to enable the MSS I2C�s SMBSUS
+  The MSS_I2C_enable_smbus_irq() function is used to enable the MSS I2Cs SMBSUS
   and SMBALERT SMBus interrupts.
 
   If this function is used to enable an MSS I2C SMBus interrupt source, the
@@ -1728,7 +1728,7 @@ void MSS_I2C_disable_smbus_irq
 /*-------------------------------------------------------------------------*//**
   The MSS_I2C_suspend_smbus_slave() function forces any SMBUS slave devices
   connected to an MSS I2C peripheral into power down or suspend mode by
-  asserting the MSS I2C�s I2C_X_SMBSUS_NO output signal. The MSS I2C is the
+  asserting the MSS I2Cs I2C_X_SMBSUS_NO output signal. The MSS I2C is the
   SMBus master in this case.
   ------------------------------------------------------------------------------
   @param this_i2c:
@@ -1898,7 +1898,7 @@ void MSS_I2C_set_smbus_alert
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_I2C_clear_smbus_alert() function is used de-assert the MSS I2C�s
+  The MSS_I2C_clear_smbus_alert() function is used de-assert the MSS I2Cs
   I2C_X_SMBALERT_NO signal once a slave device has had a response from the
   master. The MSS I2C is the SMBus slave in this case.
   ------------------------------------------------------------------------------

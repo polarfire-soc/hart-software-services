@@ -251,7 +251,7 @@ uint8_t mss_nwc_init(void)
      *      The APB RPC registers are used in the following ways to configure
      *      the MSS periphery
      *      1)  Load values to SCB registers.
-     *          core_up” and “flash_valid” determines if the SCB registers get
+     *          core_up" and "flash_valid" determines if the SCB registers get
      *          either:
      *               a.  Reset to their hardware default
      *                   (when core_up/flash_valis low)
@@ -260,32 +260,32 @@ uint8_t mss_nwc_init(void)
      *      2)  IO configuration settings
      *          These are fed directly to the static configuration of IOA cells
      *          within the IOG lanes of the DDR and SGMII PHYs, as long as
-     *          “core_up” and “flash_valid” are high.
-     *          a.  To avoid unwanted/intermediate states on IOs, the “core_up”
-     *          and “flash_valid” should be initially 0 on MSS reset. This will
+     *          "core_up" and "flash_valid" are high.
+     *          a.  To avoid unwanted/intermediate states on IOs, the "core_up"
+     *          and "flash_valid" should be initially 0 on MSS reset. This will
      *          select the safe hardware defaults. The RPC registers are written
-     *          in the background and then simultaneously “flashed” as the new
-     *          IO configuration by assertion of “core_up” and “flash_valid”
+     *          in the background and then simultaneously "flashed" as the new
+     *          IO configuration by assertion of "core_up" and "flash_valid"
      *          being asserted.
      *      3)  Training IP settings
      *          These allow the direct control of the training IP via the APB
      *          registers.
      *
      *      Notes:
-     *      1)  When the MSS is reset, the SCB slaves won’t take on the RPC
+     *      1)  When the MSS is reset, the SCB slaves won't take on the RPC
      *      values. They will be reset to their hardware default values.
      *
      *      2)  Although RPC registers are writable in APB space,
      *      they only take effect on the SCB registers whenever there is a
-     *      “virtual re-flash” operation, which involves performing
+     *      "virtual re-flash" operation, which involves performing
      *      a soft reset of an SCB slave (i.e. writing to the NV_MAP register
      *      bit in the SOFT_RESET register in the SCB slave).
      *      This mechanism would only be used if a full new configuration is to
-     *      be applied to the full SCB slave and wouldn’t be used, for example
+     *      be applied to the full SCB slave and wouldn't be used, for example
      *      to change just a clock mux configuration.
      *
      *      3)  To make configuration changes to individual registers, without
-     *      “re-flashing” all registers in an MSS custom SCB slave, it is
+     *      "re-flashing" all registers in an MSS custom SCB slave, it is
      *      necessary to write directly to the SCB registers (via SCB space) in
      *      that slave, rather than writing RPC registers via APB space
      *

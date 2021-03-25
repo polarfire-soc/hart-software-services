@@ -27,9 +27,9 @@
  *
  * DDRC blocker - blocks writes to DDR before it is set-up
  * SEG0.CFG[7]
- * Is cleared at reset. When written to ‘1’ disables the blocker function
+ * Is cleared at reset. When written to '1' disables the blocker function
  * Is allowing the L2 cache controller to access the DDRC.
- * Is Once written to ‘1’ the register cannot be written to 0, only an MSS reset
+ * Is Once written to '1' the register cannot be written to 0, only an MSS reset
  * Is will clear the register
  *
  */

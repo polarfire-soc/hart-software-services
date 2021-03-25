@@ -460,7 +460,7 @@ static inline void MSS_WD_reload(mss_watchdog_num_t wd_num)
     module number 0 to 5 when the appear on the AXI switch Slave 6.
 
   @return
-    This function returns the current value of the watchdog’s down-counter as
+    This function returns the current value of the watchdog's down-counter as
     a 32-bit unsigned integer.
  */
 static inline uint32_t MSS_WD_current_value(mss_watchdog_num_t wd_num)
@@ -587,7 +587,7 @@ MSS_WD_disable_mvrp_irq
 }
 
 /***************************************************************************//**
-  The MSS_WD_clear_timeout_irq() function clears the watchdog’s timeout
+  The MSS_WD_clear_timeout_irq() function clears the watchdog's timeout
   interrupt which is connected to the RISC-V NMI interrupt. Calling
   MSS_WD_clear_timeout_irq() results in clearing the RISC-V NMI interrupt.
   Note: You must call the MSS_WD_clear_timeout_irq() function as part of your

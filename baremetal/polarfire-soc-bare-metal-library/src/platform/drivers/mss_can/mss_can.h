@@ -468,7 +468,7 @@ extern "C" {
 
   |  Constants               |  Description                                   |
   |--------------------------|------------------------------------------------|
-  | CAN_TX_WPNH_EBL          | Indicates “WPNH” bit mask                      |
+  | CAN_TX_WPNH_EBL          | Indicates "WPNH" bit mask                      |
   | CAN_TX_WPNL_EBL          | Indicates WPNL bit mask                        |
   | CAN_TX_REQ               | Indicates transmit request flag bit position   |
   | CAN_TX_INT_EBL           | Indicates transmit Interrupt enable bit mask   |
@@ -942,7 +942,7 @@ extern mss_can_instance_t g_mss_can_1_hi;
   The MSS_CAN_init() function initializes the CAN driver as well as the CAN
   controller. The basic_can_rx_mb and basic_can_tx_mb are used to configure the
   number of receive and transmit mailboxes in basic CAN operation. This function
-  configures the CAN channel speed as per the “bitrate” parameter. It
+  configures the CAN channel speed as per the "bitrate" parameter. It
   initializes all receive mailboxes and make it ready for configuration. This is
   the first function to be called before using any other function.
 

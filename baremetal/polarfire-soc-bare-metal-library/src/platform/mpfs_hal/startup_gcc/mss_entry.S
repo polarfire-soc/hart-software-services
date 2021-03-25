@@ -31,9 +31,6 @@ _start:
      * clear the Return Address Stack
      */
     call .clear_ras
-    li a1, 0x3
-    csrw 0x7c0, a1
-
     /* Setup trap handler */
     la a4, trap_vector
     csrw mtvec, a4          # initalise machine trap vector address
@@ -239,11 +236,11 @@ _start:
     li a3, HLS_MAIN_HART_STARTED
     la a1, (__stack_top_h0$ - HLS_DEBUG_AREA_SIZE)
 .wait_main_hart:
-    LOAD a2, 0(a1)
+    LWU a2, 0(a1)
     bne a3, a2, .wait_main_hart
     # Flag we are here to the main hart
     li a1, HLS_OTHER_HART_IN_WFI
-    STORE a1, 0(tp)
+    sw a1, 0(tp)
     /* flush the instruction cache */
     fence.i
 .LwaitOtherHart:
@@ -521,7 +518,7 @@ copy_switch_code:
     mv  a4, a2// eg. Use stat of DTIM in not used for anything else 0x01000120
     lw  t2,0(a5)
     sw  t2,0(a4)
-	ret
+    ret
 
 /*
  * clear_ras , clear_ras_2_deep

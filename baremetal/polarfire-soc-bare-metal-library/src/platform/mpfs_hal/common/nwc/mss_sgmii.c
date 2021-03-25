@@ -549,7 +549,7 @@ void ddr_pvt_calibration(void)
      *
      * From DDR phy SAC spec:
      *      MSS processor releases dce bus to send RPC bits to IO buffer,
-     *      setting each to it’s programmed mode and then asserts
+     *      setting each to it's programmed mode and then asserts
      *      ioen high at end of this state.
      *
      *
@@ -558,7 +558,7 @@ void ddr_pvt_calibration(void)
      *          Auto-calibration supply ramp time settings
      *          Calibration in reset until ioen_bnk goes high, timer complete
      *          and setup of bits complete
-     *              scbclk divider setting (÷1)
+     *              scbclk divider setting (/1)
      *              calibration clkdiv setting
      *              VS bit settings
      *          Initial non-calibrated codes to IOs (functional max codes)
