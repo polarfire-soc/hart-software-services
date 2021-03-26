@@ -209,9 +209,7 @@ static void sbi_tlb_entry_process(struct sbi_scratch *scratch,
                 // forever... also, why the while() loop? that is only going
                 // to mask any races in the design...
                 //
-                // From soak testing, we seem to have better behaviour with high loads when
-                // doing the following
-		atomic_raw_xchg_ulong(rtlb_sync, 1);
+		while (atomic_raw_xchg_ulong(rtlb_sync, 1));
 	}
 }
 
@@ -306,6 +304,7 @@ static int sbi_tlb_update_cb(void *in, void *data)
 	struct sbi_tlb_info *next;
 	int ret = SBI_FIFO_UNCHANGED;
 
+#if 0
 	if (!in || !data)
 		return ret;
 
@@ -320,6 +319,12 @@ static int sbi_tlb_update_cb(void *in, void *data)
 		   curr->type == SBI_TLB_FLUSH_VMA) {
 			ret = __sbi_tlb_range_check(curr, next);
 	}
+#else
+	(void)in;
+	(void)data;
+	(void)curr;
+	(void)next;
+#endif
 
 	return ret;
 }
