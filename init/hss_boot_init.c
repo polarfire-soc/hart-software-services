@@ -165,6 +165,8 @@ bool HSS_BootInit(void)
         } else {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "%s boot image failed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calculated CRC32 of image in DDR is 0x%08x" CRLF,
+                CRC32_calculate((const uint8_t *)pBootImage, pBootImage->bootImageLength));
         }
     }
 #endif
@@ -210,52 +212,13 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction)
 {
     bool result = true;
-    char *pOrigDest = pDest;
 
     printBootImageDetails_(pBootImage);
 
-    // TODO: quickly validate boot image header before a needless copy is
-    // performed
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copying %lu bytes to 0x%X" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copying %lu bytes to 0x%x" CRLF,
         pBootImage->bootImageLength, pDest);
 
-    const size_t maxChunkSize = 512u;
-    size_t bytesLeft = pBootImage->bootImageLength;
-    size_t chunkSize = MIN(pBootImage->bootImageLength, maxChunkSize);
-
-#ifdef DEBUG_COPY
-    const char throbber[] = { '|', '/', '-', '\\' };
-    unsigned int state = 0u;
-#endif
-    while (bytesLeft) {
-#ifdef DEBUG_COPY
-        state++; state %= 4;
-        mHSS_DEBUG_PRINTF_EX("%c %lu bytes (%lu remain) to 0x%X\r",
-            throbber[state], chunkSize, bytesLeft, pDest);
-#else
-        HSS_ShowProgress(pBootImage->bootImageLength, bytesLeft);
-#endif
-
-        result = pCopyFunction(pDest, srcOffset, chunkSize);
-
-         if (!result) { break; }
-
-        srcOffset += chunkSize;
-        pDest += chunkSize;
-        bytesLeft -= chunkSize;
-
-        chunkSize = MIN(bytesLeft, maxChunkSize);
-    }
-
-#ifdef DEBUG_COPY
-    // clear copy output to console by printing an empty string
-    mHSS_DEBUG_PRINTF_EX("                                                                      \r");
-#else
-    HSS_ShowProgress(pBootImage->bootImageLength, 0u);
-#endif
-
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calculated CRC32 of image in DDR is %08x" CRLF,
-        CRC32_calculate((const uint8_t *)pOrigDest, pBootImage->bootImageLength));
+    result = pCopyFunction(pDest, srcOffset, pBootImage->bootImageLength);
 
     return result;
 }

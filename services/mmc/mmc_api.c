@@ -173,45 +173,33 @@ bool HSS_MMCInit(void)
 // size by doing the last transfer into a sector buffer
 //
 static char runtBuffer[HSS_MMC_SECTOR_SIZE] __attribute__((aligned(sizeof(uint32_t))));
+
 bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
-    // temporary code to bring up Icicle board
     char *pCDest = (char *)pDest;
-
-    // source and byteCount must be multiples of the sector size
-    //
-    // The MSS MMC driver uses uint32_t* as its pointer type
-    // To ensure alignment, would rather tramp through void* and
-    // assert check here
     assert(((size_t)srcOffset & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
     assert(((size_t)pCDest & (sizeof(uint32_t)-1)) == 0u);
 
     uint32_t src_sector_num = (uint32_t)(srcOffset / HSS_MMC_SECTOR_SIZE);
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
-    while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount >= HSS_MMC_SECTOR_SIZE)) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, 0x%p) "
-        //    "(%lu bytes remaining)" CRLF, src_sector_num, pCDest, byteCount);
+    uint8_t mmc_main_plic_IRQHandler(void);
 
-        result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)pCDest);
+    uint32_t sectorByteCount = byteCount - (byteCount % HSS_MMC_SECTOR_SIZE);
 
-        if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
-                result);
-        }
+    do {
+        result = mmc_main_plic_IRQHandler();
+    } while (MSS_MMC_TRANSFER_IN_PROGRESS == result);
 
-        if (result == MSS_MMC_TRANSFER_SUCCESS) {
-            src_sector_num++;
-            pCDest = pCDest + HSS_MMC_SECTOR_SIZE;
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_sdma_read(%lu, %p) "
+    //    "(%lu bytes remaining)" CRLF, src_sector_num, pCDest, sectorByteCount);
+    result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)pCDest, sectorByteCount);
 
-            if (byteCount < HSS_MMC_SECTOR_SIZE) {
-                ;
-            } else {
-                byteCount = byteCount - HSS_MMC_SECTOR_SIZE;
-            }
-        }
+    while (result== MSS_MMC_TRANSFER_IN_PROGRESS) {
+        result = mmc_main_plic_IRQHandler();
     }
 
+    byteCount = byteCount - sectorByteCount;
     // handle remainder
     if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) {
         assert(byteCount < HSS_MMC_SECTOR_SIZE);
