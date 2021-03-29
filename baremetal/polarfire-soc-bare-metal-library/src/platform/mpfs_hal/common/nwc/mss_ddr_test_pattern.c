@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * MPFS HAL Embedded Software
+ *
+ */
+
 #include <stdint.h>
 
 const uint32_t ddr_test_pattern[768] =

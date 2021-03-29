@@ -9,7 +9,7 @@
 
 /***************************************************************************
  *
- * @file mss_mtrap.h
+ * @file mss_mtrap.c
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief trap functions
  *

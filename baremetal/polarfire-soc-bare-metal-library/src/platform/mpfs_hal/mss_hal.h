@@ -29,7 +29,7 @@ typedef long            ssize_t;
 
 #include "common/mss_assert.h"
 #include "common/nwc/mss_ddr_defs.h"
-#include "common/nwc/mss_ddr_SGMII_regs.h"
+#include "common/nwc/mss_ddr_sgmii_regs.h"
 #include "common/nwc/mss_io_config.h"
 #include "common/nwc/mss_pll.h"
 #include "common/nwc/mss_scb_nwc_regs.h"

@@ -34,8 +34,8 @@
  *
  */
 
-#ifndef MPFS_SEG_H
-#define MPFS_SEG_H
+#ifndef MSS_SEG_H
+#define MSS_SEG_H
 
 #include <stdint.h>
 
@@ -63,4 +63,4 @@ typedef struct {
 }
 #endif
 
-#endif /*MPFS_SEG_H*/
+#endif /*MSS_SEG_H*/

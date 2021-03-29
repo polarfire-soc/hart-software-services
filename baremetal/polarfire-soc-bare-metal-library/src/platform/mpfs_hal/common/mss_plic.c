@@ -11,7 +11,7 @@
  *
  * @file mss_plic.c
  * @author Microchip-FPGA Embedded Systems Solutions
- * @brief MPFS PLIC and PRCI access data structures and functions.
+ * @brief PolarFire SoC MSS PLIC and PRCI access data structures and functions.
  *
  * PLIC related data which cannot be placed in mss_plic.h
  *

@@ -87,7 +87,7 @@ bool HSS_DDRPrintSegConfig(void)
         for (int j = 0; j < 8; j++) {
             if (seg_regs[i][j] & 0xFFFFu) {
                 mHSS_DEBUG_PRINTF_EX(
-                    "%14s: SEG%d_%d: offset 0x%010lx, physical DDR 0x%08lx" CRLF, 
+                    "%14s: SEG%d_%d: offset 0x%010lx, physical DDR 0x%08lx" CRLF,
                     segment[j].description, i, j,
                     segment[j].baseAddr,
                     seg_regOffset_to_addrOffset(seg_regs[i][j], j));

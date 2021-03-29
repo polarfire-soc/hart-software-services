@@ -16,8 +16,8 @@
  * Definitions and functions associated with local interrupts for each hart.
  *
  */
-#ifndef MSS_HART_INT_H
-#define MSS_HART_INT_H
+#ifndef MSS_HART_INTS_H
+#define MSS_HART_INTS_H
 
 #include <stdint.h>
 
@@ -374,4 +374,4 @@ void fabric_f2h_31_u54_local_IRQHandler_47(void);
 }
 #endif
 
-#endif  /* RISCV_HART_INTS_H */
+#endif  /* MSS_HART_INTS_H */

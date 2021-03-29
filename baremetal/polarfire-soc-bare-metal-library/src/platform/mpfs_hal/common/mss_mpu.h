@@ -9,7 +9,7 @@
 /*******************************************************************************
  * @file mss_mpu.h
  * @author Microchip-FPGA Embedded Systems Solutions
- * @brief PolarFire SoC MSS MPU driver APIS for configuring access regions for
+ * @brief PolarFire SoC MSS MPU driver APIs for configuring access regions for
  * the external masters.
  *
  */
@@ -97,7 +97,7 @@ typedef struct {
         } MPUCFG_TypeDef;
         uint64_t raw;
     };
-} MCU_CFG;
+} MPU_CFG;
 
 typedef struct
 {
@@ -110,7 +110,7 @@ typedef struct
 
 typedef struct
 {
-    MCU_CFG               PMPCFG[16U];
+    MPU_CFG               PMPCFG[16U];
     __IO MPU_FailStatus_TypeDef  STATUS;
 } MPU_TypeDef;
 
@@ -199,10 +199,6 @@ static inline MPU_FailStatus_TypeDef MSS_MPU_get_failstatus(mss_mpu_mport_t mast
 }
 
 #endif /* ! SIFIVE_HIFIVE_UNLEASHED */
-
-uint8_t pmp_configure(uint8_t hart_id);
-
-
 
 #ifdef __cplusplus
 }

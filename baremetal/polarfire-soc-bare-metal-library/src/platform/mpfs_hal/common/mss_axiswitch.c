@@ -1,14 +1,17 @@
 /*******************************************************************************
- * (c) Copyright 2018 Microchip - PRO Embedded Systems Solutions.  All rights reserved.
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
- * G5SoC AXI Switch driver for configuring QoS values.
+ * SPDX-License-Identifier: MIT
  *
- * SVN $Revision: 10786 $
- * SVN $Date: 2018-12-31 09:48:13 +0000 (Mon, 31 Dec 2018) $
+ * MPFS HAL Embedded Software
+ *
  */
-/*=========================================================================*//**
-
- *//*=========================================================================*/
+/*******************************************************************************
+ * @file mss_axiswitch.c
+ * @author Microchip-FPGA Embedded Systems Solutions
+ * @brief PolarFire SoC MSS AXI switch configuration
+ *
+ */
 
 #include <stddef.h>
 #include <stdint.h>

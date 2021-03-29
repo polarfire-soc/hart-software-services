@@ -660,7 +660,7 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 		bool retVal = elf_parser(base_name, base_owner);
 		if (!retVal) {
 			// assume it is a binary file, so just embed the entire thing...
-			blob_handler(base_name, base_exec_addr, base_owner);	
+			blob_handler(base_name, base_exec_addr, base_owner);
 		}
 
 		payload_idx++;
@@ -921,7 +921,7 @@ void yaml_parser(char const * const input_filename)
 			stateHandler[parser_state].handler(&event);
 			yaml_event_delete(&event);
 			break;
-			
+
 		case YAML_NO_EVENT:
 			yaml_event_delete(&event);
 			break;
@@ -934,7 +934,7 @@ void yaml_parser(char const * const input_filename)
 	yaml_event_delete(&event);
 
 	printf("Set-name is >>%s<<\n", bootImage.set_name);
-	
+
 	yaml_parser_delete(&parser);
 	fclose(configFileIn);
 }

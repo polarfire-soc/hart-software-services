@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 /*******************************************************************************
  * external functions

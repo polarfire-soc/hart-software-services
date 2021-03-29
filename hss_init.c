@@ -96,8 +96,8 @@
 //
 //  #define DDR_END                (&__ddr_end)
 asm(".align 3\n"
-    "hss_init_ddr_end: .quad (__ddr_end)\n"
-    ".globl   my_ddr_end\n");
+    "hss_init_ddr_end: .quad (__ddr_end)\n");
+
 extern const uint64_t hss_init_ddr_end;
 #define DDR_END                (&hss_init_ddr_end)
 

@@ -11,7 +11,7 @@
  *
  * @file mss_plic.h
  * @author Microchip-FPGA Embedded Systems Solutions
- * @brief MPFS PLIC and PRCI access data structures and functions.
+ * @brief PolarFire SoC MSS PLIC and PRCI access data structures and functions.
  *
  * Definitions and functions associated with PLIC interrupts.
  *
@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 #ifndef CONFIG_OPENSBI
-#    include "encoding.h"
+#  include "encoding.h"
 #endif
 
 #include "mss_assert.h"

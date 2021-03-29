@@ -18,7 +18,7 @@
 #ifndef MSS_DDR_SGMII_MSS_SCB_NWC_REGS_H_
 #define MSS_DDR_SGMII_MSS_SCB_NWC_REGS_H_
 
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 
 #ifdef __cplusplus

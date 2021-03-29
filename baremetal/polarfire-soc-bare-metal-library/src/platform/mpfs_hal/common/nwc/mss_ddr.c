@@ -1165,7 +1165,9 @@ static uint32_t ddr_setup(void)
                 ddr_training_state = DDR_TRAINING_IP_SM_START_CHECK;
             }
 #ifdef DEBUG_DDR_INIT
+#ifdef MANUAL_ADDCMD_TRAINIG
             (void)uprint32(g_debug_uart,  "\n\r\n\r ADDCMD_OFFSET ", refclk_offset);
+#endif
 #endif
             break;
         case DDR_TRAINING_IP_SM_START_CHECK:
@@ -1642,13 +1644,9 @@ static uint32_t ddr_setup(void)
              */
             {
 #if (DDR_FULL_32BIT_NC_CHECK_EN == 1)
-//#ifndef HSS
                 error = ddr_read_write_fn((uint64_t*)LIBERO_SETTING_DDR_32_NON_CACHE,\
                                      SW_CFG_NUM_READS_WRITES,\
                                          SW_CONFIG_PATTERN);
-//#else
-//                bool HSS_MemTestDDRFast(void);
-//#endif
 #endif
             }
             if(error == 0U)

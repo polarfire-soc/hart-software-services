@@ -29,8 +29,7 @@
  */
 #include <stddef.h>
 #include <stdbool.h>
-#include "mss_hal.h"
-#include "mss_ddr.h"
+#include "mpfs_hal/mss_hal.h"
 #ifdef  MPFS_HAL_HW_CONFIG
 #include "../common/nwc/mss_nwc_init.h"
 #include "system_startup_defs.h"

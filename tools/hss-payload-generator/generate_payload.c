@@ -164,7 +164,7 @@ static void generate_header(FILE *pFileOut, struct HSS_BootImage *pBootImage)
 	write_pad(pFileOut,
 		calculate_padding(sizeof(struct HSS_BootImage), PAD_SIZE));
 
-	
+
 	bootImagePaddedSize = ftello(pFileOut);
 }
 

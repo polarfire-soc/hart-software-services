@@ -19,7 +19,7 @@
 #define MSS_DDR_SGMII_PHY_DEFS_H_
 
 
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 
 #ifdef __cplusplus

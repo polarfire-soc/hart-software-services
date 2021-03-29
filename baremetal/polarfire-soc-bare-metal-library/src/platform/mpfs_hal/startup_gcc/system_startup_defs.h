@@ -43,4 +43,4 @@ extern "C" {
 }
 #endif
 
-#endif /* SYSTEM_STARTUP_H */
+#endif /* SYSTEM_STARTUP_DESF_H */

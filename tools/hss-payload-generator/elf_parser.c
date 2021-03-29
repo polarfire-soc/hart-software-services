@@ -151,7 +151,7 @@ static void process_sections_in_segment(Elf *pElf, GElf_Phdr *pPhdr, size_t owne
     						.execAddr = (void *)shdr.sh_addr,
     						.size = shdr.sh_size
 					};
-	
+
 					numZIChunks = generate_add_ziChunk(ziChunk);
 				}
 			}

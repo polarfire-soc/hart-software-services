@@ -14,8 +14,8 @@
  * @brief CLINT access data structures and functions.
  *
  */
-#include "mss_hal.h"
 #include <stdint.h>
+#include "mpfs_hal/mss_hal.h"
 
 static uint64_t g_systick_increment[5] = {0ULL,0ULL,0ULL,0ULL,0ULL};
 

@@ -13,8 +13,8 @@
  * @brief MACROs defines and prototypes associated with utility functions
  *
  */
-#ifndef G5SOC_UTIL_H
-#define G5SOC_UTIL_H
+#ifndef MSS_UTIL_H
+#define MSS_UTIL_H
 
 #include <stdint.h>
 #include "encoding.h"
@@ -71,4 +71,4 @@ void mss_release_mutex(uint64_t address);
 }
 #endif
 
-#endif  /* G5SOC_UTIL_H */
+#endif  /* MSS_UTIL_H */

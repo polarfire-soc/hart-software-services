@@ -1,5 +1,4 @@
-/**************************************************************************
-    *****
+/*******************************************************************************
  * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
@@ -3618,7 +3617,7 @@ typedef struct _mss_sysreg
        When written to 16'hDEAD will cause a full MSS reset. The Reset wil clear
        this register. The register may be writtent to any value but only a value
        off 16'hDEAD will cause the reset to happen */
-     __I uint32_t MSS_RESET_CR;
+     __IO uint32_t MSS_RESET_CR;
 
     /*Configuration lock*/
      __IO uint32_t CONFIG_LOCK_CR;

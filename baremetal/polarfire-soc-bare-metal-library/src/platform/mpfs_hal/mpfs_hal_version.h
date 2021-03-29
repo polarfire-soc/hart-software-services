@@ -29,7 +29,7 @@
  */
 
 /*******************************************************************************
- * @file mpfs_halversion.h
+ * @file mpfs_hal_version.h
  * @author Microchip-FPGA Embedded Systems Solutions
  * @brief PolareFire SoC Hardware Abstraction layer - MPFS HAL version.
  *
@@ -41,7 +41,7 @@ extern "C" {
 
 #define MPFS_HAL_VERSION_MAJOR 1
 #define MPFS_HAL_VERSION_MINOR 8
-#define MPFS_HAL_VERSION_PATCH 110
+#define MPFS_HAL_VERSION_PATCH 116
 
 #ifdef __cplusplus
 }
