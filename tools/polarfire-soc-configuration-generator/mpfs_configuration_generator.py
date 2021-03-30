@@ -26,7 +26,7 @@ def get_script_ver():
     get_xml_ver()
     :return: script version
     '''
-    return "0.4.1"
+    return "0.5.2"
 
 
 # -----------------------------------------------------------------------------
@@ -196,12 +196,12 @@ def WriteCopyright(root, theFile, filename, creator):
     theFile.write('/**********************************************************'
                   '*********************\n')
     theFile.write(" * Copyright 2019-" + str(datetime.datetime.now().year) + " Microchip FPGA Embedded Systems Solutions.\n")
-    theFile.write(' * \n')
+    theFile.write(' *\n')
     theFile.write(' * SPDX-License-Identifier: MIT\n')
-    theFile.write(' * \n')
+    theFile.write(' *\n')
     theFile.write(" * @file " + filename + "\n")
     theFile.write(" * @author " + creator + "\n")
-    theFile.write(' * \n')
+    theFile.write(' *\n')
     for child in root:
         if child.tag == "design_information":
             for child1 in child:
@@ -217,19 +217,19 @@ def WriteCopyright(root, theFile, filename, creator):
                     theFile.write(' * Format version of XML description: ' + child1.text.strip() + "\n")
     theFile.write(' * PolarFire SoC Configuration Generator version: ' + get_script_ver() + "\n")
     strings = ('',
-    'Note 1: This file should not be edited. If you need to modify a parameter,',
-    'without going through the Libero flow or editing the associated xml file,',
-    'the following method is recommended:',
-    '  1. edit the file platform//config//software//mpfs_hal//mss_sw_config.h',
-    '  2. define the value you want to override there. (Note: There is a ',
-    '     commented example in mss_sw_config.h)',
-    'Note 2: The definition in mss_sw_config.h takes precedence, as ',
-    'mss_sw_config.h is included prior to the ' + filename + ' in the hal ',
-    '(see platform//mpfs_hal//mss_hal.h)',
+    ' Note 1: This file should not be edited. If you need to modify a parameter,',
+    ' without going through the Libero flow or editing the associated xml file,',
+    ' the following method is recommended:',
+    '   1. edit the file platform//config//software//mpfs_hal//mss_sw_config.h',
+    '   2. define the value you want to override there. (Note: There is a',
+    '      commented example in mss_sw_config.h)',
+    ' Note 2: The definition in mss_sw_config.h takes precedence, as',
+    ' mss_sw_config.h is included prior to the ' + filename + ' in the hal',
+    ' (see platform//mpfs_hal//mss_hal.h)',
            )
     for string in strings:
-        theFile.write(' * ' + string + "\n")
-    theFile.write(' *\n */ \n')
+        theFile.write(' *' + string + "\n")
+    theFile.write(' *\n */\n')
 
 
 # -----------------------------------------------------------------------------
@@ -275,12 +275,12 @@ def write_line(headerFile , reg_description):
     word_list.pop(0)
     for word in word_list:
         if (len(sentence + word + ' ') > MAX_LINE_WIDTH):
-            headerFile.write(sentence + '\n')
+            headerFile.write(sentence.rstrip() + '\n')
             sentence = word + ' '
         else:
             sentence = sentence + word + ' ';
     if len(sentence) > 0:
-        headerFile.write(sentence + '\n')
+        headerFile.write(sentence.rstrip() + '\n')
 
 
 # -----------------------------------------------------------------------------
@@ -329,7 +329,7 @@ def generate_register(headerFile, registers, tags):
                     sfield += ' value= ' + field.text.strip()
                     temp_val = ((int(field.text.strip(), 16)) << int(field.get('offset')))
                     reg_value += temp_val
-                sfield += ' */ \n'
+                sfield += ' */\n'
                 # add the field to list of fields
                 field_list.extend([sfield])
         if tags[5] == 'decimal':
@@ -345,7 +345,7 @@ def generate_register(headerFile, registers, tags):
         if len(s) >= name_gap:
             name_gap = len(s) + 4
         s = s.ljust(name_gap, ' ') + value + '\n'
-        reg_description = '/*' + description + ' */ \n'
+        reg_description = '/*' + description + ' */\n'
         headerFile.write('#if !defined ' + '(' + name_of_reg + ')\n')
         # Write out the register description, max chars per line 80
         write_line(headerFile , reg_description)
@@ -389,9 +389,9 @@ def generate_mem_elements(headerFile, mem_elements, tags):
             name_size_gap = len(s1) + 4
         # create the strings for writing
         s = s.ljust(name_gap, ' ') + mem_value +  '\n'
-        reg_description = '/*' + description + ' */ \n'
+        reg_description = '/*' + description + ' */\n'
         s1 = s1.ljust(name_size_gap, ' ') + mem_size \
-             + '    /* Length of memory block*/ \n'
+             + '    /* Length of memory block*/\n'
         headerFile.write('#if !defined ' + '(' + name_of_reg + ')\n')
         headerFile.write(reg_description)
         headerFile.write(s)
@@ -443,7 +443,7 @@ def generate_reference_header_file(ref_header_file, root, header_files):
             # include_file = os.path.join(*c)
             # as we need formatting correct for linux and windows
             include_file = c[0] + '/' + c[1]
-            headerFile.write('#include \"' + include_file + '\" \n')
+            headerFile.write('#include \"' + include_file + '\"\n')
             index += 1
         # add the c++ define
         start_cplus(headerFile, file_name)
@@ -505,7 +505,6 @@ def get_full_path(in_path):
     else:
         dir_entries = os.listdir(in_path)
         for dir_entry in dir_entries:
-            #print(dir_entry)
             if dir_entry.endswith('.xml'):
                 filename = dir_entry
             else:
@@ -522,6 +521,26 @@ def get_full_path(in_path):
     os.chdir(cwd)
     full_path = full_path + '/' + filename
     return full_path
+
+
+# -----------------------------------------------------------------------------
+# Check if the source XML file is more recent than the already generated
+# SoC configuration. Used to avoid regenerating the configuration and hence
+# forcing a rebuild of software using the generated configuration files.
+# ----------------------------------------------------------------------------
+def is_xml_more_recent(xml_file_path, output_folder_name):
+    xml_timestamp = os.path.getmtime(xml_file_path)
+    for header_file_desc in header_files:
+        hfd = header_file_desc.split(',')
+        header_path = os.path.join(output_folder_name, *hfd)
+        try:
+            header_timestamp = os.path.getmtime(header_path)
+            if header_timestamp < xml_timestamp:
+                return True
+        except FileNotFoundError:
+            return True
+
+    return False
 
 
 # -----------------------------------------------------------------------------
@@ -551,7 +570,6 @@ def main():
     arg3: Command parsed, if present and equals 'debug_regs' outputs .csv with
         all reg names.
     '''
-
 
     #
     #  check/parse  arguments
@@ -601,16 +619,25 @@ def main():
             generate_xml_from_csv.generate_full_xml_file(reference_xml_file, xml_tags , get_xml_ver())
             # print('xml file created: ' + reference_xml_file.split(',')[-1])
     #
-    # Create directory structure for the header files
+    # Check if the XML file is more recent than the already existing soc_config directory content and only generate the
+    # soc_config folder content if the XML description is more recent.
     #
     root_folder = 'soc_config'
-    TOP = ['clocks', 'ddr', 'io', 'memory_map', 'sgmii', 'general']
-    create_hw_dir_struct(root_folder, TOP)
-    #
-    # Next, read in XML content and create header files
-    #
-    generate_header_files(header_files, input_xml_file, xml_tags)
-    print('Hardware configuration header files created in directory:', os.path.join(output_folder_name, 'soc_config'))
+    if is_xml_more_recent(input_xml_file, output_folder_name):
+        #
+        # Create directory structure for the header files
+        #
+        TOP = ['clocks', 'ddr', 'io', 'memory_map', 'sgmii', 'general']
+        create_hw_dir_struct(root_folder, TOP)
+        #
+        # Next, read in XML content and create header files
+        #
+        generate_header_files(header_files, input_xml_file, xml_tags)
+        print('Hardware configuration header files created in directory:', os.path.join(output_folder_name, 'soc_config'))
+    else:
+        print('The input XML configuration description is older than the existing generated configuration files.')
+        print('Touch/modify the XML configuration description file if you wish to force configuration header files regeneration.')
+
     #
     #  generate an xml example with tags - only for reference
     #
