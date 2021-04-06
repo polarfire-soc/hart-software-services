@@ -56,14 +56,10 @@
 #include <string.h>
 
 #define mMEM_SIZE(REGION)      (REGION##_END - REGION##_START + 1u)
-//extern const uint64_t __dtim_start,    __dtim_end;
-//extern const uint64_t __e51itim_start,    __e51itim_end;
-//extern const uint64_t __u54_1_itim_start, __u54_1_itim_end;
-//extern const uint64_t __u54_2_itim_start, __u54_2_itim_end;
-//extern const uint64_t __u54_3_itim_start, __u54_3_itim_end;
-//extern const uint64_t __u54_4_itim_start, __u54_4_itim_end;
-//extern const uint64_t __l2lim_start,      __l2lim_end;
-//extern const uint64_t __ddr_start,        __ddr_end;
+extern const uint64_t __dtim_start,    __dtim_end;
+extern const uint64_t __l2lim_start;
+extern const uint64_t __ddr_start,        __ddr_end;
+extern const uint64_t _hss_start;
 
 #define E51_DTIM_START         (&__dtim_start)
 #define E51_DTIM_END           (&__dtim_end)
@@ -125,6 +121,7 @@ bool HSS_ZeroDDR(void)
 }
 
 /* Init memories.. */
+#include "system_startup.h"
 bool HSS_ZeroTIMs(void)
 {
 #if IS_ENABLED(CONFIG_INITIALIZE_MEMORIES)
@@ -141,7 +138,6 @@ bool HSS_ZeroTIMs(void)
     return true;
 }
 
-#include "system_startup.h"
 bool HSS_Init_RWDATA_BSS(void)
 {
     //UART not setup at this point
@@ -182,6 +178,7 @@ void HSS_PrintBuildId(void)
 
 #if IS_ENABLED(CONFIG_DISPLAY_TOOL_VERSIONS)
 #include "tool_versions.h"
+void HSS_PrintToolVersions(void);
 void HSS_PrintToolVersions(void)
 {
     mHSS_FANCY_PUTS(LOG_STATUS, "Built with the following tools: " CRLF);
@@ -211,6 +208,10 @@ bool HSS_E51_Banner(void)
 #if IS_ENABLED(CONFIG_DISPLAY_TOOL_VERSIONS)
     HSS_PrintToolVersions();
 #endif
+
+    if (&_hss_start == &__l2lim_start) {
+        mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2LIM" CRLF CRLF);
+    }
 
     return true;
 }

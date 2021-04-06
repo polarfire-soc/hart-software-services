@@ -11,7 +11,7 @@ menu "OpenSBI"
 config PROVIDE_DTB
 	bool "Provide a DTB for OpenSBI"
 	depends on OPENSBI
-	default y
+	default n
 	help
 		This feature enabling the building in of a device tree blob and the provision
 		of this blob to OpenSBI via the a1 register.

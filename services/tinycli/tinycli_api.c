@@ -54,6 +54,7 @@ enum CmdIndex {
     CMD_QSPI,
 #endif
 #if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    CMD_EMMC,
     CMD_MMC,
 #endif
 #if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))

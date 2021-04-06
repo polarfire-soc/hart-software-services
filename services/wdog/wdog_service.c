@@ -113,7 +113,11 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
+#if IS_ENABLED(CONFIG_SERVICE_WDOG_ENABLE_E51)
+#  if IS_ENABLED(CONFIG_SERVICE_WDOG_DEBUG)
 static HSSTicks_t lastEntryTime = 0u;
+#  endif
+#endif
 static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 {
     (void) pMyMachine;
