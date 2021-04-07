@@ -248,6 +248,7 @@ static int print(char **out, u32 *out_len, const char *format, va_list args)
 				continue;
 			}
 			if (*format == 'p') {
+				prints(out, 0, "0x", 0, 0);
 				pc += printi(out, out_len,
 					     va_arg(args, unsigned long), 16, 0,
 					     width, flags, 'a');
@@ -255,6 +256,7 @@ static int print(char **out, u32 *out_len, const char *format, va_list args)
 				continue;
 			}
 			if (*format == 'P') {
+				prints(out, 0, "0x", 0, 0);
 				pc += printi(out, out_len,
 					     va_arg(args, unsigned long), 16, 0,
 					     width, flags, 'A');
