@@ -134,7 +134,7 @@ uint8_t pmp_configure(uint8_t hart_id) /* set-up with settings from Libero */
 	/* make sure enables are off */
     write_csr(pmpcfg0, 0);
     write_csr(pmpcfg2, 0);
-	/* set required addressing */
+    /* set required addressing */
     write_csr(pmpaddr0, pmp_values[hart_id][2]);
     write_csr(pmpaddr1, pmp_values[hart_id][3]);
     write_csr(pmpaddr2, pmp_values[hart_id][4]);
