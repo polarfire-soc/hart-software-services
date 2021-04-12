@@ -247,7 +247,7 @@ const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
 
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     // Name                    FunctionPointer      Halt   Restart
-    { "HSS_Setup_L2Cache",     HSS_Setup_L2Cache,   false, false },
+    //{ "HSS_Setup_L2Cache",     HSS_Setup_L2Cache,   false, false },
     { "HSS_Init_RWDATA_BSS",   HSS_Init_RWDATA_BSS, false, false },
     { "HSS_BoardInit",         HSS_BoardInit,       false, false },
     { "HSS_UARTInit",          HSS_UARTInit,        false, false },
