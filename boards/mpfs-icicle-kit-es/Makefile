@@ -129,9 +129,9 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/soc_config/sgmii/hw_sgmii_tip.h \
 
 #$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_config
-#$(BOARD_DIR)/soc_config: $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_0.xml
+#$(BOARD_DIR)/soc_config: $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_0.xml
+$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml
 	@$(ECHO) " CFGGEN    $<";
 	@$(CMD_PREFIX)python3 tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 

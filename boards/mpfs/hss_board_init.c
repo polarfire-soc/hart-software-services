@@ -55,3 +55,8 @@ bool HSS_BoardInit(void)
 
     return true;
 }
+
+bool HSS_BoardLateInit(void)
+{
+    return true;
+}
