@@ -97,14 +97,16 @@ static bool mmc_init_emmc(void)
 
     static mss_mmc_cfg_t emmcConfig =
     {
-        .clk_rate = MSS_MMC_CLOCK_50MHZ,
         .card_type = MSS_MMC_CARD_TYPE_MMC,
-        .bus_speed_mode = MSS_MMC_MODE_SDR,
         .data_bus_width = MSS_MMC_DATA_WIDTH_8BIT,
 #if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
-        .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
+        .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE,
+        .clk_rate = MSS_MMC_CLOCK_200MHZ,
+        .bus_speed_mode = MSS_MMC_MODE_HS400,
 #elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
-        .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE
+        .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE,
+        .clk_rate = MSS_MMC_CLOCK_50MHZ,
+        .bus_speed_mode = MSS_MMC_MODE_SDR,
 #endif
     };
 
@@ -129,14 +131,16 @@ static bool mmc_init_sdcard(void)
 
     static mss_mmc_cfg_t sdcardConfig =
     {
-        .clk_rate = MSS_MMC_CLOCK_50MHZ,
         .card_type = MSS_MMC_CARD_TYPE_SD,
-        .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
         .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
 #if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
-        .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE
+        .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE,
+        .clk_rate = MSS_MMC_CLOCK_200MHZ,
+        .bus_speed_mode = MSS_MMC_MODE_HS400,
 #elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
-        .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE
+        .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE,
+        .clk_rate = MSS_MMC_CLOCK_50MHZ,
+        .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
 #endif
     };
 
