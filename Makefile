@@ -183,15 +183,12 @@ $(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT
 	$(CMD_PREFIX)$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
 	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$@ 2>/dev/null
 
+BOOTMODE?=1
+PACKAGE?=FCVG484
+DIE?=MPFS250T_ES
+
 program: Default/hss.elf
-	$(eval ENVM_ADDR=20220000)
-	@$(ECHO) " FPGENPROG $< new_project"
-	$(CMD_PREFIX)$(FPGENPROG) new_project --location $(PWD)/$(BINDIR)/fpgenprog --target_die MPFS250T_ES --target_package FCVG484; echo -n
-	@$(ECHO) " FPGENPROG $< mss_boot_info"
-	$(CMD_PREFIX)$(FPGENPROG) mss_boot_info --location $(PWD)/$(BINDIR)/fpgenprog --u_mss_bootmode 1 --u_mss_bootcfg $(ENVM_ADDR)$(ENVM_ADDR)$(ENVM_ADDR)$(ENVM_ADDR)$(ENVM_ADDR)
-	@$(ECHO) " FPGENPROG $< envm_client"
-	$(CMD_PREFIX)$(FPGENPROG) envm_client --location $(PWD)/$(BINDIR)/fpgenprog --number_of_bytes `stat -L -c %s Default/hss.bin` --content_file_format intel-hex --content_file Default/hss.hex --start_page 0 --client_name bootmode1 --mem_file_base_address $(ENVM_ADDR)
-	@$(ECHO) " FPGENPROG $< generate_bitstream"
-	$(CMD_PREFIX)$(FPGENPROG) generate_bitstream --location $(PWD)/$(BINDIR)/fpgenprog
-	@$(ECHO) " FPGENPROG $< run_action"
-	$(CMD_PREFIX)$(FPGENPROG) run_action --location $(PWD)/$(BINDIR)/fpgenprog --action PROGRAM
+	-$(CMD_PREFIX)$(RM) -r $(BINDIR)/bootmode1
+	$(CMD_PREFIX)[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
+	$(CMD_PREFIX)[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
+	$(CMD_PREFIX)$(SC_INSTALL_DIR)/eclipse/jre/bin/java -jar $(SC_INSTALL_DIR)/extras/mpfs/mpfsBootmodeProgrammer.jar --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE)
