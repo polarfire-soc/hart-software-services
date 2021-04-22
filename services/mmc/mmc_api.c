@@ -101,7 +101,7 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
     }
 
     if (retval != MSS_MMC_INIT_SUCCESS) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, result);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, retval);
     } else {
         result = true;
     }
