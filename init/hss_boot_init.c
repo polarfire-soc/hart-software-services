@@ -94,13 +94,13 @@ static bool validateCrc_(struct HSS_BootImage *pImage);
 typedef bool (*HSS_GetBootImageFnPtr_t)(struct HSS_BootImage **ppBootImage);
 
 static HSS_GetBootImageFnPtr_t getBootImageFunction =
-#if defined(SPI_FLASH_BOOT_ENABLED)
+#if IS_ENABLED(CONFIG_SERVICE_SPI) && (SPI_FLASH_BOOT_ENABLED)
     getBootImageFromSpiFlash_;
-#elif defined(CONFIG_SERVICE_MMC)
+#elif IS_ENABLED(CONFIG_SERVICE_MMC)
     getBootImageFromMMC_;
-#elif defined(CONFIG_SERVICE_QSPI)
+#elif IS_ENABLED(CONFIG_SERVICE_QSPI)
     getBootImageFromQSPI_;
-#elif defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+#elif IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     getBootImageFromPayload_;
 #  else
 #    error Unable to determine boot mechanism
