@@ -50,14 +50,18 @@ enum CmdIndex {
 #if IS_ENABLED(CONFIG_MEMTEST)
     CMD_MEMTEST,
 #endif
-#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD) || defined(CONFIG_SERVICE_SPI))
     CMD_QSPI,
 #endif
-#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD) || defined(CONFIG_SERVICE_SPI))
+    CMD_EMMC,
     CMD_MMC,
 #endif
-#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_SPI))
     CMD_PAYLOAD,
+#endif
+#if defined(CONFIG_SERVICE_SPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    CMD_SPI,
 #endif
 #if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
     CMD_USBDMSC,
@@ -90,15 +94,18 @@ static struct {
 #if IS_ENABLED(CONFIG_MEMTEST)
     { CMD_MEMTEST, tinyCLI_CmdHandler_, "MEMTEST", "Full DDR memory test." },
 #endif
-#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD) || defined(CONFIG_SERVICE_SPI))
     { CMD_QSPI,    tinyCLI_CmdHandler_, "QSPI",    "Select boot via QSPI." },
 #endif
-#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD) || defined(CONFIG_SERVICE_SPI))
     { CMD_EMMC,    tinyCLI_CmdHandler_, "EMMC",    "Select boot via MMC." },
     { CMD_MMC,     tinyCLI_CmdHandler_, "MMC",     "Select boot via MMC." },
 #endif
-#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_SPI))
     { CMD_PAYLOAD, tinyCLI_CmdHandler_, "PAYLOAD", "Select boot via payload." },
+#endif
+#if defined(CONFIG_SERVICE_SPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    { CMD_SPI,     tinyCLI_CmdHandler_, "SPI",     "Select boot via SPI Flash." },
 #endif
 #if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
     { CMD_USBDMSC,  tinyCLI_CmdHandler_, "USBDMSC",  "Export eMMC as USBD Mass Storage Class." },
@@ -206,21 +213,27 @@ static void tinyCLI_CmdHandler_(int cmdIndex)
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_QSPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_PAYLOAD) || defined(CONFIG_SERVICE_SPI))
     case CMD_QSPI:
         HSS_BootSelectQSPI();
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+#if defined(CONFIG_SERVICE_MMC) && (defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD) || defined(CONFIG_SERVICE_SPI))
     case CMD_MMC:
         HSS_BootSelectMMC();
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI))
+#if defined(CONFIG_SERVICE_PAYLOAD) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_SPI))
     case CMD_PAYLOAD:
         HSS_BootSelectPayload();
+        break;
+#endif
+
+#if defined(CONFIG_SERVICE_SPI) && (defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_PAYLOAD))
+    case CMD_SPI:
+        HSS_BootSelectSPI();
         break;
 #endif
 

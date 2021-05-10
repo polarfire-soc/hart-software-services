@@ -42,7 +42,7 @@
 #  include "gpt.h"
 #endif
 
-#if SPI_FLASH_BOOT_ENABLED
+#if (SPI_FLASH_BOOT_ENABLED)
 #  include "mss_sys_services.h"
 #endif
 
@@ -422,7 +422,7 @@ static bool spiFlashReadBlock_(void *dst, size_t offs, size_t count) {
    mb();
 
    if (retval) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to read 0x%lx bytes from SPI flash @0x%lx!\n", count, offs);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to read 0x%lx bytes from SPI flash @0x%lx (error code %d)!\n", count, offs, retval);
    }
 
    return (retval == 0);
@@ -456,5 +456,11 @@ static bool getBootImageFromSpiFlash_(struct HSS_BootImage **ppBootImage) {
     *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
     return result;
+}
+
+void HSS_BootSelectSPI(void)
+{
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SPI Flash as boot source ..." CRLF);
+    getBootImageFunction = getBootImageFromSpiFlash_;
 }
 #endif
