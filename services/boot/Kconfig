@@ -21,7 +21,7 @@ config SERVICE_BOOT_SETS_SUPPORT
 
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for EMMC/QSPI/Decompressor"
-	default 0xB0000000
+	default 0xA0000000
 	depends on SERVICE_BOOT 
         help
                 This feature specifies a scratch address for EMMC/QSPI decompression
@@ -35,7 +35,7 @@ config SERVICE_BOOT_SPI_FLASH_OFFSET
 
 config SERVICE_BOOT_USE_PAYLOAD
         bool "Use Payload file"
-        default  y
+        default  n
         depends on SERVICE_BOOT 
         help
                 This feature enables booting a directly contained payload.
@@ -50,7 +50,7 @@ config SERVICE_BOOT_CUSTOM_FLOW
 
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for BOOT to DDR copy"
-	default 0xB0000000
+	default 0xA0000000
 	depends on SERVICE_QSPI_COPY_TO_DDR
 	help
 		If CONFIG_SERVICE_QSPI_COPY_TO_DDR is enabled, specify the

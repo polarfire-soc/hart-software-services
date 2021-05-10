@@ -1,6 +1,6 @@
 config SERVICE_MMC
 	bool "MMC support"
-	default n
+	default y
 	help
                 This feature enables support for booting via MMC.
 

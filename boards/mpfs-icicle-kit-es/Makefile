@@ -66,10 +66,10 @@ INCLUDES += \
 	-Ibaremetal/drivers/winbond_w25n01gv \
 
 EXTRA_SRCS-$(CONFIG_SERVICE_YMODEM) += \
-	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c \
 	baremetal/drivers/mss_envm/mss_envm.c
 
-#	baremetal/drivers/micron_mt25q/micron_mt25q.c \
+EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
+	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c \
 
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c config.h
 	@$(ECHO) " CC        $@";
