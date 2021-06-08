@@ -6,4 +6,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - run: cp boards/mpfs-icicle-kit-es/def_config .config && make BOARD=mpfs-icicle-kit-es && ls -la ./Default
+      - run: cp boards/mpfs-icicle-kit-es/def_config .config
+      - run: make BOARD=mpfs-icicle-kit-es
+      - run: ls -la ./Default
