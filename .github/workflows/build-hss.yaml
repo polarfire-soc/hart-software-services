@@ -1,0 +1,11 @@
+on: [push]
+jobs:
+  build-hss:
+    runs-on: ubuntu-latest
+    container: microsemiproess/softconsole-headless-slim:6.6-2021.1-hss
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: cp boards/mpfs-icicle-kit-es/def_config .config
+      - run: make BOARD=mpfs-icicle-kit-es
+      - run: ls -la ./Default
