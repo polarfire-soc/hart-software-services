@@ -162,6 +162,8 @@ static uint8_t g_mmc_init_complete;
 static uint8_t g_mmc_is_multi_blk = MMC_CLEAR;
 static uint8_t g_device_hpi_suport;
 
+static uint32_t g_hw_sec_count;
+static uint16_t g_sector_size;
 #ifdef MSS_MMC_INTERNAL_APIS
 static uint8_t g_device_hpi_set = MMC_CLEAR;
 static uint32_t g_trans_remain_size = MMC_CLEAR;
@@ -240,6 +242,7 @@ static mss_mmc_status_t read_tune_block
 );
 static mss_mmc_status_t execute_tunning_mmc(uint8_t data_width);
 static cif_response_t check_device_status(cif_response_t rsp_status);
+static uint32_t get_srs_bits(int from, int count);
 
 static mss_mmc_handler_t g_transfer_complete_handler_t;
 /*****************************************************************************/
@@ -259,7 +262,6 @@ MSS_MMC_init
     uint32_t csd_reg[BLK_SIZE/WORD_SIZE];
     uint8_t *pcsd_reg = NULL_POINTER;
 
-    uint32_t hw_sec_count;
     uint8_t hw_ext_csd_rev;
     uint8_t hw_device_type;
     uint8_t hw_strobe_suport;
@@ -432,7 +434,6 @@ MSS_MMC_init
                         hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
                         hw_strobe_suport = pcsd_reg [EXT_CSD_ES_SUPPORT_OFFSET];
                         g_device_hpi_suport = pcsd_reg[EXT_CSD_ES_SUPPORT_OFFSET];
-
                         if ((g_device_hpi_suport & DEVICE_HPI_SUPPORT) == DEVICE_HPI_SUPPORT)
                         {
                             /* enable HPI in device */
@@ -569,10 +570,9 @@ MSS_MMC_init
                             {
                                 pcsd_reg = (uint8_t *)csd_reg;
                                 /* offsets defined in JESD84-B51 extended CSD */
-                                hw_sec_count   = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
+                                g_hw_sec_count = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
                                 hw_ext_csd_rev = pcsd_reg[EXT_CSD_REVISION_OFFSET] & BYTE_MASK;
                                 hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
-
                                 if ((MMC_CLEAR == hw_hs_timing) &&
                                     (cfg->bus_speed_mode != MSS_MMC_MODE_LEGACY))
                                 {
@@ -657,7 +657,6 @@ MSS_MMC_init
                             | SRS12_CARD_INSERTION);
     /* variable set but not used, so referencing to avoid compiler warning */
     (void)hw_ext_csd_rev;
-    (void)hw_sec_count;
 
     return (ret_status);
 }
@@ -668,6 +667,17 @@ MSS_MMC_init
 /*-------------------------------------------------------------------------*//**
  * See "mss_mmc.h" for details of how to use this function.
  */
+void
+MSS_MMC_get_info
+(
+    uint16_t *sector_size,
+    uint32_t *sector_count
+)
+{
+    *sector_size = g_sector_size;
+    *sector_count = g_hw_sec_count;
+}
+
 mss_mmc_status_t
 MSS_MMC_single_block_read
 (
@@ -1480,7 +1490,6 @@ static mss_mmc_status_t mmccard_oper_config(const mss_mmc_cfg_t * cfg)
     uint32_t access_mode;
     uint32_t csd_max_sector_lwr;
     uint32_t max_sector_len;
-    uint16_t sector_size;
     uint32_t oper_cond = MMC_CLEAR;
 
     response_status = cif_send_cmd(STUFF_BITS, MMC_CMD_1_SEND_OP_COND,
@@ -1555,7 +1564,7 @@ static mss_mmc_status_t mmccard_oper_config(const mss_mmc_cfg_t * cfg)
                 /* Sector size from "Max. write data block length"  of CSD[25:22]*/
                 csd_max_sector_lwr  = MMC->SRS04 & SECT_SIZE_CSD_MASK;
                 max_sector_len = csd_max_sector_lwr >> SECT_SIZE_CSD_SHIFT;
-                sector_size = (uint16_t)((uint32_t)MMC_SET << max_sector_len);
+                g_sector_size = (uint16_t)((uint32_t)MMC_SET << max_sector_len);
 
                 /* Select device */
                 response_status = cif_send_cmd(sdcard_RCA << RCA_SHIFT_BIT,
@@ -1608,7 +1617,6 @@ static mss_mmc_status_t mmccard_oper_config(const mss_mmc_cfg_t * cfg)
 
     /* variable set but unused, so referencing to avoid compiler warning */
     (void)access_mode;
-    (void)sector_size;
 
     return (ret_status);
 }
@@ -1635,7 +1643,6 @@ static mss_mmc_status_t sdcard_oper_config(const mss_mmc_cfg_t * cfg)
 
     uint32_t csd_max_sector_lwr;
     uint32_t max_sector_len;
-    uint16_t sector_size;
 
     response_status = cif_send_cmd(IF_COND_27V_33V,
                                     SD_CMD_8_SEND_IF_COND,
@@ -1859,6 +1866,9 @@ static mss_mmc_status_t sdcard_oper_config(const mss_mmc_cfg_t * cfg)
 
                         if (TRANSFER_IF_SUCCESS == response_status)
                         {
+                            int csd_struct;
+                            int c_size = 0;
+
                             /* Read CSD register from device */
                             response_status = cif_send_cmd(sdcard_RCA << RCA_SHIFT_BIT,
                                                         MMC_CMD_9_SEND_CSD,
@@ -1866,7 +1876,21 @@ static mss_mmc_status_t sdcard_oper_config(const mss_mmc_cfg_t * cfg)
                             /* Sector size from "Max. write data block length"  of CSD[25:22]*/
                             csd_max_sector_lwr  = MMC->SRS04 & SECT_SIZE_CSD_MASK;
                             max_sector_len = csd_max_sector_lwr >> SECT_SIZE_CSD_SHIFT;
-                            sector_size = (uint16_t)((uint32_t)MMC_SET << max_sector_len);
+                            g_sector_size = (uint16_t)((uint32_t)MMC_SET << max_sector_len);
+                            csd_struct = get_srs_bits(126,2);
+                            switch (csd_struct) {
+                            case 0:
+                                c_size = get_srs_bits(62, 12);
+                                g_hw_sec_count = (c_size + 1) << (get_srs_bits(47, 3) + 2);
+                                break;
+                            case 1:
+                                c_size = get_srs_bits(48, 22);
+                                g_hw_sec_count = (c_size + 1) << 10;
+                                break;
+                            default:
+                                response_status = TRANSFER_IF_FAIL;
+                                break;
+                            }
                         }
 
                         if (TRANSFER_IF_SUCCESS == response_status)
@@ -2025,7 +2049,6 @@ static mss_mmc_status_t sdcard_oper_config(const mss_mmc_cfg_t * cfg)
     }
     /* variable set but unused, so referencing to avoid compiler warning */
     (void)CCS;
-    (void)sector_size;
 
     return (ret_status);
 }
@@ -2405,7 +2428,6 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
     uint32_t csd_reg[BLK_SIZE/WORD_SIZE];
     uint8_t  *pcsd_reg;
 
-    uint32_t hw_sec_count;
     uint8_t  hw_ext_csd_rev;
     uint8_t  hw_device_type;
     uint8_t  hw_hs_timing;
@@ -2465,7 +2487,7 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
             {
                 pcsd_reg = (uint8_t *)csd_reg;
                 /* offsets defined in JESD84-B51 extended CSD */
-                hw_sec_count   = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
+                g_hw_sec_count = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
                 hw_ext_csd_rev = pcsd_reg[EXT_CSD_REVISION_OFFSET] & BYTE_MASK;
                 hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
             }
@@ -2539,7 +2561,7 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
                 pcsd_reg = (uint8_t *)csd_reg;
                 /* offsets defined in JESD84-B51 extended CSD */
                 hw_device_type   =  pcsd_reg[EXT_CSD_CARD_TYPE_OFFSET];
-                hw_sec_count   = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
+                g_hw_sec_count   = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
                 hw_ext_csd_rev = pcsd_reg[EXT_CSD_REVISION_OFFSET] & BYTE_MASK;
                 hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
             }
@@ -2590,7 +2612,6 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
         ret_status = MSS_MMC_TRANSFER_FAIL;
     }
     /* variable set but unused, so referencing to avoid compiler warning */
-    (void)hw_sec_count;
     (void)hw_ext_csd_rev;
     (void)hw_device_type;
     (void)hw_hs_timing;
@@ -3267,6 +3288,23 @@ static cif_response_t check_device_status(cif_response_t rsp_status)
                                     MSS_MMC_RESPONSE_R1);
     }
     return (rsp_status);
+}
+
+/******************************************************************************/
+static uint32_t get_srs_bits(int from, int count)
+{
+    volatile uint32_t *resp = &MMC->SRS04;
+    uint32_t mask, ret;
+    int off, shft;
+
+    from -= 8;
+    mask = (count < 32 ? 1 << count : 0) - 1;
+    off = from / 32;
+    shft = from & 31;
+    ret = resp[off] >> shft;
+    if (from + shft > 32)
+        ret |= resp[off + 1] <<  (32 - shft) % 32;
+    return ret & mask;
 }
 
 /******************************************************************************/

@@ -124,6 +124,17 @@ bool FLASH_DRIVE_init(void)
     bool result = true;
 
     result = HSS_MMCInit();
+    if (result) {
+	uint16_t sector_size;
+	uint32_t sector_count;
+
+	/*Read the sector size and count from the eMMC/SDcard*/
+	MSS_MMC_get_info(&sector_size, &sector_count);
+	if (sector_size)
+	    lun_data[0].lba_block_size = sector_size;
+	if (sector_count)
+	    lun_data[0].number_of_blocks = sector_count;
+    }
 
     g_host_connection_detected = 0u;
     /*Assign call-back function Interface needed by USBD driver*/
