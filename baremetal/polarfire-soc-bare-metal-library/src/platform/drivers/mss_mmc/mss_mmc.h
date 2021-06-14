@@ -89,6 +89,9 @@
   The MSS_MMC_init() function takes a pointer to the configuration data
   structure of type mss_mmc_cfg_t.
 
+  The MSS_MMC_sector_count_get() returns the umber of sectors available on
+  the eMMC or SD card..
+
   --------------------------------
   Block Transfer Control
   --------------------------------
@@ -418,6 +421,28 @@ mss_mmc_status_t
 MSS_MMC_init
 (
     const mss_mmc_cfg_t * cfg
+);
+
+/*-------------------------------------------------------------------------*//**
+  The function MSS_MMC_get_info() returns the sector size and count of the
+  eMMC or .SD card
+
+  @param sector_size
+  This parameter is a pointer to the data containing the sector size in
+  bytes.
+
+  @param sector_count
+  This parameter is a pointer to the data containing the sector count.
+
+  @return
+  This function returns the size and the number of sectors read from the
+  device.
+ */
+void
+MSS_MMC_get_info
+(
+    uint16_t *sector_size,
+    uint32_t *sector_count
 );
 
 /*-------------------------------------------------------------------------*//**
