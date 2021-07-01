@@ -27,9 +27,13 @@
 # Compression Utilities
 
 SRCS-$(CONFIG_COMPRESSION) += \
-    thirdparty/fastlz/fastlz.c \
-    compression/hss_decompress.c \
+    modules/compression/hss_decompress.c \
+
+SRCS-$(CONFIG_COMPRESSION_MINIZ) += \
+    thirdparty/miniz/miniz.c \
 
 INCLUDES +=\
-    -I./compression \
-    -I./thirdparty/fastlz \
+    -I./modules/compression \
+    -I./thirdparty/miniz \
+
+thirdparty/miniz/miniz.o: CFLAGS+=-DMINIZ_NO_STDIO -DMINIZ_NO_TIME

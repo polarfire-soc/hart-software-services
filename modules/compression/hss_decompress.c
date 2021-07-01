@@ -32,7 +32,7 @@
 
 #include "config.h"
 #include "hss_types.h"
-#include "fastlz.h"
+#include "miniz.h"
 #include "hss_crc32.h"
 #include "hss_debug.h"
 
@@ -47,7 +47,7 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
     struct HSS_CompressedImage compressedImageHdr = *(struct HSS_CompressedImage *)pInputBuffer;
 
     if (compressedImageHdr.magic != mHSS_COMPRESSED_MAGIC) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image is missing magic value (%08X vs %08X)" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image is missing magic value (%08x vs %08x)" CRLF,
             compressedImageHdr.magic, mHSS_COMPRESSED_MAGIC);
     } else {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image Length is %lu" CRLF,
@@ -67,11 +67,28 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
 
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Decompressing from %p to %p" CRLF, pByteOffset, pOutputBuffer);
 
-            result = fastlz_decompress(
-                (const void *)pByteOffset, (int)compressedImageHdr.compressedImageLen,
-                (void *)pOutputBuffer, (int)(compressedImageHdr.originalImageLen), HSS_ShowProgress);
+            size_t decompressedOutputSize = (size_t)compressedImageHdr.originalImageLen;
+            result = mz_uncompress(
+                (void *)pOutputBuffer, &decompressedOutputSize,
+                (const void *)pByteOffset, (int)compressedImageHdr.compressedImageLen);
         }
     }
 
     return result;
+}
+
+#include <stdlib.h>
+
+void *malloc(size_t size)
+{
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "malloc() stub invoked..." CRLF);
+    (void)size;
+
+    return NULL;
+}
+
+void free(void *ptr)
+{
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "free() stub invoked..." CRLF);
+    (void)ptr;
 }

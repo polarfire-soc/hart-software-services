@@ -8,11 +8,11 @@ config COMPRESSION
 
 		If you don't know what to do here, say Y.
 
-
-config COMPRESSION_FASTLZ
-	def_bool y
-	depends on COMPRESSION 
+config COMPRESSION_MINIZ
+	bool "miniz (DEFLATE)"
+	depends on COMPRESSION
+	default y
 	help
-		This feature enables support for FastLZ compression, a fast lossless compression 
-                library.
+		This feature enables support for miniz compression, a fast lossless compression
+                library implementing DEFLATE.
 endmenu
