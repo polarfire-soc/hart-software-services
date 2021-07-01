@@ -4,16 +4,23 @@
 
 #include <sbi/riscv_encoding.h>
 #include <sbi/riscv_io.h>
+#include <sbi/sbi_console.h>
 #include <sbi/sbi_const.h>
 #include <sbi/sbi_hart.h>
 #include <sbi/sbi_platform.h>
-#include <sbi/sbi_console.h>
 #include <sbi_utils/irqchip/plic.h>
-#include <sbi_utils/sys/clint.h>
 #include <sbi_utils/serial/uart8250.h>
+#include <sbi_utils/sys/clint.h>
 #include "platform.h"
 
 static struct c910_regs_struct c910_regs;
+
+static struct clint_data clint = {
+	.addr = 0, /* Updated at cold boot time */
+	.first_hartid = 0,
+	.hart_count = C910_HART_COUNT,
+	.has_64bit_mmio = FALSE,
+};
 
 static int c910_early_init(bool cold_boot)
 {
@@ -78,7 +85,8 @@ static int c910_ipi_init(bool cold_boot)
 	int rc;
 
 	if (cold_boot) {
-		rc = clint_cold_ipi_init(c910_regs.clint_base_addr, C910_HART_COUNT);
+		clint.addr = c910_regs.clint_base_addr;
+		rc = clint_cold_ipi_init(&clint);
 		if (rc)
 			return rc;
 	}
@@ -91,8 +99,8 @@ static int c910_timer_init(bool cold_boot)
 	int ret;
 
 	if (cold_boot) {
-		ret = clint_cold_timer_init(c910_regs.clint_base_addr,
-					C910_HART_COUNT, FALSE);
+		clint.addr = c910_regs.clint_base_addr;
+		ret = clint_cold_timer_init(&clint, NULL);
 		if (ret)
 			return ret;
 	}
@@ -100,31 +108,21 @@ static int c910_timer_init(bool cold_boot)
 	return clint_warm_timer_init();
 }
 
-static int c910_system_shutdown(u32 type)
+static int c910_system_reset_check(u32 type, u32 reason)
+{
+	return 1;
+}
+
+static void c910_system_reset(u32 type, u32 reason)
 {
 	asm volatile ("ebreak");
-	return 0;
 }
 
-void sbi_boot_other_core(int hartid)
+int c910_hart_start(u32 hartid, ulong saddr)
 {
-	csr_write(CSR_MRVBR, FW_TEXT_START);
+	csr_write(CSR_MRVBR, saddr);
 	csr_write(CSR_MRMR, csr_read(CSR_MRMR) | (1 << hartid));
-}
 
-static int c910_vendor_ext_provider(long extid, long funcid,
-				unsigned long *args,
-				unsigned long *out_value,
-				struct sbi_trap_info *out_trap)
-{
-	switch (extid) {
-	case SBI_EXT_VENDOR_C910_BOOT_OTHER_CORE:
-		sbi_boot_other_core((int)args[0]);
-		break;
-	default:
-		sbi_printf("Unsupported private sbi call: %ld\n", extid);
-		asm volatile ("ebreak");
-	}
 	return 0;
 }
 
@@ -141,9 +139,10 @@ const struct sbi_platform_operations platform_ops = {
 	.timer_init          = c910_timer_init,
 	.timer_event_start   = clint_timer_event_start,
 
-	.system_shutdown     = c910_system_shutdown,
+	.system_reset_check  = c910_system_reset_check,
+	.system_reset        = c910_system_reset,
 
-	.vendor_ext_provider = c910_vendor_ext_provider,
+	.hart_start          = c910_hart_start,
 };
 
 const struct sbi_platform platform = {
@@ -152,7 +151,6 @@ const struct sbi_platform platform = {
 	.name                = "T-HEAD Xuantie c910",
 	.features            = SBI_THEAD_FEATURES,
 	.hart_count          = C910_HART_COUNT,
-	.hart_stack_size     = C910_HART_STACK_SIZE,
-	.disabled_hart_mask  = 0,
+	.hart_stack_size     = SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
 	.platform_ops_addr   = (unsigned long)&platform_ops
 };

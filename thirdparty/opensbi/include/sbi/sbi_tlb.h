@@ -12,6 +12,7 @@
 #define __SBI_TLB_H__
 
 #include <sbi/sbi_types.h>
+#include <sbi/sbi_hartmask.h>
 
 /* clang-format off */
 
@@ -21,30 +22,38 @@
 
 #define SBI_TLB_FIFO_NUM_ENTRIES		8
 
-enum sbi_tlb_info_types {
-	SBI_TLB_FLUSH_VMA,
-	SBI_TLB_FLUSH_VMA_ASID,
-	SBI_TLB_FLUSH_GVMA,
-	SBI_TLB_FLUSH_GVMA_VMID,
-	SBI_TLB_FLUSH_VVMA,
-	SBI_TLB_FLUSH_VVMA_ASID,
-	SBI_ITLB_FLUSH
-};
-
 struct sbi_scratch;
 
 struct sbi_tlb_info {
 	unsigned long start;
 	unsigned long size;
 	unsigned long asid;
-	unsigned long type;
-	unsigned long shart_mask;
+	unsigned long vmid;
+	void (*local_fn)(struct sbi_tlb_info *tinfo);
+	struct sbi_hartmask smask;
 };
 
-#define SBI_TLB_INFO_SIZE			sizeof(struct sbi_tlb_info)
+void sbi_tlb_local_hfence_vvma(struct sbi_tlb_info *tinfo);
+void sbi_tlb_local_hfence_gvma(struct sbi_tlb_info *tinfo);
+void sbi_tlb_local_sfence_vma(struct sbi_tlb_info *tinfo);
+void sbi_tlb_local_hfence_vvma_asid(struct sbi_tlb_info *tinfo);
+void sbi_tlb_local_hfence_gvma_vmid(struct sbi_tlb_info *tinfo);
+void sbi_tlb_local_sfence_vma_asid(struct sbi_tlb_info *tinfo);
+void sbi_tlb_local_fence_i(struct sbi_tlb_info *tinfo);
 
-int sbi_tlb_request(struct sbi_scratch *scratch, ulong hmask,
-		    ulong hbase, struct sbi_tlb_info *tinfo);
+#define SBI_TLB_INFO_INIT(__p, __start, __size, __asid, __vmid, __lfn, __src) \
+do { \
+	(__p)->start = (__start); \
+	(__p)->size = (__size); \
+	(__p)->asid = (__asid); \
+	(__p)->vmid = (__vmid); \
+	(__p)->local_fn = (__lfn); \
+	SBI_HARTMASK_INIT_EXCEPT(&(__p)->smask, (__src)); \
+} while (0)
+
+#define SBI_TLB_INFO_SIZE		sizeof(struct sbi_tlb_info)
+
+int sbi_tlb_request(ulong hmask, ulong hbase, struct sbi_tlb_info *tinfo);
 
 int sbi_tlb_init(struct sbi_scratch *scratch, bool cold_boot);
 

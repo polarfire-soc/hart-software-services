@@ -26,7 +26,7 @@
 	.globl	_start
 	.globl	_start_warm
 _start:
-	li	ra, 0
+	la	ra, _start
 	call	_reset_regs
 
 .macro LOAD_GP
@@ -42,7 +42,7 @@ _start:
         //
         // This process can be disabled by -Wl,--no-relax.
         //
-#ifdef CONFIG_LD_RELAX
+#if defined(CONFIG_LD_RELAX)
 .option push
 .option norelax
         la	gp, __global_pointer$
@@ -107,7 +107,7 @@ _start:
         beqz	a0, .boot_e51
 
 .setup_u54_trap_handler:
-	la	a4, hss_u54_trap_handler
+	la	a4, _trap_handler
         call	.set_trap_handler
 
 	csrw	CSR_SATP, 0 # clear SATP early on U54s, as it appears to be coming up randomly
@@ -128,19 +128,12 @@ _start:
 	la	a4, hss_e51_trap_handler
         call	.set_trap_handler
 
-        //
-        // Clear the E51 DTIM to prevent any memory errors on initial access
-        // to the cache
-        //
-        la	a4, __dtim_start
-        la	a5, __dtim_end
-1:
-	REG_S	x0, 0(a4)
-	add	a4, a4, __SIZEOF_POINTER__
-	blt	a4, a5, 1b
+        //call	.clear_dtim
+        //call	.clear_l2lim
 
         li	a2, MIP_MSIP
 	csrc	CSR_MSTATUS, a2
+
         j main
 
 .set_trap_handler:
@@ -217,7 +210,7 @@ _trap_handler_all_mode:
 	REG_S	zero, SBI_TRAP_REGS_OFFSET(mstatusH)(sp)
 
 	// Save all general regisers except SP and T0
-	REG_S	zero, SBI_TRAP_REGS_OFFSET(zero)(sp)
+	//REG_S	zero, SBI_TRAP_REGS_OFFSET(zero)(sp)
 	REG_S	ra, SBI_TRAP_REGS_OFFSET(ra)(sp)
 	REG_S	gp, SBI_TRAP_REGS_OFFSET(gp)(sp)
 	REG_S	tp, SBI_TRAP_REGS_OFFSET(tp)(sp)
@@ -251,10 +244,20 @@ _trap_handler_all_mode:
 	LOAD_GP
 
 	// Call C routine
+	csrr 	a0, CSR_MCAUSE
+	sext.w	a0, a0
+	blt	a0, zero, .skipHssIpi
+	call 	HSS_U54_HandleIPI 	// check if it is a HSS IPI
+	#csrc	CSR_MIP, MIP_MSIP
+	#csrc	CSR_MIP, MIP_SSIP
+	#bnez	a0, .skipOpenSbi
+
+.skipHssIpi:
 	add	a0, sp, zero
 	csrr	a1, CSR_MSCRATCH
 	call	sbi_trap_handler
 
+.skipOpenSbi:
 	// Restore all general regisers except SP and T0
 	REG_L	ra, SBI_TRAP_REGS_OFFSET(ra)(sp)
 	REG_L	gp, SBI_TRAP_REGS_OFFSET(gp)(sp)
@@ -345,33 +348,6 @@ _reset_regs:
 hss_e51_trap_handler:
         wfi
         j	hss_e51_trap_handler
-
-	.section .entry, "ax", %progbits
-	.align	3
-	.globl	hss_u54_trap_handler
-hss_u54_trap_handler:
-	REG_S 	a0, 10*REGBYTES(sp)
-	REG_S 	a1, 11*REGBYTES(sp)
-	csrr 	a1, CSR_MCAUSE
-
-	slli 	a1, a1, 1         	// discard MSB and decode remainder as an interrupt
-	li 	a0, IRQ_M_SOFT * 2  	// delegate anything other than IPI immediately
-
-	call 	HSS_U54_HandleIPI 	// check if it is a HSS IPI
-	csrc 	CSR_MIP, MIP_MSIP
-	csrc 	CSR_MIP, MIP_SSIP
-	csrw 	CSR_MIP, 0
-
-	REG_L	a0, 10*REGBYTES(sp)
-	REG_L	a1, 11*REGBYTES(sp)
-	fence
-	mret
-
-.delegate_trap_to_opensbi:
-	REG_L	a0, 10*REGBYTES(sp)
-	REG_L	a1, 11*REGBYTES(sp)
-	j	_trap_handler
-
 
 /***********************************************************************************
  *
@@ -479,3 +455,32 @@ copy_switch_code:
 /***********************************************************************************
  *
  */
+
+.clear_l2lim:
+	// Clear the LIM
+	//
+	// On reset, the first 15 ways are L2 and the last way is cache
+	// We can initialize all, as cache write through to DDR is blocked
+	// until DDR in initialized, so will have no effect other than clear ECC
+	//
+	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
+	//
+	la	a2, _hss_start
+	la 	a4, __l2lim_start
+	beq	a2, a4, .done_clear
+	la	a5, __l2lim_end
+        j	1f
+.clear_dtim:
+        //
+        // Clear the E51 DTIM to prevent any memory errors on initial access
+        // to the cache
+        //
+        la	a4, __dtim_start
+        la	a5, __dtim_end
+1:
+        // common loop used by both .clear_l2lim and .clear_dtim
+	REG_S	x0, 0(a4)
+	add	a4, a4, __SIZEOF_POINTER__
+	blt	a4, a5, 1b
+.done_clear:
+	ret

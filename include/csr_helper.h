@@ -47,6 +47,7 @@ extern "C" {
 #  include "sbi/riscv_asm.h"
 #  include "sbi/sbi_bitops.h"
 #  include "sbi/sbi_hart.h"
+#  include "sbi/sbi_hsm.h"
 #  include "sbi/sbi_init.h"
 #  include "sbi/sbi_scratch.h"
 #  define mHSS_CSR_READ csr_read

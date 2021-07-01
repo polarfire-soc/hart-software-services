@@ -12,8 +12,10 @@
 #include <sbi/riscv_atomic.h>
 #include <sbi/riscv_barrier.h>
 #include <sbi/sbi_bitops.h>
+#include <sbi/sbi_domain.h>
 #include <sbi/sbi_error.h>
 #include <sbi/sbi_hart.h>
+#include <sbi/sbi_hsm.h>
 #include <sbi/sbi_init.h>
 #include <sbi/sbi_ipi.h>
 #include <sbi/sbi_platform.h>
@@ -36,16 +38,14 @@ static int sbi_ipi_send(struct sbi_scratch *scratch, u32 remote_hartid,
 	const struct sbi_ipi_event_ops *ipi_ops;
 
 	if ((SBI_IPI_EVENT_MAX <= event) ||
-	    !ipi_ops_array[event] ||
-	    sbi_platform_hart_disabled(plat, remote_hartid))
+	    !ipi_ops_array[event])
 		return SBI_EINVAL;
 	ipi_ops = ipi_ops_array[event];
 
-	/*
-	 * Set IPI type on remote hart's scratch area and
-	 * trigger the interrupt
-	 */
-	remote_scratch = sbi_hart_id_to_scratch(scratch, remote_hartid);
+	remote_scratch = sbi_hartid_to_scratch(remote_hartid);
+	if (!remote_scratch)
+		return SBI_EINVAL;
+
 	ipi_data = sbi_scratch_offset_ptr(remote_scratch, ipi_data_off);
 
 	if (ipi_ops->update) {
@@ -55,6 +55,10 @@ static int sbi_ipi_send(struct sbi_scratch *scratch, u32 remote_hartid,
 			return ret;
 	}
 
+	/*
+	 * Set IPI type on remote hart's scratch area and
+	 * trigger the interrupt
+	 */
 	atomic_raw_set_bit(event, &ipi_data->ipi_type);
 	smp_wmb();
 	sbi_platform_ipi_send(plat, remote_hartid);
@@ -70,35 +74,35 @@ static int sbi_ipi_send(struct sbi_scratch *scratch, u32 remote_hartid,
  * set to all online harts if the intention is to send IPIs to all the harts.
  * If hmask is zero, no IPIs will be sent.
  */
-int sbi_ipi_send_many(struct sbi_scratch *scratch, ulong hmask, ulong hbase,
-			u32 event, void *data)
+int sbi_ipi_send_many(ulong hmask, ulong hbase, u32 event, void *data)
 {
+	int rc;
 	ulong i, m;
-	ulong mask = sbi_hart_available_mask();
-	ulong tempmask;
-	unsigned long last_bit = __fls(mask);
+	struct sbi_domain *dom = sbi_domain_thishart_ptr();
+	struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
 
 	if (hbase != -1UL) {
-		if (hbase > last_bit)
-			/* hart base is not available */
-			return SBI_EINVAL;
-		/**
-		 * FIXME: This check is valid only ULONG size. This is okay for
-		 * now as avaialble hart mask can support upto ULONG size only.
-		 */
-		tempmask = hmask << hbase;
-		tempmask = ~mask & tempmask;
-		if (tempmask)
-			/* at least one of the hart in hmask is not available */
-			return SBI_EINVAL;
+		rc = sbi_hsm_hart_interruptible_mask(dom, hbase, &m);
+		if (rc)
+			return rc;
+		m &= hmask;
 
-		mask &= (hmask << hbase);
+		/* Send IPIs */
+		for (i = hbase; m; i++, m >>= 1) {
+			if (m & 1UL)
+				sbi_ipi_send(scratch, i, event, data);
+		}
+	} else {
+		hbase = 0;
+		while (!sbi_hsm_hart_interruptible_mask(dom, hbase, &m)) {
+			/* Send IPIs */
+			for (i = hbase; m; i++, m >>= 1) {
+				if (m & 1UL)
+					sbi_ipi_send(scratch, i, event, data);
+			}
+			hbase += BITS_PER_LONG;
+		}
 	}
-
-	/* Send IPIs to every other hart on the set */
-	for (i = 0, m = mask; m; i++, m >>= 1)
-		if (m & 1UL)
-			sbi_ipi_send(scratch, i, event, data);
 
 	return 0;
 }
@@ -141,19 +145,19 @@ static struct sbi_ipi_event_ops ipi_smode_ops = {
 
 static u32 ipi_smode_event = SBI_IPI_EVENT_MAX;
 
-int sbi_ipi_send_smode(struct sbi_scratch *scratch, ulong hmask, ulong hbase)
+int sbi_ipi_send_smode(ulong hmask, ulong hbase)
 {
-	return sbi_ipi_send_many(scratch, hmask, hbase, ipi_smode_event, NULL);
+	return sbi_ipi_send_many(hmask, hbase, ipi_smode_event, NULL);
 }
 
-void sbi_ipi_clear_smode(struct sbi_scratch *scratch)
+void sbi_ipi_clear_smode(void)
 {
 	csr_clear(CSR_MIP, MIP_SSIP);
 }
 
 static void sbi_ipi_process_halt(struct sbi_scratch *scratch)
 {
-	sbi_exit(scratch);
+	sbi_hsm_hart_stop(scratch, TRUE);
 }
 
 static struct sbi_ipi_event_ops ipi_halt_ops = {
@@ -163,41 +167,22 @@ static struct sbi_ipi_event_ops ipi_halt_ops = {
 
 static u32 ipi_halt_event = SBI_IPI_EVENT_MAX;
 
-int sbi_ipi_send_halt(struct sbi_scratch *scratch, ulong hmask, ulong hbase)
+int sbi_ipi_send_halt(ulong hmask, ulong hbase)
 {
-	return sbi_ipi_send_many(scratch, hmask, hbase, ipi_halt_event, NULL);
+	return sbi_ipi_send_many(hmask, hbase, ipi_halt_event, NULL);
 }
 
-static void sbi_ipi_process_hss(struct sbi_scratch *scratch)
-{
-	bool HSS_U54_HandleIPI(void);
-	(void)scratch;
-
-	HSS_U54_HandleIPI();
-}
-
-static struct sbi_ipi_event_ops ipi_hss_ops = {
-	.name = "IPI_HSS",
-	.process = sbi_ipi_process_hss,
-};
-
-static u32 ipi_hss_event = SBI_IPI_EVENT_MAX;
-
-int sbi_ipi_send_hss(struct sbi_scratch *scratch, ulong hmask, ulong hbase)
-{
-	return sbi_ipi_send_many(scratch, hmask, hbase, ipi_hss_event, NULL);
-}
-
-void sbi_ipi_process(struct sbi_scratch *scratch)
+void sbi_ipi_process(void)
 {
 	unsigned long ipi_type;
 	unsigned int ipi_event;
 	const struct sbi_ipi_event_ops *ipi_ops;
+	struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 	struct sbi_ipi_data *ipi_data =
 			sbi_scratch_offset_ptr(scratch, ipi_data_off);
 
-	u32 hartid = sbi_current_hartid();
+	u32 hartid = current_hartid();
 	sbi_platform_ipi_clear(plat, hartid);
 
 	ipi_type = atomic_raw_xchg_ulong(&ipi_data->ipi_type, 0);
@@ -234,10 +219,6 @@ int sbi_ipi_init(struct sbi_scratch *scratch, bool cold_boot)
 		if (ret < 0)
 			return ret;
 		ipi_halt_event = ret;
-		ret = sbi_ipi_event_create(&ipi_hss_ops);
-		if (ret < 0)
-			return ret;
-		ipi_hss_event = ret;
 	} else {
 		if (!ipi_data_off)
 			return SBI_ENOMEM;
@@ -249,7 +230,10 @@ int sbi_ipi_init(struct sbi_scratch *scratch, bool cold_boot)
 	ipi_data = sbi_scratch_offset_ptr(scratch, ipi_data_off);
 	ipi_data->ipi_type = 0x00;
 
-	/* Platform init */
+	/*
+	 * Initialize platform IPI support. This will also clear any
+	 * pending IPIs for current/calling HART.
+	 */
 	ret = sbi_platform_ipi_init(sbi_platform_ptr(scratch), cold_boot);
 	if (ret)
 		return ret;
@@ -266,7 +250,7 @@ void sbi_ipi_exit(struct sbi_scratch *scratch)
 	csr_clear(CSR_MIE, MIP_MSIP);
 
 	/* Process pending IPIs */
-	sbi_ipi_process(scratch);
+	sbi_ipi_process();
 
 	/* Platform exit */
 	sbi_platform_ipi_exit(sbi_platform_ptr(scratch));

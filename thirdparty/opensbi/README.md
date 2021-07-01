@@ -1,8 +1,40 @@
-Copyright (c) 2019 Western Digital Corporation or its affiliates
-and other contributors.
-
 RISC-V Open Source Supervisor Binary Interface (OpenSBI)
 ========================================================
+
+Copyright and License
+---------------------
+
+The OpenSBI project is copyright (c) 2019 Western Digital Corporation
+or its affiliates and other contributors.
+
+It is distributed under the terms of the BSD 2-clause license
+("Simplified BSD License" or "FreeBSD License", SPDX: *BSD-2-Clause*).
+A copy of this license with OpenSBI copyright can be found in the file
+[COPYING.BSD].
+
+All source files in OpenSBI contain the 2-Clause BSD license SPDX short
+identifier in place of the full license text.
+
+```
+SPDX-License-Identifier:    BSD-2-Clause
+```
+
+This enables machine processing of license information based on the SPDX
+License Identifiers that are available on the [SPDX] web site.
+
+OpenSBI source code also contains code reused from other projects as listed
+below. The original license text of these projects is included in the source
+files where the reused code is present.
+
+* The libfdt source code is disjunctively dual licensed
+  (GPL-2.0+ OR BSD-2-Clause). Some of this project code is used in OpenSBI
+  under the terms of the BSD 2-Clause license. Any contributions to this
+  code must be made under the terms of both licenses.
+
+See also the [third party notices] file for more information.
+
+Introduction
+------------
 
 The **RISC-V Supervisor Binary Interface (SBI)** is the recommended interface
 between:
@@ -13,7 +45,7 @@ between:
    executing in VS-mode.
 
 The *RISC-V SBI specification* is maintained as an independent project by the
-RISC-V Foundation on [Github] (https://github.com/riscv/riscv-sbi-doc).
+RISC-V Foundation on [Github].
 
 The goal of the OpenSBI project is to provide an open-source reference
 implementation of the RISC-V SBI specifications for platform-specific firmwares
@@ -37,15 +69,35 @@ platform-dependent hardware manipulation functions. For all supported platforms,
 OpenSBI also provides several runtime firmware examples built using the platform
 *libplatsbi.a*. These example firmwares can be used to replace the legacy
 *riscv-pk* bootloader (aka BBL) and enable the use of well-known bootloaders
-such as [U-Boot] (https://git.denx.de/u-boot.git).
+such as [U-Boot].
+
+Supported SBI version
+---------------------
+Currently, OpenSBI fully supports SBI specification *v0.2*. OpenSBI also
+supports Hart State Management (HSM) SBI extension starting from OpenSBI v0.7.
+HSM extension allows S-mode software to boot all the harts a defined order
+rather than legacy method of random booting of harts. As a result, many
+required features such as CPU hotplug, kexec/kdump can also be supported easily
+in S-mode. HSM extension in OpenSBI is implemented in a non-backward compatible
+manner to reduce the maintenance burden and avoid confusion. That's why, any
+S-mode software using OpenSBI will not be able to boot more than 1 hart if HSM
+extension is not supported in S-mode.
+
+Linux kernel already supports SBI v0.2 and HSM SBI extension starting from
+**v5.7-rc1**. If you are using an Linux kernel older than **5.7-rc1** or any
+other S-mode software without HSM SBI extension, you should stick to OpenSBI
+v0.6 to boot all the harts. For a UMP systems, it doesn't matter.
+
+N.B. Any S-mode boot loader (i.e. U-Boot) doesn't need to support HSM extension,
+as it doesn't need to boot all the harts. The operating system should be
+capable enough to bring up all other non-booting harts using HSM extension.
 
 Required Toolchain
 ------------------
 
 OpenSBI can be compiled natively or cross-compiled on a x86 host. For
 cross-compilation, you can build your own toolchain or just download
-a prebuilt one from the
-[Bootlin toolchain repository] (https://toolchains.bootlin.com/).
+a prebuilt one from the [Bootlin toolchain repository].
 
 Please note that only a 64-bit version of the toolchain is available in
 the Bootlin toolchain repository for now.
@@ -94,7 +146,7 @@ line, the platform-specific static library *libplatsbi.a* and firmware examples
 are built for the platform *<platform_subdir>* present in the directory
 *platform* in the OpenSBI top directory. For example, to compile the platform
 library and the firmware examples for the QEMU RISC-V *virt* machine,
-*<platform_subdir>* should be *qemu/virt*.
+*<platform_subdir>* should be *generic*.
 
 To build *libsbi.a*, *libplatsbi.a* and the firmware for one of the supported
 platforms, run:
@@ -150,35 +202,6 @@ export PLATFORM_RISCV_XLEN=32
 
 will generate 32-bit OpenSBI images. And vice vesa.
 
-License
--------
-
-OpenSBI is distributed under the terms of the BSD 2-clause license
-("Simplified BSD License" or "FreeBSD License", SPDX: *BSD-2-Clause*).
-A copy of this license with OpenSBI copyright can be found in the file
-[COPYING.BSD].
-
-All source files in OpenSBI contain the 2-Clause BSD license SPDX short
-identifier in place of the full license text.
-
-```
-SPDX-License-Identifier:    BSD-2-Clause
-```
-
-This enables machine processing of license information based on the SPDX
-License Identifiers that are available on the [SPDX] web site.
-
-OpenSBI source code also contains code reused from other projects as listed
-below. The original license text of these projects is included in the source
-files where the reused code is present.
-
-* The libfdt source code is disjunctively dual licensed
-  (GPL-2.0+ OR BSD-2-Clause). Some of this project code is used in OpenSBI
-  under the terms of the BSD 2-Clause license. Any contributions to this
-  code must be made under the terms of both licenses.
-
-See also the [third party notices] file for more information.
-
 Contributing to OpenSBI
 -----------------------
 
@@ -197,10 +220,13 @@ Detailed documentation of various aspects of OpenSBI can be found under the
 
 * [Contribution Guideline]: Guideline for contributing code to OpenSBI project
 * [Library Usage]: API documentation of OpenSBI static library *libsbi.a*
+* [Platform Requirements]: Requirements for using OpenSBI on a platform
 * [Platform Support Guide]: Guideline for implementing support for new platforms
 * [Platform Documentation]: Documentation of the platforms currently supported.
 * [Firmware Documentation]: Documentation for the different types of firmware
   examples build supported by OpenSBI.
+* [Domain Support]: Documentation for the OpenSBI domain support which helps
+  users achieve system-level partitioning using OpenSBI.
 
 OpenSBI source code is also well documented. For source level documentation,
 doxygen style is used. Please refer to the [Doxygen manual] for details on this
@@ -244,14 +270,17 @@ make I=<install_directory> install_docs
 
 [Github]: https://github.com/riscv/riscv-sbi-doc
 [U-Boot]: https://www.denx.de/wiki/U-Boot/SourceCode
+[Bootlin toolchain repository]: https://toolchains.bootlin.com/
 [COPYING.BSD]: COPYING.BSD
 [SPDX]: http://spdx.org/licenses/
 [Contribution Guideline]: docs/contributing.md
 [Contributors List]: CONTRIBUTORS.md
 [Library Usage]: docs/library_usage.md
+[Platform Requirements]: docs/platform_requirements.md
 [Platform Support Guide]: docs/platform_guide.md
 [Platform Documentation]: docs/platform/platform.md
 [Firmware Documentation]: docs/firmware/fw.md
+[Domain Support]: docs/domain_support.md
 [Doxygen manual]: http://www.doxygen.nl/manual/index.html
 [Kendryte standalone SDK]: https://github.com/kendryte/kendryte-standalone-sdk
 [third party notices]: ThirdPartyNotices.md

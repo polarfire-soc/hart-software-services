@@ -17,8 +17,13 @@ int misa_extension_imp(char ext)
 {
 	unsigned long misa = csr_read(CSR_MISA);
 
-	if (misa)
-		return misa & (1 << (ext - 'A'));
+	if (misa) {
+		if ('A' <= ext && ext <= 'Z')
+			return misa & (1 << (ext - 'A'));
+		if ('a' <= ext && ext <= 'z')
+			return misa & (1 << (ext - 'a'));
+		return 0;
+	}
 
 	return sbi_platform_misa_extension(sbi_platform_thishart_ptr(), ext);
 }
@@ -44,144 +49,129 @@ int misa_xlen(void)
 	return r ? r : -1;
 }
 
+void misa_string(int xlen, char *out, unsigned int out_sz)
+{
+	unsigned int i, pos = 0;
+	const char valid_isa_order[] = "iemafdqclbjtpvnsuhkorwxyzg";
+
+	if (!out)
+		return;
+
+	if (5 <= (out_sz - pos)) {
+		out[pos++] = 'r';
+		out[pos++] = 'v';
+		switch (xlen) {
+		case 1:
+			out[pos++] = '3';
+			out[pos++] = '2';
+			break;
+		case 2:
+			out[pos++] = '6';
+			out[pos++] = '4';
+			break;
+		case 3:
+			out[pos++] = '1';
+			out[pos++] = '2';
+			out[pos++] = '8';
+			break;
+		default:
+			return;
+		}
+	}
+
+	for (i = 0; i < array_size(valid_isa_order) && (pos < out_sz); i++) {
+		if (misa_extension_imp(valid_isa_order[i]))
+			out[pos++] = valid_isa_order[i];
+	}
+
+	if (pos < out_sz)
+		out[pos++] = '\0';
+}
+
 unsigned long csr_read_num(int csr_num)
 {
+#define switchcase_csr_read(__csr_num, __val)		\
+	case __csr_num:					\
+		__val = csr_read(__csr_num);		\
+		break;
+#define switchcase_csr_read_2(__csr_num, __val)	\
+	switchcase_csr_read(__csr_num + 0, __val)	\
+	switchcase_csr_read(__csr_num + 1, __val)
+#define switchcase_csr_read_4(__csr_num, __val)	\
+	switchcase_csr_read_2(__csr_num + 0, __val)	\
+	switchcase_csr_read_2(__csr_num + 2, __val)
+#define switchcase_csr_read_8(__csr_num, __val)	\
+	switchcase_csr_read_4(__csr_num + 0, __val)	\
+	switchcase_csr_read_4(__csr_num + 4, __val)
+#define switchcase_csr_read_16(__csr_num, __val)	\
+	switchcase_csr_read_8(__csr_num + 0, __val)	\
+	switchcase_csr_read_8(__csr_num + 8, __val)
+#define switchcase_csr_read_32(__csr_num, __val)	\
+	switchcase_csr_read_16(__csr_num + 0, __val)	\
+	switchcase_csr_read_16(__csr_num + 16, __val)
+#define switchcase_csr_read_64(__csr_num, __val)	\
+	switchcase_csr_read_32(__csr_num + 0, __val)	\
+	switchcase_csr_read_32(__csr_num + 32, __val)
+
 	unsigned long ret = 0;
 
 	switch (csr_num) {
-	case CSR_PMPCFG0:
-		ret = csr_read(CSR_PMPCFG0);
-		break;
-	case CSR_PMPCFG1:
-		ret = csr_read(CSR_PMPCFG1);
-		break;
-	case CSR_PMPCFG2:
-		ret = csr_read(CSR_PMPCFG2);
-		break;
-	case CSR_PMPCFG3:
-		ret = csr_read(CSR_PMPCFG3);
-		break;
-	case CSR_PMPADDR0:
-		ret = csr_read(CSR_PMPADDR0);
-		break;
-	case CSR_PMPADDR1:
-		ret = csr_read(CSR_PMPADDR1);
-		break;
-	case CSR_PMPADDR2:
-		ret = csr_read(CSR_PMPADDR2);
-		break;
-	case CSR_PMPADDR3:
-		ret = csr_read(CSR_PMPADDR3);
-		break;
-	case CSR_PMPADDR4:
-		ret = csr_read(CSR_PMPADDR4);
-		break;
-	case CSR_PMPADDR5:
-		ret = csr_read(CSR_PMPADDR5);
-		break;
-	case CSR_PMPADDR6:
-		ret = csr_read(CSR_PMPADDR6);
-		break;
-	case CSR_PMPADDR7:
-		ret = csr_read(CSR_PMPADDR7);
-		break;
-	case CSR_PMPADDR8:
-		ret = csr_read(CSR_PMPADDR8);
-		break;
-	case CSR_PMPADDR9:
-		ret = csr_read(CSR_PMPADDR9);
-		break;
-	case CSR_PMPADDR10:
-		ret = csr_read(CSR_PMPADDR10);
-		break;
-	case CSR_PMPADDR11:
-		ret = csr_read(CSR_PMPADDR11);
-		break;
-	case CSR_PMPADDR12:
-		ret = csr_read(CSR_PMPADDR12);
-		break;
-	case CSR_PMPADDR13:
-		ret = csr_read(CSR_PMPADDR13);
-		break;
-	case CSR_PMPADDR14:
-		ret = csr_read(CSR_PMPADDR14);
-		break;
-	case CSR_PMPADDR15:
-		ret = csr_read(CSR_PMPADDR15);
-		break;
+	switchcase_csr_read_16(CSR_PMPCFG0, ret)
+	switchcase_csr_read_64(CSR_PMPADDR0, ret)
 	default:
 		break;
 	};
 
 	return ret;
+
+#undef switchcase_csr_read_64
+#undef switchcase_csr_read_32
+#undef switchcase_csr_read_16
+#undef switchcase_csr_read_8
+#undef switchcase_csr_read_4
+#undef switchcase_csr_read_2
+#undef switchcase_csr_read
 }
 
 void csr_write_num(int csr_num, unsigned long val)
 {
+#define switchcase_csr_write(__csr_num, __val)		\
+	case __csr_num:					\
+		csr_write(__csr_num, __val);		\
+		break;
+#define switchcase_csr_write_2(__csr_num, __val)	\
+	switchcase_csr_write(__csr_num + 0, __val)	\
+	switchcase_csr_write(__csr_num + 1, __val)
+#define switchcase_csr_write_4(__csr_num, __val)	\
+	switchcase_csr_write_2(__csr_num + 0, __val)	\
+	switchcase_csr_write_2(__csr_num + 2, __val)
+#define switchcase_csr_write_8(__csr_num, __val)	\
+	switchcase_csr_write_4(__csr_num + 0, __val)	\
+	switchcase_csr_write_4(__csr_num + 4, __val)
+#define switchcase_csr_write_16(__csr_num, __val)	\
+	switchcase_csr_write_8(__csr_num + 0, __val)	\
+	switchcase_csr_write_8(__csr_num + 8, __val)
+#define switchcase_csr_write_32(__csr_num, __val)	\
+	switchcase_csr_write_16(__csr_num + 0, __val)	\
+	switchcase_csr_write_16(__csr_num + 16, __val)
+#define switchcase_csr_write_64(__csr_num, __val)	\
+	switchcase_csr_write_32(__csr_num + 0, __val)	\
+	switchcase_csr_write_32(__csr_num + 32, __val)
+
 	switch (csr_num) {
-	case CSR_PMPCFG0:
-		csr_write(CSR_PMPCFG0, val);
-		break;
-	case CSR_PMPCFG1:
-		csr_write(CSR_PMPCFG1, val);
-		break;
-	case CSR_PMPCFG2:
-		csr_write(CSR_PMPCFG2, val);
-		break;
-	case CSR_PMPCFG3:
-		csr_write(CSR_PMPCFG3, val);
-		break;
-	case CSR_PMPADDR0:
-		csr_write(CSR_PMPADDR0, val);
-		break;
-	case CSR_PMPADDR1:
-		csr_write(CSR_PMPADDR1, val);
-		break;
-	case CSR_PMPADDR2:
-		csr_write(CSR_PMPADDR2, val);
-		break;
-	case CSR_PMPADDR3:
-		csr_write(CSR_PMPADDR3, val);
-		break;
-	case CSR_PMPADDR4:
-		csr_write(CSR_PMPADDR4, val);
-		break;
-	case CSR_PMPADDR5:
-		csr_write(CSR_PMPADDR5, val);
-		break;
-	case CSR_PMPADDR6:
-		csr_write(CSR_PMPADDR6, val);
-		break;
-	case CSR_PMPADDR7:
-		csr_write(CSR_PMPADDR7, val);
-		break;
-	case CSR_PMPADDR8:
-		csr_write(CSR_PMPADDR8, val);
-		break;
-	case CSR_PMPADDR9:
-		csr_write(CSR_PMPADDR9, val);
-		break;
-	case CSR_PMPADDR10:
-		csr_write(CSR_PMPADDR10, val);
-		break;
-	case CSR_PMPADDR11:
-		csr_write(CSR_PMPADDR11, val);
-		break;
-	case CSR_PMPADDR12:
-		csr_write(CSR_PMPADDR12, val);
-		break;
-	case CSR_PMPADDR13:
-		csr_write(CSR_PMPADDR13, val);
-		break;
-	case CSR_PMPADDR14:
-		csr_write(CSR_PMPADDR14, val);
-		break;
-	case CSR_PMPADDR15:
-		csr_write(CSR_PMPADDR15, val);
-		break;
+	switchcase_csr_write_16(CSR_PMPCFG0, val)
+	switchcase_csr_write_64(CSR_PMPADDR0, val)
 	default:
 		break;
 	};
+
+#undef switchcase_csr_write_64
+#undef switchcase_csr_write_32
+#undef switchcase_csr_write_16
+#undef switchcase_csr_write_8
+#undef switchcase_csr_write_4
+#undef switchcase_csr_write_2
+#undef switchcase_csr_write
 }
 
 static unsigned long ctz(unsigned long x)
@@ -207,7 +197,7 @@ int pmp_set(unsigned int n, unsigned long prot, unsigned long addr,
 	if (n >= PMP_COUNT || log2len > __riscv_xlen || log2len < PMP_SHIFT)
 		return SBI_EINVAL;
 
-		/* calculate PMP register and offset */
+	/* calculate PMP register and offset */
 #if __riscv_xlen == 32
 	pmpcfg_csr   = CSR_PMPCFG0 + (n >> 2);
 	pmpcfg_shift = (n & 3) << 3;
@@ -224,7 +214,7 @@ int pmp_set(unsigned int n, unsigned long prot, unsigned long addr,
 
 	/* encode PMP config */
 	prot |= (log2len == PMP_SHIFT) ? PMP_A_NA4 : PMP_A_NAPOT;
-	cfgmask = ~(0xff << pmpcfg_shift);
+	cfgmask = ~(0xffUL << pmpcfg_shift);
 	pmpcfg	= (csr_read_num(pmpcfg_csr) & cfgmask);
 	pmpcfg |= ((prot << pmpcfg_shift) & ~cfgmask);
 
@@ -249,16 +239,16 @@ int pmp_set(unsigned int n, unsigned long prot, unsigned long addr,
 }
 
 int pmp_get(unsigned int n, unsigned long *prot_out, unsigned long *addr_out,
-	    unsigned long *log2len_out)
+	    unsigned long *log2len)
 {
 	int pmpcfg_csr, pmpcfg_shift, pmpaddr_csr;
 	unsigned long cfgmask, pmpcfg, prot;
-	unsigned long t1, addr, log2len;
+	unsigned long t1, addr, len;
 
 	/* check parameters */
-	if (n >= PMP_COUNT || !prot_out || !addr_out || !log2len_out)
+	if (n >= PMP_COUNT || !prot_out || !addr_out || !log2len)
 		return SBI_EINVAL;
-	*prot_out = *addr_out = *log2len_out = 0;
+	*prot_out = *addr_out = *log2len = 0;
 
 	/* calculate PMP register and offset */
 #if __riscv_xlen == 32
@@ -276,7 +266,7 @@ int pmp_get(unsigned int n, unsigned long *prot_out, unsigned long *addr_out,
 		return SBI_ENOTSUPP;
 
 	/* decode PMP config */
-	cfgmask = (0xff << pmpcfg_shift);
+	cfgmask = (0xffUL << pmpcfg_shift);
 	pmpcfg	= csr_read_num(pmpcfg_csr) & cfgmask;
 	prot	= pmpcfg >> pmpcfg_shift;
 
@@ -285,21 +275,21 @@ int pmp_get(unsigned int n, unsigned long *prot_out, unsigned long *addr_out,
 		addr = csr_read_num(pmpaddr_csr);
 		if (addr == -1UL) {
 			addr	= 0;
-			log2len = __riscv_xlen;
+			len	= __riscv_xlen;
 		} else {
 			t1	= ctz(~addr);
 			addr	= (addr & ~((1UL << t1) - 1)) << PMP_SHIFT;
-			log2len = (t1 + PMP_SHIFT + 1);
+			len	= (t1 + PMP_SHIFT + 1);
 		}
 	} else {
 		addr	= csr_read_num(pmpaddr_csr) << PMP_SHIFT;
-		log2len = PMP_SHIFT;
+		len	= PMP_SHIFT;
 	}
 
 	/* return details */
 	*prot_out    = prot;
 	*addr_out    = addr;
-	*log2len_out = log2len;
+	*log2len     = len;
 
 	return 0;
 }

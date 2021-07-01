@@ -7,7 +7,6 @@
  *   Anup Patel <anup.patel@wdc.com>
  */
 
-#include <sbi/sbi_hart.h>
 #include <sbi/riscv_barrier.h>
 #include <sbi/riscv_locks.h>
 
@@ -18,8 +17,7 @@ int spin_lock_check(spinlock_t *lock)
 
 int spin_trylock(spinlock_t *lock)
 {
-	const int hartid = sbi_current_hartid();
-	int tmp = hartid, busy;
+	int tmp = 1, busy;
 
 	__asm__ __volatile__(
 		"	amoswap.w %0, %2, %1\n" RISCV_ACQUIRE_BARRIER
@@ -27,16 +25,12 @@ int spin_trylock(spinlock_t *lock)
 		: "r"(tmp)
 		: "memory");
 
-	return (!busy || (busy == hartid));
+	return !busy;
 }
 
 void spin_lock(spinlock_t *lock)
 {
-	const int hartid = sbi_current_hartid();
 	while (1) {
-		if (lock->lock == hartid)
-			break;
-
 		if (spin_lock_check(lock))
 			continue;
 

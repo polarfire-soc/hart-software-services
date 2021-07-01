@@ -53,7 +53,7 @@ extern "C" {
 
 #include "hss_clock.h"
 
-#define CRLF "\r\n"
+#define CRLF "\n"
 #define CR   "\r"
 
 typedef enum {
@@ -68,9 +68,11 @@ typedef enum {
 
 void HSS_Debug_Highlight(HSS_Debug_LogLevel_t logLevel);
 
+#ifndef __SBI_CONSOLE_H__
 int sbi_printf(const char *fmt, ...);
 void sbi_puts(const char *buf);
 void sbi_putc(char c);
+#endif
 
 void HSS_Debug_Timestamp(void);
 #    define mHSS_TIMESTAMP HSS_Debug_Timestamp()
@@ -98,7 +100,7 @@ void HSS_Debug_Timestamp(void);
 #    define mHSS_FANCY_PRINTF_EX sbi_printf
 
 #ifndef mHSS_DEBUG_PRINTF
-#  ifdef DEBUG
+//#  ifdef DEBUG
 #    define mHSS_DEBUG_PRINTF(logLevel, ...) { \
          mHSS_TIMESTAMP; \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
@@ -109,11 +111,11 @@ void HSS_Debug_Timestamp(void);
      }
 #      define mHSS_DEBUG_PRINTF_EX sbi_printf
 #      define mHSS_DEBUG_PUTS sbi_puts
-#  else
-#    define mHSS_DEBUG_PRINTF (void)
-#    define mHSS_DEBUG_PRINTF_EX (void)
-#    define mHSS_DEBUG_PUTS (void)
-#  endif
+//#  else
+//#    define mHSS_DEBUG_PRINTF(logLevel, ...) (void)(0)
+//#    define mHSS_DEBUG_PRINTF_EX (void)
+//#    define mHSS_DEBUG_PUTS (void)
+///#  endif
 #endif
 
 #define mDO_PRAGMA(x) _Pragma(#x)

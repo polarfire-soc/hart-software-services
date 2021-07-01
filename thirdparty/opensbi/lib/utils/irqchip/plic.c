@@ -10,10 +10,9 @@
 #include <sbi/riscv_io.h>
 #include <sbi/riscv_encoding.h>
 #include <sbi/sbi_console.h>
+#include <sbi/sbi_error.h>
 #include <sbi/sbi_string.h>
 #include <sbi_utils/irqchip/plic.h>
-#include <libfdt.h>
-#include <fdt.h>
 
 #define PLIC_PRIORITY_BASE 0x0
 #define PLIC_PENDING_BASE 0x1000
@@ -22,97 +21,80 @@
 #define PLIC_CONTEXT_BASE 0x200000
 #define PLIC_CONTEXT_STRIDE 0x1000
 
-static u32 plic_hart_count;
-static u32 plic_num_sources;
-static volatile void *plic_base;
-
-static void plic_set_priority(u32 source, u32 val)
+static void plic_set_priority(struct plic_data *plic, u32 source, u32 val)
 {
-	volatile void *plic_priority =
-		plic_base + PLIC_PRIORITY_BASE + 4 * source;
+	volatile void *plic_priority = (void *)plic->addr +
+			PLIC_PRIORITY_BASE + 4 * source;
 	writel(val, plic_priority);
 }
 
-void plic_set_thresh(u32 cntxid, u32 val)
+void plic_set_thresh(struct plic_data *plic, u32 cntxid, u32 val)
 {
-	volatile void *plic_thresh =
-		plic_base + PLIC_CONTEXT_BASE + PLIC_CONTEXT_STRIDE * cntxid;
+	volatile void *plic_thresh;
+
+	if (!plic)
+		return;
+
+	plic_thresh = (void *)plic->addr +
+		      PLIC_CONTEXT_BASE + PLIC_CONTEXT_STRIDE * cntxid;
 	writel(val, plic_thresh);
 }
 
-void plic_set_ie(u32 cntxid, u32 word_index, u32 val)
+void plic_set_ie(struct plic_data *plic, u32 cntxid, u32 word_index, u32 val)
 {
-	volatile void *plic_ie =
-		plic_base + PLIC_ENABLE_BASE + PLIC_ENABLE_STRIDE * cntxid;
+	volatile void *plic_ie;
+
+	if (!plic)
+		return;
+
+	plic_ie = (void *)plic->addr +
+		   PLIC_ENABLE_BASE + PLIC_ENABLE_STRIDE * cntxid;
 	writel(val, plic_ie + word_index * 4);
 }
 
-void plic_fdt_fixup(void *fdt, const char *compat)
+int plic_warm_irqchip_init(struct plic_data *plic,
+			   int m_cntx_id, int s_cntx_id)
 {
-	u32 *cells;
-	int i, cells_count;
-	int plic_off;
+	size_t i, ie_words;
 
-	plic_off = fdt_node_offset_by_compatible(fdt, 0, compat);
-	if (plic_off < 0)
-		return;
+	if (!plic)
+		return SBI_EINVAL;
 
-	cells = (u32 *)fdt_getprop(fdt, plic_off,
-				   "interrupts-extended", &cells_count);
-	if (!cells)
-		return;
-
-	cells_count = cells_count / sizeof(u32);
-	if (!cells_count)
-		return;
-
-	for (i = 0; i < (cells_count / 2); i++) {
-		if (fdt32_to_cpu(cells[2 * i + 1]) == IRQ_M_EXT)
-			cells[2 * i + 1] = cpu_to_fdt32(0xffffffff);
-	}
-}
-
-int plic_warm_irqchip_init(u32 target_hart, int m_cntx_id, int s_cntx_id)
-{
-	size_t i, ie_words = plic_num_sources / 32 + 1;
-
-	if (plic_hart_count <= target_hart)
-		return -1;
+	ie_words = plic->num_src / 32 + 1;
 
 	/* By default, disable all IRQs for M-mode of target HART */
 	if (m_cntx_id > -1) {
 		for (i = 0; i < ie_words; i++)
-			plic_set_ie(m_cntx_id, i, 0);
+			plic_set_ie(plic, m_cntx_id, i, 0);
 	}
 
 	/* By default, disable all IRQs for S-mode of target HART */
 	if (s_cntx_id > -1) {
 		for (i = 0; i < ie_words; i++)
-			plic_set_ie(s_cntx_id, i, 0);
+			plic_set_ie(plic, s_cntx_id, i, 0);
 	}
 
 	/* By default, disable M-mode threshold */
 	if (m_cntx_id > -1)
-		plic_set_thresh(m_cntx_id, 0xffffffff);
+		plic_set_thresh(plic, m_cntx_id, 0x7);
 
 	/* By default, disable S-mode threshold */
 	if (s_cntx_id > -1)
-		plic_set_thresh(s_cntx_id, 0xffffffff);
+		plic_set_thresh(plic, s_cntx_id, 0x7);
 
 	return 0;
 }
 
-int plic_cold_irqchip_init(unsigned long base, u32 num_sources, u32 hart_count)
+int plic_cold_irqchip_init(struct plic_data *plic)
 {
 	int i;
 
-	plic_hart_count	 = hart_count;
-	plic_num_sources = num_sources;
-	plic_base	 = (void *)base;
+	if (!plic)
+		return SBI_EINVAL;
 
 	/* Configure default priorities of all IRQs */
-	for (i = 1; i <= plic_num_sources; i++)
-		plic_set_priority(i, 0);
+	for (i = 1; i <= plic->num_src; i++)
+		plic_set_priority(plic, i, 0);
 
 	return 0;
 }

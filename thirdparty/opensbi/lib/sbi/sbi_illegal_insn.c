@@ -9,57 +9,39 @@
 
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_encoding.h>
-#include <sbi/sbi_bits.h>
+#include <sbi/sbi_bitops.h>
 #include <sbi/sbi_emulate_csr.h>
 #include <sbi/sbi_error.h>
 #include <sbi/sbi_illegal_insn.h>
 #include <sbi/sbi_trap.h>
 #include <sbi/sbi_unpriv.h>
 
-typedef int (*illegal_insn_func)(ulong insn, u32 hartid, ulong mcause,
-				 struct sbi_trap_regs *regs,
-				 struct sbi_scratch *scratch);
+typedef int (*illegal_insn_func)(ulong insn, struct sbi_trap_regs *regs);
 
-static int truly_illegal_insn(ulong insn, u32 hartid, ulong mcause,
-			      struct sbi_trap_regs *regs,
-			      struct sbi_scratch *scratch)
+static int truly_illegal_insn(ulong insn, struct sbi_trap_regs *regs)
 {
 	struct sbi_trap_info trap;
 
 	trap.epc = regs->mepc;
-	trap.cause = mcause;
+	trap.cause = CAUSE_ILLEGAL_INSTRUCTION;
 	trap.tval = insn;
 	trap.tval2 = 0;
 	trap.tinst = 0;
 
-	return sbi_trap_redirect(regs, &trap, scratch);
+	return sbi_trap_redirect(regs, &trap);
 }
 
-static int system_opcode_insn(ulong insn, u32 hartid, ulong mcause,
-			      struct sbi_trap_regs *regs,
-			      struct sbi_scratch *scratch)
+static int system_opcode_insn(ulong insn, struct sbi_trap_regs *regs)
 {
 	int do_write, rs1_num = (insn >> 15) & 0x1f;
 	ulong rs1_val = GET_RS1(insn, regs);
 	int csr_num   = (u32)insn >> 20;
 	ulong csr_val, new_csr_val;
 
-	/*
-	 * WFI always traps as illegal instruction when executed from
-	 * VS/VU mode so we just forward it to HS-mode.
-	 */
-#if __riscv_xlen == 32
-	if ((regs->mstatusH & MSTATUSH_MPV) &&
-#else
-	if ((regs->mstatus & MSTATUS_MPV) &&
-#endif
-	    (insn & INSN_MASK_WFI) == INSN_MATCH_WFI)
-		return truly_illegal_insn(insn, hartid, mcause,
-					  regs, scratch);
+	/* TODO: Ensure that we got CSR read/write instruction */
 
-	if (sbi_emulate_csr_read(csr_num, hartid, regs, scratch, &csr_val))
-		return truly_illegal_insn(insn, hartid, mcause,
-					  regs, scratch);
+	if (sbi_emulate_csr_read(csr_num, regs, &csr_val))
+		return truly_illegal_insn(insn, regs);
 
 	do_write = rs1_num;
 	switch (GET_RM(insn)) {
@@ -84,12 +66,11 @@ static int system_opcode_insn(ulong insn, u32 hartid, ulong mcause,
 		new_csr_val = csr_val & ~rs1_num;
 		break;
 	default:
-		return truly_illegal_insn(insn, hartid, mcause, regs, scratch);
+		return truly_illegal_insn(insn, regs);
 	};
 
-	if (do_write && sbi_emulate_csr_write(csr_num, hartid, regs,
-					      scratch, new_csr_val))
-		return truly_illegal_insn(insn, hartid, mcause, regs, scratch);
+	if (do_write && sbi_emulate_csr_write(csr_num, regs, new_csr_val))
+		return truly_illegal_insn(insn, regs);
 
 	SET_RD(insn, regs, csr_val);
 
@@ -133,26 +114,30 @@ static illegal_insn_func illegal_insn_table[32] = {
 	truly_illegal_insn  /* 31 */
 };
 
-int sbi_illegal_insn_handler(u32 hartid, ulong mcause, ulong insn,
-			     struct sbi_trap_regs *regs,
-			     struct sbi_scratch *scratch)
+int sbi_illegal_insn_handler(ulong insn, struct sbi_trap_regs *regs)
 {
 	struct sbi_trap_info uptrap;
 
+	/*
+	 * We only deal with 32-bit (or longer) illegal instructions. If we
+	 * see instruction is zero OR instruction is 16-bit then we fetch and
+	 * check the instruction encoding using unprivilege access.
+	 *
+	 * The program counter (PC) in RISC-V world is always 2-byte aligned
+	 * so handling only 32-bit (or longer) illegal instructions also help
+	 * the case where MTVAL CSR contains instruction address for illegal
+	 * instruction trap.
+	 */
+
 	if (unlikely((insn & 3) != 3)) {
-		if (insn == 0) {
-			insn = sbi_get_insn(regs->mepc, scratch, &uptrap);
-			if (uptrap.cause) {
-				uptrap.epc = regs->mepc;
-				return sbi_trap_redirect(regs, &uptrap,
-							 scratch);
-			}
+		insn = sbi_get_insn(regs->mepc, &uptrap);
+		if (uptrap.cause) {
+			uptrap.epc = regs->mepc;
+			return sbi_trap_redirect(regs, &uptrap);
 		}
 		if ((insn & 3) != 3)
-			return truly_illegal_insn(insn, hartid, mcause, regs,
-						  scratch);
+			return truly_illegal_insn(insn, regs);
 	}
 
-	return illegal_insn_table[(insn & 0x7c) >> 2](insn, hartid, mcause,
-						      regs, scratch);
+	return illegal_insn_table[(insn & 0x7c) >> 2](insn, regs);
 }

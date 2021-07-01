@@ -21,6 +21,7 @@
 
 #include "ssmb_ipi.h"
 
+#include <string.h>
 #include <assert.h>
 
 #include "csr_helper.h"
@@ -28,12 +29,14 @@
 #include "ssmb_ipi.h"
 
 #include "opensbi_service.h"
+#include "riscv_encoding.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  include "hss_boot_pmp.h"
 #endif
 
 #include "mpfs_reg_map.h"
+#include "sbi_version.h"
 
 #if !IS_ENABLED(CONFIG_OPENSBI)
 #  error OPENSBI needed for this module
@@ -41,9 +44,6 @@
 
 
 extern const struct sbi_platform platform;
-
-extern unsigned long _hartid_to_scratch(int hartid); // crt.S
-
 static unsigned long l_hartid_to_scratch(int hartid);
 
 //
@@ -54,22 +54,38 @@ static unsigned long l_hartid_to_scratch(int hartid);
 // 1. Program Stack
 // 2.OpenSBI scratch space (i.e. struct sbi_scratch instance with extra space above)"
 
-union {
+// place this in DDR...
+union t_HSS_scratchBuffer {
     struct sbi_scratch scratch;
-    unsigned long buffer[SBI_SCRATCH_SIZE+16];
-} scratches[MAX_NUM_HARTS];
+    unsigned long buffer[SBI_SCRATCH_SIZE / __SIZEOF_POINTER__];
+} scratches[MAX_NUM_HARTS] __attribute__((section(".l2_scratchpad"),used));
+//} scratches[MAX_NUM_HARTS] __attribute__((section(".opensbi_scratch")));
 
-static void opensbi_scratch_setup(int hartid)
+asm(".align 3\n"
+	"scratch_addr: .quad scratches\n");
+extern const size_t scratch_addr;
+union t_HSS_scratchBuffer *pScratches = 0;
+
+static void opensbi_scratch_setup(enum HSSHartId hartid)
 {
-    scratches[hartid].scratch.options = SBI_SCRATCH_DEBUG_PRINTS;
-    scratches[hartid].scratch.hartid_to_scratch = (unsigned long)l_hartid_to_scratch;
-    scratches[hartid].scratch.platform_addr = (unsigned long)&platform;
+    assert(hartid < MAX_NUM_HARTS);
+
+    pScratches = (union t_HSS_scratchBuffer * const)scratch_addr;
+    pScratches[hartid].scratch.options = SBI_SCRATCH_DEBUG_PRINTS;
+    pScratches[hartid].scratch.hartid_to_scratch = (unsigned long)l_hartid_to_scratch;
+    pScratches[hartid].scratch.platform_addr = (unsigned long)&platform;
 }
 
 static unsigned long l_hartid_to_scratch(int hartid)
 {
+    unsigned long result = 0u;
     assert(hartid < MAX_NUM_HARTS);
-    return (unsigned long)&(scratches[hartid].scratch);
+
+    if (hartid != 0) {
+        result = (unsigned long)(&(pScratches[hartid].scratch));
+    }
+
+    return result;
 }
 
 static void opensbi_init_handler(struct StateMachine * const pMyMachine);
@@ -128,6 +144,10 @@ static void opensbi_idle_handler(struct StateMachine * const pMyMachine)
 /////////////////
 
 extern unsigned long _trap_handler;
+
+#include "sbi/sbi_domain.h"
+#include "sbi/sbi_ecall_interface.h"
+
 void HSS_OpenSBI_Setup(enum HSSHartId hartid)
 {
     assert(current_hartid() == hartid);
@@ -135,23 +155,14 @@ void HSS_OpenSBI_Setup(enum HSSHartId hartid)
     opensbi_scratch_setup(hartid);
 
     if (hartid == HSS_HART_E51) {
-        sbi_hss_e51_init(&(scratches[hartid].scratch), false);
+        sbi_hss_e51_init(&(pScratches[hartid].scratch), false);
     } else {
-        sbi_printf("%s(): MTVEC switching from %lx", __func__, mHSS_CSR_READ(CSR_MTVEC));
-	while (mHSS_CSR_READ(CSR_MTVEC) != (unsigned long)&_trap_handler) {
-            mHSS_CSR_WRITE(CSR_MTVEC, (unsigned long)&_trap_handler);
-	}
-        sbi_printf(" to %lx\n" , (unsigned long)&_trap_handler);
-
-        mb();
-        mb_i();
-        sbi_init(&(scratches[hartid].scratch));
+        sbi_init(&(pScratches[hartid].scratch));
     }
 }
 
-void HSS_OpenSBI_DoBoot(enum HSSHartId hartid);
-
-void HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
+void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid);
+void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
 {
     uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);
     mstatus_val = EXTRACT_FIELD(mstatus_val, MSTATUS_MPIE);
@@ -160,48 +171,46 @@ void HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
 
     HSS_OpenSBI_Setup(hartid);
 
-    struct sbi_scratch *scratch = &(scratches[hartid].scratch);
-    sbi_hart_switch_mode(hartid, scratch->next_arg1, scratch->next_addr,
-         scratch->next_mode, FALSE);
+    while (1) {
+        asm("wfi");
+    };
 }
 
 enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer, void *p_ancilliary_buffer_in_ddr)
 {
     enum IPIStatusCode result = IPI_FAIL;
 
-    result = IPI_SUCCESS;
     int hartid = current_hartid();
 
     if (source != HSS_HART_E51) { // prohibited by policy
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "request from source %d prohibited by policy" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request from source %d prohibited by policy" CRLF, hartid, source);
     } else if (hartid == HSS_HART_E51) { // prohibited by policy
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "request to %d prohibited by policy" CRLF, HSS_HART_E51);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy" CRLF, HSS_HART_E51);
     } else {
         result = IPI_SUCCESS;
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
-        struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, current_hartid());
+        struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, hartid);
         pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
-        csr_write(mscratch, &(scratches[hartid].scratch));
-
+        csr_write(mscratch, &(pScratches[hartid].scratch));
 
         extern unsigned long _hss_start, _hss_end;
-        scratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
-        scratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
+        pScratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
+        pScratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
 
-        scratches[hartid].scratch.next_addr = *(unsigned long*)p_extended_buffer;
-        scratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
+        pScratches[hartid].scratch.next_addr = (uintptr_t)p_extended_buffer;
+        pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
 
-        // set arg1 (A1) to point to device tree blob
+        // set arg1 (A1) to point to override device tree blob, if provided
 #if IS_ENABLED(CONFIG_PROVIDE_DTB)
-#  if defined(CONFIG_PLATFORM_MPFS)
+#  if IS_ENABLED(CONFIG_PLATFORM_MPFS)
         extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
         scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
-#  elif defined(CONFIG_PLATFORM_FU540)
+#  elif IS_ENABLED(CONFIG_PLATFORM_FU540)
         extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
-        scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
+        pScratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
 #  else
 #    error Unknown PLATFORM settings
 #  endif
@@ -209,6 +218,24 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
 	// else use ancilliary data if provided in boot image, assuming it is a DTB
        	scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
 #endif
+
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_addr to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_addr);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_arg1 to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_arg1);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_mode to PRV_", hartid);
+	switch (scratches[hartid].scratch.next_mode) {
+	case PRV_M:
+	    mHSS_DEBUG_PRINTF_EX("M" CRLF);
+            break;
+	case PRV_S:
+	    mHSS_DEBUG_PRINTF_EX("S" CRLF);
+            break;
+	case PRV_U:
+	    mHSS_DEBUG_PRINTF_EX("U" CRLF);
+            break;
+	default:
+	    mHSS_DEBUG_PRINTF_EX("???" CRLF);
+            break;
+	}
 
         HSS_OpenSBI_DoBoot(hartid);
     }
@@ -220,19 +247,22 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
 #include <sbi/sbi_error.h>
 #include "hss_boot_service.h"
 
-static int sbi_ecall_hss_handler(struct sbi_scratch *scratch,
+static int sbi_ecall_hss_handler(
+#if (OPENSBI_VERSION <=6)
+    struct sbi_scratch *scratch,
+#endif
     unsigned long extid, unsigned long funcid,
-    unsigned long *args, unsigned long *out_val, struct sbi_trap_info *out_trap)
+    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
 {
     int ret = 0;
     //struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
-
-    (void)scratch;
-    (void)args;
+    //(void)scratch;
+    (void)regs;
     uint32_t index;
 
     switch (funcid) {
     case SBI_EXT_HSS_REBOOT:
+sbi_printf("%s() SBI_EXT_HSS_REBOOT\n", __func__);
         IPI_MessageAlloc(&index);
         IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
         ret = 0; //ret = hss_reboot_req(scratch, args[0], args[1], args[2]);
@@ -262,4 +292,14 @@ void HSS_SBI_Ecall_Register(void)
     //if (result)
     //    sbi_hart_hang();
     (void)result;
+}
+
+void HSS_OpenSBI_Reboot(void);
+void HSS_OpenSBI_Reboot(void)
+{
+    uint32_t index;
+
+sbi_printf("%s() called\n", __func__);
+    IPI_MessageAlloc(&index);
+    IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
 }

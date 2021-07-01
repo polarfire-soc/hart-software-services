@@ -16,13 +16,16 @@
 #include <sbi/sbi_illegal_insn.h>
 #include <sbi/sbi_ipi.h>
 #include <sbi/sbi_misaligned_ldst.h>
+#include <sbi/sbi_scratch.h>
 #include <sbi/sbi_timer.h>
 #include <sbi/sbi_trap.h>
 
-static void __noreturn sbi_trap_error(const char *msg, int rc, u32 hartid,
+static void __noreturn sbi_trap_error(const char *msg, int rc,
 				      ulong mcause, ulong mtval, ulong mtval2,
 				      ulong mtinst, struct sbi_trap_regs *regs)
 {
+	u32 hartid = current_hartid();
+
 	sbi_printf("%s: hart%d: %s (error %d)\n", __func__, hartid, msg, rc);
 	sbi_printf("%s: hart%d: mcause=0x%" PRILX " mtval=0x%" PRILX "\n",
 		   __func__, hartid, mcause, mtval);
@@ -74,13 +77,11 @@ static void __noreturn sbi_trap_error(const char *msg, int rc, u32 hartid,
  *
  * @param regs pointer to register state
  * @param trap pointer to trap details
- * @param scratch pointer to sbi_scratch of current HART
  *
  * @return 0 on success and negative error code on failure
  */
 int sbi_trap_redirect(struct sbi_trap_regs *regs,
-		      struct sbi_trap_info *trap,
-		      struct sbi_scratch *scratch)
+		      struct sbi_trap_info *trap)
 {
 	ulong hstatus, vsstatus, prev_mode;
 #if __riscv_xlen == 32
@@ -120,12 +121,10 @@ int sbi_trap_redirect(struct sbi_trap_regs *regs,
 
 	/* Update HSTATUS for VS/VU-mode to HS-mode transition */
 	if (misa_extension('H') && prev_virt && !next_virt) {
-		/* Update HSTATUS SP2P, SP2V, and SPV bits */
+		/* Update HSTATUS SPVP and SPV bits */
 		hstatus = csr_read(CSR_HSTATUS);
-		hstatus &= ~HSTATUS_SP2P;
-		hstatus |= (regs->mstatus & MSTATUS_SPP) ? HSTATUS_SP2P : 0;
-		hstatus &= ~HSTATUS_SP2V;
-		hstatus |= (hstatus & HSTATUS_SPV) ? HSTATUS_SP2V : 0;
+		hstatus &= ~HSTATUS_SPVP;
+		hstatus |= (prev_mode == PRV_S) ? HSTATUS_SPVP : 0;
 		hstatus &= ~HSTATUS_SPV;
 		hstatus |= (prev_virt) ? HSTATUS_SPV : 0;
 		csr_write(CSR_HSTATUS, hstatus);
@@ -178,7 +177,7 @@ int sbi_trap_redirect(struct sbi_trap_regs *regs,
 		regs->mstatus &= ~MSTATUS_MPP;
 		regs->mstatus |= (PRV_S << MSTATUS_MPP_SHIFT);
 
-		/* Set SPP for S-mode*/
+		/* Set SPP for S-mode */
 		regs->mstatus &= ~MSTATUS_SPP;
 		if (prev_mode == PRV_S)
 			regs->mstatus |= (1UL << MSTATUS_SPP_SHIFT);
@@ -210,17 +209,14 @@ int sbi_trap_redirect(struct sbi_trap_regs *regs,
  * 7. Interrupts are disabled in MSTATUS CSR
  *
  * @param regs pointer to register state
- * @param scratch pointer to sbi_scratch of current HART
  */
-void sbi_trap_handler(struct sbi_trap_regs *regs,
-		      struct sbi_scratch *scratch)
+void sbi_trap_handler(struct sbi_trap_regs *regs)
 {
 	int rc = SBI_ENOTSUPP;
 	const char *msg = "trap handler failed";
-	u32 hartid = sbi_current_hartid();
 	ulong mcause = csr_read(CSR_MCAUSE);
 	ulong mtval = csr_read(CSR_MTVAL), mtval2 = 0, mtinst = 0;
-	struct sbi_trap_info trap, *uptrap;
+	struct sbi_trap_info trap;
 
 	if (misa_extension('H')) {
 		mtval2 = csr_read(CSR_MTVAL2);
@@ -231,10 +227,10 @@ void sbi_trap_handler(struct sbi_trap_regs *regs,
 		mcause &= ~(1UL << (__riscv_xlen - 1));
 		switch (mcause) {
 		case IRQ_M_TIMER:
-			sbi_timer_process(scratch);
+			sbi_timer_process();
 			break;
 		case IRQ_M_SOFT:
-			sbi_ipi_process(scratch);
+			sbi_ipi_process();
 			break;
 		default:
 			msg = "unhandled external interrupt";
@@ -245,49 +241,21 @@ void sbi_trap_handler(struct sbi_trap_regs *regs,
 
 	switch (mcause) {
 	case CAUSE_ILLEGAL_INSTRUCTION:
-		rc  = sbi_illegal_insn_handler(hartid, mcause, mtval,
-					       regs, scratch);
+		rc  = sbi_illegal_insn_handler(mtval, regs);
 		msg = "illegal instruction handler failed";
 		break;
 	case CAUSE_MISALIGNED_LOAD:
-		rc = sbi_misaligned_load_handler(hartid, mcause, mtval,
-						 mtval2, mtinst, regs,
-						 scratch);
+		rc = sbi_misaligned_load_handler(mtval, mtval2, mtinst, regs);
 		msg = "misaligned load handler failed";
 		break;
 	case CAUSE_MISALIGNED_STORE:
-		rc  = sbi_misaligned_store_handler(hartid, mcause, mtval,
-						   mtval2, mtinst, regs,
-						   scratch);
+		rc  = sbi_misaligned_store_handler(mtval, mtval2, mtinst, regs);
 		msg = "misaligned store handler failed";
 		break;
 	case CAUSE_SUPERVISOR_ECALL:
-	case CAUSE_HYPERVISOR_ECALL:
-		rc  = sbi_ecall_handler(hartid, mcause, regs, scratch);
+	case CAUSE_MACHINE_ECALL:
+		rc  = sbi_ecall_handler(regs);
 		msg = "ecall handler failed";
-		break;
-	case CAUSE_LOAD_ACCESS:
-	case CAUSE_STORE_ACCESS:
-	case CAUSE_LOAD_PAGE_FAULT:
-	case CAUSE_STORE_PAGE_FAULT:
-		uptrap = sbi_hart_get_trap_info(scratch);
-		if ((regs->mstatus & MSTATUS_MPRV) && uptrap) {
-			rc = 0;
-			uptrap->epc = regs->mepc;
-			regs->mepc += 4;
-			uptrap->cause = mcause;
-			uptrap->tval = mtval;
-			uptrap->tval2 = mtval2;
-			uptrap->tinst = mtinst;
-		} else {
-			trap.epc = regs->mepc;
-			trap.cause = mcause;
-			trap.tval = mtval;
-			trap.tval2 = mtval2;
-			trap.tinst = mtinst;
-			rc = sbi_trap_redirect(regs, &trap, scratch);
-		}
-		msg = "page/access fault handler failed";
 		break;
 	default:
 		/* If the trap came from S or U mode, redirect it there */
@@ -296,13 +264,30 @@ void sbi_trap_handler(struct sbi_trap_regs *regs,
 		trap.tval = mtval;
 		trap.tval2 = mtval2;
 		trap.tinst = mtinst;
-		rc = sbi_trap_redirect(regs, &trap, scratch);
+		rc = sbi_trap_redirect(regs, &trap);
 		break;
 	};
 
 trap_error:
-	if (rc) {
-		sbi_trap_error(msg, rc, hartid, mcause, mtval,
-			       mtval2, mtinst, regs);
-	}
+	if (rc)
+		sbi_trap_error(msg, rc, mcause, mtval, mtval2, mtinst, regs);
+}
+
+typedef void (*trap_exit_t)(const struct sbi_trap_regs *regs);
+
+/**
+ * Exit trap/interrupt handling
+ *
+ * This function is called by non-firmware code to abruptly exit
+ * trap/interrupt handling and resume execution at context pointed
+ * by given register state.
+ *
+ * @param regs pointer to register state
+ */
+void __noreturn sbi_trap_exit(const struct sbi_trap_regs *regs)
+{
+	struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
+
+	((trap_exit_t)scratch->trap_exit)(regs);
+	__builtin_unreachable();
 }

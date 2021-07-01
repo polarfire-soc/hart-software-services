@@ -8,11 +8,15 @@
  *   Atish Patra <atish.patra@wdc.com>
  */
 
+#include <sbi/riscv_asm.h>
 #include <sbi/sbi_console.h>
+#include <sbi/sbi_domain.h>
 #include <sbi/sbi_ecall.h>
 #include <sbi/sbi_ecall_interface.h>
 #include <sbi/sbi_error.h>
+#include <sbi/sbi_hsm.h>
 #include <sbi/sbi_ipi.h>
+#include <sbi/sbi_platform.h>
 #include <sbi/sbi_system.h>
 #include <sbi/sbi_timer.h>
 #include <sbi/sbi_tlb.h>
@@ -20,90 +24,91 @@
 #include <sbi/sbi_unpriv.h>
 #include <sbi/sbi_hart.h>
 
-static int sbi_load_hart_mask_unpriv(struct sbi_scratch *scratch,
-				     ulong *pmask, ulong *hmask,
+static int sbi_load_hart_mask_unpriv(ulong *pmask, ulong *hmask,
 				     struct sbi_trap_info *uptrap)
 {
 	ulong mask = 0;
 
 	if (pmask) {
-		mask = sbi_load_ulong(pmask, scratch, uptrap);
+		mask = sbi_load_ulong(pmask, uptrap);
 		if (uptrap->cause)
 			return SBI_ETRAP;
 	} else {
-		mask = sbi_hart_available_mask();
+		sbi_hsm_hart_interruptible_mask(sbi_domain_thishart_ptr(),
+						0, &mask);
 	}
 	*hmask = mask;
+
 	return 0;
 }
 
-static int sbi_ecall_legacy_handler(struct sbi_scratch *scratch,
-				    unsigned long extid, unsigned long funcid,
-				    unsigned long *args, unsigned long *out_val,
+static int sbi_ecall_legacy_handler(unsigned long extid, unsigned long funcid,
+				    const struct sbi_trap_regs *regs,
+				    unsigned long *out_val,
 				    struct sbi_trap_info *out_trap)
 {
 	int ret = 0;
 	struct sbi_tlb_info tlb_info;
-	u32 source_hart = sbi_current_hartid();
+	u32 source_hart = current_hartid();
 	ulong hmask = 0;
 
 	switch (extid) {
 	case SBI_EXT_0_1_SET_TIMER:
 #if __riscv_xlen == 32
-		sbi_timer_event_start(scratch,
-				      (((u64)args[1] << 32) | (u64)args[0]));
+		sbi_timer_event_start((((u64)regs->a1 << 32) | (u64)regs->a0));
 #else
-		sbi_timer_event_start(scratch, (u64)args[0]);
+		sbi_timer_event_start((u64)regs->a0);
 #endif
 		break;
 	case SBI_EXT_0_1_CONSOLE_PUTCHAR:
-		sbi_putc(args[0]);
+		sbi_putc(regs->a0);
 		break;
 	case SBI_EXT_0_1_CONSOLE_GETCHAR:
 		ret = sbi_getc();
 		break;
 	case SBI_EXT_0_1_CLEAR_IPI:
-		sbi_ipi_clear_smode(scratch);
+		sbi_ipi_clear_smode();
 		break;
 	case SBI_EXT_0_1_SEND_IPI:
-		ret = sbi_load_hart_mask_unpriv(scratch, (ulong *)args[0],
+		ret = sbi_load_hart_mask_unpriv((ulong *)regs->a0,
 						&hmask, out_trap);
 		if (ret != SBI_ETRAP)
-			ret = sbi_ipi_send_smode(scratch, hmask, 0);
+			ret = sbi_ipi_send_smode(hmask, 0);
 		break;
 	case SBI_EXT_0_1_REMOTE_FENCE_I:
-		tlb_info.start  = 0;
-		tlb_info.size  = 0;
-		tlb_info.type  = SBI_ITLB_FLUSH;
-		tlb_info.shart_mask = 1UL << source_hart;
-		ret = sbi_load_hart_mask_unpriv(scratch, (ulong *)args[0],
+		ret = sbi_load_hart_mask_unpriv((ulong *)regs->a0,
 						&hmask, out_trap);
-		if (ret != SBI_ETRAP)
-			ret = sbi_tlb_request(scratch, hmask, 0, &tlb_info);
+		if (ret != SBI_ETRAP) {
+			SBI_TLB_INFO_INIT(&tlb_info, 0, 0, 0, 0,
+					  sbi_tlb_local_fence_i,
+					  source_hart);
+			ret = sbi_tlb_request(hmask, 0, &tlb_info);
+		}
 		break;
 	case SBI_EXT_0_1_REMOTE_SFENCE_VMA:
-		tlb_info.start = (unsigned long)args[1];
-		tlb_info.size  = (unsigned long)args[2];
-		tlb_info.type  = SBI_TLB_FLUSH_VMA;
-		tlb_info.shart_mask = 1UL << source_hart;
-		ret = sbi_load_hart_mask_unpriv(scratch, (ulong *)args[0],
+		ret = sbi_load_hart_mask_unpriv((ulong *)regs->a0,
 						&hmask, out_trap);
-		if (ret != SBI_ETRAP)
-			ret = sbi_tlb_request(scratch, hmask, 0, &tlb_info);
+		if (ret != SBI_ETRAP) {
+			SBI_TLB_INFO_INIT(&tlb_info, regs->a1, regs->a2, 0, 0,
+					  sbi_tlb_local_sfence_vma,
+					  source_hart);
+			ret = sbi_tlb_request(hmask, 0, &tlb_info);
+		}
 		break;
 	case SBI_EXT_0_1_REMOTE_SFENCE_VMA_ASID:
-		tlb_info.start = (unsigned long)args[1];
-		tlb_info.size  = (unsigned long)args[2];
-		tlb_info.asid  = (unsigned long)args[3];
-		tlb_info.type  = SBI_TLB_FLUSH_VMA_ASID;
-		tlb_info.shart_mask = 1UL << source_hart;
-		ret = sbi_load_hart_mask_unpriv(scratch, (ulong *)args[0],
+		ret = sbi_load_hart_mask_unpriv((ulong *)regs->a0,
 						&hmask, out_trap);
-		if (ret != SBI_ETRAP)
-			ret = sbi_tlb_request(scratch, hmask, 0, &tlb_info);
+		if (ret != SBI_ETRAP) {
+			SBI_TLB_INFO_INIT(&tlb_info, regs->a1,
+					  regs->a2, regs->a3, 0,
+					  sbi_tlb_local_sfence_vma_asid,
+					  source_hart);
+			ret = sbi_tlb_request(hmask, 0, &tlb_info);
+		}
 		break;
 	case SBI_EXT_0_1_SHUTDOWN:
-		sbi_system_shutdown(scratch, 0);
+		sbi_system_reset(SBI_SRST_RESET_TYPE_SHUTDOWN,
+				 SBI_SRST_RESET_REASON_NONE);
 		break;
 	default:
 		ret = SBI_ENOTSUPP;

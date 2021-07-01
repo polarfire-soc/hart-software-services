@@ -35,22 +35,31 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/utils/libfdt/fdt_rw.c \
 	thirdparty/opensbi/lib/utils/libfdt/fdt_wip.c \
 	thirdparty/opensbi/lib/utils/libfdt/fdt_addresses.c \
+	thirdparty/opensbi/lib/utils/fdt/fdt_fixup.c \
+	thirdparty/opensbi/lib/utils/fdt/fdt_helper.c \
 	thirdparty/opensbi/lib/sbi/riscv_asm.c \
 	thirdparty/opensbi/lib/sbi/riscv_atomic.c \
 	thirdparty/opensbi/lib/sbi/riscv_locks.c \
+	thirdparty/opensbi/lib/sbi/sbi_bitmap.c \
+	thirdparty/opensbi/lib/sbi/sbi_bitops.c \
 	thirdparty/opensbi/lib/sbi/sbi_console.c \
+	thirdparty/opensbi/lib/sbi/sbi_domain.c \
 	thirdparty/opensbi/lib/sbi/sbi_ecall_base.c \
 	thirdparty/opensbi/lib/sbi/sbi_ecall.c \
+	thirdparty/opensbi/lib/sbi/sbi_ecall_hsm.c \
 	thirdparty/opensbi/lib/sbi/sbi_ecall_legacy.c \
 	thirdparty/opensbi/lib/sbi/sbi_ecall_replace.c \
 	thirdparty/opensbi/lib/sbi/sbi_ecall_vendor.c \
 	thirdparty/opensbi/lib/sbi/sbi_emulate_csr.c \
 	thirdparty/opensbi/lib/sbi/sbi_fifo.c \
 	thirdparty/opensbi/lib/sbi/sbi_hart.c \
+	thirdparty/opensbi/lib/sbi/sbi_hsm.c \
 	thirdparty/opensbi/lib/sbi/sbi_illegal_insn.c \
 	thirdparty/opensbi/lib/sbi/sbi_init.c \
 	thirdparty/opensbi/lib/sbi/sbi_ipi.c \
+	thirdparty/opensbi/lib/sbi/sbi_math.c \
 	thirdparty/opensbi/lib/sbi/sbi_misaligned_ldst.c \
+	thirdparty/opensbi/lib/sbi/sbi_platform.c \
 	thirdparty/opensbi/lib/sbi/sbi_scratch.c \
 	thirdparty/opensbi/lib/sbi/sbi_string.c \
 	thirdparty/opensbi/lib/sbi/sbi_system.c \
@@ -61,6 +70,7 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/riscv_hardfp.S \
+	thirdparty/opensbi/lib/sbi/sbi_expected_trap.S \
 	thirdparty/opensbi/lib/sbi/sbi_hfence.S \
 
 ifdef CONFIG_PLATFORM_MPFS
@@ -110,6 +120,7 @@ thirdparty/opensbi/lib/sbi/riscv_asm.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/riscv_atomic.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/riscv_locks.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_bitmap.o: CFLAGS=$(CFLAGS_GCCEXT)
+thirdparty/opensbi/lib/sbi/sbi_bitops.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_console.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_domain.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_ecall_base.o: CFLAGS=$(CFLAGS_GCCEXT)
@@ -127,6 +138,7 @@ thirdparty/opensbi/lib/sbi/sbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_ipi.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_math.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_misaligned_ldst.o: CFLAGS=$(CFLAGS_GCCEXT)
+thirdparty/opensbi/lib/sbi/sbi_platform.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_scratch.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_string.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/sbi/sbi_system.o: CFLAGS=$(CFLAGS_GCCEXT)

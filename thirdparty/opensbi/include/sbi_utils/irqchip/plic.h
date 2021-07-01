@@ -12,14 +12,18 @@
 
 #include <sbi/sbi_types.h>
 
-void plic_fdt_fixup(void *fdt, const char *compat);
+struct plic_data {
+	unsigned long addr;
+	unsigned long num_src;
+};
 
-int plic_warm_irqchip_init(u32 target_hart, int m_cntx_id, int s_cntx_id);
+int plic_warm_irqchip_init(struct plic_data *plic,
+			   int m_cntx_id, int s_cntx_id);
 
-int plic_cold_irqchip_init(unsigned long base, u32 num_sources, u32 hart_count);
+int plic_cold_irqchip_init(struct plic_data *plic);
 
-void plic_set_thresh(u32 cntxid, u32 val);
+void plic_set_thresh(struct plic_data *plic, u32 cntxid, u32 val);
 
-void plic_set_ie(u32 cntxid, u32 word_index, u32 val);
+void plic_set_ie(struct plic_data *plic, u32 cntxid, u32 word_index, u32 val);
 
 #endif

@@ -96,6 +96,8 @@ static inline void __sbi_fifo_reset(struct sbi_fifo *fifo)
 	sbi_memset(fifo->queue, 0, size);
 }
 
+#if 0
+// unused?
 bool sbi_fifo_reset(struct sbi_fifo *fifo)
 {
 	if (!fifo)
@@ -107,6 +109,7 @@ bool sbi_fifo_reset(struct sbi_fifo *fifo)
 
 	return TRUE;
 }
+#endif
 
 /**
  * Provide a helper function to do inplace update to the fifo.

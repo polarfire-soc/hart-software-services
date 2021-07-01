@@ -15,6 +15,8 @@
 #include "config.h"
 #include "hss_types.h"
 
+#include "hss_init.h"
+
 #include <string.h>
 #include <assert.h>
 
@@ -26,12 +28,14 @@
 
 bool HSS_OpenSBIInit(void)
 {
-    bool result = true;
+    bool result = (current_hartid() == HSS_HART_E51);
 
-    HSS_OpenSBI_Setup(current_hartid());
+    if (result) {
+        HSS_OpenSBI_Setup(current_hartid());
+    }
 
     /*
-     * Nothing to do on the E51...
+     * Nothing to do on the U54s here...?
     */
 
     return result;

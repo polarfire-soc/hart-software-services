@@ -4,6 +4,7 @@
  * Copyright (c) 2019 Western Digital Corporation or its affiliates.
  */
 
+#include <sbi/riscv_asm.h>
 #include <sbi/riscv_encoding.h>
 #include <sbi/sbi_const.h>
 #include <sbi/sbi_platform.h>
@@ -15,6 +16,26 @@
 #include <sbi_utils/irqchip/plic.h>
 #include <sbi_utils/serial/uart8250.h>
 #include <sbi_utils/sys/clint.h>
+
+#define PLATFORM_PLIC_ADDR		0xc000000
+#define PLATFORM_PLIC_NUM_SOURCES	128
+#define PLATFORM_HART_COUNT		4
+#define PLATFORM_CLINT_ADDR		0x2000000
+#define PLATFORM_UART_ADDR		0x09000000
+#define PLATFORM_UART_INPUT_FREQ	10000000
+#define PLATFORM_UART_BAUDRATE		115200
+
+static struct plic_data plic = {
+	.addr = PLATFORM_PLIC_ADDR,
+	.num_src = PLATFORM_PLIC_NUM_SOURCES,
+};
+
+static struct clint_data clint = {
+	.addr = PLATFORM_CLINT_ADDR,
+	.first_hartid = 0,
+	.hart_count = PLATFORM_HART_COUNT,
+	.has_64bit_mmio = TRUE,
+};
 
 /*
  * Platform early initialization.
@@ -33,30 +54,12 @@ static int platform_final_init(bool cold_boot)
 }
 
 /*
- * Get number of PMP regions for given HART.
- */
-static u32 platform_pmp_region_count(u32 hartid)
-{
-	return 0;
-}
-
-/*
- * Get PMP regions details (namely: protection, base address, and size) for
- * a given HART.
- */
-static int platform_pmp_region_info(u32 hartid, u32 index, ulong *prot,
-				    ulong *addr, ulong *log2size)
-{
-	return 0;
-}
-
-/*
  * Initialize the platform console.
  */
 static int platform_console_init(void)
 {
 	/* Example if the generic UART8250 driver is used */
-	return uart8250_init(PLATFORM_UART_ADDR, PLATFORM_UART_SHIFTREG_ADDR,
+	return uart8250_init(PLATFORM_UART_ADDR, PLATFORM_UART_INPUT_FREQ,
 			     PLATFORM_UART_BAUDRATE, 0, 1);
 }
 
@@ -82,19 +85,17 @@ static int platform_console_getc(void)
  */
 static int platform_irqchip_init(bool cold_boot)
 {
-	u32 hartid = sbi_current_hartid();
+	u32 hartid = current_hartid();
 	int ret;
 
 	/* Example if the generic PLIC driver is used */
 	if (cold_boot) {
-		ret = plic_cold_irqchip_init(PLATFORM_PLIC_ADDR,
-					     PLATFORM_PLIC_NUM_SOURCES,
-					     PLATFORM_HART_COUNT);
+		ret = plic_cold_irqchip_init(&plic);
 		if (ret)
 			return ret;
 	}
 
-	return plic_warm_irqchip_init(hartid, 2 * hartid, 2 * hartid + 1);
+	return plic_warm_irqchip_init(&plic, 2 * hartid, 2 * hartid + 1);
 }
 
 /*
@@ -106,8 +107,7 @@ static int platform_ipi_init(bool cold_boot)
 
 	/* Example if the generic CLINT driver is used */
 	if (cold_boot) {
-		ret = clint_cold_ipi_init(PLATFORM_CLINT_ADDR,
-					  PLATFORM_HART_COUNT);
+		ret = clint_cold_ipi_init(&clint);
 		if (ret)
 			return ret;
 	}
@@ -142,8 +142,7 @@ static int platform_timer_init(bool cold_boot)
 
 	/* Example if the generic CLINT driver is used */
 	if (cold_boot) {
-		ret = clint_cold_timer_init(PLATFORM_CLINT_ADDR,
-					    PLATFORM_HART_COUNT, TRUE);
+		ret = clint_cold_timer_init(&clint, NULL);
 		if (ret)
 			return ret;
 	}
@@ -179,19 +178,18 @@ static void platform_timer_event_stop(void)
 }
 
 /*
- * Reboot the platform.
+ * Check reset type and reason supported by the platform.
  */
-static int platform_system_reboot(u32 type)
+static int platform_system_reset_check(u32 type, u32 reason)
 {
 	return 0;
 }
 
 /*
- * Shutdown or poweroff the platform.
+ * Reset the platform.
  */
-static int platform_system_shutdown(u32 type)
+static void platform_system_reset(u32 type, u32 reason)
 {
-	return 0;
 }
 
 /*
@@ -200,8 +198,6 @@ static int platform_system_shutdown(u32 type)
 const struct sbi_platform_operations platform_ops = {
 	.early_init		= platform_early_init,
 	.final_init		= platform_final_init,
-	.pmp_region_count	= platform_pmp_region_count,
-	.pmp_region_info	= platform_pmp_region_info,
 	.console_putc		= platform_console_putc,
 	.console_getc		= platform_console_getc,
 	.console_init		= platform_console_init,
@@ -213,8 +209,8 @@ const struct sbi_platform_operations platform_ops = {
 	.timer_event_stop	= platform_timer_event_stop,
 	.timer_event_start	= platform_timer_event_start,
 	.timer_init		= platform_timer_init,
-	.system_reboot		= platform_system_reboot,
-	.system_shutdown	= platform_system_shutdown
+	.system_reset_check	= platform_system_reset_check,
+	.system_reset		= platform_system_reset
 };
 const struct sbi_platform platform = {
 	.opensbi_version	= OPENSBI_VERSION,
@@ -222,7 +218,6 @@ const struct sbi_platform platform = {
 	.name			= "platform-name",
 	.features		= SBI_PLATFORM_DEFAULT_FEATURES,
 	.hart_count		= 1,
-	.hart_stack_size	= 4096,
-	.disabled_hart_mask	= 0,
+	.hart_stack_size	= SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
 	.platform_ops_addr	= (unsigned long)&platform_ops
 };

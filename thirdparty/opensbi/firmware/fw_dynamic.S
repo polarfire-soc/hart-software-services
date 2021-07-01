@@ -54,7 +54,7 @@ fw_boot_hart:
 	 */
 fw_save_info:
 	/* Save next arg1 in 'a1' */
-	la	a4, _dynamic_next_arg1
+	lla	a4, _dynamic_next_arg1
 	REG_S	a1, (a4)
 
 	/* Sanity checks */
@@ -66,13 +66,13 @@ fw_save_info:
 	bgt	a3, a4, _bad_dynamic_info
 
 	/* Save version == 0x1 fields */
-	la	a4, _dynamic_next_addr
+	lla	a4, _dynamic_next_addr
 	REG_L	a3, FW_DYNAMIC_INFO_NEXT_ADDR_OFFSET(a2)
 	REG_S	a3, (a4)
-	la	a4, _dynamic_next_mode
+	lla	a4, _dynamic_next_mode
 	REG_L	a3, FW_DYNAMIC_INFO_NEXT_MODE_OFFSET(a2)
 	REG_S	a3, (a4)
-	la	a4, _dynamic_options
+	lla	a4, _dynamic_options
 	REG_L	a3, FW_DYNAMIC_INFO_OPTIONS_OFFSET(a2)
 	REG_S	a3, (a4)
 
@@ -80,23 +80,10 @@ fw_save_info:
 	li	a4, 0x2
 	REG_L	a3, FW_DYNAMIC_INFO_VERSION_OFFSET(a2)
 	blt	a3, a4, 2f
-	la	a4, _dynamic_boot_hart
+	lla	a4, _dynamic_boot_hart
 	REG_L	a3, FW_DYNAMIC_INFO_BOOT_HART_OFFSET(a2)
 	REG_S	a3, (a4)
 2:
-	ret
-
-	.section .entry, "ax", %progbits
-	.align 3
-	.global fw_prev_arg1
-	/*
-	 * We can only use a0, a1, and a2 registers here.
-	 * The a0, a1, and a2 registers will be same as passed by
-	 * previous booting stage.
-	 * The previous arg1 should be returned in 'a0'.
-	 */
-fw_prev_arg1:
-	add	a0, zero, zero
 	ret
 
 	.section .entry, "ax", %progbits
@@ -109,7 +96,7 @@ fw_prev_arg1:
 	 * The next arg1 should be returned in 'a0'.
 	 */
 fw_next_arg1:
-	la	a0, _dynamic_next_arg1
+	lla	a0, _dynamic_next_arg1
 	REG_L	a0, (a0)
 	ret
 
@@ -121,7 +108,7 @@ fw_next_arg1:
 	 * The next address should be returned in 'a0'.
 	 */
 fw_next_addr:
-	la	a0, _dynamic_next_addr
+	lla	a0, _dynamic_next_addr
 	REG_L	a0, (a0)
 	ret
 
@@ -133,7 +120,7 @@ fw_next_addr:
 	 * The next address should be returned in 'a0'
 	 */
 fw_next_mode:
-	la	a0, _dynamic_next_mode
+	lla	a0, _dynamic_next_mode
 	REG_L	a0, (a0)
 	ret
 
@@ -146,7 +133,7 @@ fw_next_mode:
 	 * The next address should be returned in 'a0'.
 	 */
 fw_options:
-	la	a0, _dynamic_options
+	lla	a0, _dynamic_options
 	REG_L	a0, (a0)
 	ret
 

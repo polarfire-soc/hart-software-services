@@ -7,11 +7,10 @@
  *   Anup Patel <anup.patel@wdc.com>
  */
 
-#include <sbi/sbi_types.h>
+#include <sbi/sbi_bitops.h>
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_atomic.h>
 #include <sbi/riscv_barrier.h>
-#include <sbi/sbi_bits.h>
 
 long atomic_read(atomic_t *atom)
 {
@@ -50,7 +49,7 @@ long atomic_sub_return(atomic_t *atom, long value)
 	return ret - value;
 }
 
-#define __axchg(ptr, new, size)						\
+#define __axchg(ptr, new, size)							\
 	({									\
 		__typeof__(ptr) __ptr = (ptr);					\
 		__typeof__(new) __new = (new);					\
@@ -71,12 +70,12 @@ long atomic_sub_return(atomic_t *atom, long value)
 				: "memory");					\
 			break;							\
 		default:							\
-			break;						\
+			break;							\
 		}								\
 		__ret;								\
 	})
 
-#define axchg(ptr, x)							\
+#define axchg(ptr, x)								\
 	({									\
 		__typeof__(*(ptr)) _x_ = (x);					\
 		(__typeof__(*(ptr))) __axchg((ptr), _x_, sizeof(*(ptr)));	\
@@ -91,20 +90,20 @@ long atomic_sub_return(atomic_t *atom, long value)
 		register unsigned int __rc;                               \
 		switch (size) {                                           \
 		case 4:                                                   \
-			__asm__ __volatile__("0:	lr.w %0, %2\n"           \
-					     "	sc.w.rl %1, %z3, %2\n"     \
-					     "	bnez %1, 0b\n"             \
-					     "	fence rw, rw\n"            \
+			__asm__ __volatile__("0:	lr.w %0, %2\n"    \
+					     "	sc.w.rl %1, %z3, %2\n"    \
+					     "	bnez %1, 0b\n"            \
+					     "	fence rw, rw\n"           \
 					     : "=&r"(__ret), "=&r"(__rc), \
 					       "+A"(*__ptr)               \
 					     : "rJ"(__new)                \
 					     : "memory");                 \
 			break;                                            \
 		case 8:                                                   \
-			__asm__ __volatile__("0:	lr.d %0, %2\n"           \
-					     "	sc.d.rl %1, %z3, %2\n"     \
-					     "	bnez %1, 0b\n"             \
-					     "	fence rw, rw\n"            \
+			__asm__ __volatile__("0:	lr.d %0, %2\n"    \
+					     "	sc.d.rl %1, %z3, %2\n"    \
+					     "	bnez %1, 0b\n"            \
+					     "	fence rw, rw\n"           \
 					     : "=&r"(__ret), "=&r"(__rc), \
 					       "+A"(*__ptr)               \
 					     : "rJ"(__new)                \
@@ -131,11 +130,11 @@ long atomic_sub_return(atomic_t *atom, long value)
 		register unsigned int __rc;                               \
 		switch (size) {                                           \
 		case 4:                                                   \
-			__asm__ __volatile__("0:	lr.w %0, %2\n"           \
-					     "	bne  %0, %z3, 1f\n"        \
-					     "	sc.w.rl %1, %z4, %2\n"     \
-					     "	bnez %1, 0b\n"             \
-					     "	fence rw, rw\n"            \
+			__asm__ __volatile__("0:	lr.w %0, %2\n"    \
+					     "	bne  %0, %z3, 1f\n"       \
+					     "	sc.w.rl %1, %z4, %2\n"    \
+					     "	bnez %1, 0b\n"            \
+					     "	fence rw, rw\n"           \
 					     "1:\n"                       \
 					     : "=&r"(__ret), "=&r"(__rc), \
 					       "+A"(*__ptr)               \
@@ -143,11 +142,11 @@ long atomic_sub_return(atomic_t *atom, long value)
 					     : "memory");                 \
 			break;                                            \
 		case 8:                                                   \
-			__asm__ __volatile__("0:	lr.d %0, %2\n"           \
-					     "	bne %0, %z3, 1f\n"         \
-					     "	sc.d.rl %1, %z4, %2\n"     \
-					     "	bnez %1, 0b\n"             \
-					     "	fence rw, rw\n"            \
+			__asm__ __volatile__("0:	lr.d %0, %2\n"    \
+					     "	bne %0, %z3, 1f\n"        \
+					     "	sc.d.rl %1, %z4, %2\n"    \
+					     "	bnez %1, 0b\n"            \
+					     "	fence rw, rw\n"           \
 					     "1:\n"                       \
 					     : "=&r"(__ret), "=&r"(__rc), \
 					       "+A"(*__ptr)               \
@@ -168,7 +167,7 @@ long atomic_sub_return(atomic_t *atom, long value)
 			__cmpxchg((ptr), _o_, _n_, sizeof(*(ptr))); \
 	})
 
-long arch_atomic_cmpxchg(atomic_t *atom, long oldval, long newval)
+long atomic_cmpxchg(atomic_t *atom, long oldval, long newval)
 {
 #ifdef __riscv_atomic
 	return __sync_val_compare_and_swap(&atom->counter, oldval, newval);
@@ -177,7 +176,7 @@ long arch_atomic_cmpxchg(atomic_t *atom, long oldval, long newval)
 #endif
 }
 
-long arch_atomic_xchg(atomic_t *atom, long newval)
+long atomic_xchg(atomic_t *atom, long newval)
 {
 	/* Atomically set new value and return old value. */
 #ifdef __riscv_atomic
@@ -209,12 +208,12 @@ unsigned long atomic_raw_xchg_ulong(volatile unsigned long *ptr,
 #endif
 }
 
-#if (BITS_PER_LONG == 64)
+#if (__SIZEOF_POINTER__ == 8)
 #define __AMO(op) "amo" #op ".d"
-#elif (BITS_PER_LONG == 32)
+#elif (__SIZEOF_POINTER__ == 4)
 #define __AMO(op) "amo" #op ".w"
 #else
-#error "Unexpected BITS_PER_LONG"
+#error "Unexpected __SIZEOF_POINTER__"
 #endif
 
 #define __atomic_op_bit_ord(op, mod, nr, addr, ord)                          \
