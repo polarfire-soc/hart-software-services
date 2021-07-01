@@ -199,17 +199,14 @@ static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine)
     bool done = false;
     uint8_t cBuf[1];
 
-    bool usbdmsc_is_active(void);
-    done = !usbdmsc_is_active();
+    done = !USBDMSC_IsActive();
 
     if (!done && (0 != MSS_UART_get_rx(&g_mss_uart0_lo, cBuf, 1))) {
         done = (cBuf[0] == '\003') || (cBuf[0] == '\033');
     }
 
     if (done) {
-        void usbdmsc_deactivate(void);
-
-        usbdmsc_deactivate();
+        USBDMSC_Deactivate();
         pMyMachine->state = TINYCLI_READLINE;
     }
 #else

@@ -42,16 +42,14 @@ extern "C" {
  * Local functions.
  */
 uint8_t* flash_drive_device_descriptor(uint32_t* length);
-uint8_t* flash_drive_device_qual_descriptor(mss_usb_device_speed_t speed,
-                                            uint32_t* length);
+uint8_t* flash_drive_device_qual_descriptor(mss_usb_device_speed_t speed, uint32_t* length);
 uint8_t* flash_drive_string_descriptor(uint8_t index, uint32_t* length);
 uint8_t flash_drive_get_string(uint8_t* string, uint8_t* dest);
 
 /***************************************************************************//**
   Device descriptor.
  */
-uint8_t device_descriptor[USB_STD_DEVICE_DESCR_LEN] =
-{
+uint8_t device_descriptor[USB_STD_DEVICE_DESCR_LEN] = {
     USB_STD_DEVICE_DESCR_LEN,                           /* bLength */
     USB_DEVICE_DESCRIPTOR_TYPE,                         /* bDescriptorType */
     0x00u,                                              /* bcdUSB LSB */
@@ -75,8 +73,7 @@ uint8_t device_descriptor[USB_STD_DEVICE_DESCR_LEN] =
 /***************************************************************************//**
   Device qualifiers.
  */
-uint8_t hs_dev_qualifier_descriptor[USB_STD_DEV_QUAL_DESCR_LENGTH] =
-{
+uint8_t hs_dev_qualifier_descriptor[USB_STD_DEV_QUAL_DESCR_LENGTH] = {
     USB_STD_DEV_QUAL_DESCR_LENGTH,                      /* bLength */
     USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE,               /* bDescriptorType */
     0x00u,                                              /* bcdUSB LSB */
@@ -89,8 +86,7 @@ uint8_t hs_dev_qualifier_descriptor[USB_STD_DEV_QUAL_DESCR_LENGTH] =
     0x00u                                               /* Reserved */
 };
 
-uint8_t fs_dev_qualifier_descriptor[USB_STD_DEV_QUAL_DESCR_LENGTH] =
-{
+uint8_t fs_dev_qualifier_descriptor[USB_STD_DEV_QUAL_DESCR_LENGTH] = {
     USB_STD_DEV_QUAL_DESCR_LENGTH,                      /* bLength */
     USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE,               /* bDescriptorType */
     0x00u,                                              /* bcdUSB LSB */
@@ -103,8 +99,7 @@ uint8_t fs_dev_qualifier_descriptor[USB_STD_DEV_QUAL_DESCR_LENGTH] =
     0x00u                                               /* Reserved */
 };
 
-uint8_t lang_string_descriptor[] =
-{
+uint8_t lang_string_descriptor[] = {
     0x04u,                                              /* bLength */
     USB_STRING_DESCRIPTOR_TYPE,                         /* bDescriptorType */
     0x09u,                                              /* LangID-LSB */
@@ -119,46 +114,29 @@ mss_usbd_user_descr_cb_t flash_drive_descriptors_cb = {
 
 uint8_t g_string_descriptor[USB_MAX_STRING_DESCRIPTOR_SIZE];
 
-uint8_t*
-flash_drive_device_descriptor
-(
-    uint32_t* length
-)
+uint8_t* flash_drive_device_descriptor(uint32_t* length)
 {
    *length = sizeof(device_descriptor);
-   return(device_descriptor);
+   return (device_descriptor);
 }
 
-uint8_t*
-flash_drive_device_qual_descriptor
-(
-    mss_usb_device_speed_t speed,
-    uint32_t* length
-)
+uint8_t* flash_drive_device_qual_descriptor(mss_usb_device_speed_t speed,
+    uint32_t* length)
 {
-    if(speed == MSS_USB_DEVICE_HS)
-    {
+    if (speed == MSS_USB_DEVICE_HS) {
         *length = sizeof(fs_dev_qualifier_descriptor);
-         return(fs_dev_qualifier_descriptor);
-    }
-    else
-    {
+         return (fs_dev_qualifier_descriptor);
+    } else {
         *length = sizeof(hs_dev_qualifier_descriptor);
-         return(hs_dev_qualifier_descriptor);
+         return (hs_dev_qualifier_descriptor);
     }
 }
 
-uint8_t*
-flash_drive_string_descriptor
-(
-    uint8_t index,
-    uint32_t* length
-)
+uint8_t* flash_drive_string_descriptor(uint8_t index, uint32_t* length)
 {
-    switch(index)
-    {
+    switch (index) {
         case USB_STRING_DESCRIPTOR_IDX_LANGID:
-                *length = sizeof(lang_string_descriptor);
+            *length = sizeof(lang_string_descriptor);
         break;
 
         case USB_STRING_DESCRIPTOR_IDX_MANUFACTURER:
@@ -191,31 +169,22 @@ flash_drive_string_descriptor
         break;
     }
 
-    if(USB_STRING_DESCRIPTOR_IDX_LANGID == index)
-    {
-        return(lang_string_descriptor);
+    if (USB_STRING_DESCRIPTOR_IDX_LANGID == index) {
+        return (lang_string_descriptor);
     }
-    {
-        return(g_string_descriptor);
-    }
+
+    return (g_string_descriptor);
 }
 
-uint8_t
-flash_drive_get_string
-(
-    uint8_t* string,
-    uint8_t* dest
-)
+uint8_t flash_drive_get_string(uint8_t* string, uint8_t* dest)
 {
     const uint8_t *idx = string ;
     uint8_t *cp_dest;
 
     cp_dest = dest;
 
-    if((dest != NULL) && (string != NULL))
-    {
-        for (; *(idx); ++idx)
-        {
+    if ((dest != NULL) && (string != NULL)) {
+        for (; *(idx); ++idx) {
             *(dest + 2u) = *(idx);
             dest++;
             *(dest + 2u) = 0x00u;
@@ -225,7 +194,7 @@ flash_drive_get_string
         *(cp_dest + 1u) = USB_STRING_DESCRIPTOR_TYPE;        /*bDesriptorType*/
     }
 
-    return(((idx - string) * 2u) + 2u);
+    return (((idx - string) * 2u) + 2u);
 }
 
 #ifdef __cplusplus

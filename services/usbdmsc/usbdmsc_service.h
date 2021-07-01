@@ -47,6 +47,10 @@ bool USBDMSC_Poll(void);
 void USBDMSC_Start(void);
 void USBDMSC_Shutdown(void);
 
+void USBDMSC_Activate(void);
+void USBDMSC_Deactivate(void);
+bool USBDMSC_IsActive(void);
+
 extern struct StateMachine usbdmsc_service;
 
 #ifdef __cplusplus

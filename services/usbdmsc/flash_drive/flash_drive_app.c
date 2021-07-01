@@ -142,15 +142,31 @@ bool FLASH_DRIVE_init(void)
   Local function definitions
 */
 
-#define IS_ENABLED defined
+//#define IS_ENABLED defined
+#undef MIN
+#include "hss_types.h"
+
 #include "hss_clock.h"
 static size_t writeCount = 0u, readCount = 0u;
 HSSTicks_t last_sec_time = 0u;
 
-static void dump_xfer_status(void)
+const char throbber[] = { '/', '-', '\\', '|' };
+static size_t throbber_iterator = 0u;
+
+void FLASH_DRIVE_dump_xfer_status(void)
 {
+    static char activeThrobber = '/';
+
+    if (HSS_Timer_IsElapsed(last_sec_time, 5*TICKS_PER_SEC)) {
+        activeThrobber = '.';
+    } else if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
+        activeThrobber = throbber[throbber_iterator];
+        throbber_iterator++;
+        throbber_iterator%= ARRAY_SIZE(throbber);
+    }
+
     if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
-        sbi_printf("\r %lu bytes written, %lu bytes read", writeCount, readCount);
+        sbi_printf("\r %c %lu bytes written, %lu bytes read", activeThrobber, writeCount, readCount);
         last_sec_time = HSS_GetTime();
     }
 }
@@ -158,14 +174,13 @@ static void dump_xfer_status(void)
 static void update_write_count(size_t bytes)
 {
     writeCount += bytes;
-
-    dump_xfer_status();
+    FLASH_DRIVE_dump_xfer_status();
 }
 
 static void update_read_count(size_t bytes)
 {
     readCount += bytes;
-    dump_xfer_status();
+    FLASH_DRIVE_dump_xfer_status();
 }
 
 uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len)

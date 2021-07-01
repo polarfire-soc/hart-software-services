@@ -53,6 +53,7 @@ bool FLASH_DRIVE_init(void);
 */
 uint32_t FLASH_DRIVE_is_host_connected(void);
 
+void FLASH_DRIVE_dump_xfer_status(void);
 
 #ifdef __cplusplus
 }

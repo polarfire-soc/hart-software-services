@@ -19,6 +19,7 @@
 #include "flash_drive_app.h"
 #include "mss_plic.h"
 #include "uart_helper.h"
+#include "usbdmsc_service.h"
 
 /**************************************************************************//**
  */
@@ -46,6 +47,8 @@ void USBDMSC_Init(void)
     MSS_MPU_configure(MSS_MPU_MMC, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
         MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
 }
+
+HSSTicks_t last_poll_time = 0u;
 
 bool USBDMSC_Poll(void)
 {
@@ -88,6 +91,10 @@ bool USBDMSC_Poll(void)
         }
     }
 
+    if (HSS_Timer_IsElapsed(last_poll_time, 5*TICKS_PER_SEC)) {
+        FLASH_DRIVE_dump_xfer_status();
+    }
+
     return done;
 }
 
@@ -95,16 +102,13 @@ void USBDMSC_Shutdown(void)
 {
 #ifndef CONFIG_SERVICE_USBDMSC_REGISTER
     PLIC_ClearPendingIRQ();
-    void usbmsc_deactivate(void);
-    usbmsc_deactivate();
+    USBDMSC_Deactivate();
 #endif
 }
 
 void USBDMSC_Start(void)
 {
-    bool done = false;
-
-    done = !FLASH_DRIVE_init();
+    bool done = !FLASH_DRIVE_init();
 
     if (done) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false..." CRLF);
@@ -132,8 +136,7 @@ void USBDMSC_Start(void)
         } while (!done);
         mHSS_PUTS(CRLF "USB Host disconnected..." CRLF);
 #else
-        void usbdmsc_activate(void);
-        usbdmsc_activate();
+        USBDMSC_Activate();
 #endif
     }
 }

@@ -51,10 +51,10 @@ enum UartStatesEnum {
  *
  */
 static const struct StateDesc usbdmsc_state_descs[] = {
-    { (const stateType_t)USBDMSC_INITIALIZATION,    (const char *)"init",   NULL,                            NULL,                   &usbdmsc_init_handler },
-    { (const stateType_t)USBDMSC_IDLE,              (const char *)"idle",   NULL,                            NULL,                   &usbdmsc_idle_handler },
-    { (const stateType_t)USBDMSC_WAIT_FOR_USB_HOST, (const char *)"idle",   &usbdmsc_waitForUSBHost_onEntry, NULL,                   &usbdmsc_waitForUSBHost_handler },
-    { (const stateType_t)USBDMSC_ACTIVE,            (const char *)"active", NULL,                            &usbdmsc_active_onExit, &usbdmsc_active_handler },
+    { (const stateType_t)USBDMSC_INITIALIZATION,    (const char *)"Init",             NULL,                            NULL,                   &usbdmsc_init_handler },
+    { (const stateType_t)USBDMSC_IDLE,              (const char *)"Idle",             NULL,                            NULL,                   &usbdmsc_idle_handler },
+    { (const stateType_t)USBDMSC_WAIT_FOR_USB_HOST, (const char *)"WaitForUSBHost",   &usbdmsc_waitForUSBHost_onEntry, NULL,                   &usbdmsc_waitForUSBHost_handler },
+    { (const stateType_t)USBDMSC_ACTIVE,            (const char *)"Active",           NULL,                            &usbdmsc_active_onExit, &usbdmsc_active_handler },
 };
 
 /*!
@@ -129,22 +129,19 @@ static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-void usbdmsc_activate(void);
-void usbdmsc_activate(void)
+void USBDMSC_Activate(void)
 {
     usbdmsc_service.state = USBDMSC_WAIT_FOR_USB_HOST;
 }
 
-void usbdmsc_deactivate(void);
-void usbdmsc_deactivate(void)
+void USBDMSC_Deactivate(void)
 {
     if (usbdmsc_service.state != USBDMSC_IDLE) {
         usbdmsc_service.state = USBDMSC_IDLE;
     }
 }
 
-bool usbdmsc_is_active(void);
-bool usbdmsc_is_active(void)
+bool USBDMSC_IsActive(void)
 {
     return (usbdmsc_service.state != USBDMSC_IDLE);
 }
