@@ -28,11 +28,7 @@ extern "C" {
 /*******************************************************************************
  Exported APIs from USBD-CIF
  */
-void
-MSS_USBD_CIF_get_hwcore_info
-(
-    mss_usb_core_info_t* hw_core
-);
+void MSS_USBD_CIF_get_hwcore_info(mss_usb_core_info_t* hw_core);
 
 /* DeviceInfo register related APIs */
 
@@ -163,65 +159,42 @@ static __INLINE void MSS_USBD_CIF_reset_index_reg(void)
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_init
-(
-    mss_usb_device_speed_t speed
-);
+void MSS_USBD_CIF_init(mss_usb_device_speed_t speed);
 
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_cep_configure
-(
-    void
-);
+void MSS_USBD_CIF_cep_configure(void);
 
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_cep_rx_prepare
-(
-    mss_usb_ep_t* device_ep
-);
+void MSS_USBD_CIF_cep_rx_prepare(mss_usb_ep_t* device_ep);
 
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_cep_read_pkt
-(
-    mss_usb_ep_t* device_ep
-);
+void MSS_USBD_CIF_rx_ep_read_prepare(mss_usb_ep_t* device_ep);
 
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_cep_write_pkt
-(
-    mss_usb_ep_t* device_ep
-);
+void MSS_USBD_CIF_cep_read_pkt(mss_usb_ep_t* device_ep);
 
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_tx_ep_configure
-(
-    mss_usb_ep_t* device_ep
-);
+void MSS_USBD_CIF_cep_write_pkt(mss_usb_ep_t* device_ep);
 
 /***************************************************************************//**
 
 */
-void
-MSS_USBD_CIF_rx_ep_configure
-(
-    mss_usb_ep_t* device_ep
-);
+void MSS_USBD_CIF_tx_ep_configure(mss_usb_ep_t* device_ep);
+
+/***************************************************************************//**
+
+*/
+void MSS_USBD_CIF_rx_ep_configure(mss_usb_ep_t* device_ep);
 
 #endif  //MSS_USB_DEVICE_ENABLED
 

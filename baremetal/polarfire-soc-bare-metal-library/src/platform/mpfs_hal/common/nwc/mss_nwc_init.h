@@ -118,11 +118,7 @@ extern "C" {
   mss_nwc_init()
   Called on start-up, initializes clocks, sgmii, ddr, mssio
  */
-uint8_t
-mss_nwc_init
-(
-    void
-);
+uint8_t mss_nwc_init(void);
 
 
 /***************************************************************************//**
@@ -140,12 +136,16 @@ mss_nwc_init
   @endcode
 
  */
-void
-mtime_delay
-(
-    uint32_t microseconds
-);
+void mtime_delay(uint32_t microseconds);
 
+/***************************************************************************//**
+ * delay() spin-loop short delay function
+ * @param n
+ *
+ *  @return
+ *   No return value.
+ */
+void delay(uint32_t n);
 
 #ifdef __cplusplus
 }

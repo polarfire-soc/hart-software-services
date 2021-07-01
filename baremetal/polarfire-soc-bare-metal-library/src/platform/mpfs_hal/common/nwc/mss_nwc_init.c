@@ -39,10 +39,6 @@ g5_mss_top_scb_regs_TypeDef     *SCB_REGS    =\
         (g5_mss_top_scb_regs_TypeDef     *)  SYSREGSCB_BASE;
 
 
-/*******************************************************************************
- * Local functions
- */
-void delay(uint32_t n);
 
 /*******************************************************************************
  * extern defined functions
@@ -355,6 +351,7 @@ uint8_t mss_nwc_init(void)
             error |= (0x1U << 2U);
         }
         //todo: remove, just for sim test ddr_recalib_io_test();
+
 #endif
     }
 

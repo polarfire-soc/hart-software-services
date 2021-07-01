@@ -130,8 +130,7 @@ const uint64_t pmp_values[][18] = {
  */
 uint8_t pmp_configure(uint8_t hart_id) /* set-up with settings from Libero */
 {
-    uint64_t pmp0cfg;
-	/* make sure enables are off */
+    /* make sure enables are off */
     write_csr(pmpcfg0, 0);
     write_csr(pmpcfg2, 0);
     /* set required addressing */
@@ -151,11 +150,11 @@ uint8_t pmp_configure(uint8_t hart_id) /* set-up with settings from Libero */
     write_csr(pmpaddr13, pmp_values[hart_id][15]);
     write_csr(pmpaddr14, pmp_values[hart_id][16]);
     write_csr(pmpaddr15, pmp_values[hart_id][17]);
-#if ((LIBERO_SETTING_MEM_CONFIGS_ENABLED & 1UL) == PMP_ENABLED_MASK)
-    pmp_master_configs(hart_id, &pmp0cfg);
-    write_csr(pmpcfg0, pmp0cfg);
+//#if ((LIBERO_SETTING_MEM_CONFIGS_ENABLED & 1UL) == PMP_ENABLED_MASK)
+//    pmp_master_configs(hart_id, &pmp0cfg);
+//#endif
+    write_csr(pmpcfg0, pmp_values[hart_id][0]);
     write_csr(pmpcfg2, pmp_values[hart_id][1]);
-#endif
 
     return(0);
 }

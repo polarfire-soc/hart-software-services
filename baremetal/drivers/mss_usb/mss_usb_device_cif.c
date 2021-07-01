@@ -44,11 +44,8 @@ volatile mss_usbd_cep_state_t cep_state;
  This function initializes the MSS USB core in Device mode.
  */
 volatile uint32_t reg=0;
-void
-MSS_USBD_CIF_init
-(
-    mss_usb_device_speed_t speed
-)
+
+void MSS_USBD_CIF_init(mss_usb_device_speed_t speed)
 {
     cep_state = MSS_USB_CTRL_EP_IDLE;
 
@@ -56,22 +53,18 @@ MSS_USBD_CIF_init
     MSS_USB_CIF_soft_reset();
     MSS_USB_CIF_clr_usb_irq_reg();
 
-#if 1
     /*Reset and Resume are by default enabled in INTRUSBE reg after soft reset*/
     PLIC_EnableIRQ(USB_DMA_PLIC);
     PLIC_EnableIRQ(USB_MC_PLIC);
 
     MSS_USB_CIF_rx_ep_disable_irq_all();
     MSS_USB_CIF_tx_ep_disable_irq_all();
-#endif
+
     if(MSS_USB_DEVICE_FS == speed)
     {
         MSS_USB_CIF_disable_hs_mode();
     }
 
-//    reg = ulpi_read(0x0A);
-//    reg = ulpi_read(0x13);
-//    reg = ulpi_read(0x15);
     /*This was added during Compliance testing. Refer MUSB section 3.8.5*/
     USB->C_T_HSBT = 0x01u;
 }
@@ -79,11 +72,7 @@ MSS_USBD_CIF_init
 /***************************************************************************//**
  Provides the information about the MSS USB core configuration
  */
-void
-MSS_USBD_CIF_get_hwcore_info
-(
-    mss_usb_core_info_t* hw_core
-)
+void MSS_USBD_CIF_get_hwcore_info(mss_usb_core_info_t* hw_core)
 {
     MSS_USB_CIF_set_index_reg(MSS_USB_CEP);
     hw_core->core_max_nbr_of_tx_ep = (USB->EP_INFO & 0x0Fu); /*lower nibble for txep*/
@@ -103,11 +92,7 @@ MSS_USBD_CIF_get_hwcore_info
  Configures the registers related to TX EP for data transfer operations as
  per the parameters provided by the upper layer.
  */
-void
-MSS_USBD_CIF_tx_ep_configure
-(
-    mss_usb_ep_t* device_ep
-)
+void MSS_USBD_CIF_tx_ep_configure(mss_usb_ep_t* device_ep)
 {
     MSS_USB_CIF_tx_ep_clr_csrreg(device_ep->num); //clear previous config, if any
 
@@ -147,11 +132,7 @@ MSS_USBD_CIF_tx_ep_configure
  Configures the RX EP for data transfer operations as per the parameters
  provided by upper layer.
  */
-void
-MSS_USBD_CIF_rx_ep_configure
-(
-    mss_usb_ep_t* device_ep
-)
+void MSS_USBD_CIF_rx_ep_configure(mss_usb_ep_t* device_ep)
 {
     MSS_USB_CIF_rx_ep_clr_csrreg(device_ep->num); //clear previous config, if any
 
@@ -191,11 +172,7 @@ MSS_USBD_CIF_rx_ep_configure
 /***************************************************************************//**
  Configures the Control EP for data transfer operations.
  */
-void
-MSS_USBD_CIF_cep_configure
-(
-    void
-)
+void MSS_USBD_CIF_cep_configure(void)
 {
     /*Control transfers will be handled without DMA*/
     MSS_USB_CIF_set_index_reg(MSS_USB_CEP);
@@ -207,11 +184,7 @@ MSS_USBD_CIF_cep_configure
  Prepares the Control EP for receiving data as per the parameters provided by
  upper layer
  */
-void
-MSS_USBD_CIF_cep_rx_prepare
-(
-    mss_usb_ep_t* device_ep
-)
+void MSS_USBD_CIF_cep_rx_prepare(mss_usb_ep_t* device_ep)
 {
     if(MSS_USB_CEP_IDLE == device_ep[MSS_USB_CEP].state)
     {
@@ -227,11 +200,7 @@ MSS_USBD_CIF_cep_rx_prepare
 /***************************************************************************//**
  Prepares the RX EP for receiving data as per parameters provided by upper layer
  */
-void
-MSS_USBD_CIF_rx_ep_read_prepare
-(
-    mss_usb_ep_t* device_ep
-)
+void MSS_USBD_CIF_rx_ep_read_prepare(mss_usb_ep_t* device_ep)
 {
     /*Fixed Buffer overwriting issue found with printer driver and
       issue with interrupt transfer with DMA by moving the location
@@ -285,11 +254,7 @@ MSS_USBD_CIF_rx_ep_read_prepare
 /***************************************************************************//**
  Writes a data packet on EP0 in device mode(control endpoint).
  */
-void
-MSS_USBD_CIF_cep_write_pkt
-(
-    mss_usb_ep_t* device_ep
-)
+void MSS_USBD_CIF_cep_write_pkt(mss_usb_ep_t* device_ep)
 {
     if(device_ep->num == MSS_USB_CEP)
     {
@@ -323,11 +288,7 @@ MSS_USBD_CIF_cep_write_pkt
 /***************************************************************************//**
  Reads data packet arrived on EP0 in device mode(control endpoint).
  */
-void
-MSS_USBD_CIF_cep_read_pkt
-(
-    mss_usb_ep_t* device_ep
-)
+void MSS_USBD_CIF_cep_read_pkt(mss_usb_ep_t* device_ep)
 {
     volatile uint16_t received_count = 0u;
 

@@ -38,8 +38,13 @@ extern "C" {
 #define likely(x) __builtin_expect((x), 1)
 #define unlikely(x) __builtin_expect((x), 0)
 
-#define ROUNDUP(a, b) ((((a)-1)/(b)+1)*(b))
-#define ROUNDDOWN(a, b) ((a)/(b)*(b))
+#ifndef ROUNDUP
+#    define ROUNDUP(a, b) ((((a)-1)/(b)+1)*(b))
+#endif
+
+#ifndef ROUNDDOWN
+#    define ROUNDDOWN(a, b) ((a)/(b)*(b))
+#endif
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

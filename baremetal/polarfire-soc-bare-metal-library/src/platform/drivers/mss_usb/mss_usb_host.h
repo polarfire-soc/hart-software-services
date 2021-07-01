@@ -1038,16 +1038,16 @@ MSS_USBH_configure_control_pipe
     pipe must timeout on receiving a stream of NAK responses. The valid values
     for this parameter are as mentioned in the table below.
 
-    | Transfer Type    |  Speed     | Valid values                             |
-    |------------------|------------|------------------------------------------|
-    |  Interrupt       | LS or FS   | 1 - 255                                  |
+    | Transfer Type    |  Speed     | Valid values                               |
+    |------------------|------------|--------------------------------------------|
+    |  Interrupt       | LS or FS   | 1 - 255                                    |
     |  Interrupt       |    HS      | 1,2,4,8,16,32,64...32768 microframes       |
-    |                  |            |                                          |
+    |                  |            |                                            |
     |  Isochronous     | FS or HS   | 1,2,4,8,16,32,64...32768 frames/microframes|
-    |                  |            |                                          |
+    |                  |            |                                            |
     |  Bulk            |    HS      | 0,2,4,8,16,32,64...32768 microframes       |
-    |                  |            | Note:Value 0 disables the NAK Timeout    |
-    |                  |            | detection on Bulk endpoint               |
+    |                  |            | Note:Value 0 disables the NAK Timeout      |
+    |                  |            | detection on Bulk endpoint                 |
 
   @return
     This function returns zero when execution was successful.
@@ -1192,16 +1192,16 @@ MSS_USBH_configure_in_pipe
     which the OUT Pipe must time out on receiving a stream of NAK responses.
     The valid values for this parameter are as mentioned in the table below.
 
-    | Transfer Type    |  Speed    | Valid values                              |
-    |------------------|-----------|-------------------------------------------|
-    |  Interrupt       | LS or FS  | 1 - 255                                   |
+    | Transfer Type    |  Speed    | Valid values                                |
+    |------------------|-----------|---------------------------------------------|
+    |  Interrupt       | LS or FS  | 1 - 255                                     |
     |  Interrupt       |    HS     | 1,2,4,8,16,32,64...32768 microframes        |
-    |                  |           |                                           |
+    |                  |           |                                             |
     |  Isochronous     | FS or HS  | 1,2,4,8,16,32,64...32768 frames/microframes |
-    |                  |           |                                           |
+    |                  |           |                                             |
     |  Bulk            |    HS     | 0,2,4,8,16,32,64...32768 microframes        |
-    |                  |           | Note:Value 0 disables the NAK Timeout     |
-    |                  |           | detection on Bulk endpoint                |
+    |                  |           | Note:Value 0 disables the NAK Timeout       |
+    |                  |           | detection on Bulk endpoint                  |
 
   @return
     This function returns zero when execution was successful.
