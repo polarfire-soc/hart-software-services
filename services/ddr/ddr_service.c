@@ -52,7 +52,17 @@ static const struct StateDesc ddr_state_descs[] = {
  * \brief DDR Driver State Machine
  */
 struct StateMachine ddr_service = {
-    (stateType_t)DDR_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)DDR_NUM_STATES, (const char *)"ddr_service", 0u, 0u, 0u, ddr_state_descs, false, 0u, NULL
+    .state             = (stateType_t)DDR_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)DDR_NUM_STATES,
+    .pMachineName      = (const char *)"ddr_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = ddr_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL
 };
 
 // --------------------------------------------------------------------------------------------------

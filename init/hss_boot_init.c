@@ -15,6 +15,7 @@
 #include "config.h"
 #include "hss_types.h"
 
+#include "hss_init.h"
 #include "hss_boot_service.h"
 #include "hss_boot_init.h"
 #include "hss_sys_setup.h"
@@ -49,6 +50,7 @@
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 #include "hss_crc32.h"
+#include "hss_perfctr.h"
 
 #include <string.h>
 #include <assert.h>
@@ -113,6 +115,9 @@ bool HSS_BootInit(void)
     struct HSS_BootImage *pBootImage = NULL;
 
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image.." CRLF);
+
+    int perf_ctr_index;
+    HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image Init");
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     result = getBootImageFunction(&pBootImage);
@@ -188,6 +193,7 @@ bool HSS_BootInit(void)
     }
 #endif
 
+    HSS_PerfCtr_Lap(perf_ctr_index);
     return result;
 }
 
@@ -330,10 +336,13 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
             if (!result) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "verifyMagic_() failed" CRLF);
             } else {
+                int perf_ctr_index;
+                HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image MMC Copy");
                 result = copyBootImageToDDR_(&bootImage,
                     (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), srcOffset * GPT_LBA_SIZE,
                     HSS_MMC_ReadBlock);
                 *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+                HSS_PerfCtr_Lap(perf_ctr_index);
 
                if (!result) {
                    mHSS_DEBUG_PRINTF(LOG_ERROR, "copyBootImageToDDR_() failed" CRLF);

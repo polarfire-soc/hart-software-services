@@ -39,6 +39,7 @@ extern "C" {
 
 bool HSS_MemTestDDRFast(void);
 bool HSS_MemTestDDRFull(void);
+bool HSS_MemTestDDR_Ex(volatile uint64_t *baseAddr, size_t numBytes);
 
 #ifdef __cplusplus
 }

@@ -18,6 +18,7 @@
 #include "hss_debug.h"
 #include "hss_progress.h"
 #include "hss_clock.h"
+#include "hss_perfctr.h"
 
 #include <assert.h>
 #include <string.h>
@@ -85,7 +86,6 @@ static void mmc_reset_block(void)
         (uint32_t)(SOFT_RESET_CR_MMC_MASK);
     SYSREG->SOFT_RESET_CR &=
         ~(uint32_t)(SOFT_RESET_CR_MMC_MASK);
-
 }
 
 static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
@@ -178,24 +178,33 @@ static bool mmc_init_sdcard(void)
 }
 #endif
 
+static bool mmc_initialized = false;
 bool HSS_MMCInit(void)
 {
     bool result = false;
-    mmc_reset_block();
+
+    if (!mmc_initialized) {
+        int perf_ctr_index;
+        HSS_PerfCtr_Allocate(&perf_ctr_index, "MMC Init");
+        mmc_reset_block();
 
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select SDCARD ... ");
-    result = mmc_init_sdcard();
-    mHSS_DEBUG_PRINTF_EX("%s" CRLF, result ? "Passed" : "Failed");
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select SDCARD ... ");
+        mmc_initialized = mmc_init_sdcard();
+        mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
 
 #endif
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
-    if (!result) {
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select eMMC ... ");
-        result = mmc_init_emmc();
-        mHSS_DEBUG_PRINTF_EX("%s" CRLF, result ? "Passed" : "Failed");
-    }
+        if (!mmc_initialized) {
+            mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select eMMC ... ");
+            mmc_initialized = mmc_init_emmc();
+            mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
+        }
 #endif
+        HSS_PerfCtr_Lap(perf_ctr_index);
+    }
+
+    result = mmc_initialized;
 
     return result;
 }

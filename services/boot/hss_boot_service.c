@@ -21,6 +21,7 @@
 #include "hss_sys_setup.h"
 #include "hss_clock.h"
 #include "hss_debug.h"
+#include "hss_perfctr.h"
 
 #include <assert.h>
 #include <string.h>
@@ -71,6 +72,7 @@ static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine);
 static void boot_wait_onEntry(struct StateMachine * const pMyMachine);
 static void boot_wait_handler(struct StateMachine * const pMyMachine);
 static void boot_error_handler(struct StateMachine * const pMyMachine);
+static void boot_idle_onEntry(struct StateMachine * const pMyMachine);
 static void boot_idle_handler(struct StateMachine * const pMyMachine);
 
 static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk,
@@ -101,10 +103,10 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_INITIALIZATION,     (const char *)"Init",             NULL,                             NULL,                         &boot_init_handler },
     { (const stateType_t)BOOT_SETUP_PMP,          (const char *)"SetupPMP",         &boot_setup_pmp_onEntry,          NULL,                         &boot_setup_pmp_handler },
     { (const stateType_t)BOOT_SETUP_PMP_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_pmp_complete_onEntry, NULL,                         &boot_setup_pmp_complete_handler },
-    { (const stateType_t)BOOT_ZERO_INIT_CHUNKS,          (const char *)"ZeroInit",         &boot_zero_init_chunks_onEntry,   NULL,                         &boot_zero_init_chunks_handler },
+    { (const stateType_t)BOOT_ZERO_INIT_CHUNKS,   (const char *)"ZeroInit",         &boot_zero_init_chunks_onEntry,   NULL,                         &boot_zero_init_chunks_handler },
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
-    { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             NULL,                             NULL,                         &boot_idle_handler },
+    { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             &boot_idle_onEntry,               NULL,                         &boot_idle_handler },
     { (const stateType_t)BOOT_ERROR,              (const char *)"Error",            NULL,                             NULL,                         &boot_error_handler }
 };
 
@@ -123,6 +125,7 @@ struct HSS_Boot_LocalData {
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     uint32_t msgIndexAux;
 #endif
+    int perfCtr;
 };
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
@@ -132,10 +135,10 @@ struct HSS_Boot_LocalData {
 #endif
 
 static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
-    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
+    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
+    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
+    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
 };
 
 struct HSS_BootImage *pBootImage = NULL;
@@ -308,6 +311,9 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
 {
     if (pBootImage) {
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot" CRLF, pMyMachine->pMachineName);
+
+        struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+        HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
 
         pMyMachine->state = BOOT_SETUP_PMP;
     } else {
@@ -627,6 +633,13 @@ static void boot_error_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
+static void boot_idle_onEntry(struct StateMachine * const pMyMachine)
+{
+    struct HSS_Boot_LocalData const * const pInstanceData = pMyMachine->pInstanceData;
+    HSS_PerfCtr_Lap(pInstanceData->perfCtr);
+    //mHSS_DEBUG_PRINTF(LOG_ERROR, "%s:: now at state %d\n", pMyMachine->pMachineName, pMyMachine->state);
+}
+
 static void boot_idle_handler(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData const * const pInstanceData = pMyMachine->pInstanceData;
@@ -643,7 +656,7 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
 {
     bool result = false;
 
-    // TODO: should it restart all, or one the non-busy boot state machines??
+    // TODO: should it restart all, or only the non-busy boot state machines??
     //
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
         if (restartHartBitmask.uint && (1u << bootMachine[i].hartId)) {

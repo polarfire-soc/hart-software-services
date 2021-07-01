@@ -43,7 +43,9 @@ extern "C" {
 #include "hss_debug.h"
 
 size_t HSS_DDR_GetSize(void);
-void *HSS_DDR_GetStart(void);
+uintptr_t HSS_DDR_GetStart(void);
+size_t HSS_DDRHi_GetSize(void);
+uintptr_t HSS_DDRHi_GetStart(void);
 void HSS_DDR_Train(void);
 
 extern struct StateMachine ddr_service;

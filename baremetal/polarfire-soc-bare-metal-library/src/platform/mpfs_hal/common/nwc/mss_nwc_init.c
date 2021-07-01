@@ -333,6 +333,9 @@ uint8_t mss_nwc_init(void)
 
     {
 #ifdef DDR_SUPPORT
+        int perf_ctr_index;
+	bool HSS_PerfCtr_Allocate(int *pIdx, char const * name);
+        HSS_PerfCtr_Allocate(&perf_ctr_index, "DDR Training");
 #ifdef DEBUG_DDR_INIT
         {
             (void)setup_ddr_debug_port(g_debug_uart);
@@ -352,6 +355,8 @@ uint8_t mss_nwc_init(void)
         }
         //todo: remove, just for sim test ddr_recalib_io_test();
 
+	void HSS_PerfCtr_Lap(int perf_ctr_index);
+        HSS_PerfCtr_Lap(perf_ctr_index);
 #endif
     }
 
