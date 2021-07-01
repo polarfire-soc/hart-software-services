@@ -33,7 +33,7 @@ HSSTicks_t HSS_GetTime(void)
 
 HSSTicks_t HSS_GetTickCount(void)
 {
-    HSSTicks_t volatile tickCount;
+    HSSTicks_t tickCount;
 
     tickCount = CSR_GetTickCount();
     return tickCount;

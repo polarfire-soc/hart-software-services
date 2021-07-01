@@ -15,8 +15,8 @@
 #include "config.h"
 #include "hss_types.h"
 
+#include "hss_init.h"
 #include "hss_debug.h"
-#include "hss_logo_init.h"
 
 //
 // A variety of colored pixels are needed - red, white, black

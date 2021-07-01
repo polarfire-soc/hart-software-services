@@ -67,6 +67,7 @@ bool HSS_LogoInit(void);
 bool HSS_PCIeInit(void);
 #endif
 
+bool HSS_PDMAInit(void);
 
 #ifdef __cplusplus
 }

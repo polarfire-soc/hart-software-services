@@ -233,6 +233,9 @@ struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
     &usbdmsc_service,
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    &scrub_service,
+#endif
 };
 const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
 
@@ -267,6 +270,7 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #endif
     { "HSS_E51_Banner",            HSS_E51_Banner,            false, false },
     { "HSS_DDRPrintSegConfig",     HSS_DDRPrintSegConfig,     false, false },
+    { "HSS_DDRPrintL2CacheConfig", HSS_DDRPrintL2CacheConfig, false, false },
 #if IS_ENABLED(CONFIG_MEMTEST)
     { "HSS_MemTestDDRFast",        HSS_MemTestDDRFast,        false, false },
 #endif

@@ -1,3 +1,6 @@
+#ifndef USER_CONFIG_MSS_USER_CONFIG_H_
+#define USER_CONFIG_MSS_USER_CONFIG_H_
+
 /*******************************************************************************
  * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
@@ -28,9 +31,6 @@
 *//*==========================================================================*/
 
 
-#ifndef USER_CONFIG_MSS_USER_CONFIG_H_
-#define USER_CONFIG_MSS_USER_CONFIG_H_
-
 /*------------------------------------------------------------------------------
  * MPFS_HAL_FIRST_HART and MPFS_HAL_LAST_HART defines used to specify which
  * harts to actually start.
@@ -52,8 +52,8 @@
 /*------------------------------------------------------------------------------
  * Markers used to indicate startup status of hart
  */
-#define HLS_DATA_IN_WFI                     0x12345678U
-#define HLS_DATA_PASSED_WFI                 0x87654321U
+#define HLS_DATA_IN_WFI                     0x12345678u
+#define HLS_DATA_PASSED_WFI                 0x87654321u
 
 /*------------------------------------------------------------------------------
  * Define the size of the HLS used
@@ -120,8 +120,6 @@
 #define SGMII_SUPPORT
 #define DDR_SUPPORT
 #define MSSIO_SUPPORT
-//#define SIMULATION_TEST_FEEDBACK
-//#define E51_ENTER_SLEEP_STATE
 
 /*
  * DDR software options
@@ -196,4 +194,3 @@
 #define LIBERO_SETTING_CFG_RMW_EN		0x00000001UL
 
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
-

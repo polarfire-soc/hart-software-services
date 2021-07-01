@@ -15,6 +15,8 @@
 #include "config.h"
 #include "hss_types.h"
 
+#include "hss_init.h"
+
 #include <assert.h>
 
 #include "hss_debug.h"

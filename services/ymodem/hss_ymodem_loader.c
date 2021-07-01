@@ -139,7 +139,7 @@ void hss_loader_ymodem_loop(void)
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
             "QSPI"
 #endif
-#if defined(CONFIG_SERVICE_QSPI) && defined(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_QSPI) && IS_ENABLED(CONFIG_SERVICE_MMC)
            "/"
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_MMC)

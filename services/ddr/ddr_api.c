@@ -76,4 +76,3 @@ void HSS_DDR_Train(void)
 {
     //mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
 }
-
