@@ -1,8 +1,8 @@
-#ifndef HSS_WDOG_SERVICE_H
-#define HSS_WDOG_SERVICE_H
+#ifndef HSS_TINYCLI_HEXDUMP_H
+#define HSS_TINYCLI_HEXDUMP_H
 
 /*******************************************************************************
- * Copyright 2019-2021 Microchip Corporation.
+ * Copyright 2019-2020 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,30 +25,15 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Virtual Watchdog Service
+ * Hart Software Services - Tiny CLI Parser
  *
- */
-
-
-/*!
- * \file Watchdog Driver State Machine
- * \brief Virtualised Watchdog Service
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "hss_state_machine.h"
-#include "hss_debug.h"
-#include "ssmb_ipi.h"
-#include "mpfs_reg_map.h"
-
-void HSS_Wdog_MonitorHart(enum HSSHartId target);
-void HSS_Wdog_Reboot(enum HSSHartId target);
-void HSS_Wdog_DumpStats(void);
-
-extern struct StateMachine wdog_service;
+void HSS_TinyCLI_HexDump(uint8_t *pStart, ptrdiff_t count);
 
 #ifdef __cplusplus
 }

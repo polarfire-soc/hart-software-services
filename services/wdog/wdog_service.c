@@ -56,7 +56,17 @@ static const struct StateDesc wdog_state_descs[] = {
  *
  */
 struct StateMachine wdog_service = {
-    (stateType_t)WDOG_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)WDOG_NUM_STATES, (const char *)"wdog_service",  0u, 0u, 0u, wdog_state_descs, false, 0u, NULL
+    .state             = (stateType_t)WDOG_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)WDOG_NUM_STATES,
+    .pMachineName      = (const char *)"wdog_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = wdog_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL
 };
 
 // --------------------------------------------------------------------------------------------------
@@ -103,7 +113,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
             wdogInitTime[HSS_HART_U54_4] = HSS_GetTime();
         }
 
-        //mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%X" CRLF, hartBitmask.uint);
+        //mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%x" CRLF, hartBitmask.uint);
         pMyMachine->state = WDOG_MONITORING;
     }
 
@@ -133,32 +143,9 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
     if ((hartBitmask.uint)
         && (HSS_Timer_IsElapsed(lastEntryTime,
             (HSSTicks_t)CONFIG_SERVICE_WDOG_DEBUG_TIMEOUT_SEC * TICKS_PER_SEC))) {
-        lastEntryTime = HSS_GetTime();
-
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog Status Update: ");
-
-        if (hartBitmask.s.u54_1) {
-            mHSS_DEBUG_PRINTF_EX("U54_1 (%lu sec) ",
-                (lastEntryTime - wdogInitTime[HSS_HART_U54_1]) / TICKS_PER_SEC);
-        }
-
-        if (hartBitmask.s.u54_2) {
-            mHSS_DEBUG_PRINTF_EX("U54_2 (%lu sec) ",
-                (lastEntryTime - wdogInitTime[HSS_HART_U54_2]) / TICKS_PER_SEC);
-        }
-
-        if (hartBitmask.s.u54_3) {
-            mHSS_DEBUG_PRINTF_EX("U54_3 (%lu sec) ",
-                (lastEntryTime - wdogInitTime[HSS_HART_U54_3]) / TICKS_PER_SEC);
-        }
-
-        if (hartBitmask.s.u54_4) {
-            mHSS_DEBUG_PRINTF_EX("U54_4 (%lu sec) ",
-                (lastEntryTime - wdogInitTime[HSS_HART_U54_4]) / TICKS_PER_SEC);
-        }
-
-        mHSS_DEBUG_PRINTF_EX(CRLF);
-    }
+#  if WDOG_DEBUG
+        HSS_Wdog_DumpStats();
+#  endif
 #endif
 
     uint32_t status = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
@@ -172,18 +159,22 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
         if (hartBitmask.s.u54_1) {
             HSS_Boot_RestartCore(HSS_HART_U54_1);
+            wdogInitTime[HSS_HART_U54_1] = HSS_GetTime();
         }
 
         if (hartBitmask.s.u54_2) {
             HSS_Boot_RestartCore(HSS_HART_U54_2);
+            wdogInitTime[HSS_HART_U54_2] = HSS_GetTime();
         }
 
         if (hartBitmask.s.u54_3) {
             HSS_Boot_RestartCore(HSS_HART_U54_3);
+            wdogInitTime[HSS_HART_U54_3] = HSS_GetTime();
         }
 
         if (hartBitmask.s.u54_4) {
             HSS_Boot_RestartCore(HSS_HART_U54_4);
+            wdogInitTime[HSS_HART_U54_4] = HSS_GetTime();
         }
     }
 }
@@ -193,26 +184,31 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target)
 {
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "monitoring ");
 
     switch (target) {
     case HSS_HART_U54_1:
+	mHSS_DEBUG_PRINTF_EX("U54_1" CRLF);
         hartBitmask.s.u54_1 = 1;
         break;
 
     case HSS_HART_U54_2:
+	mHSS_DEBUG_PRINTF_EX("U54_2" CRLF);
         hartBitmask.s.u54_2 = 1;
         break;
 
     case HSS_HART_U54_3:
+	mHSS_DEBUG_PRINTF_EX("U54_3" CRLF);
         hartBitmask.s.u54_3 = 1;
         break;
 
     case HSS_HART_U54_4:
+	mHSS_DEBUG_PRINTF_EX("U54_4" CRLF);
         hartBitmask.s.u54_4 = 1;
         break;
 
     case HSS_HART_ALL:
+	mHSS_DEBUG_PRINTF_EX("U54_1 U54_2 U54_3 U54_4" CRLF);
         hartBitmask.s.u54_1 = 1;
         hartBitmask.s.u54_2 = 1;
         hartBitmask.s.u54_3 = 1;
@@ -249,6 +245,38 @@ void HSS_Wdog_Reboot(enum HSSHartId target)
         break;
 
     default:
+        assert(1 == 0); // should never reach here!! LCOV_EXCL_LINE
         break;
     }
+}
+
+void HSS_Wdog_DumpStats(void)
+{
+#  if IS_ENABLED(CONFIG_SERVICE_WDOG_DEBUG)
+    lastEntryTime = HSS_GetTime();
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog Status Update: " CRLF);
+
+    if (hartBitmask.s.u54_1) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "U54_1: %lu sec uptime" CRLF,
+            (lastEntryTime - wdogInitTime[HSS_HART_U54_1]) / TICKS_PER_SEC);
+    }
+
+    if (hartBitmask.s.u54_2) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "U54_2: %lu sec uptime" CRLF,
+            (lastEntryTime - wdogInitTime[HSS_HART_U54_2]) / TICKS_PER_SEC);
+    }
+
+    if (hartBitmask.s.u54_3) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "U54_3: %lu sec uptime " CRLF,
+            (lastEntryTime - wdogInitTime[HSS_HART_U54_3]) / TICKS_PER_SEC);
+    }
+
+    if (hartBitmask.s.u54_4) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "U54_4: %lu sec uptime" CRLF,
+            (lastEntryTime - wdogInitTime[HSS_HART_U54_4]) / TICKS_PER_SEC);
+    }
+
+    mHSS_DEBUG_PRINTF_EX(CRLF);
+#endif
 }

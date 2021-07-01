@@ -69,7 +69,6 @@ void uart_putc(int hartid, const char ch)
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)string);
 }
 
-#define HSS_UART_HELPER_MAX_GETLINE 80
 ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 {
     ssize_t result = 0;

@@ -22,11 +22,16 @@
 #include <assert.h>
 
 #include "tinycli_service.h"
+#include "uart_helper.h"
 #include "mpfs_reg_map.h"
 #include "hss_boot_service.h"
 #include "usbdmsc_service.h"
 
 #include "drivers/mss_uart/mss_uart.h"
+
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
+#  include "usbdmsc_service.h"
+#endif
 
 static void tinycli_init_handler(struct StateMachine * const pMyMachine);
 static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine);
@@ -63,10 +68,17 @@ static const struct StateDesc tinycli_state_descs[] = {
  *
  */
 struct StateMachine tinycli_service = {
-    (stateType_t)TINYCLI_INITIALIZATION,
-    (stateType_t)SM_INVALID_STATE,
-    (const uint32_t)TINYCLI_NUM_STATES,
-    (const char *)"tinycli_service", 0u, 0u, 0u, tinycli_state_descs, false, 0u, NULL
+    .state             = (stateType_t)TINYCLI_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)TINYCLI_NUM_STATES,
+    .pMachineName      = (const char *)"tinycli_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = tinycli_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL
 };
 
 // --------------------------------------------------------------------------------------------------
@@ -80,37 +92,101 @@ static void tinycli_init_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-#define HSS_UART_HELPER_MAX_GETLINE 80
-
+static char myPrevBuffer[HSS_UART_HELPER_MAX_GETLINE];
 static char myBuffer[HSS_UART_HELPER_MAX_GETLINE];
-const size_t bufferLen = ARRAY_SIZE(myBuffer);
+const size_t bufferLen = ARRAY_SIZE(myBuffer)-1;
 ssize_t readStringLen = 0;
 
 /////////////////
+
+const char* lineHeader = ">> ";
 
 static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
 
-    memset(myBuffer, 0, bufferLen);
+    //myBuffer[0] = '\0';
     readStringLen = 0u;
-    mHSS_PUTS(">> ");
-
+    mHSS_PUTS(lineHeader);
 }
 
 static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
 {
     uint8_t cBuf[1];
 
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
+    HSS_TinyCLI_RunMonitors();
+#endif
+
+    static bool escapeActive = false;
+
     if (0 != MSS_UART_get_rx(&g_mss_uart0_lo, cBuf, 1)) {
+	if (escapeActive) {
+		switch (cBuf[0]) {
+		case '[':
+                    // consume
+		    break;
+
+                case 'A': // up arrow
+                    readStringLen = strlen(myBuffer);
+                    MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\r", 1);
+                    mHSS_PUTS(lineHeader);
+                    if (readStringLen) {
+                        memcpy(myBuffer, myPrevBuffer, readStringLen);
+                        MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)myBuffer, readStringLen);
+                    } else {
+                        myBuffer[0] = '\0';
+                    }
+		    escapeActive = false;
+                    return;
+
+                case 'B': // down arrow
+		    escapeActive = false;
+                    return;
+
+                case 'C': // right arrow
+		    escapeActive = false;
+                    if (readStringLen < bufferLen) {
+                        readStringLen++;
+                        if (myBuffer[readStringLen] == 0) {
+                            myBuffer[readStringLen] = ' ';
+                        }
+                        MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[C", 4u);
+                    }
+                    return;
+
+                case 'D': // left arrow
+                    if (readStringLen) {
+                        readStringLen--;
+                        MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[D", 4u);
+                    }
+		    escapeActive = false;
+                    return;
+
+                default:
+		    escapeActive = false;
+                    break;
+		}
+
+		if (escapeActive) { return; }
+	}
+
         switch (cBuf[0]) {
         case '\r':
-            MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
-            pMyMachine->state = TINYCLI_PARSELINE;
-            break;
-
+            __attribute__((fallthrough)); // deliberate fallthrough
         case '\n':
             MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+            if (readStringLen < bufferLen) {
+                myBuffer[readStringLen] = '\0';
+            }
+	    if (readStringLen) {
+                memcpy(myPrevBuffer, myBuffer, readStringLen+1);
+            } else {
+                // if just hit enter, as a convenience, reuse last command (a la GDB)
+		//mHSS_DEBUG_PRINTF(LOG_WARN, "Convenience: copying >>%s<< into myBuffer" CRLF, myPrevBuffer);
+		readStringLen = strlen(myPrevBuffer);
+                memcpy(myBuffer, myPrevBuffer, readStringLen+1);
+            }
             pMyMachine->state = TINYCLI_PARSELINE;
             break;
 
@@ -130,6 +206,24 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
             }
             break;
 
+        case 0x01u: // ^A
+            readStringLen = 0;
+            MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\r", 1);
+            mHSS_PUTS(lineHeader);
+            break;
+
+        case 0x05u: // ^E
+            readStringLen = strlen(myBuffer);
+            MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\r", 1);
+            mHSS_PUTS(lineHeader);
+            MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)myBuffer, readStringLen);
+            break;
+
+        case 0x04u: // ^D
+            if (readStringLen != 0) {
+                break;
+            }
+            __attribute__((fallthrough)); // deliberate fallthrough
         case 0x03u: // intr - ^C
             readStringLen = -1;
             myBuffer[0] = 0;
@@ -137,17 +231,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
             break;
 
         case 0x1Bu: // ESC
-            readStringLen = -1;
-            myBuffer[0] = 0;
-            pMyMachine->state = TINYCLI_PARSELINE;
-            break;
-
-        case 0x04u: // ^D
-            if (readStringLen == 0) {
-                readStringLen = -1;
-                myBuffer[0] = 0;
-                pMyMachine->state = TINYCLI_PARSELINE;
-            }
+            escapeActive = true;
             break;
 
         default:
@@ -179,8 +263,11 @@ static void tinycli_readline_onExit(struct StateMachine * const pMyMachine)
 
 static void tinycli_parseline_handler(struct StateMachine * const pMyMachine)
 {
-    if (readStringLen > 0) {
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
+    HSS_TinyCLI_RunMonitors();
+#endif
 
+    if (readStringLen > 0) {
         if (HSS_TinyCLI_ParseIntoTokens(myBuffer)) {
             HSS_TinyCLI_Execute();
         }
@@ -196,6 +283,10 @@ static void tinycli_parseline_handler(struct StateMachine * const pMyMachine)
 static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine)
 {
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
+#  if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
+    HSS_TinyCLI_RunMonitors();
+#  endif
+
     bool done = false;
     uint8_t cBuf[1];
 

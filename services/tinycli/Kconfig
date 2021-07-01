@@ -30,4 +30,15 @@ config SERVICE_TINYCLI_REGISTER
 		as a state machine, which makes it available at all times via the E51.
 
 		If you do not know what to do here, say N.
+
+config SERVICE_TINYCLI_MONITOR
+	depends on SERVICE_TINYCLI && SERVICE_TINYCLI_REGISTER
+	bool "Enable periodic monitoring of memory"
+	default n
+	help
+		This feature enables the creation of a number of monitor tasks which
+                can be configured to dump the contents of blocks of memory to the E51 
+                console periodically.
+
+		If you do not know what to do here, say N.
 endmenu

@@ -72,6 +72,8 @@ struct StateMachine {
     const char * const pMachineName;
     HSSTicks_t startTime;
     HSSTicks_t lastExecutionTime;
+    HSSTicks_t maxExecutionTime;
+    HSSTicks_t lastDeltaExecutionTime;
     uint64_t executionCount;
     struct StateDesc const * const pStateDescs;
     bool debugFlag;
@@ -107,4 +109,5 @@ uint64_t GetStateMachinesExecutionCount(void);
 
 void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunction initFunctions[]);
 
+void DumpStateMachineStats(void);
 #endif
