@@ -295,7 +295,8 @@ static void generate_blobs(FILE *pFileOut)
         	off_t posn = ftello(pFileOut);
 		debug_printf(4, "\t- Processing blob %lu (%lu bytes) at file position %lu\n",
 			i, chunkTable[i].chunk.size, posn);
-		debug_printf(4, "\t\tCRC32: %x\n", CRC32_calculate((uint8_t *)chunkTable[i].pBuffer, chunkTable[i].chunk.size));
+		debug_printf(4, "\t\tCRC32: %x\n",
+			CRC32_calculate((uint8_t *)chunkTable[i].pBuffer, chunkTable[i].chunk.size));
 		fflush(stdout);
 
 		fwrite((char *)chunkTable[i].pBuffer, chunkTable[i].chunk.size, 1, pFileOut);

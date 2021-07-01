@@ -96,7 +96,17 @@ static const struct StateDesc opensbi_state_descs[] = {
  * \brief OPENSBI Driver State Machine
  */
 struct StateMachine opensbi_service = {
-    (stateType_t)OPENSBI_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)OPENSBI_NUM_STATES, (const char *)"opensbi_service", 0u, 0u, 0u, opensbi_state_descs, false, 0u, NULL
+    .state             = (stateType_t)OPENSBI_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)OPENSBI_NUM_STATES,
+    .pMachineName      = (const char *)"opensbi_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = opensbi_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL,
 };
 
 
@@ -155,7 +165,7 @@ void HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
          scratch->next_mode, FALSE);
 }
 
-enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer)
+enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer, void *p_ancilliary_buffer_in_ddr)
 {
     enum IPIStatusCode result = IPI_FAIL;
 
@@ -167,13 +177,12 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     } else if (hartid == HSS_HART_E51) { // prohibited by policy
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "request to %d prohibited by policy" CRLF, HSS_HART_E51);
     } else {
-        IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL);
+        result = IPI_SUCCESS;
+        IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
         struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, current_hartid());
         pMsg->msg_type = IPI_MSG_NO_MESSAGE;
-
-        result = IPI_SUCCESS;
 
         csr_write(mscratch, &(scratches[hartid].scratch));
 
@@ -197,7 +206,8 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
 #    error Unknown PLATFORM settings
 #  endif
 #else
-        scratches[hartid].scratch.next_arg1 = 0u;
+	// else use ancilliary data if provided in boot image, assuming it is a DTB
+       	scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
 #endif
 
         HSS_OpenSBI_DoBoot(hartid);
@@ -224,7 +234,7 @@ static int sbi_ecall_hss_handler(struct sbi_scratch *scratch,
     switch (funcid) {
     case SBI_EXT_HSS_REBOOT:
         IPI_MessageAlloc(&index);
-        IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, 0);
+        IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
         ret = 0; //ret = hss_reboot_req(scratch, args[0], args[1], args[2]);
         break;
 

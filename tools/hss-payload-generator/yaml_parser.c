@@ -53,7 +53,7 @@
  * 	hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
  * 	payloads:
  *   	test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
- *   	test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
+ *   	test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/amp-context-0.dtb}
  */
 
 /////////////////////////////////////////////////////////////////////////////
@@ -87,6 +87,7 @@ enum token
 	TOKEN_PAYLOAD_OWNER_HART,
 	TOKEN_PAYLOAD_SECONDARY_HART,
 	TOKEN_PAYLOAD_PRIV_MODE,
+	TOKEN_PAYLOAD_ANCILLIARY_DATA,
 	TOKEN_PRIV_MODE_M,
 	TOKEN_PRIV_MODE_H,
 	TOKEN_PRIV_MODE_S,
@@ -104,20 +105,21 @@ struct hss_config_token
 };
 
 const struct hss_config_token tokens[] = {
-	{ TOKEN_SET_NAME,		"set-name" },
-	{ TOKEN_HART_ENTRY_POINTS,	"hart-entry-points" },
-	{ TOKEN_PAYLOADS,		"payloads" },
-	{ TOKEN_PAYLOAD_EXEC_ADDR,	"exec-addr" },
-	{ TOKEN_PAYLOAD_OWNER_HART,	"owner-hart" },
-	{ TOKEN_PAYLOAD_SECONDARY_HART,	"secondary-hart" },
-	{ TOKEN_PAYLOAD_PRIV_MODE,	"priv-mode" },
-	{ TOKEN_PRIV_MODE_M,		"prv_m" },
-	{ TOKEN_PRIV_MODE_S,		"prv_s" },
-	{ TOKEN_PRIV_MODE_U,		"prv_u" },
-	{ TOKEN_HART_U54_1,		"u54_1" },
-	{ TOKEN_HART_U54_2,		"u54_2" },
-	{ TOKEN_HART_U54_3,		"u54_3" },
-	{ TOKEN_HART_U54_4,		"u54_4" }
+	{ TOKEN_SET_NAME,			"set-name" },
+	{ TOKEN_HART_ENTRY_POINTS,		"hart-entry-points" },
+	{ TOKEN_PAYLOADS,			"payloads" },
+	{ TOKEN_PAYLOAD_EXEC_ADDR,		"exec-addr" },
+	{ TOKEN_PAYLOAD_OWNER_HART,		"owner-hart" },
+	{ TOKEN_PAYLOAD_SECONDARY_HART,		"secondary-hart" },
+	{ TOKEN_PAYLOAD_PRIV_MODE,		"priv-mode" },
+	{ TOKEN_PAYLOAD_ANCILLIARY_DATA,	"ancilliary-data" },
+	{ TOKEN_PRIV_MODE_M,			"prv_m" },
+	{ TOKEN_PRIV_MODE_S,			"prv_s" },
+	{ TOKEN_PRIV_MODE_U,			"prv_u" },
+	{ TOKEN_HART_U54_1,			"u54_1" },
+	{ TOKEN_HART_U54_2,			"u54_2" },
+	{ TOKEN_HART_U54_3,			"u54_3" },
+	{ TOKEN_HART_U54_4,			"u54_4" }
 };
 
 enum ParserState
@@ -138,6 +140,7 @@ enum ParserState
 	STATE_NEW_PAYLOAD_OWNER_HART,
 	STATE_NEW_PAYLOAD_SECONDARY_HART,
 	STATE_NEW_PAYLOAD_PRIV_MODE,
+	STATE_NEW_PAYLOAD_ANCILLIARY_DATA,
 };
 
 const char * const stateNames[] =
@@ -158,6 +161,7 @@ const char * const stateNames[] =
 	[ STATE_NEW_PAYLOAD_OWNER_HART ] =	"STATE_NEW_PAYLOAD_OWNER_HART",
 	[ STATE_NEW_PAYLOAD_SECONDARY_HART ] =	"STATE_NEW_PAYLOAD_SECONDARY_HART",
 	[ STATE_NEW_PAYLOAD_PRIV_MODE ] =	"STATE_NEW_PAYLOAD_PRIV_MODE",
+	[ STATE_NEW_PAYLOAD_ANCILLIARY_DATA ] =	"STATE_NEW_PAYLOAD_ANCILLIARY_DATA",
 };
 
 struct StateHandler
@@ -193,6 +197,7 @@ static void Handle_STATE_NEW_PAYLOAD_EXEC_ADDR(yaml_event_t *pEvent)		__attribut
 static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)	__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)		__attribute__((nonnull));
+static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)	__attribute__((nonnull));
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -221,6 +226,7 @@ static struct StateHandler stateHandler[] = {
 	{ STATE_NEW_PAYLOAD_OWNER_HART,		Handle_STATE_NEW_PAYLOAD_OWNER_HART },
 	{ STATE_NEW_PAYLOAD_SECONDARY_HART,	Handle_STATE_NEW_PAYLOAD_SECONDARY_HART },
 	{ STATE_NEW_PAYLOAD_PRIV_MODE,		Handle_STATE_NEW_PAYLOAD_PRIV_MODE },
+	{ STATE_NEW_PAYLOAD_ANCILLIARY_DATA,	Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA },
 };
 
 static bool override_set_name_flag = false;
@@ -497,7 +503,7 @@ static void Handle_STATE_HART_ENTRY_POINTS_U54_1(yaml_event_t *pEvent)
 		entry_point = (uintptr_t)strtoul((char *)pEvent->data.scalar.value, NULL, 0);
 		bootImage.hart[0].entryPoint = entry_point;
 
-		debug_printf(1, "\tEntry Point U54_1 is 0x%p\n", (void *)entry_point);
+		debug_printf(1, "\tEntry Point U54_1 is %p\n", (void *)entry_point);
 		Do_State_Transition(STATE_HART_ENTRY_POINTS);
 		break;
 
@@ -526,7 +532,7 @@ static void Handle_STATE_HART_ENTRY_POINTS_U54_2(yaml_event_t *pEvent)
 		entry_point = (uintptr_t)strtoul((char *)pEvent->data.scalar.value, NULL, 0);
 		bootImage.hart[1].entryPoint = entry_point;
 
-		debug_printf(1, "\tEntry Point U54_2 is 0x%p\n", (void *)entry_point);
+		debug_printf(1, "\tEntry Point U54_2 is %p\n", (void *)entry_point);
 		Do_State_Transition(STATE_HART_ENTRY_POINTS);
 		break;
 
@@ -555,7 +561,7 @@ static void Handle_STATE_HART_ENTRY_POINTS_U54_3(yaml_event_t *pEvent)
 		entry_point = (uintptr_t)strtoul((char *)pEvent->data.scalar.value, NULL, 0);
 		bootImage.hart[2].entryPoint = entry_point;
 
-		debug_printf(1, "\tEntry Point U54_3 is 0x%p\n", (void *)entry_point);
+		debug_printf(1, "\tEntry Point U54_3 is %p\n", (void *)entry_point);
 		Do_State_Transition(STATE_HART_ENTRY_POINTS);
 		break;
 
@@ -584,7 +590,7 @@ static void Handle_STATE_HART_ENTRY_POINTS_U54_4(yaml_event_t *pEvent)
 		entry_point = (uintptr_t)strtoul((char *)pEvent->data.scalar.value, NULL, 0);
 		bootImage.hart[3].entryPoint = entry_point;
 
-		debug_printf(1, "\tEntry Point U54_4 is 0x%p\n", (void *)entry_point);
+		debug_printf(1, "\tEntry Point U54_4 is %p\n", (void *)entry_point);
 		Do_State_Transition(STATE_HART_ENTRY_POINTS);
 		break;
 
@@ -601,6 +607,8 @@ static size_t base_owner = 0u;
 static size_t base_secondary[3] = { 0u, 0u, 0u };
 static uint8_t base_priv_mode = PRV_ILLEGAL;
 static size_t secondary_idx = 0u;
+static bool ancilliary_data_present_flag = false;
+static char ancilliary_name[BOOT_IMAGE_MAX_NAME_LEN];
 
 static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 {
@@ -627,6 +635,7 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 		base_secondary[1] = 0u;
 		base_secondary[2] = 0u;
 		base_priv_mode = PRV_M;
+		ancilliary_data_present_flag = false;
 
 		Do_State_Transition(STATE_NEW_PAYLOAD);
 		break;
@@ -660,7 +669,11 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 		bool retVal = elf_parser(base_name, base_owner);
 		if (!retVal) {
 			// assume it is a binary file, so just embed the entire thing...
-			blob_handler(base_name, base_exec_addr, base_owner);
+			if (ancilliary_data_present_flag) {
+				blob_handler(base_name, base_exec_addr, base_owner, true, ancilliary_name);
+			} else {
+				blob_handler(base_name, base_exec_addr, base_owner, false, NULL);
+			}
 		}
 
 		payload_idx++;
@@ -686,6 +699,12 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 
 		case TOKEN_PAYLOAD_PRIV_MODE:
 			Do_State_Transition(STATE_NEW_PAYLOAD_PRIV_MODE);
+			break;
+
+		case TOKEN_PAYLOAD_ANCILLIARY_DATA:
+			debug_printf(1, "\tancilliary data found\n");
+			ancilliary_data_present_flag = true;
+			Do_State_Transition(STATE_NEW_PAYLOAD_ANCILLIARY_DATA);
 			break;
 
 		default:
@@ -882,6 +901,36 @@ static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)
 }
 
 
+static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)
+{
+        assert(pEvent);
+
+	//printf("%s(): event %d / token %s\n", __func__, pEvent->type, pEvent->data.scalar.value);
+        switch (pEvent->type) {
+        case YAML_MAPPING_START_EVENT:
+                break;
+
+        case YAML_MAPPING_END_EVENT:
+                Do_State_Transition(STATE_MAPPING);
+                break;
+
+        case YAML_SCALAR_EVENT:
+		debug_printf(0, "Parsing ancilliary payload >>%s<<\n", pEvent->data.scalar.value);
+		strncpy(ancilliary_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN-2);
+		ancilliary_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
+
+		Do_State_Transition(STATE_NEW_PAYLOAD);
+                break;
+
+        default:
+                report_illegal_event(stateNames[parser_state], pEvent);
+                exit(EXIT_FAILURE);
+                break;
+        }
+}
+
+
+
 /////////////////////////////////////////////////////////////////////////////
 
 void yaml_parser(char const * const input_filename)
@@ -897,6 +946,7 @@ void yaml_parser(char const * const input_filename)
 
 	FILE *configFileIn = fopen((char *)input_filename, "r");
 	if (!configFileIn) {
+		fprintf(stderr, "%s(): File: %s -", __func__, input_filename);
 		perror("fopen()");
 		exit(EXIT_FAILURE);
 	}

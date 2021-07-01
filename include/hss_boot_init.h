@@ -33,20 +33,13 @@
 extern "C" {
 #endif
 
-#if defined(CONFIG_SERVICE_BOOT)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 bool HSS_BootInit(void);
-#  if defined(CONFIG_SERVICE_QSPI)
+
 void HSS_BootSelectQSPI(void);
-#  endif
-#  if defined(CONFIG_SERVICE_MMC)
 void HSS_BootSelectMMC(void);
-#  endif
-#  if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 void HSS_BootSelectPayload(void);
-#  endif
-#  if defined(CONFIG_SERVICE_SPI)
 void HSS_BootSelectSPI(void);
-#  endif
 #endif
 
 

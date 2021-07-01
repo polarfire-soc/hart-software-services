@@ -140,10 +140,11 @@ static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
     }
 }
 
-enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr)
+enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr)
 {
     (void)transaction_id;
     (void)immediate_arg;
+    (void)p_ancilliary_buffer_in_ddr;
 
     // scatter gather DMA IPI received from one of the U54s...
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (sgdma_service.state is %u)" CRLF, sgdma_service.state);

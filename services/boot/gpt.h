@@ -32,6 +32,8 @@
 extern "C" {
 #endif
 
+#define GPT_LBA_SIZE 512u
+
 typedef struct HSS_GPT_GUID_s {
     uint32_t data1;
     uint16_t data2;
@@ -60,16 +62,30 @@ typedef struct HSS_GPT_Header_s {
      uint32_t partitionEntriesArrayCrc32;
 } HSS_GPT_Header_t;
 
-#define GPT_LBA_SIZE 512u
+typedef struct HSS_GPT_s {
+    union {
+        HSS_GPT_Header_t header;
+        uint8_t buffer[GPT_LBA_SIZE] __attribute__((aligned(8)));
+    } h;
+    // For now, GPT needs a 2-sector buffer (~1KB) - for partition entity
+    uint8_t lbaBuffer[2 * GPT_LBA_SIZE] __attribute__((aligned(8)));
+    size_t bootPartitionIndex;
+
+    int headerValid:1;
+    int partitionEntriesValid:1;
+    int bootPartitionIndexValid:1;
+} HSS_GPT_t;
+
 
 #define GPT_EXPECTED_SIGNATURE "EFI PART"
 #define GPT_EXPECTED_REVISION 0x00010000u
 
 void GPT_RegisterReadFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, size_t byteCount));
 
-bool GPT_ReadHeader(HSS_GPT_Header_t *pGptHeader);
-void GPT_DumpHeaderInfo(HSS_GPT_Header_t *pGptHeader);
-bool GPT_ValidateHeader(HSS_GPT_Header_t *pGptHeader);
+void GPT_Init(HSS_GPT_t *pGpt);
+bool GPT_ReadHeader(HSS_GPT_t *pGpt);
+void GPT_DumpHeaderInfo(HSS_GPT_t *pGpt);
+bool GPT_ValidateHeader(HSS_GPT_t *pGpt);
 
 typedef struct HSS_GPT_PartitionEntry_s {
     HSS_GPT_GUID_t partitionTypeGUID;
@@ -84,20 +100,32 @@ typedef struct HSS_GPT_PartitionEntry_s {
     };
 } HSS_GPT_PartitionEntry_t;
 
-bool GPT_ValidatePartitionEntries(HSS_GPT_Header_t *pGptHeader, uint8_t *pLBABuffer);
+bool GPT_ValidatePartitionEntries(HSS_GPT_t *pGpt);
 
-void GPT_DumpPartitionInfo(HSS_GPT_Header_t const * const pGptHeader,
+void GPT_DumpPartitionInfo(HSS_GPT_t const * const pGpt,
     HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry);
 
-bool GPT_FindPartitionByTypeId(HSS_GPT_Header_t const * const pGptHeader,
-    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
-    size_t * const pFirstLBA, size_t * const pLastLBA);
+bool GPT_PartitionIdToLBAOffset(HSS_GPT_t const * const pGpt,
+    size_t partitionIndex, size_t * const pFirstLBA);
 
-bool GPT_FindPartitionByUniqueId(HSS_GPT_Header_t const * const pGptHeader,
-    HSS_GPT_GUID_t const * const pGUID, uint8_t *pLBABuffer,
-    size_t * const pFirstLBA, size_t * const pLastLBA);
+bool GPT_FindPartitionByTypeId(HSS_GPT_t const * const pGpt,
+    HSS_GPT_GUID_t const * const pGUID, size_t * const pPartitionIndex,
+    HSS_GPT_PartitionEntry_t const ** ppGptPartitionEntryOut);
+
+bool GPT_FindPartitionByUniqueId(HSS_GPT_t const * const pGpt,
+    HSS_GPT_GUID_t const * const pGUID, size_t * const pPartitionIndex,
+    HSS_GPT_PartitionEntry_t const ** ppGptPartitionEntryOut);
 
 void GPT_RegisterReadBlockFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, size_t byteCount));
+
+bool GPT_FindBootSectorIndex(HSS_GPT_t *pGpt, size_t *srcIndex,
+    HSS_GPT_PartitionEntry_t const ** ppGptPartitionEntryOut);
+
+void GPT_SetBootPartitionIndex(HSS_GPT_t *pGpt, size_t index);
+bool GPT_GetBootPartitionIndex(HSS_GPT_t *pGpt, size_t *pIndex);
+bool GPT_ReadPartitionEntryByIndex(HSS_GPT_t const * const pGpt,
+    size_t const partitionIndex, HSS_GPT_PartitionEntry_t const ** ppGptPartitionEntryOut);
+
 #ifdef __cplusplus
 }
 #endif

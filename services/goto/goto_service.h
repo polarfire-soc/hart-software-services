@@ -42,7 +42,7 @@ extern "C" {
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 
-enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr);
+enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);
 
 #ifdef __cplusplus
 }

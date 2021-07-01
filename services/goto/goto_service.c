@@ -60,7 +60,17 @@ static const struct StateDesc goto_state_descs[] = {
  * \brief GOTO Driver State Machine
  */
 struct StateMachine goto_service = {
-    (stateType_t)GOTO_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)GOTO_NUM_STATES, (const char *)"goto_service", 0u, 0u, 0u, goto_state_descs, false, 0u, NULL
+    .state             = (stateType_t)GOTO_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)GOTO_NUM_STATES,
+    .pMachineName      = (const char *)"goto_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = goto_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL,
 };
 
 
@@ -83,9 +93,10 @@ static void goto_idle_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer)
+enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer, void *p_ancilliary_buffer_in_ddr)
 {
     enum IPIStatusCode result = IPI_FAIL;
+    (void)p_ancilliary_buffer_in_ddr;
 
     // goto IPI received from E51
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (goto_service.state is %u)" CRLF, goto_service.state);
@@ -101,7 +112,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 #if __riscv //TODO
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Source is %d, transaction_id is %u" CRLF, source,
         //    transaction_id);
-        IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL);
+        IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
         // first find queue

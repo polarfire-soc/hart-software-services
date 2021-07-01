@@ -46,7 +46,18 @@ static const struct StateDesc flashfreeze_state_descs[] = {
  * \brief FLASHFREEZE Driver State Machine
  */
 struct StateMachine flashfreeze_service = {
-    (stateType_t)FLASHFREEZE_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)FLASHFREEZE_NUM_STATES, (const char *)"flashfreeze_service", 0u, 0u, 0u, flashfreeze_state_descs, false, 0u, NULL
+    .state             = (stateType_t)FLASHFREEZEINITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)FLASHFREEZE_NUM_STATES,
+    .pMachineName      = (const char *)"flashfreeze_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = flashfreeze_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL,
+};
 };
 
 // --------------------------------------------------------------------------------------------------

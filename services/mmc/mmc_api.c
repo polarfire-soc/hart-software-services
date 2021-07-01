@@ -27,6 +27,7 @@
 #include "encoding.h"
 #include "mss_mmc.h"
 #include "hal/hw_macros.h"
+#include "hss_memcpy_via_pdma.h"
 
 /*
  * MMC doesn't need a "service" to run every super-loop, but it does need to be
@@ -101,7 +102,7 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
     }
 
     if (retval != MSS_MMC_INIT_SUCCESS) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, retval);
+        //mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, retval);
     } else {
         result = true;
     }
@@ -225,10 +226,9 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 
     uint32_t src_sector_num = (uint32_t)(srcOffset / HSS_MMC_SECTOR_SIZE);
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
+    uint32_t sectorByteCount = byteCount - (byteCount % HSS_MMC_SECTOR_SIZE);
 
     uint8_t mmc_main_plic_IRQHandler(void);
-
-    uint32_t sectorByteCount = byteCount - (byteCount % HSS_MMC_SECTOR_SIZE);
 
     do {
         result = mmc_main_plic_IRQHandler();
@@ -238,7 +238,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     //    "(%lu bytes remaining)" CRLF, src_sector_num, pCDest, sectorByteCount);
     result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)pCDest, sectorByteCount);
 
-    while (result== MSS_MMC_TRANSFER_IN_PROGRESS) {
+    while (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
         result = mmc_main_plic_IRQHandler();
     }
 
@@ -247,11 +247,16 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     if ((result == MSS_MMC_TRANSFER_SUCCESS) && byteCount) {
         assert(byteCount < HSS_MMC_SECTOR_SIZE);
 
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)" CRLF);
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, 0x%p) "
-        //    "(%lu bytes remaining)" CRLF, src_sector_num, runtBuffer, byteCount);
+        src_sector_num += (uint32_t)(sectorByteCount / HSS_MMC_SECTOR_SIZE);
 
-        result = MSS_MMC_single_block_read(src_sector_num, (uint32_t *)runtBuffer);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)" CRLF);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, %p) "
+        //    "(%lu bytes remaining)" CRLF, src_sector_num, runtBuffer, byteCount);
+        result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)runtBuffer, HSS_MMC_SECTOR_SIZE);
+
+        while (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
+            result = mmc_main_plic_IRQHandler();
+        }
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
@@ -259,7 +264,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         }
 
         if (result == MSS_MMC_TRANSFER_SUCCESS) {
-            memcpy(pCDest, runtBuffer, byteCount);
+            memcpy_via_pdma(pCDest + sectorByteCount, runtBuffer, byteCount);
         }
     }
 

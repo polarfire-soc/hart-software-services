@@ -54,7 +54,17 @@ static const struct StateDesc ipiPoll_state_descs[] = {
  *
  */
 struct StateMachine ipi_poll_service = {
-    (stateType_t)IPI_POLL_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)IPI_POLL_NUM_STATES, (const char *)"ipi_poll_service", 0u, 0u, 0u, ipiPoll_state_descs, false, 0u, NULL
+    .state             = (stateType_t)IPI_POLL_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)IPI_POLL_NUM_STATES,
+    .pMachineName      = (const char *)"ipi_poll_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = ipiPoll_state_descs,
+    .debugFlag         = true,
+    .priority          = 0u,
+    .pInstanceData     = NULL,
 };
 
 // ----------------------------------------------------------------------------------------------------------------------

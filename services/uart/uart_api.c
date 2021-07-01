@@ -21,12 +21,13 @@
 
 #include "uart_service.h"
 
-enum IPIStatusCode HSS_UartTx_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr)
+enum IPIStatusCode HSS_UartTx_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr)
 {
     (void)transaction_id;
     (void)source;
     (void)immediate_arg;
     (void)p_extended_buffer_in_ddr;
+    (void)p_ancilliary_buffer_in_ddr;
 
     // IPI received from one of the U54s...
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
@@ -34,12 +35,13 @@ enum IPIStatusCode HSS_UartTx_IPIHandler(TxId_t transaction_id, enum HSSHartId s
     return IPI_SUCCESS;
 }
 
-enum IPIStatusCode HSS_UartPollRx_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr)
+enum IPIStatusCode HSS_UartPollRx_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr)
 {
     (void)transaction_id;
     (void)source;
     (void)immediate_arg;
     (void)p_extended_buffer_in_ddr;
+    (void)p_ancilliary_buffer_in_ddr;
 
     // IPI received from one of the U54s...
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);

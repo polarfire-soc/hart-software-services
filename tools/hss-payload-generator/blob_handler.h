@@ -35,6 +35,6 @@
 #include "hss_types.h"
 
 void blob_handler_init(void);
-bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner);
+bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner, bool is_ancilliary_data, char const * const ancilliary_filename);
 
 #endif
