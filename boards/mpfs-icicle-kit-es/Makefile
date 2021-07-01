@@ -34,12 +34,11 @@ $(info mpfs-icicle-kit-es selected)
 
 BINDIR=Default
 TARGET-l2lim=hss-l2lim.elf
-TARGET-envm=hss-envm.elf
-RISCV_TARGET=$(TARGET-l2lim) $(TARGET-envm)
+TARGET-envm-wrapper=hss-envm-wrapper.elf
+RISCV_TARGET=$(TARGET-l2lim) $(TARGET-envm-wrapper)
 TARGET:=$(RISCV_TARGET)
 
 LINKER_SCRIPT-l2lim=boards/${BOARD}/hss-l2lim.ld
-LINKER_SCRIPT-envm=boards/${BOARD}/hss-envm.ld
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
@@ -86,11 +85,6 @@ baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BOARD_DIR)/hss-l2lim.ld: $(BOARD_DIR)/hss-l2lim.lds config.h
 	@$(ECHO) " CPP       $@";
 	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
-
-$(BOARD_DIR)/hss-envm.ld: $(BOARD_DIR)/hss-envm.lds config.h
-	@$(ECHO) " CPP       $@";
-	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
-
 
 ################################################################################################
 
@@ -143,3 +137,4 @@ $(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
 
+include envm-wrapper/Makefile

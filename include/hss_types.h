@@ -73,6 +73,8 @@ enum HSSHartId {
 #define MAX_NUM_HARTS ((unsigned)HSS_HART_NUM_PEERS)
 #define mHSS_BITMASK_ALL_U54 (0x1Eu)
 
+#define BOOT_ANCILLIARY_DATA_FLAG (0x80u)
+
 typedef union HSSHartBitmask {
     unsigned int uint;
     struct {
@@ -152,11 +154,14 @@ struct HSS_CompressedImage {
     size_t headerLength;
     uint32_t headerCrc;
     uint32_t compressedCrc;
+    uint32_t originalCrc;
     size_t compressedImageLen;
     size_t originalImageLen;
     uint8_t hash[32];
     uint8_t ecdsaSig[32];
 };
+
+#define mHSS_COMPRESSED_VERSION_DEFLATE  1u
 
 /*
  * We'll use the same trick as used by Linux for its Kconfig options...

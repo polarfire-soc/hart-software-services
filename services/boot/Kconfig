@@ -19,13 +19,6 @@ config SERVICE_BOOT_SETS_SUPPORT
 
                 This setting is is enabled by default.
 
-config SERVICE_BOOT_DDR_TARGET_ADDR
-	hex "Target Base address for EMMC/QSPI/Decompressor"
-	default 0xA0000000
-	depends on SERVICE_BOOT 
-        help
-                This feature specifies a scratch address for EMMC/QSPI decompression
-
 config SERVICE_BOOT_SPI_FLASH_OFFSET
         hex "Copy payload from SPI FLASH at offset"
         default  0x400
@@ -51,11 +44,9 @@ config SERVICE_BOOT_CUSTOM_FLOW
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for BOOT to DDR copy"
 	default 0xA0000000
-	depends on SERVICE_QSPI_COPY_TO_DDR
+	depends on SERVICE_BOOT
 	help
-		If CONFIG_SERVICE_QSPI_COPY_TO_DDR is enabled, specify the
-                target base address for the boot image from QSPI to be 
-                cached in main system memory.
+                This feature specifies a scratch address for EMMC/QSPI decompression
 
 config SERVICE_BOOT_MMC_USE_GPT
         bool "Use GPT with MMC"

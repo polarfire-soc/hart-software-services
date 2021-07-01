@@ -143,12 +143,3 @@ $(BINDIR)/$(TARGET-l2lim): $(TARGET-l2lim)
 $(TARGET-ddr): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-ddr) $(LIBS)
 	$(call main-build-target,ddr)
 
-BOOTMODE?=1
-PACKAGE?=FCVG484
-DIE?=MPFS250T_ES
-
-program: Default/hss-envm.elf
-	-$(CMD_PREFIX)$(RM) -r $(BINDIR)/bootmode1
-	$(CMD_PREFIX)[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
-	$(CMD_PREFIX)[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
-	$(CMD_PREFIX)$(SC_INSTALL_DIR)/eclipse/jre/bin/java -jar $(SC_INSTALL_DIR)/extras/mpfs/mpfsBootmodeProgrammer.jar --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE)

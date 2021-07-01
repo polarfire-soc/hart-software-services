@@ -75,7 +75,7 @@ profile: clean $(TARGET)
 
 .PHONY: clean cppcheck splint cscope cscope.files
 
-clean: 
+clean: envm-wrapper_clean
 	$(CMD_PREFIX)$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
 		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) $(OBJS:.o=.su) \
                 $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) $(EXTRA_OBJS:.o=.su) \
