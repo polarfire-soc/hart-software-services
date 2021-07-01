@@ -30,7 +30,16 @@
 #
 # Confusingly, the MPFS-ICICLE-KIT-ES is platform MPFS
 #
-$(info MPFS-ICICLE-KIT-ES selected)
+$(info mpfs-icicle-kit-es selected)
+
+BINDIR=Default
+TARGET-l2lim=hss-l2lim.elf
+TARGET-envm=hss-envm.elf
+RISCV_TARGET=$(TARGET-l2lim) $(TARGET-envm)
+TARGET:=$(RISCV_TARGET)
+
+LINKER_SCRIPT-l2lim=boards/${BOARD}/hss-l2lim.ld
+LINKER_SCRIPT-envm=boards/${BOARD}/hss-envm.ld
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
@@ -47,20 +56,17 @@ EXTRA_SRCS-y += \
         $(BOARD_DIR)/uart_helper.c \
         $(BOARD_DIR)/hss_board_init.c \
 
-$(BOARD_DIR)/hss_uart_init.o: $(BOARD_DIR)/hss_uart_init.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
+$(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += $(BOARD_DIR)/payload.o
 $(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 	$(LD) -r -b binary $< -o $@
 
 ################################################################################################
-
 #
 # Extra hardware dependency rules for YMODEM
 #
+
 INCLUDES += \
 	-Ibaremetal/ \
 	-Ibaremetal/drivers/winbond_w25n01gv \
@@ -68,20 +74,22 @@ INCLUDES += \
 EXTRA_SRCS-$(CONFIG_SERVICE_YMODEM) += \
 	baremetal/drivers/mss_envm/mss_envm.c
 
-EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
-	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c \
+baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 
-baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+################################################################################################
+#
+# Linker Scripts
+#
 
-baremetal/drivers/micron_mt25q/micron_mt25q.o: baremetal/drivers/micron_mt25q/micron_mt25q.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+$(BOARD_DIR)/hss-l2lim.ld: $(BOARD_DIR)/hss-l2lim.lds config.h
+	@$(ECHO) " CPP       $@";
+	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
 
-baremetal/drivers/mss_envm/mss_envm.o: baremetal/drivers/mss_envm/mss_envm.c config.h
-	@$(ECHO) " CC        $@";
-	@$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
+$(BOARD_DIR)/hss-envm.ld: $(BOARD_DIR)/hss-envm.lds config.h
+	@$(ECHO) " CPP       $@";
+	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
 
 
 ################################################################################################
@@ -128,11 +136,10 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/soc_config/memory_map/hw_pmp_hart4.h \
 	$(BOARD_DIR)/soc_config/sgmii/hw_sgmii_tip.h \
 
-#$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_config
-#$(BOARD_DIR)/soc_config: $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml
 config.h: $(SOC_CONFIG_FILES)
 $(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml
 	@$(ECHO) " CFGGEN    $<";
-	@$(CMD_PREFIX)python3 tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
+	$(CMD_PREFIX)$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
+

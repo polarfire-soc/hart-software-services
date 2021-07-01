@@ -24,23 +24,10 @@
 # IN THE SOFTWARE.
 #
 #
-# Services
+# RAM Scrubbing Service
 
-include services/boot/Makefile
-include services/crypto/Makefile
-include services/ddr/Makefile
-include services/flashfreeze/Makefile
-include services/goto/Makefile
-include services/ipi_poll/Makefile
-include services/mmc/Makefile
-include services/opensbi/Makefile
-include services/powermode/Makefile
-include services/qspi/Makefile
-include services/scrub/Makefile
-include services/sgdma/Makefile
-include services/spi/Makefile
-include services/tinycli/Makefile
-include services/uart/Makefile
-include services/usbdmsc/Makefile
-include services/wdog/Makefile
-include services/ymodem/Makefile
+SRCS-$(CONFIG_SERVICE_SCRUB) += \
+	services/scrub/scrub_service.c \
+
+INCLUDES +=\
+	-I./services/scrub \

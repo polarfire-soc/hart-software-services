@@ -21,7 +21,7 @@
 /**
  * Return HART ID of the caller.
  */
-unsigned int sbi_current_hartid()
+unsigned int sbi_current_hartid(void)
 {
 	return (u32)csr_read(CSR_MHARTID);
 }

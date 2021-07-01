@@ -45,7 +45,7 @@ all: bin2chunks dump_header
 INCLUDES=\
 	-I. \
 	-I../../include \
-	-I../../ssmb/ipi/ \
+	-I../../modules/ssmb/ipi/ \
 	-I../../ \
 	-I../../thirdparty/opensbi/include \
 	

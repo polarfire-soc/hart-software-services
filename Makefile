@@ -27,133 +27,63 @@
 # Toplevel HSS Makefile
 #
 
-SHELL=/bin/bash
+SHELL=/bin/sh
+PYTHON?=python3
 
 #
-# To build the HSS under SoftConsole on Windows, we need to spawn the build out to
-# MSYS2. If MSYS2, we need to ensure that the path is correctly setup to find
-# genconfig.exe
+# To build the HSS under SoftConsole on Windows, we need to use SoftConsole-provided
+# tools, and potentially to modify paths
 #
-# Therefore, we need to determine whether we are on Linux, or a Unix-ish environment
-# such as MSYS2 or Cygwin.
-#
-SYSTEM:=$(shell uname -s)
-ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
-  # Nothing special needed
-  HOST_LINUX=true
-else ifneq (, $(findstring MSYS2_NT, $(SYSTEM)))  # MSYS2-specific mods
-  #
-  # Adjust the path to ensure that we can run kconfiglib (genconfig) from SoftConsole
-  PATH:=/bin:/usr/bin:$(PATH)
-  TOOLPATH=$(shell /usr/bin/cygpath "${SC_INSTALL_DIR}/riscv-unknown-elf-gcc/bin")
-  PATH:=$(TOOLPATH):$(PATH)
-  $(info MSYS2 detected, PATH is "$(PATH)")
-  HOST_MSYS_NT=true
-else ifneq (, $(findstring CYGWIN, $(SYSTEM)))   # Cygwin-specific mods
-  #
-  # Currently OPENSBI doesn't build on Cygwin without modifications to its Makefile...
-  #
-  ifdef CONFIG_OPENSBI
-    $(warning OPENSBI build may fail on Cygwin due to issues with file paths)
-  endif
-  HOST_CYGWIN=true
+
+.ONESHELL:
+
+ifeq ($(OS), Windows_NT)
+  TOOLPATH:=${SC_INSTALL_DIR}riscv-unknown-elf-gcc\bin
+  export PATH:="$(TOOLPATH);$(PATH)"
+  $(info Windows detected, Adding "$(TOOLPATH)" to PATH)
+  HOST_WINDOWS:=true
 else
+  SYSTEM:=$(shell uname -s)
+  ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
+    # Nothing special needed
+    $(info Linux detected)
+    HOST_LINUX:=true
+  else
+    $(error Unsupported build platform $(SYSTEM))
+  endif
 endif
 
-all: ${TARGET}
-
+include application/Makefile
 include .config
-
-RISCV_TARGET:=hss.elf
-TARGET:=$(RISCV_TARGET)
 
 ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
   include boards/${BOARD}/Makefile
 else
   ifndef BOARD
-    $(warning BOARD not specified) # default to icicle if nothing found
     BOARD:=mpfs-icicle-kit-es
+    $(info BOARD not specified, defaulting to ${BOARD}) # default to icicle if nothing found
     include boards/${BOARD}/Makefile
   else
     $(error Board >>${BOARD}<< not found)
   endif
 endif
 
-ifneq ("$(wildcard boards/${BOARD}/hss.ld)", "")
-  LINKER_SCRIPT=boards/${BOARD}/hss.ld
-else
-  $(error Linker Script >>${LINKER_SCRIPT}<< not found)
-endif
-
-RISCV_TARGET=hss.elf
-BINDIR=Default
-
-SRCS-y= \
-    hss_state_machine.c \
-    hss_clock.c \
-    hss_registry.c \
-
-INCLUDES +=\
-    -I./include \
-    -I.
-
-ASM_SRCS= \
-    crt.S \
-
-
-EXTRA_SRCS-y += \
-    hss_init.c \
-    hss_main.c
-
-EXTRA_OBJS += $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(EXTRA_OBJS-y)
 
 MCMODEL=-mcmodel=medany
 
-include rules.mk
-include targets.mk
+include application/rules.mk
+include application/targets.mk
 include init/Makefile
-include misc/Makefile
 include baremetal/Makefile
-include ssmb/Makefile
 include services/Makefile
-include debug/Makefile
-include compression/Makefile
+include modules/Makefile
 
-LIBS = $(OPENSBI_LIBS)
-
-EXTRA_SRCS-y += misc/stack_guard.c
-
-
-ifdef CONFIG_OPENSBI
-  OPENSBI_LIBS = thirdparty/opensbi/build/lib/libsbi.a
-  $(OPENSBI_LIBS):
-	+$(CMD_PREFIX)$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(PLATFORM_RISCV_ABI) PLATFORM_RISCV_ISA=$(PLATFORM_RISCV_ISA) -r --no-print-directory -C thirdparty/opensbi V=$(V)
-
-  .PHONY: $(OPENSBI_LIBS)
-else
-  OPENSBI_LIBS =
-endif
+LIBS =
 
 #$(info $$INCLUDES is [${INCLUDES}])
 
-hss_main.o: hss_main.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-hss_init.o: hss_init.c include/tool_versions.h config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-hss_state_machine.o: hss_state_machine.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
-tools/bin2chunks/bootImage.o: tools/bin2chunks/bootImage.c
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
 ifdef CONFIG_CC_USE_MAKEDEP
-  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d)
+  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) $(ASM_SRCS-y:.S=.d)
   .PHONY: dep
   dep: $(DEPENDENCIES)
 
@@ -168,22 +98,56 @@ include/tool_versions.h:
 DEPENDENCIES+=include/tool_versions.h
 endif
 
-$(RISCV_TARGET): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT) $(LIBS)
+################################################################################################
+#
+# Main Build Targets
+#
+
+OBJS-envm = $(OBJS)
+EXTRA_OBJS-envm = $(EXTRA_OBJS)
+
+OBJS-l2lim = $(OBJS)
+EXTRA_OBJS-l2lim = $(EXTRA_OBJS)
+
+define main-build-target
 	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT) $(CFLAGS_GCCEXT) $(OPT-y) -static -nostdlib -nostartfiles -nodefaultlibs -Wl,--build-id -Wl,-Map=$(BINDIR)/output.map -Wl,--gc-sections -o $(BINDIR)/$@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT-$(1)) $(CFLAGS_GCCEXT) $(OPT-y) \
+		 -static -nostdlib -nostartfiles -nodefaultlibs \
+		 -Wl,--build-id -Wl,-Map=$(BINDIR)/output-$(1).map -Wl,--gc-sections \
+		 -o $(BINDIR)/$@ $(OBJS-$(1)) $(EXTRA_OBJS-$(1)) $(LIBS)
 	@$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(CMD_PREFIX)$(NM) -n $(BINDIR)/$@ > $(BINDIR)/`basename $@ .elf`.sym
+endef
+
+#
+# Build Targets
+#
+
+$(TARGET-envm): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-envm) $(LIBS)
+	$(call main-build-target,envm)
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(CMD_PREFIX)$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
 	$(CMD_PREFIX)$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
-	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$@ 2>/dev/null
+	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$(TARGET-envm) 2>/dev/null
+
+$(TARGET-l2lim): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2lim) $(LIBS)
+	$(call main-build-target,l2lim)
+	@$(ECHO) " BIN       `basename $@ .elf`.bin"
+	$(CMD_PREFIX)$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
+	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$(TARGET-l2lim) 2>/dev/null
+
+$(BINDIR)/$(TARGET-envm): $(TARGET-envm)
+$(BINDIR)/$(TARGET-l2lim): $(TARGET-l2lim)
+
+$(TARGET-ddr): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-ddr) $(LIBS)
+	$(call main-build-target,ddr)
 
 BOOTMODE?=1
 PACKAGE?=FCVG484
 DIE?=MPFS250T_ES
 
-program: Default/hss.elf
+program: Default/hss-envm.elf
 	-$(CMD_PREFIX)$(RM) -r $(BINDIR)/bootmode1
 	$(CMD_PREFIX)[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
 	$(CMD_PREFIX)[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )

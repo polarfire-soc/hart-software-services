@@ -1,8 +1,8 @@
-#ifndef HSS_U54_HANDLE_IPI_H
-#define HSS_U54_HANDLE_IPI_H
+#ifndef HSS_SCRUB_SERVICE_H
+#define HSS_SCRUB_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2021 Microchip Corporation.
+ * Copyright 2019-2020 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,20 +25,26 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - U54 IPI Handler toplevel
+ * Hart Software Services - RAM Scrubber Service API
  *
+ */
+
+
+/*!
+ * \file RAM Scrubber API
+ * \brief RAM Scrubber State Machine API function declarations
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*!
- * \file U54 Handle IPI
- * \brief U54 Handle IPI
- */
+#include "hss_state_machine.h"
+#include "hss_debug.h"
 
-void HSS_U54_Banner(void);
+#include "scrub_types.h"
+
+extern struct StateMachine scrub_service;
 
 #ifdef __cplusplus
 }

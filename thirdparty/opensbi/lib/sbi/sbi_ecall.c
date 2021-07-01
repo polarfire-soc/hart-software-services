@@ -94,7 +94,7 @@ int sbi_ecall_handler(u32 hartid, ulong mcause, struct sbi_trap_regs *regs,
 	if (ext && ext->handle) {
 		ret = ext->handle(scratch, extension_id, func_id,
 				  args, &out_val, &trap);
-		if (extension_id >= SBI_EXT_0_1_SET_TIMER &&
+		if (/*extension_id >= SBI_EXT_0_1_SET_TIMER && */
 		    extension_id <= SBI_EXT_0_1_SHUTDOWN)
 			is_0_1_spec = 1;
 	} else {

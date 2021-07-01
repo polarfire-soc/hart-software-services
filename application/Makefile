@@ -24,23 +24,38 @@
 # IN THE SOFTWARE.
 #
 #
-# Services
+#
 
-include services/boot/Makefile
-include services/crypto/Makefile
-include services/ddr/Makefile
-include services/flashfreeze/Makefile
-include services/goto/Makefile
-include services/ipi_poll/Makefile
-include services/mmc/Makefile
-include services/opensbi/Makefile
-include services/powermode/Makefile
-include services/qspi/Makefile
-include services/scrub/Makefile
-include services/sgdma/Makefile
-include services/spi/Makefile
-include services/tinycli/Makefile
-include services/uart/Makefile
-include services/usbdmsc/Makefile
-include services/wdog/Makefile
-include services/ymodem/Makefile
+all: $(TARGETS) config.h
+include .config
+
+SRCS-y += \
+    application/hart0/hss_state_machine.c \
+    application/hart0/hss_clock.c \
+    application/hart0/hss_registry.c \
+
+INCLUDES +=\
+    -I./include \
+    -I.
+
+ASM_SRCS += \
+    application/crt.S \
+
+
+EXTRA_SRCS-y += \
+    application/hart0/hss_init.c \
+    application/hart0/hss_main.c
+
+application/hart0/hss_main.o: CFLAGS=$(CFLAGS_GCCEXT)
+application/hart0/hss_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+application/hart0/hss_init.o: include/tool_versions.h
+application/hart0/hss_state_machine.o: CFLAGS=$(CFLAGS_GCCEXT)
+tools/bin2chunks/bootImage.o: CFLAGS=$(CFLAGS_GCCEXT)
+
+#
+# U54 Functionality
+
+EXTRA_SRCS-y += \
+        application/hart1-4/u54_handle_ipi.c \
+
+application/hart1-4/u54_handle_ipi.o: CFLAGS=$(CFLAGS_GCCEXT)

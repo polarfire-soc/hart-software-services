@@ -20,7 +20,7 @@
 
 #include "hss_init.h"
 #include "hss_state_machine.h"
-#include "ssmb/ipi/ssmb_ipi.h"
+#include "ssmb_ipi.h"
 #include "hss_registry.h"
 
 /******************************************************************************************************/
