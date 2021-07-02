@@ -509,9 +509,9 @@ config BASIC_NO_PROMPT
 	bool
 	help
 	  blah blah
-	  
+
 	    blah blah blah
-	  
+
 	   blah
 """)
 

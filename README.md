@@ -1,6 +1,6 @@
 # Hart Software Services
 
-This is the Hardware Software Services code. 
+This is the Hart Software Services code. 
 
 On PolarFire SoC, this is comprised of two portions:
 
@@ -15,6 +15,7 @@ On PolarFire SoC, this is comprised of two portions:
 Source code is found under the `hart-software-services` folder.
      
     hart-software-services
+    ├── application (main function, crt startup, init function)
     ├── baremetal
     │   ├── drivers (local modules)
     │   └── polarfire-soc-bare-metal-library (subtree)
@@ -26,7 +27,7 @@ Source code is found under the `hart-software-services` folder.
     ├── debug (helper routines for function profiling)
     ├── include
     ├── init (system initialization)
-    ├── misc
+    ├── misc (miscellaneous routines)
     ├── services (software service state machines)
     │   ├── boot
     │   ├── crypto
@@ -38,6 +39,7 @@ Source code is found under the `hart-software-services` folder.
     │   ├── opensbi
     │   ├── powermode
     │   ├── qspi
+    │   ├── scrub
     │   ├── sgdma
     │   ├── spi
     │   ├── tinycli
@@ -56,12 +58,10 @@ Source code is found under the `hart-software-services` folder.
 
 The build is configured using the Kconfig system of selecting build options. 
 
-Due to potential licensing issues, the Hart Software Services do not include Kconfig parsing infrastructure directly. Instead, install [Kconfiglib](https://github.com/ulfalizer/Kconfiglib) - available at [https://github.com/ulfalizer/Kconfiglib](https://github.com/ulfalizer/Kconfiglib).
+The Hart Software Services includes the Kconfig parsing infrastructure directly as a third-party tool invoked by the build system.
 
-Both Linux and Windows are supported by Kconfiglib.  Kconfiglib is easily installed with pip from the Linux command line:
+Both Linux and Windows are supported by Kconfiglib.  
  
-    $ pip install kconfiglib
-
 The HSS supports a number of board targets - currently including PolarFireSoC-based boards (mpfs-icicle-kit-es), and SiFive FU540-based boards (lc-mpfs and mpfs).
 
 Once Kconfiglib is installed,  you can enter an interactive selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
@@ -72,11 +72,15 @@ Alternatively, copy the default config for your board - e.g.,
 
     $ cp boards/mpfs-icicle-kit-es/def_config .config
 
+or just use the defconfig target to do the copy:
+
+    $ make BOARD=mpfs-icicle-kit-es defconfig 
+
 Once configured, to build, run `make`:
 
     $ make BOARD=mpfs-icicle-kit-es
 
-In the `Default` subdirectory, the standard build will create `hss.elf` and various binary formats (`hss.hex` and `hss.bin`).  Also generated are `output.map`, which is a mapfile for the build, and  `hss.sym`, which is a list of symbols.  (The name `Default` is required by SoftConsole for programming purposes.)
+In the `Default` subdirectory, the standard build will create `hss-envm.elf` and various binary formats (`hss-envm.hex` and `hss-envm.bin`).  Also generated are `output-envm.map`, which is a mapfile for the build, and  `hss-envm.sym`, which is a list of symbols.  (The name `Default` is required by SoftConsole for programming purposes.)
 
 A variety of alternative build options can be seen by running `make help`:
 
@@ -85,6 +89,8 @@ A variety of alternative build options can be seen by running `make help`:
 Verbose builds (which show each individual command) are possible by adding V=1 to the end of the make command, e.g.:
 
     $ make V=1
+
+For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/software-development/polarfire-soc-software-tool-flow.md#build-the-hss.
 
 ### Debug
 

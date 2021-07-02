@@ -111,7 +111,7 @@ bool HSS_DDRPrintSegConfig(void)
 //
 // We use the GCC intrinsic __builtin_popcount() to count cache way bits set
 // if we don't have an implementation for __popcountdi2, we'll use the weakly
-// bound one here, which does some common bit tricks 
+// bound one here, which does some common bit tricks
  __attribute__((weak)) int64_t __popcountdi2(int64_t n);
 __attribute__((weak)) int64_t __popcountdi2(int64_t n)
 {
