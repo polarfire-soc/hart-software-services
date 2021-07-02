@@ -1,0 +1,90 @@
+menu "Debug Options"
+
+config DEBUG_LOG_STATE_TRANSITIONS
+	bool "Debug State Transitions"
+	default y
+	help
+		This feature enables debug output for all state machine transitions.
+
+		If you do not know what to do here, say Y.
+
+config DEBUG_LOOP_TIMES
+	bool "Debug Loop Times"
+	default y
+	help
+		This feature enables output for loop timings via debug UART 
+                (mmuart0).
+
+		If you do not know what to do here, say Y.
+
+config DEBUG_LOOP_TIMES_THRESHOLD
+	int "Output loop times every threshold cycles"
+        default 2500000
+        depends on DEBUG_LOOP_TIMES
+	help
+		If CONFIG_DEBUG_LOOP_TIMES is enabled, specify how often
+                (in loop cycles) loop timings diagnostics should be dumped
+                out via the debug UART.
+
+config DEBUG_IPI_STATS
+        bool "Debug IPI Statistics"
+        default n
+        help
+		This feature enables output for IPI statistics via debug UART 
+
+		If you do not know what to do here, say N.
+
+config DEBUG_CHUNK_DOWNLOADS
+        bool "Debug chunk downloads"
+        depends on SERVICE_BOOT
+        default n
+        help
+		This feature enables logging of each chunk copy.
+
+		If you do not know what to do here, say N.
+
+config DEBUG_MSCGEN_IPI
+        bool "Output mscgen compatible traces of IPI messages"
+        depends on SERVICE_BOOT
+        default n
+        help
+		This feature enables logging of IPIs in a format to help
+                generate mscgen traces.
+
+		If you do not know what to do here, say N.
+
+config DEBUG_PROFILING_SUPPORT
+        bool "Output periodic function timings"
+        depends on DEBUG_LOOP_TIMES
+        default n
+        help
+		This feature enables periodic output of function timings.
+
+		If you do not know what to do here, say N.
+
+config DEBUG_PROFILING_MAX_NUM_FUNCTIONS
+        int "Determine the maximum number of functions to track"
+	default 128
+        depends on DEBUG_PROFILING_SUPPORT
+        help
+		This feature configures how many functions to trace during profiling.
+
+config DEBUG_PERF_CTRS
+	bool "Performance Counters"
+	depends on SERVICE_TINYCLI
+	default N
+	help
+		This feature enables performance counters to track wallclock time
+		spent in various activities, such as DDR training, memory tests,
+		MMC init, boot, etc.
+
+		If you do not know what to do here, say N.
+
+config DEBUG_PERF_CTRS_NUM
+	int "Determine how many performance counters are enabled"
+	default 16
+	depends on DEBUG_PERF_CTRS
+	help
+		This feature configures how many performance counters are enabled.
+
+endmenu

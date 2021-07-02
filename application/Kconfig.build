@@ -97,6 +97,4 @@ config DISPLAY_TOOL_VERSIONS
 
 		If you do not know what to do here, say Y.
 
-source "modules/qrcode/Kconfig"
-
 endmenu
