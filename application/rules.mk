@@ -45,12 +45,6 @@ MAKEDEP=makedepend
 GENCONFIG:=thirdparty/Kconfiglib/genconfig.py
 MENUCONFIG:=thirdparty/Kconfiglib/menuconfig.py
 
-
-ifneq ($(HOST_WINDOWS), true)
-    GIT_DESCRIPTION:=$(shell git describe --abbrev=4 --dirty --always --tags)
-    CORE_CFLAGS+=-DGIT_DESCRIPTION=\"$(GIT_DESCRIPTION)\"
-endif
-
 #
 #
 PLATFORM_RISCV_ABI=lp64
@@ -110,11 +104,11 @@ endif
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
 #
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
-  $(info Not enabling -flto as stack protector enabled)
+  $(info INFO: Not enabling -flto as stack protector enabled)
   CORE_CFLAGS+=-fstack-protector-strong
   # CORE_CFLAGS+=-fstack-clash-protection  # currently does nothing on RISC-V
 else
-  $(info NOTICE: enabling -flto (which means stack protection is disabled))
+  $(info INFO: NOTICE: enabling -flto (which means stack protection is disabled))
   OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
 endif
 
@@ -128,13 +122,13 @@ ifeq ($(HOST_LINUX), true)
   CC_VERSION = $(strip $(shell $(CC) -dumpversion))
   EXPECTED_CC_VERSION := 8.3.0
   ifneq ($(CC_VERSION),$(EXPECTED_CC_VERSION))
-    $(info Expected $(CC) version $(EXPECTED_CC_VERSION) but found $(CC_VERSION))
+    $(info INFO: Expected $(CC) version $(EXPECTED_CC_VERSION) but found $(CC_VERSION))
   endif
 
   CC_MACHINE = $(strip $(shell $(CC) -dumpmachine))
   EXPECTED_CC_MACHINE := riscv64-unknown-elf
   ifneq ($(CC_MACHINE),$(EXPECTED_CC_MACHINE))
-    $(info Expected $(CC) version $(EXPECTED_CC_MACHINE) but found $(CC_MACHINE))
+    $(info INFO: Expected $(CC) version $(EXPECTED_CC_MACHINE) but found $(CC_MACHINE))
   endif
 endif
 
@@ -144,7 +138,7 @@ endif
 #
 
 # Check if verbosity is ON for build process
-CMD_PREFIX_DEFAULT := @
+CMD_PREFIX_DEFAULT:=@
 ifeq ($(V), 1)
   CMD_PREFIX :=
 else

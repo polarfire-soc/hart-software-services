@@ -48,9 +48,19 @@ config:
 	@$(ECHO) " MENUCONFIG"
 	$(CMD_PREFIX)$(MENUCONFIG)
 
+# we can't run curses in SoftConsole, so just copy a pre-canned
+# config, and the user can tweak if necessary
 .config:
+ifeq ($(HOST_WINDOWS), true)
+	$(info Using boards/${BOARD}/def_config - edit as necessary.)
+	@$(ECHO) " CP       def_config";
+	@$(CMD_PREFIX)cp boards/${BOARD}/def_config .config
+	@$(ECHO) " GENCONFIG"
+	@$(CMD_PREFIX)$(GENCONFIG)
+else
 	@$(ECHO) " MENUCONFIG"
 	$(CMD_PREFIX)$(MENUCONFIG)
+endif
 
 config.h: .config
 	@$(ECHO) " GENCONFIG"

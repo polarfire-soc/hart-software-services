@@ -38,15 +38,16 @@ PYTHON?=python3
 .ONESHELL:
 
 ifeq ($(OS), Windows_NT)
-  TOOLPATH:=${SC_INSTALL_DIR}riscv-unknown-elf-gcc\bin
-  export PATH:="$(TOOLPATH);$(PATH)"
-  $(info Windows detected, Adding "$(TOOLPATH)" to PATH)
+  #If we need to patch up path for Windows, we could do it here...
+  #TOOLPATH:=${SC_INSTALL_DIR}riscv-unknown-elf-gcc\bin
+  #export PATH:="$(TOOLPATH);$(PATH)"
+  $(info INFO: Windows detected)
   HOST_WINDOWS:=true
 else
   SYSTEM:=$(shell uname -s)
   ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
     # Nothing special needed
-    $(info Linux detected)
+    $(info INFO: Linux detected)
     HOST_LINUX:=true
   else
     $(error Unsupported build platform $(SYSTEM))
@@ -61,7 +62,7 @@ ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
 else
   ifndef BOARD
     BOARD:=mpfs-icicle-kit-es
-    $(info BOARD not specified, defaulting to ${BOARD}) # default to icicle if nothing found
+    $(info INFO: BOARD not specified, defaulting to ${BOARD}) # default to icicle if nothing found
     include boards/${BOARD}/Makefile
   else
     $(error Board >>${BOARD}<< not found)
