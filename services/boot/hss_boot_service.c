@@ -52,6 +52,8 @@
 
 #include "hss_memcpy_via_pdma.h"
 #include "system_startup.h"
+#include "soc_config/hw_platform.h"
+
 
 /* Timeouts */
 #define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 5u)
@@ -892,6 +894,7 @@ enum IPIStatusCode HSS_Boot_PMPSetupHandler(TxId_t transaction_id, enum HSSHartI
         // modification through software defect.
         //
 	init_pmp(myHartId);
+	(void)mss_set_apb_bus_cr((uint32_t)LIBERO_SETTING_APBBUS_CR);
         //
 
         mHSS_DEBUG_PRINTF_EX("setup complete" CRLF);
