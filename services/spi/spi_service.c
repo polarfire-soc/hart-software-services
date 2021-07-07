@@ -49,7 +49,17 @@ static const struct StateDesc spi_state_descs[] = {
  *
  */
 struct StateMachine spi_service = {
-    (stateType_t)SPI_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)SPI_NUM_STATES, (const char *)"spi_service", 0u, 0u, 0u, spi_state_descs, false, 0u, NULL
+    .state             = (stateType_t)SPI_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         = (const uint32_t)SPI_NUM_STATES,
+    .pMachineName      = (const char *)"spi_service",
+    .startTime         = 0u,
+    .lastExecutionTime = 0u,
+    .executionCount    = 0u,
+    .pStateDescs       = spi_state_descs,
+    .debugFlag         = false,
+    .priority          = 0u,
+    .pInstanceData     = NULL
 };
 
 // --------------------------------------------------------------------------------------------------
