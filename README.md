@@ -62,9 +62,9 @@ The Hart Software Services includes the Kconfig parsing infrastructure directly 
 
 Both Linux and Windows are supported by Kconfiglib.  
  
-The HSS supports a number of board targets - currently including PolarFireSoC-based boards (mpfs-icicle-kit-es), and SiFive FU540-based boards (lc-mpfs and mpfs).
+The HSS currently support PolarFire SoC-based icicle kit (mpfs-icicle-kit-es) as a board build target.
 
-Once Kconfiglib is installed,  you can enter an interactive selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
+You can enter an interactive Kconfiglib configuration selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
 
     $ make BOARD=mpfs-icicle-kit-es config
 
@@ -89,6 +89,10 @@ A variety of alternative build options can be seen by running `make help`:
 Verbose builds (which show each individual command) are possible by adding V=1 to the end of the make command, e.g.:
 
     $ make V=1
+
+### Building on Windows
+
+The HSS relies only on SoftConsole v2021.1 or later to build on Windows. One workaround that is needed is to copy `python3\bin\python.exe` to `python3\bin\python3.exe` in the SoftConsole v2021.1 installation folder on Windows.
 
 For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/software-development/polarfire-soc-software-tool-flow.md#build-the-hss.
 
