@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * Driver for MICRON_MT25Q QSPI flash memory.
+ * Driver for Winbond W25N01GV QSPI flash memory.
  * This driver uses the MPFS MSS QSPI driver interface.
  *
  */
@@ -425,12 +425,8 @@ void Flash_readid
 /*------------------------------------------------------------------------------
  *
  */
-void read_page
-(
-    uint8_t* buf,
-    uint32_t page,
-    uint32_t read_len
-)
+void read_page (uint8_t* buf, uint32_t page, uint32_t read_len);
+void read_page (uint8_t* buf, uint32_t page, uint32_t read_len)
 {
     uint32_t length = read_len;
     uint8_t command_buf[4] __attribute__ ((aligned (4))) = {WINBOND_PAGE_DATA_READ};
@@ -501,12 +497,8 @@ void Flash_read
 /*==============================================================================
  *
  */
-uint8_t program_page
-(
-    uint8_t* buf,
-    uint32_t page,
-    uint32_t wr_len
-)
+uint8_t program_page(uint8_t* buf, uint32_t page, uint32_t wr_len);
+uint8_t program_page(uint8_t* buf, uint32_t page, uint32_t wr_len)
 {
     uint8_t command_buf[PAGE_LENGTH + 3] __attribute__ ((aligned (4))) = {0};
 
@@ -562,12 +554,8 @@ uint8_t program_page
 /*==============================================================================
  *
  */
-uint8_t program_block
-(
-    uint8_t* buf,
-    uint32_t wr_addr,
-    uint32_t wr_len
-)
+uint8_t program_block(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len);
+uint8_t program_block(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
 {
     uint32_t page_nb = wr_addr / PAGE_LENGTH;
     int32_t remaining_length = (int32_t)wr_len;
