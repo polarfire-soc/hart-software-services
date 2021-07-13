@@ -46,7 +46,8 @@ ifeq ($(OS), Windows_NT)
 else
   SYSTEM:=$(shell uname -s)
   ifneq (, $(findstring Linux, $(SYSTEM)))         # Linux-specific mods
-    # Nothing special needed
+    # Workaround SoftConsole v2021.1 Linux Python limitations by using system python
+    export PATH:=/usr/bin:$(PATH)
     $(info INFO: Linux detected)
     HOST_LINUX:=true
   else
