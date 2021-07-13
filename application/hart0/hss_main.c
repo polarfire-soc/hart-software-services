@@ -58,9 +58,9 @@ void hss_main(void);
 
 void hss_main(void)
 {
-#if IS_ENABLED(CONFIG_SERVICE_WDOG)
-    HSS_Wdog_MonitorHart(HSS_HART_ALL);
-#endif
+    if (IS_ENABLED(CONFIG_SERVICE_WDOG)) {
+        HSS_Wdog_MonitorHart(HSS_HART_ALL);
+    }
 
     while (true) {
         RunStateMachines(spanOfPGlobalStateMachines, pGlobalStateMachines);
@@ -78,11 +78,11 @@ int main(int argc, char **argv)
         sbi_hart_hang();
     }
 
-#if IS_ENABLED(CONFIG_SUPERLOOP_IN_U_MODE)
-    sbi_hart_switch_mode(current_hartid(), 0lu, (unsigned long)hss_main, PRV_U, false);
-#else
-    hss_main();
-#endif
+    if (IS_ENABLED(CONFIG_SUPERLOOP_IN_U_MODE)) {
+        sbi_hart_switch_mode(current_hartid(), 0lu, (unsigned long)hss_main, PRV_U, false);
+    } else {
+        hss_main();
+    }
 
     // will never be reached
     __builtin_unreachable();
