@@ -44,7 +44,7 @@ bool HSS_E51_Banner(void);
 bool HSS_QueuesInit(void);
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
-bool HSS_QSPIInit(void);
+#  include "qspi_service.h"
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)

@@ -47,7 +47,17 @@ static const struct StateDesc powermode_state_descs[] = {
  * \brief PowerMode Driver State Machine
  */
 struct StateMachine powermode_service = {
-    (stateType_t)POWER_MODE_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)POWER_MODE_NUM_STATES, (const char *)"powermode_service", 0u, 0u, 0u, powermode_state_descs, false, 0u, NULL
+    .state             = (stateType_t)POWER_MODE_INITIALIZATION,
+    .prevState         = (stateType_t)SM_INVALID_STATE,
+    .numStates         =  (const uint32_t)POWER_MODE_NUM_STATES,
+    .pMachineName          =  (const char *)"powermode_service",
+    .startTime         =  0u,
+    .lastExecutionTime =  0u,
+    .executionCount    =  0u,
+    .pStateDescs       =  powermode_state_descs,
+    .debugFlag         =  false,
+    .priority          =  0u,
+    .pInstanceData     =  NULL
 };
 
 // --------------------------------------------------------------------------------------------------

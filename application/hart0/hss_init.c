@@ -181,7 +181,7 @@ void HSS_PrintBuildId(void)
 void HSS_PrintToolVersions(void);
 void HSS_PrintToolVersions(void)
 {
-    mHSS_FANCY_PUTS(LOG_STATUS, "Built with the following tools: " CRLF);
+    mHSS_FANCY_PUTS(LOG_STATUS, "Built with the following tools:" CRLF);
 
     mHSS_PUTS(" - " CC_VERSION_STRING CRLF);
     mHSS_PUTS(" - " LD_VERSION_STRING CRLF CRLF);

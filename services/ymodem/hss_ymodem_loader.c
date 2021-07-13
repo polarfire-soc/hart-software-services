@@ -124,6 +124,7 @@ bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCoun
 }
 #endif
 
+void hss_loader_ymodem_loop(void);
 void hss_loader_ymodem_loop(void)
 {
     uint8_t rx_byte;
