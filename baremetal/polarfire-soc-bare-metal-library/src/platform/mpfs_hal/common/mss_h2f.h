@@ -67,6 +67,14 @@ typedef struct
     volatile uint32_t PLENABLE[4U];   /* Enables PLINT interrupts PLENABLE[0] 31:0, PLENABLE[1] 63:32, 95:64, 127:96 */
 } H2F_CONTROLLER_Type;
 
+#ifndef H2F_BASE_ADDRESS
+#if (LIBERO_SETTING_APBBUS_CR & (1U<<23U))
+#define H2F_BASE_ADDRESS 0x28126000
+#else
+#define H2F_BASE_ADDRESS 0x20126000
+#endif
+#endif
+
 #define H2F_CONTROLLER    ((H2F_CONTROLLER_Type *)H2F_BASE_ADDRESS)
 
 void reset_h2f(void);

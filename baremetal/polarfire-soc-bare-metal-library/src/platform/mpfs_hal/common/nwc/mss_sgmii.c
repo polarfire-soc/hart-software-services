@@ -16,8 +16,10 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 #include "simulation.h"
+
+#ifdef  MPFS_HAL_HW_CONFIG
 
 static PART_TYPE silicon_variant = PART_NOT_DETERMINED;
 
@@ -91,54 +93,6 @@ static uint32_t sgmii_channel_setup(void)
      *      SGMII
      *      DDR
      *      IOMUX
-     */
-
-    /*
-     * List from Eugene
-     * 1.  Full SGMII test- both channels enabled, external loopback and rx_lock
-     *     for both channels. (This test is written)
-     *     (Will do a version of this for refclk = 125 mhz also- already
-     *      supported in sw)
-     * 2.  SGMII test, similar to 1 , except chan1 is off.
-     * 3.  TEST with both CHAn0 and CHAn 1 off. This is the default state for
-     *     sgmii anyway. The SGMII PLL will not be turned on either. This is our
-     *     SGMII OFF MODE test.
-     * 4.  RECALIB mode on (RECAL_CNTL-reg_recal_start_en =1). Both chans off.
-     *     As I understand this is for DDR IO recalibration. I am not sure what
-     *     I check for here. SO I will ask Jeff.
-     * 5.  PVT recalibration..as per Srikanths presentation...SCB
-     *     reg_calib_start =1 and APB calib_start =1 (see my earlier email.)
-     *     This allows us check status of calib_start and calib_lock and
-     *     calib_intrpt to be checked as per Srikanths presentation.
-     *
-     */
-
-    /*
-     * Hi Malachy,
-     * These are the forces that I have been applying in my test. I suppose we
-     * should integrate them in the code now.
-     * I have got the loopback working, with the rx_side locking.
-     * As we discussed before I am forcing DYN_CTRL (0x2000_7c1c)
-     * dyn_cntl_reg_lane0_dynen, dyn_cntl_reg_lane1_dynen = 00.
-     * These are required to start the tx_clock. (I realize you have a different
-     * strategy here, which is included in the current code.)
-     *
-     * The CHAN0_CNTL reg (0x2000_7c0c): the reg_rx1_ibufmd_p [20:18] must be
-     * set = 0x4. They default = 0x7 which is off (ref Ranjeets email)
-     * Same for CHAN1_CNTL (0x2000_7c10).
-     * This turns on the input buffers. Loopback implemented in testbench.
-     * The SUBBLK_CLOCK_CR reg (2000_2084) should include setting [2:1] MAC0,
-     * MAC1 = 11. Need the mac clocks running.
-     * The nw_config register for mac0 (0x2011_0004): I am forcing 'gigabit' and
-     * 'tbi' bits = 11.
-     * The same for Mac1.
-     * This starts up the tx_mac_clocks for the 2 macs.
-     *
-     * The SOFT_RESET_CR (0x2000_2088) register:  [2:1] MAC0, MAC1 resets should
-     * be = 00 (ie turn off reset)
-     * We should probably discuss these settings. (unless everything is clear!)
-     * -eugene.
-     *
      */
 
     switch(sgmii_training_state)
@@ -337,8 +291,8 @@ static uint32_t sgmii_channel_setup(void)
              *
              */
             /* the mac clocks need to be turned on when setting up the sgmii */
-            turn_on_mac0();
-            turn_on_mac1();
+            (void)mss_config_clk_rst(MSS_PERIPH_MAC0, (uint8_t) MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+            (void)mss_config_clk_rst(MSS_PERIPH_MAC0, (uint8_t) MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
             GEM_A_LO->network_config |= (0x01U << 10U) | (0x01U << 11U);   /* GEM0 */
             GEM_B_LO->network_config |= (0x01U << 10U) | (0x01U << 11U);   /* GEM1 */
             sgmii_training_state = SGMII_DETERMINE_SILICON_VARIANT;
@@ -442,63 +396,13 @@ static uint32_t sgmii_channel_setup(void)
             break;
     } /* end of switch statement */
 
-    /*
-     *
-     */
-#if 0
-    if (sgmii_instruction == SGMII_RECALIB)
-    {
-        SIM_FEEDBACK1(17U);
-        recalib();
-        SIM_FEEDBACK1(18U);
-    }
-
-    if (sgmii_instruction == SGMII_PVT_MONITOR)
-    {
-        SIM_FEEDBACK1(13U);
-        recalib_monitor_test((uint8_t) (1U));
-        SIM_FEEDBACK1(14U);
-    }
-#endif
-#if 0
-    if ((sgmii_instruction == SGMII_MAC0_LOOPBACK_TEST)||\
-            (sgmii_instruction == SGMII_MAC1_LOOPBACK_TEST))
-    {
-        /*
-         * Once SGMII setup, we can configure mss pll as external clock will be
-         * available
-         * */
-        SIM_FEEDBACK0(19U);
-        mss_pll_config();
-        SIM_FEEDBACK1(20U);
-        if(sgmii_instruction == SGMII_MAC0_LOOPBACK_TEST)
-        {
-            mac_test(0U);
-        }
-        else
-        {
-            mac_test(1U);
-        }
-        SIM_FEEDBACK1(21U);
-    }
-#endif
-#if 0
-    if (sgmii_instruction == SGMII_TRIM_IO)
-    {
-        SIM_FEEDBACK1(21U);
-        calib_trim_test((uint8_t) 1U);
-        SIM_FEEDBACK1(22U);
-    }
-#endif
-
-
     return(status);
 }
 #endif
 
 /**
  * setup_sgmii_rpc_per_config
- * @param sgmii_instruction
+ * Configures SGMII RPC TIP registers
  */
 static void setup_sgmii_rpc_per_config(void)
 {
@@ -750,3 +654,4 @@ static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_
 
 }
 
+#endif

@@ -203,7 +203,9 @@ extern "C" {
  *         non-volatile registers,  the bit self clears.  i.e. is similar to a
  *         W1P bit
  */
-#define PLL_INIT_AND_OUT_OF_RESET   0x00000003UL
+#define PLL_INIT_AND_OUT_OF_RESET               0x00000003UL
+
+#define PLL_CTRL_REG_POWERDOWN_B_MASK           0x00000001UL
 
 typedef enum RTC_CLK_SOURCE_
 {

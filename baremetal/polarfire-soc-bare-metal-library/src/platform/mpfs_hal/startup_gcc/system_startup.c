@@ -36,25 +36,23 @@
 #endif
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 /*==============================================================================
- * E51 startup.
+ * This function is called by the lowest enabled hart (MPFS_HAL_FIRST_HART) in
+ * the configuration file (platform/config/software/mpfs_hal/mss_sw_config.h )
+ *
+ * The other harts up to MPFS_HAL_LAST_HART are placed in wfi at this point.
+ * This function brings them out of wfi in sequence.
  * If you need to modify this function, create your own one in a user directory
  * space
  * e.g. /hart0/e51.c
  */
-__attribute__((weak)) int main_first_hart(void)
+__attribute__((weak)) int main_first_hart(HLS_DATA* hls)
 {
     uint64_t hartid = read_csr(mhartid);
-    HLS_DATA* hls = NULL;
 
     if(hartid == MPFS_HAL_FIRST_HART)
     {
-        uint8_t hard_idx;
+        uint8_t hart_id;
         ptrdiff_t stack_top;
 
         /*
@@ -66,12 +64,15 @@ __attribute__((weak)) int main_first_hart(void)
          * as required.
          */
 #ifdef  MPFS_HAL_HW_CONFIG
-        load_virtual_rom();
         config_l2_cache();
 #endif  /* MPFS_HAL_HW_CONFIG */
-        init_memory();
 
+        init_memory();
+#ifndef MPFS_HAL_HW_CONFIG
+        hls->my_hart_id = MPFS_HAL_FIRST_HART;
+#endif
 #ifdef  MPFS_HAL_HW_CONFIG
+        load_virtual_rom();
         (void)init_bus_error_unit();
         (void)init_mem_protection_unit();
         (void)init_pmp((uint8_t)MPFS_HAL_FIRST_HART);
@@ -86,10 +87,7 @@ __attribute__((weak)) int main_first_hart(void)
          */
 #ifdef  MPFS_HAL_HW_CONFIG
         (void)mss_nwc_init();
-        //init_ddr();
-#endif  /* MPFS_HAL_HW_CONFIG */
 
-#ifdef  MPFS_HAL_HW_CONFIG
         /* main hart init's the PLIC */
         PLIC_init_on_reset();
         /*
@@ -100,9 +98,10 @@ __attribute__((weak)) int main_first_hart(void)
         stack_top = (ptrdiff_t)((uint8_t*)&__stack_top_h0$);
         hls = (HLS_DATA*)(stack_top - HLS_DEBUG_AREA_SIZE);
         hls->in_wfi_indicator = HLS_MAIN_HART_STARTED;
+        hls->my_hart_id = MPFS_HAL_FIRST_HART;
         WFI_SM sm_check_thread = INIT_THREAD_PR;
-        hard_idx = MPFS_HAL_FIRST_HART + 1U;
-        while( hard_idx <= MPFS_HAL_LAST_HART)
+        hart_id = MPFS_HAL_FIRST_HART + 1U;
+        while( hart_id <= MPFS_HAL_LAST_HART)
         {
             uint32_t wait_count = 0U;
 
@@ -111,7 +110,7 @@ __attribute__((weak)) int main_first_hart(void)
                 default:
                 case INIT_THREAD_PR:
 
-                    switch (hard_idx)
+                    switch (hart_id)
                     {
                         case 1:
                             stack_top = (ptrdiff_t)((uint8_t*)&__stack_top_h1$);
@@ -140,7 +139,8 @@ __attribute__((weak)) int main_first_hart(void)
                     break;
 
                 case SEND_WFI:
-                    raise_soft_interrupt(hard_idx);
+                    hls->my_hart_id = hart_id; /* record hartid locally */
+                    raise_soft_interrupt(hart_id);
                     sm_check_thread = CHECK_WAKE;
                     wait_count = 0UL;
                     break;
@@ -149,7 +149,7 @@ __attribute__((weak)) int main_first_hart(void)
                     if( hls->in_wfi_indicator == HLS_OTHER_HART_PASSED_WFI )
                     {
                         sm_check_thread = INIT_THREAD_PR;
-                        hard_idx++;
+                        hart_id++;
                         wait_count = 0UL;
                     }
                     else
@@ -159,7 +159,8 @@ __attribute__((weak)) int main_first_hart(void)
                         {
                             if( hls->in_wfi_indicator == HLS_OTHER_HART_IN_WFI )
                             {
-                                raise_soft_interrupt(hard_idx);
+                                hls->my_hart_id = hart_id; /* record hartid locally */
+                                raise_soft_interrupt(hart_id);
                                 wait_count = 0UL;
                             }
                         }
@@ -175,13 +176,83 @@ __attribute__((weak)) int main_first_hart(void)
          * Turn on fic interfaces by default. Drivers will turn on/off other MSS
          * peripherals as required.
          */
-        turn_on_fic0();
-        turn_on_fic1();
-        turn_on_fic2();
-        turn_on_fic3();
+        (void)mss_config_clk_rst(MSS_PERIPH_FIC0, (uint8_t)MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+        (void)mss_config_clk_rst(MSS_PERIPH_FIC1, (uint8_t)MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+        (void)mss_config_clk_rst(MSS_PERIPH_FIC2, (uint8_t)MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+        (void)mss_config_clk_rst(MSS_PERIPH_FIC3, (uint8_t)MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
 
 #endif /* MPFS_HAL_HW_CONFIG */
-        (void)main_other_hart();
+        (void)main_other_hart(hls);
+    }
+
+    /* should never get here */
+    while(true)
+    {
+       static volatile uint64_t counter = 0U;
+       /* Added some code as debugger hangs if in loop doing nothing */
+       counter = counter + 1U;
+    }
+
+    return (0);
+}
+
+/*==============================================================================
+ * u54_single_hart startup.
+ * This is called when a bootloader has loaded a single hart program.
+ * A pointer to the hart Local Storage (HLS) is passed here which has been
+ * passed by the boot program in the a1 register.
+ * The HLS contains the hartID.
+ * It also contains a pointer to shared memory
+ * Information on the HLS used in the bare metal examples.
+ *           The HLS is a small amount of memory dedicated to each hart.
+ *           The HLS also contains a pointer to shared memory.
+ *           The shared memory is accessible by all harts if used. It is
+ *           allocated by the boot-loader if the MPFS_HAL_SHARED_MEM_ENABLED
+ *           is defined in the mss_sw_config.h file project configuration file.
+ * Please see the project mpfs-hal-run-from-ddr-u54-1 located in the Bare Metal
+ * library under examples/mpfs-hal for an example of it use.
+ *
+ * https://github.com/polarfire-soc/polarfire-soc-bare-metal-library
+ *
+ * If you need to modify this function, create your own one in a user directory
+ * space
+ * e.g. /hart1/x.c
+ */
+int u54_single_hart(HLS_DATA* hls);
+__attribute__((weak)) int u54_single_hart(HLS_DATA* hls)
+{
+    init_memory();
+    hls->my_hart_id = MPFS_HAL_FIRST_HART;
+#ifdef  MPFS_HAL_SHARED_MEM_ENABLED
+    /* if shared memory enabled, pointer from Boot-loader in the HLS should be
+     * non-zero */
+    ASSERT(hls->shared_mem != NULL);
+#endif
+    switch(hls->my_hart_id)
+    {
+        case 0U:
+            e51();
+            break;
+
+        case 1U:
+            u54_1();
+            break;
+
+        case 2U:
+            u54_2();
+            break;
+
+        case 3U:
+            u54_3();
+            break;
+
+        case 4U:
+            u54_4();
+            break;
+
+        default:
+            /* no more harts */
+            break;
     }
 
     /* should never get here */
@@ -199,32 +270,59 @@ __attribute__((weak)) int main_first_hart(void)
  * U54s startup.
  * This is called from entry.S
  * If you need to modify this function, create your own one in a user directory
- * space
+ * space.
  *
- * Please note: harts 1 to 4 will wait in startup code in entry.S as they run
- * the wfi (wait for interrupt) instruction.
- * They are woken up as required by the the MPFS_HAL_FIRST_HART
+ * Please note: harts MPFS_HAL_FIRST_FIRST + 1 to MPFS_HAL_FIRST_LAST will wait
+ * in startup code in entry.S as they run the wfi (wait for interrupt)
+ * instruction.
+ * They are woken up as required by the the MPFS_HAL_FIRST_HART, in the function
+ * main_first_hart().
  * ( It triggers a software interrupt on the particular hart to be woken up )
  */
-__attribute__((weak)) int main_other_hart(void)
+__attribute__((weak)) int main_other_hart(HLS_DATA* hls)
 {
+#ifdef  MPFS_HAL_HW_CONFIG
     extern char __app_stack_top_h0;
     extern char __app_stack_top_h1;
     extern char __app_stack_top_h2;
     extern char __app_stack_top_h3;
     extern char __app_stack_top_h4;
 
-    const uint64_t app_stack_top_h0 = (const uint64_t)&__app_stack_top_h0;
-    const uint64_t app_stack_top_h1 = (const uint64_t)&__app_stack_top_h1;
-    const uint64_t app_stack_top_h2 = (const uint64_t)&__app_stack_top_h2;
-    const uint64_t app_stack_top_h3 = (const uint64_t)&__app_stack_top_h3;
-    const uint64_t app_stack_top_h4 = (const uint64_t)&__app_stack_top_h4;
+    const uint64_t app_stack_top_h0 = (const uint64_t)&__app_stack_top_h0 - (HLS_DEBUG_AREA_SIZE);
+    const uint64_t app_stack_top_h1 = (const uint64_t)&__app_stack_top_h1 - (HLS_DEBUG_AREA_SIZE);
+    const uint64_t app_stack_top_h2 = (const uint64_t)&__app_stack_top_h2 - (HLS_DEBUG_AREA_SIZE);
+    const uint64_t app_stack_top_h3 = (const uint64_t)&__app_stack_top_h3 - (HLS_DEBUG_AREA_SIZE);
+    const uint64_t app_stack_top_h4 = (const uint64_t)&__app_stack_top_h4 - (HLS_DEBUG_AREA_SIZE);
 
-    uint64_t hartid = read_csr(mhartid);
+#ifdef  MPFS_HAL_HW_CONFIG
+#ifdef  MPFS_HAL_SHARED_MEM_ENABLED
+    /*
+     * If we are a boot-loader, and shared memory enabled (MPFS_HAL_SHARED_MEM_ENABLED)
+     * sets the pointer in each harts HLS to the shared memory.
+     * This allows access to this shared memory across all harts.
+     */
+    const uint64_t app_hart_common_start = (const uint64_t)&__app_hart_common_start;
+    hls->shared_mem = (uint64_t *)app_hart_common_start;
+    hls->shared_mem_marker = SHARED_MEM_INITALISED_MARKER;
+    hls->shared_mem_status = SHARED_MEM_DEFAULT_STATUS;
+#endif
+#else
+#ifdef  MPFS_HAL_SHARED_MEM_ENABLED
+    /* make sure each harts Harts Local Storage has pointer to common memory if enabled */
+    /* store the value here received from boot-loader */
+    /* a1 will contain pointer to the start of shared memory */
+    //hls->shared_mem = (uint64_t *)__uninit_bottom$;
+#else
+    /*
+     * We are not using shared memory
+     */
+    hls->shared_mem = (uint64_t *)NULL;
+#endif
+#endif
 
     volatile uint64_t dummy;
 
-    switch(hartid)
+    switch(hls->my_hart_id)
     {
 
     case 0U:
@@ -268,7 +366,7 @@ __attribute__((weak)) int main_other_hart(void)
        /* Added some code as debugger hangs if in loop doing nothing */
        counter = counter + 1U;
     }
-
+#endif
   return (0);
 
 }
@@ -280,27 +378,22 @@ __attribute__((weak)) int main_other_hart(void)
 #ifdef  MPFS_HAL_HW_CONFIG
 #define VIRTUAL_BOOTROM_BASE_ADDR   0x20003120UL
 #define NB_BOOT_ROM_WORDS           8U
+const uint32_t rom[NB_BOOT_ROM_WORDS] =
+{
+    0x00000513U,    /* li a0, 0 */
+    0x34451073U,    /* csrw mip, a0 */
+    0x10500073U,    /* wfi */
+    0xFF5FF06FU,    /* j 0x20003120 */
+    0xFF1FF06FU,    /* j 0x20003120 */
+    0xFEDFF06FU,    /* j 0x20003120 */
+    0xFE9FF06FU,    /* j 0x20003120 */
+    0xFE5FF06FU     /* j 0x20003120 */
+};
+
 void load_virtual_rom(void)
 {
-    uint8_t inc;
     volatile uint32_t * p_virtual_bootrom = (uint32_t *)VIRTUAL_BOOTROM_BASE_ADDR;
-
-    const uint32_t rom[NB_BOOT_ROM_WORDS] =
-    {
-        0x00000513U,    /* li a0, 0 */
-        0x34451073U,    /* csrw mip, a0 */
-        0x10500073U,    /* wfi */
-        0xFF5FF06FU,    /* j 0x20003120 */
-        0xFF1FF06FU,    /* j 0x20003120 */
-        0xFEDFF06FU,    /* j 0x20003120 */
-        0xFE9FF06FU,    /* j 0x20003120 */
-        0xFE5FF06FU     /* j 0x20003120 */
-    };
-
-    for(inc = 0; inc < NB_BOOT_ROM_WORDS; ++inc)
-    {
-        p_virtual_bootrom[inc] = rom[inc];
-    }
+    config_copy( (void *)p_virtual_bootrom, (void *)rom,sizeof(rom[NB_BOOT_ROM_WORDS]));
 }
 #endif  /* MPFS_HAL_HW_CONFIG */
 
@@ -392,20 +485,10 @@ __attribute__((weak)) void u54_4(void)
   */
  __attribute__((weak)) void init_memory( void)
  {
-    extern uint64_t __l2_scratchpad_load;
-    extern uint64_t __l2_scratchpad_start;
-    extern uint64_t __l2_scratchpad_end;
-
     copy_section(&__text_load, &__text_start, &__text_end);
     copy_section(&__sdata_load, &__sdata_start, &__sdata_end);
     copy_section(&__data_load, &__data_start, &__data_end);
 
-
-    /* filling the lim as a test with identifiable content */
-#if 0 //todo: used during testing, remove
-    count_section(&__stack_top_h4$, &__l2lim_end, &__stack_top_h4$);
-#endif
-    copy_section(&__l2_scratchpad_load, &__l2_scratchpad_start, &__l2_scratchpad_end);
     zero_section(&__sbss_start, &__sbss_end);
     zero_section(&__bss_start, &__bss_end);
 
@@ -442,16 +525,16 @@ __attribute__((weak)) void u54_4(void)
 __attribute__((weak)) uint8_t init_bus_error_unit(void)
 {
 #ifndef SIFIVE_HIFIVE_UNLEASHED
-    uint8_t hard_idx;
+    uint8_t hart_id;
     /* Init BEU in all harts - enable local interrupt */
-    for(hard_idx = MPFS_HAL_FIRST_HART; hard_idx <= MPFS_HAL_LAST_HART; hard_idx++)
+    for(hart_id = MPFS_HAL_FIRST_HART; hart_id <= MPFS_HAL_LAST_HART; hart_id++)
     {
-        BEU->regs[hard_idx].ENABLE      = (uint64_t)BEU_ENABLE;
-        BEU->regs[hard_idx].PLIC_INT    = (uint64_t)BEU_PLIC_INT;
-        BEU->regs[hard_idx].LOCAL_INT   = (uint64_t)BEU_LOCAL_INT;
-        BEU->regs[hard_idx].CAUSE       = 0ULL;
-        BEU->regs[hard_idx].ACCRUED     = 0ULL;
-        BEU->regs[hard_idx].VALUE       = 0ULL;
+        BEU->regs[hart_id].ENABLE      = (uint64_t)BEU_ENABLE;
+        BEU->regs[hart_id].PLIC_INT    = (uint64_t)BEU_PLIC_INT;
+        BEU->regs[hart_id].LOCAL_INT   = (uint64_t)BEU_LOCAL_INT;
+        BEU->regs[hart_id].CAUSE       = 0ULL;
+        BEU->regs[hart_id].ACCRUED     = 0ULL;
+        BEU->regs[hart_id].VALUE       = 0ULL;
     }
 #endif
     return (0U);
@@ -501,102 +584,3 @@ __attribute__((weak)) uint8_t mss_get_apb_bus_cr(void)
     return (SYSREG->APBBUS_CR);
 }
 
-__attribute__((weak))  void turn_on_fic0(void)
-{
-    /* Turn on clock */
-    SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_FIC0_MASK);
-    /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC0_MASK);
-}
-
-__attribute__((weak))  void turn_on_fic1(void)
-{
-    /* Turn on clock */
-    SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_FIC1_MASK);
-    /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC1_MASK);
-}
-
-__attribute__((weak))  void turn_on_fic2(void)
-{
-    /* Turn on clock */
-    SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_FIC2_MASK);
-    /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC2_MASK);
-}
-
-__attribute__((weak))  void turn_on_fic3(void)
-{
-    /* Turn on clock */
-    SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_FIC3_MASK);
-    /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC3_MASK);
-}
-
-__attribute__((weak))  void turn_on_mac0(void)
-{
-    /* Turn on clock */
-    SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_MAC0_MASK);
-    /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= (uint32_t)~(SUBBLK_CLOCK_CR_MAC0_MASK);
-}
-
-__attribute__((weak))  void turn_on_mac1(void)
-{
-    /* Turn on clock */
-    SYSREG->SUBBLK_CLOCK_CR |= (SUBBLK_CLOCK_CR_MAC1_MASK);
-    /* Remove soft reset */
-    SYSREG->SOFT_RESET_CR   &= (uint32_t)~(SUBBLK_CLOCK_CR_MAC1_MASK);
-}
-
-__attribute__((weak))  void turn_off_fic0(void)
-{
-    /* Turn off clock */
-    SYSREG->SUBBLK_CLOCK_CR &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC0_MASK);
-    /* Hold in reset */
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)(SUBBLK_CLOCK_CR_FIC0_MASK);
-}
-
-__attribute__((weak))  void turn_off_fic1(void)
-{
-    /* Turn off clock */
-    SYSREG->SUBBLK_CLOCK_CR &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC1_MASK);
-    /* Hold in reset */
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)(SUBBLK_CLOCK_CR_FIC1_MASK);
-}
-
-__attribute__((weak))  void turn_off_fic2(void)
-{
-    /* Turn off clock */
-    SYSREG->SUBBLK_CLOCK_CR &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC2_MASK);
-    /* Hold in reset */
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)(SUBBLK_CLOCK_CR_FIC2_MASK);
-}
-
-__attribute__((weak))  void turn_off_fic3(void)
-{
-    /* Turn off clock */
-    SYSREG->SUBBLK_CLOCK_CR &= (uint32_t)~(SUBBLK_CLOCK_CR_FIC3_MASK);
-    /* Hold in reset */
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)(SUBBLK_CLOCK_CR_FIC3_MASK);
-}
-
-__attribute__((weak))  void turn_off_mac0(void)
-{
-    /* Turn off clock */
-    SYSREG->SUBBLK_CLOCK_CR &= (uint32_t)~(SUBBLK_CLOCK_CR_MAC0_MASK);
-    /* Hold in reset */
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)(SUBBLK_CLOCK_CR_MAC0_MASK);
-}
-
-__attribute__((weak))  void turn_off_mac1(void)
-{
-    /* Turn off clock */
-    SYSREG->SUBBLK_CLOCK_CR &= (uint32_t)~(SUBBLK_CLOCK_CR_MAC1_MASK);
-    /* Hold in reset */
-    SYSREG->SOFT_RESET_CR   |= (uint32_t)(SUBBLK_CLOCK_CR_MAC1_MASK);
-}
-
-#ifdef __cplusplus
-}
-#endif

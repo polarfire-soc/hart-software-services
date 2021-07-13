@@ -16,7 +16,7 @@
  * PLIC related data which cannot be placed in mss_plic.h
  *
  */
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 #ifdef __cplusplus
 extern "C" {

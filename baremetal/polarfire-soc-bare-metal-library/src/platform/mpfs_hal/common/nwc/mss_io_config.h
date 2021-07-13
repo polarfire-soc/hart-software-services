@@ -23,6 +23,29 @@ extern "C" {
 #endif
 
 /*
+ * fields of LIBERO_SETTING_MSSIO_CONFIGURATION_OPTIONS
+ * */
+#define EMMC_CONFIGURED_MASK                            (0x01U<<0U) /*!< set => eMMC is configured */
+#define SD_CONFIGURED_MASK                              (0x01U<<1U) /*!< set => SD is configured */
+#define DEFAULT_ON_START_MASK                           (0x01U<<2U) /*!< set => default is SD config, not set default is eMMC config */
+
+#define ICICLE_KIT_REF_DESIGN_FPGS_SWITCH_ADDRESS       0x4f000000
+
+typedef enum MSSIO_CONFIG_OPTION_
+{
+    DEFAULT_MSSIO_CONFIGURATION         = 0x00,       /*!< 0 default behavior */
+    ALT_MSSIO_CONFIGURATION             = 0x01,       /*!< 1 alternate config */
+}   MSSIO_CONFIG_OPTION;
+
+typedef enum MSS_IO_OPTIONS_
+{
+    NO_SUPPORT_MSSIO_CONFIGURATION       = 0x00,       /*!< 0 MSS Configurator version too early */
+    NOT_SETUP_MSSIO_CONFIGURATION        = 0x01,       /*!< 0 none configured */
+    SD_MSSIO_CONFIGURATION               = 0x02,       /*!< 0 SD config */
+    EMMC_MSSIO_CONFIGURATION             = 0x03,       /*!< 1 eMMC config */
+}   MSS_IO_OPTIONS;
+
+/*
  * There are 38 general purpose IO pads, referred to as MSSIO, to support
  * peripheral devices. System registers will select which signals are connected
  * to the IO pads. These are in addition to the SGMII IO for the Ethernet MACs,
@@ -231,8 +254,150 @@ gpio_toggle_test
 void
 set_bank2_and_bank4_volts
 (
-   void
+        MSSIO_CONFIG_OPTION config
 );
+
+
+/***************************************************************************//**
+  switch_mssio_config()
+  switches as instructed SD/eMMC
+
+  Example:
+
+  @code
+
+  ASSERT(mss_does_xml_ver_support_switch() == true)
+
+  if ( switch_mssio_config(EMMC_MSSIO_CONFIGURATION) == false )
+  {
+      while(1u);
+  }
+  switch_external_mux(EMMC_MSSIO_CONFIGURATION);
+  g_mmc.clk_rate = MSS_MMC_CLOCK_200MHZ;
+  g_mmc.card_type = MSS_MMC_CARD_TYPE_MMC;
+  g_mmc.bus_speed_mode = MSS_MMC_MODE_HS200;
+  g_mmc.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
+  g_mmc.bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE;
+
+  @endcode
+
+ *
+ */
+uint8_t
+switch_mssio_config
+(
+        MSS_IO_OPTIONS option
+)
+;
+
+/***************************************************************************//**
+  mss_does_xml_ver_support_switch()
+  Sets bank 2 and 4 voltages, with Values coming from Libero
+
+  Example:
+
+  @code
+
+  ASSERT(mss_does_xml_ver_support_switch() == true);
+
+  @endcode
+
+ *
+ */
+uint8_t  mss_does_xml_ver_support_switch(void);
+
+/***************************************************************************//**
+  mss_is_alternate_io_configured()
+
+  Example:
+
+  @code
+
+  if ( mss_is_alternate_io_configured() == true )
+  {
+      ...
+  }
+
+  @endcode
+
+ *
+ */
+uint8_t  mss_is_alternate_io_configured(void);
+
+/***************************************************************************//**
+  mss_is_alternate_io_setting_emmc()
+
+
+  Example:
+
+  @code
+
+  if ( mss_is_alternate_io_setting_emmc() == true )
+  {
+      ...
+  }
+
+  @endcode
+
+ *
+ */
+uint8_t  mss_is_alternate_io_setting_emmc(void);
+
+/***************************************************************************//**
+  mss_is_alternate_io_setting_sd()
+
+  Example:
+
+  @code
+
+  if ( mss_is_alternate_io_setting_sd() == true )
+  {
+      ...
+  }
+
+  @endcode
+
+ *
+ */
+uint8_t  mss_is_alternate_io_setting_sd(void);
+
+/***************************************************************************//**
+  switch_external_mux()
+  This is a function used to switch external mux.
+  Requires fpga switch hdl. This comes with reference icicle kit design.
+  Will need to create your own or copy when creating your own fpga design
+  along with an external mux in your board design if you wish to use SD/eMMC
+  muxing in your hardware design.
+
+  Example:
+
+  @code
+
+  switch_external_mux(SD_MSSIO_CONFIGURATION);
+
+  @endcode
+
+ */
+uint8_t switch_external_mux(MSS_IO_OPTIONS option);
+
+/***************************************************************************//**
+  mss_io_default_setting()
+  This helper function may be useful, e.g. print a message on start-up
+  explaining configuration.
+
+  Example:
+
+  @code
+
+  if ( mss_io_default_setting() == SD_MSSIO_CONFIGURATION )
+  {
+      // ...
+  }
+
+  @endcode
+
+ */
+uint8_t  mss_io_default_setting(void);
 
 
 #ifdef __cplusplus

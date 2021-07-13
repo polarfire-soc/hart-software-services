@@ -16,12 +16,12 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 #include "mss_nwc_init.h"
 #include "simulation.h"
 
 #ifdef DEBUG_DDR_INIT
-#include "drivers/mss_mmuart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 extern mss_uart_instance_t *g_debug_uart ;
 uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
 #endif
@@ -29,16 +29,15 @@ uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
 /*******************************************************************************
  * Local Defines
  */
-CFG_DDR_SGMII_PHY_TypeDef *CFG_DDR_SGMII_PHY =\
-        ((CFG_DDR_SGMII_PHY_TypeDef *) CFG_DDR_SGMII_PHY_BASE);
-DDR_CSR_APB_TypeDef *DDRCFG =\
-        ((DDR_CSR_APB_TypeDef *)       DDRCFG_BASE);
-IOSCBCFG_TypeDef                *SCBCFG_REGS =\
-        (IOSCBCFG_TypeDef            *)IOSCBCFG_BASE ;
-g5_mss_top_scb_regs_TypeDef     *SCB_REGS    =\
-        (g5_mss_top_scb_regs_TypeDef     *)  SYSREGSCB_BASE;
+CFG_DDR_SGMII_PHY_TypeDef       * const CFG_DDR_SGMII_PHY   =  ((CFG_DDR_SGMII_PHY_TypeDef *) CFG_DDR_SGMII_PHY_BASE);
+DDR_CSR_APB_TypeDef             * const DDRCFG              = ((DDR_CSR_APB_TypeDef *)       DDRCFG_BASE);
+IOSCBCFG_TypeDef                * const SCBCFG_REGS         =  (IOSCBCFG_TypeDef            *)IOSCBCFG_BASE ;
+g5_mss_top_scb_regs_TypeDef     * const SCB_REGS            = (g5_mss_top_scb_regs_TypeDef *) SYSREGSCB_BASE;
 
-
+/*******************************************************************************
+ * Local functions
+ */
+void delay(uint32_t n);
 
 /*******************************************************************************
  * extern defined functions
@@ -333,9 +332,6 @@ uint8_t mss_nwc_init(void)
 
     {
 #ifdef DDR_SUPPORT
-        int perf_ctr_index;
-	bool HSS_PerfCtr_Allocate(int *pIdx, char const * name);
-        HSS_PerfCtr_Allocate(&perf_ctr_index, "DDR Training");
 #ifdef DEBUG_DDR_INIT
         {
             (void)setup_ddr_debug_port(g_debug_uart);
@@ -354,9 +350,6 @@ uint8_t mss_nwc_init(void)
             error |= (0x1U << 2U);
         }
         //todo: remove, just for sim test ddr_recalib_io_test();
-
-	void HSS_PerfCtr_Lap(int perf_ctr_index);
-        HSS_PerfCtr_Lap(perf_ctr_index);
 #endif
     }
 
@@ -367,13 +360,11 @@ uint8_t mss_nwc_init(void)
     return error;
 }
 
+
 /*-------------------------------------------------------------------------*//**
  * delay()
- * @param n
- *
- *  @return
- *   No return value.
- *   //todo: make delay function clock based
+ * Not absolute. Dependency on current clk rate
+ * @param n Number of iterations to wait.
  */
 void delay(uint32_t n)
 {

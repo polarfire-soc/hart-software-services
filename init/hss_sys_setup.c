@@ -37,7 +37,6 @@
 
 #include "hss_clock.h"
 #include "hss_state_machine.h"
-#include "hss_sys_setup.h"
 
 #include "csr_helper.h"
 
@@ -55,6 +54,7 @@
 #include "hss_memcpy_via_pdma.h"
 
 #include "mpfs_reg_map.h"
+#include "hss_sys_setup.h"
 
 /******************************************************************************/
 

@@ -17,7 +17,7 @@
  *//*=========================================================================*/
 #include <stdio.h>
 #include <string.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 /**
  * \brief PMP configuration from Libero
@@ -121,19 +121,21 @@ const uint64_t pmp_values[][18] = {
         LIBERO_SETTING_HART4_CSR_PMPADDR15},
 };
 
-/***************************************************************************//**
- * MPU_auto_configure()
- * Set MPU's up with configuration from Libero
- *
- *
+/**
+ * pmp_configure()
+ * Set PMP's up with configuration from Libero
+ * @param hart_id hart Id
  * @return
  */
 uint8_t pmp_configure(uint8_t hart_id) /* set-up with settings from Libero */
 {
-    /* make sure enables are off */
+#if ((LIBERO_SETTING_MEM_CONFIGS_ENABLED & PMP_ENABLED_MASK) == PMP_ENABLED_MASK)
+    uint64_t pmp0cfg;
+#endif
+	/* make sure enables are off */
     write_csr(pmpcfg0, 0);
     write_csr(pmpcfg2, 0);
-    /* set required addressing */
+	/* set required addressing */
     write_csr(pmpaddr0, pmp_values[hart_id][2]);
     write_csr(pmpaddr1, pmp_values[hart_id][3]);
     write_csr(pmpaddr2, pmp_values[hart_id][4]);
@@ -150,11 +152,12 @@ uint8_t pmp_configure(uint8_t hart_id) /* set-up with settings from Libero */
     write_csr(pmpaddr13, pmp_values[hart_id][15]);
     write_csr(pmpaddr14, pmp_values[hart_id][16]);
     write_csr(pmpaddr15, pmp_values[hart_id][17]);
-//#if ((LIBERO_SETTING_MEM_CONFIGS_ENABLED & 1UL) == PMP_ENABLED_MASK)
-//    pmp_master_configs(hart_id, &pmp0cfg);
-//#endif
-    write_csr(pmpcfg0, pmp_values[hart_id][0]);
+#if ((LIBERO_SETTING_MEM_CONFIGS_ENABLED & PMP_ENABLED_MASK) == PMP_ENABLED_MASK)
+    pmp0cfg = pmp_values[hart_id][0];
+    pmp_master_configs(hart_id, &pmp0cfg);
+    write_csr(pmpcfg0, pmp0cfg);
     write_csr(pmpcfg2, pmp_values[hart_id][1]);
+#endif
 
     return(0);
 }

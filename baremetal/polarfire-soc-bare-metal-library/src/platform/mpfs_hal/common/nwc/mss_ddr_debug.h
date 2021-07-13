@@ -40,7 +40,7 @@
 #define __MSS_DDr_DEBUG_H_ 1
 
 #ifdef DEBUG_DDR_INIT
-#include "drivers/mss_mmuart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 #endif
 
 #ifdef __cplusplus
@@ -123,6 +123,23 @@ uprint64
 mss_uart_instance_t * uart,
 const char* msg,
 uint64_t d
+);
+
+/***************************************************************************//**
+  The uprint() function is used to print to the designated debug port
+
+  Example:
+  @code
+
+  (void)uprint(g_debug_uart, "\n\r DDR_TRAINING_FAIL: ");
+
+  @endcode
+ */
+void
+uprint
+(
+mss_uart_instance_t * uart,
+const char* msg
 );
 
 /***************************************************************************//**

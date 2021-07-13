@@ -47,7 +47,7 @@
  * MICROCHIP_STDIO_BAUD_RATE #define.
  */
 #ifdef MICROCHIP_STDIO_THRU_UART
-#include "drivers/mss_mmuart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 
 #ifndef MICROCHIP_STDIO_BAUD_RATE
 #define MICROCHIP_STDIO_BAUD_RATE  MSS_UART_115200_BAUD

@@ -1,2 +1,2 @@
 @Library('automated-testing-library') _
-pipelineBareMetalDriverSrc(examplesRepoBranch: 'ddr-test-update')
+pipelineBareMetalDriverSrc(examplesRepoBranch: 'mutex_update')

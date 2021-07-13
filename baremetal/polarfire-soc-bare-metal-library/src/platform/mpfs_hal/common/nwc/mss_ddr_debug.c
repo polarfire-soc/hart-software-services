@@ -17,9 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mss_hal.h"
-
-#include "mss_nwc_init.h"
+#include "mpfs_hal/mss_hal.h"
 
 /*******************************************************************************
  * Local Defines
@@ -54,9 +52,7 @@ extern const uint32_t ddr_test_pattern[768];
 /*******************************************************************************
  * External function declarations
  */
-//extern void delay(uint32_t n);
-
-// these following functions are implemented in assembler, so declaring here
+extern void delay(uint32_t n);
 extern void pdma_transfer(uint64_t destination, uint64_t source, uint64_t size_in_bytes, uint64_t base_address);
 extern void pdma_transfer_complete( uint64_t base_address);
 
@@ -76,15 +72,13 @@ static uint32_t ddr_write ( volatile uint64_t *DDR_word_ptr,\
         uint32_t no_of_access, uint8_t data_ptrn, DDR_ACCESS_SIZE data_size );
 static uint32_t ddr_read ( volatile uint64_t *DDR_word_ptr,\
         uint32_t no_of_access, uint8_t data_ptrn,  DDR_ACCESS_SIZE data_size );
-static void load_test_buffers(uint32_t * p_cached_ddr, uint32_t * p_not_cached_ddr,
-	uint64_t length);
 
-
+#ifdef HSS
 __attribute__((weak)) int rand(void)
 {
-    return 0;
+    return(0);
 }
-
+#endif
 
 #ifdef DEBUG_DDR_INIT
 /***************************************************************************//**
@@ -548,14 +542,12 @@ uint32_t error_status(mss_uart_instance_t *g_mss_uart_debug_pt, uint32_t error)
  * @return
  */
 #ifdef DEBUG_DDR_INIT
-#if 0
 uint32_t wrcalib_status(mss_uart_instance_t *g_mss_uart_debug_pt)
 {
     uprint32(g_mss_uart_debug_pt,  "\n\r WRCALIB_RESULT: ",\
             CFG_DDR_SGMII_PHY->expert_wrcalib.expert_wrcalib);
     return (0U);
 }
-#endif
 #endif
 
 #ifdef DEBUG_DDR_INIT
@@ -815,11 +807,11 @@ void load_ddr_pattern(uint64_t base, uint32_t size, uint8_t pattern_offset)
 
 }
 
-#if 0
 /**
  * Run from address
  * @param start_addr address to run from.
  */
+#if 0
 void execute_ddr_pattern(uint64_t start_addr)
 {
     pattern_fct_t p_pattern_fct = (pattern_fct_t)start_addr;
@@ -835,7 +827,8 @@ void execute_ddr_pattern(uint64_t start_addr)
  * @param p_not_cached_ddr
  * @param length
  */
-static void load_test_buffers(uint32_t * p_cached_ddr, uint32_t * p_not_cached_ddr, uint64_t length)
+void load_test_buffers(uint32_t * p_cached_ddr, uint32_t * p_not_cached_ddr, uint64_t length);
+void load_test_buffers(uint32_t * p_cached_ddr, uint32_t * p_not_cached_ddr, uint64_t length)
 {
     (void)length;
 

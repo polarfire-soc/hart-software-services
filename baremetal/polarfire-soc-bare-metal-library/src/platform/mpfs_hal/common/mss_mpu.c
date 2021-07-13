@@ -18,7 +18,7 @@
  *//*=========================================================================*/
 #include <stdio.h>
 #include <string.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 #ifndef SIFIVE_HIFIVE_UNLEASHED
 

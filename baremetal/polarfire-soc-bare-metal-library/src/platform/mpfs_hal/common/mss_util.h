@@ -17,6 +17,7 @@
 #define MSS_UTIL_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "encoding.h"
 #include "mss_hart_ints.h"
 
@@ -46,6 +47,7 @@ void sleep_cycles(uint64_t ncycles);
 
 
 uint64_t get_stack_pointer(void);
+uint64_t get_tp_reg(void);
 uint64_t get_program_counter(void) __attribute__((aligned(16)));
 
 #ifdef MPFS_PRINTF_DEBUG_SUPPORTED
@@ -63,9 +65,22 @@ void __enable_irq(void);
 void __enable_local_irq(uint8_t local_interrupt);
 void __disable_local_irq(uint8_t local_interrupt);
 
-void mss_init_mutex(uint64_t address);
-void mss_take_mutex(uint64_t address);
-void mss_release_mutex(uint64_t address);
+static inline void spinunlock(volatile long *pLock)
+{
+    __sync_lock_release(pLock);
+}
+
+static inline void spinlock(volatile long *pLock)
+{
+    while(__sync_lock_test_and_set(pLock, 1))
+    {
+        /* add yield if OS */
+#if defined USING_FREERTOS
+        taskYIELD();
+#endif
+    }
+}
+
 
 #ifdef __cplusplus
 }

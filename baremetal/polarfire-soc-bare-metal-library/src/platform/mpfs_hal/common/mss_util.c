@@ -15,7 +15,7 @@
  */
 #include <stddef.h>
 #include <stdbool.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,6 +91,10 @@ void __disable_local_irq(uint8_t local_interrupt)
     }
 }
 
+/**
+ * readmcycle(void)
+ * @return returns the mcycle count from hart CSR
+ */
 uint64_t readmcycle(void)
 {
     return (read_csr(mcycle));
@@ -106,6 +110,10 @@ void sleep_ms(uint64_t msecs)
     }
 }
 
+/**
+ * sleep_cycles(uint64_t ncycles)
+ * @param number of cycles to sleep
+ */
 void sleep_cycles(uint64_t ncycles)
 {
     uint64_t starttime = readmcycle();
@@ -116,15 +124,10 @@ void sleep_cycles(uint64_t ncycles)
     }
 }
 
-void exit_simulation(void) {
-    uint64_t hartid = read_csr(mhartid);
-    volatile uint32_t * exit_simulation_p = (uint32_t *)0x60000000U;
-
-
-    *exit_simulation_p = 1U;
-	(void)hartid; /* use hartid to avoid compiler warning */
-}
-
+/**
+ * get_program_counter(void)
+ * @return returns the program counter
+ */
 __attribute__((aligned(16))) uint64_t get_program_counter(void)
 {
     uint64_t prog_counter;
@@ -132,11 +135,30 @@ __attribute__((aligned(16))) uint64_t get_program_counter(void)
     return (prog_counter);
 }
 
+/**
+ * get_stack_pointer(void)
+ * @return Return the stack pointer
+ */
 uint64_t get_stack_pointer(void)
 {
-    uint64_t prog_counter;
-    asm volatile ("addi %0, sp, 0" : "=r"(prog_counter));
-    return (prog_counter);
+    uint64_t stack_pointer;
+    asm volatile ("addi %0, sp, 0" : "=r"(stack_pointer));
+    return (stack_pointer);
+}
+
+/**
+ * Return the tp register
+ * The tp register holds the value of the Hart Common memory HLS once not in an
+ * interrupt. If the tp value is used in an interrupt, it is saved first and
+ * restored on exit. This conforms to OpenSBI implementation.
+ *
+ * @return returns the tp register value
+ */
+uint64_t get_tp_reg(void)
+{
+    uint64_t tp_reg_val;
+    asm volatile ("addi %0, tp, 0" : "=r"(tp_reg_val));
+    return (tp_reg_val);
 }
 
 #ifdef PRINTF_DEBUG_SUPPORTED

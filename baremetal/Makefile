@@ -44,6 +44,7 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.c \
 	baremetal/drivers/mss_watchdog/mss_watchdog.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_mpu.c \
+	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_peripherals.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_plic.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_cache.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_util.c \
@@ -61,8 +62,9 @@ EXTRA_SRCS-$(CONFIG_PLATFORM_FU540) += \
 	baremetal/sysreg.c \
 
 ASM_SRCS += \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_mutex.S \
  	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_utils.S \
+
+	# baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_mutex.S \
 
 INCLUDES += \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_uart \
@@ -96,6 +98,7 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_c
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_util.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services/mss_sys_services.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_mpu.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_peripherals.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_plic.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_pmp.o: CFLAGS=$(CFLAGS_GCCEXT)
 

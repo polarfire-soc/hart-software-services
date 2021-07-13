@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 #ifndef CONFIG_OPENSBI
-#  include "encoding.h"
+#include "encoding.h"
 #endif
 
 #include "mss_assert.h"

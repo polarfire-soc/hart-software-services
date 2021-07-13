@@ -539,21 +539,21 @@ extern "C" {
 
 /*Configures the two AHB-APB bridges on S5 and S6*/
 #define AHBAPB_CR_OFFSET                                         0x90
-    /* Enables posted mode on the AHB-APB bridge when set the AHB write cycle
-	will complete before the APB write cycle completes.*/
+    /* Enables posted mode on the AHB-APB bridge when set the AHB write cyc
+    le will complete before the APB write cycle completes.*/
     #define AHBAPB_CR_APB0_POSTED_OFFSET                         0x0
     #define AHBAPB_CR_APB0_POSTED_MASK                           (0x01 << 0x0)
-    /* Enables posted mode on the AHB-APB bridge when set the AHB write cycle
-	will complete before the APB write cycle completes.*/
+    /* Enables posted mode on the AHB-APB bridge when set the AHB write cyc
+    le will complete before the APB write cycle completes.*/
     #define AHBAPB_CR_APB1_POSTED_OFFSET                         0x1
     #define AHBAPB_CR_APB1_POSTED_MASK                           (0x01 << 0x1)
 
 /*MSS Corner APB interface controls*/
 #define DFIAPB_CR_OFFSET                                         0x98
-    /* Turns on the APB clock to the MSS Corner is off at reset. Once corner
-	blocks is configured the firmware may turn off the clock but periodically
-	should turn back on to allow refresh of TMR registers inside the corner
-	block. */
+    /* Turns on the APB clock to the MSS Corner is off at reset. Once corne
+    r blocks is configured the firmware may turn off the clock but periodically
+     should turn back on to allow refresh of TMR registers inside the corner bl
+    ock. */
     #define DFIAPB_CR_CLOCKON_OFFSET                             0x0
     #define DFIAPB_CR_CLOCKON_MASK                               (0x01 << 0x0)
     /* Asserts the APB reset to the MSS corner is asserted at MSS reset.*/
@@ -562,44 +562,42 @@ extern "C" {
 
 /*GPIO Blocks reset control*/
 #define GPIO_CR_OFFSET                                           0x9C
-    /* "This signal selects whether the associated byte is reset by soft reset or
-	the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed values are:
-	* 0: Selects MSS_GPIO_RESET_N signal from the FPGA fabric.
-	* 1: Selects the GPIO to be reset by the GPIO block soft reset signal.
-	Bit 0 controls GPIO0 [7:0] and bit 1 GPIO[15:8]
-	The master MSS reset will also reset the GPIO register if not configured
-	to use fabric reset."*/
+    /* "This signal selects whether the associated byte is reset by soft re
+    set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
+    lues are:* 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.* 1
+    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
+    controls GPIO0 [7:0]  and bit  1 GPIO[15:8]The master MSS reset will also r
+    eset the GPIO register if not configured to use fabric reset."*/
     #define GPIO_CR_GPIO0_SOFT_RESET_SELECT_OFFSET               0x0
     #define GPIO_CR_GPIO0_SOFT_RESET_SELECT_MASK                 (0x03 << 0x0)
     /* "Sets the reset value off the GPIO0 per byteBit 0 controls GPIO0 [7:
     0]  and bit  1 GPIO[15:8]"*/
     #define GPIO_CR_GPIO0_DEFAULT_OFFSET                         0x4
     #define GPIO_CR_GPIO0_DEFAULT_MASK                           (0x03 << 0x4)
-    /* "This signal selects whether the associated byte is reset by soft reset or
-	the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed values are:
-	* 0: Selects MSS_GPIO_RESET_N signal from the FPGA fabric.
-	* 1: Selects the GPIO to be reset by the GPIO block soft reset signal.
-	Bit 0 controls GPIO0 [7:0] bit 1 GPIO[15:8] and bit 2 GPIO[23:16]
-	The master MSS reset will also reset the GPIO register if not configured to
-	use fabric reset."*/
+    /* "This signal selects whether the associated byte is reset by soft re
+    set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
+    lues are:* 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.* 1
+    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
+    controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 2 GPIO[23:16]The master MSS
+    reset will also reset the GPIO register if not configured to use fabric res
+    et."*/
     #define GPIO_CR_GPIO1_SOFT_RESET_SELECT_OFFSET               0x8
     #define GPIO_CR_GPIO1_SOFT_RESET_SELECT_MASK                 (0x07 << 0x8)
-    /* "Sets the reset value off the GPIO0 per byte
-	Bit 0 controls GPIO0 [7:0] bit 1 GPIO[15:8] and bit 2 GPIO[23:16]"*/
+    /* "Sets the reset value off the GPIO0 per byteBit 0 controls GPIO0 [7:
+    0] bit  1 GPIO[15:8] and bit 2 GPIO[23:16]"*/
     #define GPIO_CR_GPIO1_DEFAULT_OFFSET                         0xC
     #define GPIO_CR_GPIO1_DEFAULT_MASK                           (0x07 << 0xC)
-    /* "This signal selects whether the associated byte is reset by soft reset or
-	the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed values are:
-	* 0: Selects MSS_GPIO_RESET_N signal from the FPGA fabric.
-	* 1: Selects the GPIO to be reset by the GPIO block soft reset signal.
-	Bit 0 controls GPIO0 [7:0] bit 1 GPIO[15:8] and bit 1 GPIO[23:16] and
-	bit 3 GPIO[31:24]
-	The master MSS reset will also reset the GPIO register if not configured to
-	use fabric reset."*/
+    /* "This signal selects whether the associated byte is reset by soft re
+    set or the the MSS_GPIO_RESET_N signal from the FPGA fabric. The allowed va
+    lues are:* 0: Selects  MSS_GPIO_RESET_N signal from the FPGA fabric.* 1
+    : Selects  the GPIO to be reset by the GPIO block soft reset signal .Bit 0
+    controls GPIO0 [7:0] bit  1 GPIO[15:8] and bit 1 GPIO[23:16] and bit 3 GPIO
+    [31:24]The master MSS reset will also reset the GPIO register if not config
+    ured to use fabric reset."*/
     #define GPIO_CR_GPIO2_SOFT_RESET_SELECT_OFFSET               0x10
     #define GPIO_CR_GPIO2_SOFT_RESET_SELECT_MASK                 (0x0F << 0x10)
-    /* "Sets the reset value off the GPIO0 per byteBit 0 controls GPIO0 [7:0]
-	bit  1 GPIO[15:8] and bit 1 GPIO[23:16] and bit 3 GPIO[31:24]"*/
+    /* "Sets the reset value off the GPIO0 per byteBit 0 controls GPIO0 [7:
+    0] bit  1 GPIO[15:8] and bit 1 GPIO[23:16] and bit 3 GPIO[31:24]"*/
     #define GPIO_CR_GPIO2_DEFAULT_OFFSET                         0x14
     #define GPIO_CR_GPIO2_DEFAULT_MASK                           (0x0F << 0x14)
 
@@ -617,22 +615,22 @@ extern "C" {
 
 /*USB Configuration register*/
 #define USB_CR_OFFSET                                            0xAC
-    /* "Configures USB for Single-Data Rate(SDR) mode or Double-Data Rate(DDR) mode.
-	0 - SDR Mode is selected
-	1 - DDR Mode is selected (Not supported in G5 or G5)"*/
+    /* "Configures USB for Single-Data Rate(SDR) mode or Double-Data Rate(D
+    DR) mode. 0 - SDR Mode is selected1 - DDR Mode is selected (Not supported i
+    n G5 or G5)"*/
     #define USB_CR_DDR_SELECT_OFFSET                             0x0
     #define USB_CR_DDR_SELECT_MASK                               (0x01 << 0x0)
     /* When '1' will stops the clock to the USB core when the core asserts
     its POWERDOWN output. For G4 compatibility this bit defaults to 0.*/
     #define USB_CR_POWERDOWN_ENABLE_OFFSET                       0x1
     #define USB_CR_POWERDOWN_ENABLE_MASK                         (0x01 << 0x1)
-    /* Indicates that the USB CLK may be stopped to save power. Derived from
-	combination of signals from CLK & XCLK flip-flops AVALID VBUSVALID and
-	LINESTATE. When asserted the USB clock into the core is stopped.*/
+    /* Indicates that the USB CLK may be stopped to save power. Derived fro
+    m combination of signals from CLK & XCLK flip-flops AVALID VBUSVALID and LI
+    NESTATE. When asserted the USB clock into the core is stopped.*/
     #define USB_CR_POWERDOWN_OFFSET                              0x2
     #define USB_CR_POWERDOWN_MASK                                (0x01 << 0x2)
-    /* Set when entry is made into CarKit mode and cleared on exit from CarKit
-	mode.*/
+    /* Set when entry is made into CarKit mode and cleared on exit from Car
+    Kit mode.*/
     #define USB_CR_LPI_CARKIT_EN_OFFSET                          0x3
     #define USB_CR_LPI_CARKIT_EN_MASK                            (0x01 << 0x3)
 
@@ -641,11 +639,10 @@ extern "C" {
     /* Writing a 1 will start the Mesh System*/
     #define MESH_CR_START_OFFSET                                 0x0
     #define MESH_CR_START_MASK                                   (0x01 << 0x0)
-    /* "Sets the amount of time that the mesh is held active for actual hold
-	time includes up to 256 us of random variation.
-	Minimum Time = 1 + 256 * value   us
-	Maximum Time = 1 +  256 * (1+value)   us
-	Value must be greater than 0"*/
+    /* "Sets the amount of time that the mesh is held active for actual hol
+    d time includes up to 256 us of random variation.Minimum Time = 1 + 256 * v
+    alue   usMaximum Time = 1 +  256 * (1+value)   usValue must be greater than
+     0"*/
     #define MESH_CR_HOLD_OFFSET                                  0x1
     #define MESH_CR_HOLD_MASK                                    (0xFFF << 0x1)
     /* When set will inject an error in the mesh*/
@@ -654,42 +651,43 @@ extern "C" {
     /* Indicates that Mesh detected an error. Cleared by writing a '1'*/
     #define MESH_CR_MESH_ERROR_OFFSET                            0x18
     #define MESH_CR_MESH_ERROR_MASK                              (0x01 << 0x18)
-    /* Indicates that the Mesh is functioning correctly. Will be set approximately
-	520 clock cycles after mesh started and stay set as long as the mesh
-	is not detecting any errors.*/
+    /* Indicates that the Mesh is functioning correctly. Will be set approx
+    imately  520 clock cycles after mesh started and stay set as long as the me
+    sh is not detecting any errors.*/
     #define MESH_CR_OKAY_OFFSET                                  0x19
     #define MESH_CR_OKAY_MASK                                    (0x01 << 0x19)
 
 /*Crypto mesh seed and update rate*/
 #define MESH_SEED_CR_OFFSET                                      0xB4
-    /* Sets the mesh seed value any value may be used zero should be avoided*/
+    /* Sets the mesh seed value any value may be used zero should be avoide
+    d*/
     #define MESH_SEED_CR_SEED_OFFSET                             0x0
     #define MESH_SEED_CR_SEED_MASK                               (0x7FFFFF << 0x0)
-    /* Sets the rate that the mesh value is changed. Rate = AHBCLK/(clkrate+1).
-	Rate must be less than 1MHz setting slower will reduce power consumpti
+    /* Sets the rate that the mesh value is changed. Rate = AHBCLK/(clkrate
+    +1). Rate must be less than 1MHz setting slower will reduce power consumpti
     on.*/
     #define MESH_SEED_CR_CLKRATE_OFFSET                          0x18
     #define MESH_SEED_CR_CLKRATE_MASK                            (0xFF << 0x18)
 
 /*ENVM AHB Controller setup*/
 #define ENVM_CR_OFFSET                                           0xB8
-    /* "Sets the number of  AHB cycles used to generate the PNVM
-	clockClock period = (Value+1) * (1000/AHBFREQMHZ)
-	Value must be 1 to 63  (0 defaults to 15), e.g. 11 will generate
-	a 40ns period  25MHz clock if the AHB clock is 250MHz
-	15 will generate a 40ns period 25MHz clock if the AHB clock is 400MHz"*/
+    /* "Sets the number of  AHB cycles used to generate the PNVM clockClock
+      period = (Value+1) * (1000/AHBFREQMHZ)         Value must be 1 to 63  (0
+    defaults to 15)e.g.11  will generate a 40ns period  25MHz clock if the AHB
+    clock is 250MHz15  will generate a 40ns period  25MHz clock if the AHB cloc
+    k is 400MHz"*/
     #define ENVM_CR_CLOCK_PERIOD_OFFSET                          0x0
     #define ENVM_CR_CLOCK_PERIOD_MASK                            (0x3F << 0x0)
     /* Indicates the eNVM is running at the configured divider rate. */
     #define ENVM_CR_CLOCK_OKAY_OFFSET                            0x6
     #define ENVM_CR_CLOCK_OKAY_MASK                              (0x01 << 0x6)
-    /* When '1' the PNVM clock will be always generated and not stopped between
-	access cycles. Setting this will increase access latency but mean that
+    /* When '1' the PNVM clock will be always generated and not stopped bet
+    ween access cycles. Setting this will increase access latency but mean that
      the PNVM clock operates at a stable rate.*/
     #define ENVM_CR_CLOCK_CONTINUOUS_OFFSET                      0x8
     #define ENVM_CR_CLOCK_CONTINUOUS_MASK                        (0x01 << 0x8)
-    /* When set suppresses clock edge between C-Bus access cycles so that they
-	appear as consecutive access cycles.*/
+    /* When set suppresses clock edge between C-Bus access cycles so that t
+    hey appear as consecutive access cycles.*/
     #define ENVM_CR_CLOCK_SUPPRESS_OFFSET                        0x9
     #define ENVM_CR_CLOCK_SUPPRESS_MASK                          (0x01 << 0x9)
     /* "Enables ""read-ahead"" on the ENVM controller. The controller will
@@ -711,10 +709,9 @@ extern "C" {
     #define ENVM_CR_INTERRUPT_ENABLE_OFFSET                      0x12
     #define ENVM_CR_INTERRUPT_ENABLE_MASK                        (0x01 << 0x12)
     /* "Sets the duration of the timer used to detect a non response of slow
-    response from the PNVM on C and R bus accesses.
-	Timer Duration = Value * (1000/AHBFREQMHZ)
-	0x00: Timer disabled. If the timer expires the AHB cycle is terminated
-		using the HRESP protocol"*/
+    response from the PNVM on C and R bus accesses.Timer Duration = Value *
+    (1000/AHBFREQMHZ)   0x00: Timer disabled. If the timer expires the AHB cycle
+    is terminates using the HRESP protocol"*/
     #define ENVM_CR_TIMER_OFFSET                                 0x18
     #define ENVM_CR_TIMER_MASK                                   (0xFF << 0x18)
 
@@ -3659,6 +3656,18 @@ typedef struct _mss_sysreg
     /*Allows the Ethernet interrupts to be directly routed to the U54 CPUS.
     */
      __IO uint32_t FAB_INTEN_MISC;
+    /* Enables the Ethernet MAC0 to interrupt U54_1 directly  */
+    #define FAB_INTEN_MAC0_U54_1_EN_OFFSET      0x01U
+    /* Enables the Ethernet MAC0 to interrupt U54_2 directly  */
+    #define FAB_INTEN_MAC0_U54_2_EN_OFFSET      0x02U
+    /* Enables the Ethernet MAC1 to interrupt U54_3 directly  */
+    #define FAB_INTEN_MAC1_U54_3_EN_OFFSET      0x03U
+    /* Enables the Ethernet MAC1 to interrupt U54_4 directly  */
+    #define FAB_INTEN_MAC1_U54_4_EN_OFFSET      0x04U
+    #define FAB_INTEN_MAC0_U54_1_EN_MASK        0x01U
+    #define FAB_INTEN_MAC0_U54_2_EN_MASK        0x02U
+    #define FAB_INTEN_MAC1_U54_3_EN_MASK        0x04U
+    #define FAB_INTEN_MAC1_U54_4_EN_MASK        0x08U
 
     /*Switches GPIO interrupt from PAD to Fabric GPIO*/
      __IO uint32_t GPIO_INTERRUPT_FAB_CR;

@@ -15,7 +15,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 
 #ifdef __cplusplus
 extern "C" {

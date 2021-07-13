@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 #include "mss_l2_cache.h"
 
 /*==============================================================================
@@ -44,13 +44,19 @@ static void check_config_l2_scratchpad(void);
  *  - Configure some of the enabled ways as scratchpad based on linker
  *    configuration and space allocated by configurator.
  */
-
 __attribute__((weak)) void config_l2_cache(void)
 {
-    //
-    // Sanity Check the L2 Cache settings
-    //
     ASSERT(LIBERO_SETTING_WAY_ENABLE < 16U);
+
+    /*
+     * Set the number of ways that will be shared between cache and scratchpad.
+     */
+    CACHE_CTRL->WAY_ENABLE = LIBERO_SETTING_WAY_ENABLE;
+
+    /*
+     * shutdown L2 as directed
+     */
+    SYSREG->L2_SHUTDOWN_CR = LIBERO_SETTING_L2_SHUTDOWN_CR;
 
     /* The scratchpad has already been set-up, first check enough space before copying */
     check_config_l2_scratchpad();
@@ -59,10 +65,13 @@ __attribute__((weak)) void config_l2_cache(void)
 
     ASSERT(LIBERO_SETTING_WAY_ENABLE >= LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS);
 
+
+
     /*
      * Compute the mask used to specify ways that will be used by the
      * scratchpad.
      */
+
     uint32_t scratchpad_ways_mask = 0U;
 #if (LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS != 0)
     uint32_t inc;
@@ -71,12 +80,10 @@ __attribute__((weak)) void config_l2_cache(void)
     {
         scratchpad_ways_mask |= (seed_ways_mask >> inc) ;
     }
-
 #else
     (void)scratchpad_ways_mask;
 #endif
 
-#if (LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS != 0)
     /*
      * Make sure ways are masked if being used as scratchpad
      */
@@ -95,25 +102,6 @@ __attribute__((weak)) void config_l2_cache(void)
     ASSERT((LIBERO_SETTING_WAY_MASK_U54_2_ICACHE & scratchpad_ways_mask) == 0UL);
     ASSERT((LIBERO_SETTING_WAY_MASK_U54_3_ICACHE & scratchpad_ways_mask) == 0UL);
     ASSERT((LIBERO_SETTING_WAY_MASK_U54_4_ICACHE & scratchpad_ways_mask) == 0UL);
-#endif
-
-    //
-    // ... and now that sanity checking is done, actually configure the L2 Cache...
-    //
-    config_l2_cache_ex();
-}
-
-__attribute__((weak)) void config_l2_cache_ex(void)
-{
-    /*
-     * Set the number of ways that will be shared between cache and scratchpad.
-     */
-    CACHE_CTRL->WAY_ENABLE = LIBERO_SETTING_WAY_ENABLE;
-
-    /*
-     * shutdown L2 as directed
-     */
-    SYSREG->L2_SHUTDOWN_CR = LIBERO_SETTING_L2_SHUTDOWN_CR;
 
     /*
      * Setup all masters, apart from one we are using to setup scratch
@@ -140,7 +128,7 @@ __attribute__((weak)) void config_l2_cache_ex(void)
     uint64_t * p_scratchpad = (uint64_t *)ZERO_DEVICE_BOTTOM;
     uint32_t ways_inc;
     uint64_t current_way = 0x1U << (((LIBERO_SETTING_WAY_ENABLE + 1U) - LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS) );
-    for(ways_inc = 0U; ways_inc < LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS; ++ways_inc)
+    for(ways_inc = 0; ways_inc < LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS; ++ways_inc)
     {
         /*
          * Populate the scratchpad memory one way at a time.
@@ -150,8 +138,7 @@ __attribute__((weak)) void config_l2_cache_ex(void)
         /*
          * Write to the first 64-bit location of each cache block.
          */
-        uint32_t inc;
-        for(inc = 0U; inc < (WAY_BYTE_LENGTH / CACHE_BLOCK_BYTE_LENGTH); ++inc)
+        for(inc = 0; inc < (WAY_BYTE_LENGTH / CACHE_BLOCK_BYTE_LENGTH); ++inc)
         {
             *p_scratchpad = g_init_marker + inc;
             p_scratchpad += CACHE_BLOCK_BYTE_LENGTH / UINT64_BYTE_LENGTH;
@@ -165,6 +152,7 @@ __attribute__((weak)) void config_l2_cache_ex(void)
      */
     CACHE_CTRL->WAY_MASK_E51_DCACHE = LIBERO_SETTING_WAY_MASK_E51_DCACHE;
     mb();
+
 }
 
 
@@ -203,3 +191,107 @@ static void check_config_l2_scratchpad(void)
 
     ASSERT(LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS >= n_scratchpad_ways);
 }
+
+#if 0 // todo - remove, no longer used
+
+
+/*==============================================================================
+ * Reserve a number of cache ways to be used as scratchpad memory.
+ *
+ * @param nways
+ *  Number of ways to be used as scratchpad. One way is 128Kbytes.
+ *
+ * @param scratchpad_start
+ *  Start address within the Zero Device memory range in which the scratchpad
+ *  will be located.
+ */
+static void reserve_scratchpad_ways(uint8_t nways, uint64_t * scratchpad_start)
+{
+    uint8_t way_enable;
+    uint64_t available_ways = 1;
+    uint64_t scratchpad_ways = 0;
+    uint64_t non_scratchpad_ways;
+    uint32_t inc;
+
+    ASSERT(scratchpad_start >= (uint64_t *)ZERO_DEVICE_BOTTOM);
+    ASSERT(scratchpad_start < (uint64_t *)ZERO_DEVICE_TOP);
+
+    /*
+     * Ensure at least one way remains available as cache.
+     */
+    way_enable = CACHE_CTRL->WAY_ENABLE;
+    ASSERT(nways <= way_enable);
+    if(nways <= way_enable)
+    {
+        /*
+         * Compute the mask used to specify ways that will be used by the
+         * scratchpad.
+         */
+
+        for(inc = 0; inc < way_enable; ++inc)
+        {
+            available_ways = (available_ways << 1) | (uint64_t)0x01;
+            if(inc < nways)
+            {
+                scratchpad_ways = (scratchpad_ways << 1) | (uint64_t)0x01;
+            }
+        }
+
+        /*
+         * Prevent other masters from evicting cache lines from scratchpad ways.
+         * Only allow E51 to evict from scratchpad ways.
+         */
+        non_scratchpad_ways = available_ways &  ~scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_DMA = non_scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_AXI4_SLAVE_PORT_0 = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_AXI4_SLAVE_PORT_1 = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_AXI4_SLAVE_PORT_2 = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_AXI4_SLAVE_PORT_3 = non_scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_E51_ICACHE = non_scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_U54_1_DCACHE = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_U54_1_ICACHE = non_scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_U54_2_DCACHE = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_U54_2_ICACHE = non_scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_U54_3_DCACHE = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_U54_3_ICACHE = non_scratchpad_ways;
+
+        CACHE_CTRL->WAY_MASK_U54_4_DCACHE = non_scratchpad_ways;
+        CACHE_CTRL->WAY_MASK_U54_4_ICACHE = non_scratchpad_ways;
+
+        /*
+         * Assign ways to Zero Device
+         */
+        uint64_t * p_scratchpad = scratchpad_start;
+        int ways_inc;
+        uint64_t current_way = 1;
+        for(ways_inc = 0; ways_inc < nways; ++ways_inc)
+        {
+            /*
+             * Populate the scratchpad memory one way at a time.
+             */
+            CACHE_CTRL->WAY_MASK_E51_DCACHE = current_way;
+            /*
+             * Write to the first 64-bit location of each cache block.
+             */
+            for(inc = 0; inc < (WAY_BYTE_LENGTH / CACHE_BLOCK_BYTE_LENGTH); ++inc)
+            {
+                *p_scratchpad = g_init_marker + inc;
+                p_scratchpad += CACHE_BLOCK_BYTE_LENGTH / UINT64_BYTE_LENGTH;
+            }
+            current_way = current_way << 1U;
+            mb();
+        }
+
+        /*
+         * Prevent E51 from evicting from scratchpad ways.
+         */
+        CACHE_CTRL->WAY_MASK_E51_DCACHE = non_scratchpad_ways;
+    }
+}
+#endif

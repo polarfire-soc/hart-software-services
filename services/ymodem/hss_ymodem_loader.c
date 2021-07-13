@@ -38,8 +38,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "soc_config/hw_platform.h"
-#include "soc_config/clocks/hw_mss_clks.h"
+#include "fpga_design_config/fpga_design_config.h"
+#include "fpga_design_config/clocks/hw_mss_clks.h"
 #undef ROUNDUP
 #undef ROUNDDOWN
 #include "mss_util.h"

@@ -52,7 +52,7 @@
 
 #include "hss_memcpy_via_pdma.h"
 #include "system_startup.h"
-#include "soc_config/hw_platform.h"
+#include "fpga_design_config/fpga_design_config.h"
 
 
 /* Timeouts */

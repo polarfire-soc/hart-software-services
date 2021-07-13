@@ -11,7 +11,7 @@
  * SVN $Date$
  */
 #include "mss_plic.h"
-#include "soc_config/hw_platform.h"
+#include "fpga_design_config/fpga_design_config.h"
 
 #include "drivers/mss_mac/mss_ethernet_registers.h"
 #include "drivers/mss_mac/mss_ethernet_mac_regs.h"

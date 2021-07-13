@@ -27,6 +27,10 @@
 #include "encoding.h"
 #include "mss_mmc.h"
 #include "hal/hw_macros.h"
+#ifndef __IO
+#define __IO volatile
+#endif
+#include "mss_io_config.h"
 #include "hss_memcpy_via_pdma.h"
 
 /*
@@ -45,48 +49,13 @@
 
 // ---------------------------------------------------------------------------------------------
 
-/*
- * We need MSSIO settings for eMMC...
- */
-#define LIBERO_SETTING_IOMUX1_CR_eMMC			0x11111111UL
-#define LIBERO_SETTING_IOMUX2_CR_eMMC			0x00FF1111UL
-#define LIBERO_SETTING_IOMUX6_CR_eMMC			0x00000000UL
-#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR_eMMC		0x00040A0DUL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_eMMC	0x09280928UL
-
-/*
- * ... and for SDCard
- */
-#define LIBERO_SETTING_IOMUX1_CR_SD			0x00000000UL
-#define LIBERO_SETTING_IOMUX2_CR_SD			0x00000000UL
-#define LIBERO_SETTING_IOMUX6_CR_SD			0x0000001DUL
-#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR_SD		0x00080907UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_SD	0x08290829UL
-
-// ---------------------------------------------------------------------------------------------
-
 #include "mss_sysreg.h"
 
 static void mmc_reset_block(void)
 {
-    SYSREG->SUBBLK_CLOCK_CR |=
-        (uint32_t)(SUBBLK_CLOCK_CR_MMC_MASK);
-    SYSREG->SOFT_RESET_CR |=
-        (uint32_t)(SOFT_RESET_CR_MMC_MASK);
-    SYSREG->SOFT_RESET_CR &=
-        ~(uint32_t)(SOFT_RESET_CR_MMC_MASK);
+    SYSREG->SUBBLK_CLOCK_CR |= (uint32_t)(SUBBLK_CLOCK_CR_MMC_MASK);
+    SYSREG->SOFT_RESET_CR |= (uint32_t)(SOFT_RESET_CR_MMC_MASK);
+    SYSREG->SOFT_RESET_CR &= ~(uint32_t)(SOFT_RESET_CR_MMC_MASK);
 }
 
 static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
@@ -102,7 +71,7 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
     }
 
     if (retval != MSS_MMC_INIT_SUCCESS) {
-        //mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, retval);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, retval);
     } else {
         result = true;
     }
@@ -113,22 +82,6 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
 static bool mmc_init_emmc(void)
 {
-    SYSREG->IOMUX1_CR = LIBERO_SETTING_IOMUX1_CR_eMMC;
-    SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_eMMC;
-    SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_eMMC;
-    SYSREG->MSSIO_BANK4_CFG_CR = LIBERO_SETTING_MSSIO_BANK4_CFG_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_0_1_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_2_3_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_4_5_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_6_7_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_8_9_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_10_11_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_12_13_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_eMMC;
-
-#if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
-    HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  0);
-#endif
-
     static mss_mmc_cfg_t emmcConfig =
     {
         .card_type = MSS_MMC_CARD_TYPE_MMC,
@@ -144,29 +97,26 @@ static bool mmc_init_emmc(void)
 #endif
     };
 
-    return mmc_init_common(&emmcConfig);
+    bool result = mss_does_xml_ver_support_switch();
+
+    if (result) {
+        result = switch_mssio_config(EMMC_MSSIO_CONFIGURATION);
+
+        if (result) {
+            switch_external_mux(EMMC_MSSIO_CONFIGURATION);
+
+            /* Initialize eMMC/SD */
+            result = mmc_init_common(&emmcConfig);
+        }
+    }
+
+    return result;
 }
 #endif
 
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
 static bool mmc_init_sdcard(void)
 {
-    SYSREG->IOMUX1_CR = LIBERO_SETTING_IOMUX1_CR_SD;
-    SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_SD;
-    SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_SD;
-    SYSREG->MSSIO_BANK4_CFG_CR = LIBERO_SETTING_MSSIO_BANK4_CFG_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_0_1_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_2_3_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_4_5_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_6_7_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_8_9_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_10_11_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_12_13_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_SD;
-
-#if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
-    HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  1);
-#endif
-
     static mss_mmc_cfg_t sdcardConfig =
     {
         .card_type = MSS_MMC_CARD_TYPE_SD,
@@ -175,39 +125,49 @@ static bool mmc_init_sdcard(void)
         .clk_rate = MSS_MMC_CLOCK_50MHZ,
     };
 
-    return mmc_init_common(&sdcardConfig);
+
+    bool result = mss_does_xml_ver_support_switch();
+
+    if (result) {
+        result = switch_mssio_config(SD_MSSIO_CONFIGURATION);
+
+        if (result) {
+            switch_external_mux(SD_MSSIO_CONFIGURATION);
+
+            /* Initialize eMMC/SD */
+            result = mmc_init_common(&sdcardConfig);
+        }
+    }
+
+    return result;
 }
 #endif
 
 static bool mmc_initialized = false;
 bool HSS_MMCInit(void)
 {
-    bool result = false;
-
     if (!mmc_initialized) {
         int perf_ctr_index;
         HSS_PerfCtr_Allocate(&perf_ctr_index, "MMC Init");
         mmc_reset_block();
 
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select SDCARD ... ");
-        mmc_initialized = mmc_init_sdcard();
-        mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select SDCARD ... ");
+    mmc_initialized = mmc_init_sdcard();
+    mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
 
 #endif
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
-        if (!mmc_initialized) {
-            mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select eMMC ... ");
-            mmc_initialized = mmc_init_emmc();
-            mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
-        }
+    if (!mmc_initialized) {
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select eMMC ... ");
+        mmc_initialized = mmc_init_emmc();
+        mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
+    }
 #endif
         HSS_PerfCtr_Lap(perf_ctr_index);
     }
 
-    result = mmc_initialized;
-
-    return result;
+    return mmc_initialized;
 }
 
 #define HSS_MMC_SECTOR_SIZE (512u)

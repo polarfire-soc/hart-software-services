@@ -38,7 +38,7 @@ cache. E.g. set to 0x7, will allocate 8 cache ways, 0-7 to cache, and leave
 #if !defined (LIBERO_SETTING_WAY_MASK_DMA)
 /*Way mask register master DMA. Set field to zero to disable way from this
 master. The available cache ways are 0 to number set in WAY_ENABLE register. If
-using scratch pad memory, the ways you want reserved for scratchpad are not
+using scratch pad memory, the ways you want reserved for scrathpad are not
 available for selection, you must set to 0. e.g. If three ways reserved for
 scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for all
 masters, so they can not evict the way. */
@@ -63,7 +63,7 @@ masters, so they can not evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_AXI4_PORT_0)
 /*Way mask register master DMA. Set field to zero to disable way from this
 master. The available cache ways are 0 to number set in WAY_ENABLE register. If
-using scratch pad memory, the ways you want reserved for scratchpad are not
+using scratch pad memory, the ways you want reserved for scrathpad are not
 available for selection, you must set to 0. e.g. If three ways reserved for
 scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for all
 masters, so they can not evict the way. */
@@ -88,7 +88,7 @@ masters, so they can not evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_AXI4_PORT_1)
 /*Way mask register master DMA. Set field to zero to disable way from this
 master. The available cache ways are 0 to number set in WAY_ENABLE register. If
-using scratch pad memory, the ways you want reserved for scratchpad are not
+using scratch pad memory, the ways you want reserved for scrathpad are not
 available for selection, you must set to 0. e.g. If three ways reserved for
 scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for all
 masters, so they can not evict the way. */
@@ -113,7 +113,7 @@ masters, so they can not evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_AXI4_PORT_2)
 /*Way mask registerAXI slave port 2. Set field to zero to disable way from this
 master. The available cache ways are 0 to number set in WAY_ENABLE register. If
-using scratch pad memory, the ways you want reserved for scratchpad are not
+using scratch pad memory, the ways you want reserved for scrathpad are not
 available for selection, you must set to 0. e.g. If three ways reserved for
 scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for all
 masters, so they can not evict the way. */
@@ -139,7 +139,7 @@ masters, so they can not evict the way. */
 /*Way mask register AXI slave port 3. Set field to 1 to disable way from this
 master. Set field to zero to disable way from this master. The available cache
 ways are 0 to number set in WAY_ENABLE register. If using scratch pad memory,
-the ways you want reserved for scratchpad are not available for selection, you
+the ways you want reserved for scrathpad are not available for selection, you
 must set to 0. e.g. If three ways reserved for scratchpad, WAY_MASK_0,
 WAY_MASK_1 and WAY_MASK_2 will be set to zero for all masters, so they can not
 evict the way. */
@@ -164,7 +164,7 @@ evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_E51_DCACHE)
 /*Way mask register E51 data cache (hart0). Set field to zero to disable way
 from this master. The available cache ways are 0 to number set in WAY_ENABLE
-register. If using scratch pad memory, the ways you want reserved for scratchpad
+register. If using scratch pad memory, the ways you want reserved for scrathpad
 are not available for selection, you must set to 0. e.g. If three ways reserved
 for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for
 all masters, so they can not evict the way. */
@@ -190,7 +190,7 @@ all masters, so they can not evict the way. */
 /*Way mask registerE52 instruction cache (hart0). Set field to zero to disable
 way from this master. The available cache ways are 0 to number set in
 WAY_ENABLE register. If using scratch pad memory, the ways you want reserved
-for scratchpad are not available for selection, you must set to 0. e.g. If three
+for scrathpad are not available for selection, you must set to 0. e.g. If three
 ways reserved for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set
 to zero for all masters, so they can not evict the way. */
 #define LIBERO_SETTING_WAY_MASK_E51_ICACHE    0x0000FFFFUL
@@ -214,7 +214,7 @@ to zero for all masters, so they can not evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_U54_1_DCACHE)
 /*Way mask register data cache (hart1). Set field to zero to disable way from
 this master. The available cache ways are 0 to number set in WAY_ENABLE
-register. If using scratch pad memory, the ways you want reserved for scratchpad
+register. If using scratch pad memory, the ways you want reserved for scrathpad
 are not available for selection, you must set to 0. e.g. If three ways reserved
 for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for
 all masters, so they can not evict the way. */
@@ -239,7 +239,7 @@ all masters, so they can not evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_U54_1_ICACHE)
 /*Way mask register instruction cache (hart1). Set field to zero to disable way
 from this master. The available cache ways are 0 to number set in WAY_ENABLE
-register. If using scratch pad memory, the ways you want reserved for scratchpad
+register. If using scratch pad memory, the ways you want reserved for scrathpad
 are not available for selection, you must set to 0. e.g. If three ways reserved
 for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for
 all masters, so they can not evict the way. */
@@ -265,7 +265,7 @@ all masters, so they can not evict the way. */
 /*Way mask register data cache (hart2). Set field to 1 to disable way from this
 master. Set field to zero to disable way from this master. The available cache
 ways are 0 to number set in WAY_ENABLE register. If using scratch pad memory,
-the ways you want reserved for scratchpad are not available for selection, you
+the ways you want reserved for scrathpad are not available for selection, you
 must set to 0. e.g. If three ways reserved for scratchpad, WAY_MASK_0,
 WAY_MASK_1 and WAY_MASK_2 will be set to zero for all masters, so they can not
 evict the way. */
@@ -290,7 +290,7 @@ evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_U54_2_ICACHE)
 /*Way mask register instruction cache (hart2). Set field to zero to disable way
 from this master. The available cache ways are 0 to number set in WAY_ENABLE
-register. If using scratch pad memory, the ways you want reserved for scratchpad
+register. If using scratch pad memory, the ways you want reserved for scrathpad
 are not available for selection, you must set to 0. e.g. If three ways reserved
 for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for
 all masters, so they can not evict the way. */
@@ -316,7 +316,7 @@ all masters, so they can not evict the way. */
 /*Way mask register data cache (hart3). Set field to 1 to disable way from this
 master.Set field to zero to disable way from this master. The available cache
 ways are 0 to number set in WAY_ENABLE register. If using scratch pad memory,
-the ways you want reserved for scratchpad are not available for selection, you
+the ways you want reserved for scrathpad are not available for selection, you
 must set to 0. e.g. If three ways reserved for scratchpad, WAY_MASK_0,
 WAY_MASK_1 and WAY_MASK_2 will be set to zero for all masters, so they can not
 evict the way. */
@@ -341,7 +341,7 @@ evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_U54_3_ICACHE)
 /*Way mask register instruction cache(hart3). Set field to zero to disable way
 from this master. The available cache ways are 0 to number set in WAY_ENABLE
-register. If using scratch pad memory, the ways you want reserved for scratchpad
+register. If using scratch pad memory, the ways you want reserved for scrathpad
 are not available for selection, you must set to 0. e.g. If three ways reserved
 for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for
 all masters, so they can not evict the way. */
@@ -367,7 +367,7 @@ all masters, so they can not evict the way. */
 /*Way mask register data cache (hart4). Set field to 1 to disable way from this
 master. Set field to zero to disable way from this master. The available cache
 ways are 0 to number set in WAY_ENABLE register. If using scratch pad memory,
-the ways you want reserved for scratchpad are not available for selection, you
+the ways you want reserved for scrathpad are not available for selection, you
 must set to 0. e.g. If three ways reserved for scratchpad, WAY_MASK_0,
 WAY_MASK_1 and WAY_MASK_2 will be set to zero for all masters, so they can not
 evict the way. */
@@ -392,7 +392,7 @@ evict the way. */
 #if !defined (LIBERO_SETTING_WAY_MASK_U54_4_ICACHE)
 /*Way mask register instruction cache (hart4). Set field to zero to disable way
 from this master. The available cache ways are 0 to number set in WAY_ENABLE
-register. If using scratch pad memory, the ways you want reserved for scratchpad
+register. If using scratch pad memory, the ways you want reserved for scrathpad
 are not available for selection, you must set to 0. e.g. If three ways reserved
 for scratchpad, WAY_MASK_0, WAY_MASK_1 and WAY_MASK_2 will be set to zero for
 all masters, so they can not evict the way. */
@@ -522,7 +522,6 @@ typedef struct {
 
 #define CACHE_CTRL  ((volatile CACHE_CTRL_typedef *) CACHE_CTRL_BASE)
 
-void config_l2_cache_ex(void);
 void config_l2_cache(void);
 uint8_t check_num_scratch_ways(uint64_t *start, uint64_t *end);
 

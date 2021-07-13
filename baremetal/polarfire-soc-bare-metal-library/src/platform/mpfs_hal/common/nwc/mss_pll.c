@@ -14,12 +14,12 @@
  *
  */
 
-#include "mss_hal.h"
+#include "mpfs_hal/mss_hal.h"
 #include "mss_pll.h"
 #ifndef SIFIVE_HIFIVE_UNLEASHED
 
 /**
- * We do it this way to avoid multiple LDAR warnings
+ * We do it this way to avoid multiple LDRA warnings
  * alternate it to
  * #define MSS_SCB_MSS_PLL      (IOSCB_CFM_MSS *) )x7xxxxxxx    The actual
  * address * but above results in error every time we use the function
@@ -42,10 +42,14 @@ IOSCB_IO_CALIB_STRUCT * const IOSCB_IO_CALIB_DDR   =\
  * Symbols from the linker script used to locate the text, data and bss
  * sections.
  ******************************************************************************/
+#ifndef  MPFS_HAL_HW_CONFIG
+uint32_t __sc_load;
+uint32_t __sc_start;
+uint32_t __sc_end;
+#else
 extern uint32_t __sc_load;
 extern uint32_t __sc_start;
 extern uint32_t __sc_end;
-
 
 /*******************************************************************************
  * Local Defines                                                               *
@@ -70,13 +74,9 @@ void sgmii_mux_config(uint8_t option);
 
 /***************************************************************************//**
  * set_RTC_divisor()
- * Change the RTC clock divisor, so RTC clock is 1MHz
- * When changing the divider the enable should be turned off first, the divider
- * changed and the enable turned back on.
- * @param state source of clock
- * @return
+ * Set the RTC divisor based on MSS Configurator setting
+ * Note: This will always be calculated so RTC clock is 1MHz.
  */
-
 void set_RTC_divisor(void)
 {
 
@@ -428,8 +428,7 @@ void mss_pll_config(void)
      *  [0] REG_POWERDOWN_B
      */
 
-    /* MSS PLL - 0x3E001000 - */
-    MSS_SCB_MSS_PLL->PLL_CTRL       = LIBERO_SETTING_MSS_PLL_CTRL;
+    MSS_SCB_MSS_PLL->PLL_CTRL       = LIBERO_SETTING_MSS_PLL_CTRL & ~(PLL_CTRL_REG_POWERDOWN_B_MASK);
 
     /*
      * PLL calibration register
@@ -512,8 +511,7 @@ void ddr_pll_config(REG_LOAD_METHOD option)
              * */
             MSS_SCB_DDR_PLL->SOFT_RESET       = PLL_INIT_AND_OUT_OF_RESET;
 
-            /* MSS PLL - 0x3E001000 - */
-            MSS_SCB_DDR_PLL->PLL_CTRL         = LIBERO_SETTING_DDR_PLL_CTRL;
+            MSS_SCB_DDR_PLL->PLL_CTRL         = LIBERO_SETTING_DDR_PLL_CTRL & ~(PLL_CTRL_REG_POWERDOWN_B_MASK);
             /* PLL calibration register */
 
             /*
@@ -633,8 +631,7 @@ void sgmii_pll_config_scb(uint8_t option)
              * */
             MSS_SCB_SGMII_PLL->SOFT_RESET      = PLL_INIT_AND_OUT_OF_RESET;
 
-            /* MSS PLL - 0x3E001000 - */
-            MSS_SCB_SGMII_PLL->PLL_CTRL      = LIBERO_SETTING_SGMII_PLL_CTRL;
+            MSS_SCB_SGMII_PLL->PLL_CTRL      = LIBERO_SETTING_SGMII_PLL_CTRL & ~(PLL_CTRL_REG_POWERDOWN_B_MASK);
             /* PLL calibration register */
 
             /*
@@ -721,6 +718,7 @@ __attribute__((weak)) void copy_switch_code(void)
     }
 }
 
+#endif /* MPFS_HAL_HW_CONFIG */
 #endif
 
 

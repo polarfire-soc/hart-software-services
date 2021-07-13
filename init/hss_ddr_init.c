@@ -17,10 +17,19 @@
 
 #include "hss_debug.h"
 #include "hss_perfctr.h"
-#include "hss_init.h"
 
 #include <assert.h>
 #include <string.h>
+
+#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
+#  include "ddr/hw_ddr_segs.h"
+#  include "nwc/mss_nwc_init.h"
+#  include "mss_hal.h"
+#  include "mss_l2_cache.h"
+#endif
+
+
+#include "hss_init.h"
 
 /*!
  * \brief DDR Training
@@ -35,11 +44,6 @@
  * TBD: is periodic re-calibration required during operation (e.g. temperature induced
  * or other)
  */
-
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-#  include "ddr/hw_ddr_segs.h"
-#  include "nwc/mss_nwc_init.h"
-#endif
 
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 static const struct segment {
@@ -102,11 +106,6 @@ bool HSS_DDRPrintSegConfig(void)
 
     return true;
 }
-
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-#  include "mss_hal.h"
-#  include "mss_l2_cache.h"
-#endif
 
 //
 // We use the GCC intrinsic __builtin_popcount() to count cache way bits set

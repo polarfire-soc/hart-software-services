@@ -27,6 +27,7 @@
 
 reset_vector:
 _start:
+#if (IMAGE_LOADED_BY_BOOTLOADER == 0)
     /*
      * clear the Return Address Stack
      */
@@ -212,6 +213,8 @@ _start:
     sb   x0, 0(a4)
     # now core MPFS_HAL_FIRST_HART jumps to main_first_hart
 .main_hart:
+    # pass HLS address
+    mv  a0, tp
     j main_first_hart
 .LoopForeverMain:
     #in case of return, loop forever. nop's added so can be seen in debugger
@@ -229,7 +232,6 @@ _start:
                            # enabled- otherwise stays in wfi.
                            # Other interrupts appera to bring out of wfi,even if
                            # not enabled.
-
     #
     # Wait here until main hart is up and running
     #
@@ -261,7 +263,9 @@ _start:
     csrw mip, zero
     # set marker as to where we are
     li a1, HLS_OTHER_HART_PASSED_WFI
-    STORE a1, 0(tp)
+    sw a1, 0(tp)
+    # pass HLS address
+    mv  a0, tp
     j main_other_hart
 .LoopForeverOther:
     #in case of return, loop forever. nop's added so can be seen in debugger
@@ -269,11 +273,134 @@ _start:
     nop
     j .LoopForeverOther
 
+#else /* IMAGE_LOADED_BY_BOOTLOADER == 1 */
+
+/***********************************************************************************
+ *The program has been loaded by a bootloader
+ * a0 - contains the hart ID
+ * a1 - contains pointer to bootloader -Hart Local Storage, for this hart.
+ */
+_start_non_bootloader_image:
+    /* ebreak called at the start of the program if required when debuging.   */
+    /* DEBUG_EBREAK_AT_START is set to one in the debug build, 0 in the       */
+    /* release build                                                          */
+    /* uncomment the 3 lines below if you want to use this method to for      */
+    /* debugging                                                              */
+    /* li a2, DEBUG_EBREAK_AT_START
+    beq x0, a2, 1f
+    ebreak */
+1:
+    /* store the value here received from boot-loader */
+    /* a0 will always contain the hart ID */
+    /* If a1 is null, boot-loader is not passing pointer to the HLS */
+    /* If this is the case, point HLS to out own and fill with hart ID */
+    /* Setup trap handler */
+    /* we are currently only supporting mmode */
+    /* m-mode/s-mode set-up option will be added here */
+    la a4, trap_vector
+    csrw mtvec, a4          # initalise machine trap vector address
+    /* Make sure that mtvec is updated before continuing */
+2:
+    csrr    a5, mtvec
+    bne a4, a5, 2b
+    /* Disable and clear all interrupts */
+    /* assumption is this has been done by the Boot-loader */
+    # Init delegation registers, mideleg, medeleg, if a U54
+    # These are not initialised by the hardware and come up in a random state
+    # mhartid is in a0
+    beqz a0, 3f
+    csrw mideleg, 0
+    csrw medeleg, 0
+3:
+    # mscratch must be init to zero- we are not using scratch memory
+    csrw mscratch, zero
+    csrw mcause, zero
+    csrw mepc, zero
+
+    # Init floating point control register to zero
+    # skip if e51
+    # mhartid is in a0
+    beqz a0, 1f
+#ifdef __riscv_flen
+    fscsr x0
+#endif
+1:  # no float
+    # make sure XLEN agrees with compilation choice, if not will loop here
+    csrr t0, misa
+#if __riscv_xlen == 64
+    bltz t0, 2f
+#else
+    bgez t0, 2f
+#endif
+    j 1b
+2:
+    # initialize global pointer, global data
+    # The __global_pointer is allocated in the linker script. It points to a
+    # location 2k after sdata start as the offsets used in the gp are +/- 2k
+    # See https://www.sifive.com/blog/2017/08/28/all-aboard-part-3-linker-relaxation-in-riscv-toolchain/
+    # see: http://www.rowleydownload.co.uk/arm/documentation/gnu/as/RISC_002dV_002dDirectives.html
+    .option push
+    .option norelax
+    la gp, __global_pointer$
+    .option pop
+
+    la a4, __app_stack_bottom  # keep bottom of stack in a5 so we can init later
+    la a5, __app_stack_top
+    la sp, __app_stack_top
+1:
+    STORE x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, 1b
+    # clear the common heap
+    la  a4, __heap_start
+    la  a5, __heap_end
+2:
+    STORE x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, 2b
+    # check if HLS passed by BL, if not allocate one here
+    bnez a1, 1f
+    # Allocate some space at top of stack for the HLS, as HLS mem not passed
+    addi sp, sp, -HLS_DEBUG_AREA_SIZE
+    # HLS grows up from new top of stack
+    mv tp, sp
+    mv a0, tp
+    j u54_single_hart
+1:
+    # pass HLS address from the boot-loader
+    mv a0, a1
+    j u54_single_hart
+2:
+    # in case of return, loop forever. nop's added so can be seen in debugger
+    nop
+    nop
+    j 2b
+#endif /* IMAGE_LOADED_BY_BOOTLOADER */
+
 /******************************************************************************/
 /******************************interrupt handeling below here******************/
 /******************************************************************************/
 
 trap_vector:
+#if defined USING_FREERTOS
+    addi    sp, sp, -REGBYTES /* Save t0 for now */
+    STORE   t0, 0x0(sp)
+    csrr  t0, mcause
+    bge   t0,x0,.Le51_other  /* Not an interrupt... */
+    slli  t0,t0,1
+    srli  t0,t0,1
+    addi  t0,t0,-7
+    bne   t0,x0,.Le51_other /* Not Timer interrupt... */
+    /* Interrupt is timer interrupt so let FreeRTOS handle it */
+    LOAD    t0, 0x0(sp)     # Restore t0 for proper context save by FreeRTOS
+    addi    sp, sp, REGBYTES
+    j       TIMER_CMP_INT
+    mret
+
+.Le51_other:                # Re-enter mainline here if not timer interrupt
+    LOAD    t0, 0x0(sp)       # Restore t0 for proper context save by HAL
+    addi    sp, sp, REGBYTES
+#endif
     # The mscratch register is an XLEN-bit read/write register dedicated for use by machine mode.
     # Typically, it is used to hold a pointer to a machine-mode hart-local context space and swapped
     # with a user register upon entry to an M-mode trap handler.
@@ -473,7 +600,7 @@ copy_switch_code:
     // NOTE: we need to check if we are debugging from LIM,if so do not
     // initialize.
     //
-    la a2, __text_start
+    la a2, _start
     la  a4, 0x08000000          # start of LIM address
     and a2, a2, a4
     bnez a2, .done_clear
@@ -547,6 +674,4 @@ copy_switch_code:
     nop
     nop
     ret
-
-
 
