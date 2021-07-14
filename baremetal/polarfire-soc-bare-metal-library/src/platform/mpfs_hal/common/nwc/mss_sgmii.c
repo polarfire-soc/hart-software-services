@@ -21,7 +21,9 @@
 
 #ifdef  MPFS_HAL_HW_CONFIG
 
+#ifdef SGMII_SUPPORT
 static PART_TYPE silicon_variant = PART_NOT_DETERMINED;
+#endif
 
 /*
  * local functions
@@ -34,12 +36,16 @@ static uint32_t sgmii_channel_setup(void);
 /*
  * local variable
  */
+#ifdef SGMII_SUPPORT
 static uint32_t sro_dll_90_code;
+#endif
 
 /*
  * local functions
  */
+#ifdef SGMII_SUPPORT
 static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_threshold);
+#endif
 
 /*
  * extern functions
@@ -631,6 +637,7 @@ void ddr_pvt_recalibration(void)
  * @param n_late_threshold
  * @param p_early_threshold
  */
+#ifdef SGMII_SUPPORT
 static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_threshold)
 {
     uint32_t n_eye_values;
@@ -653,5 +660,6 @@ static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_
     CFG_DDR_SGMII_PHY->CH1_CNTL.CH1_CNTL        = ((LIBERO_SETTING_CH1_CNTL & REG_RX0_EYEWIDTH_P_MASK) | p_eye_value) | REG_RX1_EN_FLAG_N;
 
 }
+#endif
 
 #endif

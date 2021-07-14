@@ -157,6 +157,8 @@ uint8_t pmp_configure(uint8_t hart_id) /* set-up with settings from Libero */
     pmp_master_configs(hart_id, &pmp0cfg);
     write_csr(pmpcfg0, pmp0cfg);
     write_csr(pmpcfg2, pmp_values[hart_id][1]);
+#else
+    write_csr(pmpcfg0, pmp_values[hart_id][0]);
 #endif
 
     return(0);
