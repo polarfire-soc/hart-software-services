@@ -46,6 +46,8 @@ extern "C" {
 
 extern struct StateMachine scrub_service;
 
+void scrub_dump_stats(void);
+
 #ifdef __cplusplus
 }
 #endif
