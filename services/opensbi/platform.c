@@ -46,9 +46,10 @@
 #include <sbi/sbi_console.h>
 #include <sbi/sbi_const.h>
 #include <sbi/sbi_platform.h>
-#if (OPENSBI_VERSION>=8)
-#  include <sbi_utils/fdt/fdt_fixup.h>
-#endif
+#include <sbi/sbi_hartmask.h>
+#include <sbi/sbi_domain.h>
+#include <sbi/sbi_math.h>
+#include <sbi_utils/fdt/fdt_fixup.h>
 #include <sbi_utils/irqchip/plic.h>
 #include <sbi_utils/serial/uart8250.h>
 #include <sbi_utils/sys/clint.h>
@@ -234,9 +235,107 @@ static u64 mpfs_get_tlbr_flush_limit(void)
 // don't allow OpenSBI to play with PMPs
 int sbi_hart_pmp_configure(struct sbi_scratch *scratch)
 {
-	(void)scratch;
-	return 0;
+    (void)scratch;
+    return 0;
 }
+
+static struct sbi_domain_memregion mpfs_memregion[3] = {
+    { .order = 0, .base = 0u, .flags = 0u },
+    { .order = __riscv_xlen, .base = 0u, .flags =
+        (SBI_DOMAIN_MEMREGION_READABLE | SBI_DOMAIN_MEMREGION_WRITEABLE | SBI_DOMAIN_MEMREGION_EXECUTABLE) },
+    { .order = 0u, .base = 0u, .flags = 0u }
+};
+
+static struct sbi_domain_memregion * mpfs_domains_root_regions(void)
+{
+    return mpfs_memregion;
+}
+
+
+static struct {
+    char name[64];
+    u64 next_addr;
+    u64 next_arg1;
+    u32 hartMask;
+    u32 next_mode;
+    int boot_hartid;
+} hart_table[MAX_NUM_HARTS] = { 0 };
+
+void mpfs_domains_register_hart(int hartid, int boot_hartid);
+void mpfs_domains_register_hart(int hartid, int boot_hartid)
+{
+    hart_table[hartid].boot_hartid = boot_hartid;
+}
+
+void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid, u32 privMode, void * entryPoint, void * pArg1);
+void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid, u32 privMode, void * entryPoint, void * pArg1)
+{
+    memcpy(hart_table[boot_hartid].name, pName, ARRAY_SIZE(hart_table[boot_hartid].name) - 1);
+    hart_table[boot_hartid].next_addr = (u64)entryPoint;
+    hart_table[boot_hartid].next_arg1 = (u64)pArg1;
+    hart_table[boot_hartid].hartMask = hartMask;
+    hart_table[boot_hartid].next_mode = privMode;
+    hart_table[boot_hartid].boot_hartid = boot_hartid;
+}
+
+
+static struct sbi_domain dom[MAX_NUM_HARTS] = { 0 };
+static int mpfs_domains_init(void)
+{
+    const u32 hartid = current_hartid();
+    const int boot_hartid = hart_table[hartid].boot_hartid;
+    int result = SBI_EINVAL;
+
+    if (boot_hartid) {
+        struct sbi_domain * const pDom = &dom[hartid];
+
+        if (pDom->boot_hartid != boot_hartid) {
+            // TODO: replace memcpy with something like strlcpy
+            memcpy(pDom->name, hart_table[boot_hartid].name, ARRAY_SIZE(dom[0].name)-1);
+
+            struct sbi_hartmask mask, * const pMask = &mask;
+            SBI_HARTMASK_INIT(pMask);
+
+            pDom->possible_harts = pMask;
+
+            for (int i = 0; i < MAX_NUM_HARTS; i++) {
+                if (hart_table[boot_hartid].hartMask & (1 << i)) {
+                    sbi_hartmask_set_hart(i, pMask);
+                }
+            }
+
+            struct sbi_scratch * const scratch = sbi_scratch_thishart_ptr();
+            pDom->regions = mpfs_domains_root_regions();
+            pDom->regions[0].order = log2roundup(scratch->fw_size);
+            pDom->regions[0].base = scratch->fw_start & ~((1UL << pDom->regions[0].order) - 1UL);
+            pDom->regions[0].flags = 0u;
+
+            pDom->boot_hartid = hart_table[boot_hartid].boot_hartid;
+            pDom->next_arg1 = hart_table[boot_hartid].next_arg1;
+            pDom->next_addr = hart_table[boot_hartid].next_addr;
+            pDom->next_mode = hart_table[boot_hartid].next_mode;
+            pDom->system_reset_allowed = TRUE;
+
+            result = sbi_domain_register(pDom, pMask);
+            if (result) {
+                sbi_printf("%s(): sbi_domain_register() failed for %s\n", __func__, pDom->name);
+            } else {
+		sbi_printf("%s(): Successfully registered domain %d: \"%s\"\n"
+                    " - boot_hartid: %u\n"
+                    " - next_addr:   0x%lx\n"
+                    " - next_arg1:   0x%lx\n"
+                    " - next_mode:   %lu\n",
+                    __func__, pDom->index, pDom->name, pDom->boot_hartid,
+                    pDom->next_addr, pDom->next_arg1, pDom->next_mode);
+            }
+        }
+    } else {
+       sbi_printf("%s(): boot_hart_id not set\n", __func__);
+    }
+
+    return result;
+}
+
 
 const struct sbi_platform_operations platform_ops = {
     .early_init = NULL,
@@ -268,6 +367,9 @@ const struct sbi_platform_operations platform_ops = {
     .timer_exit = NULL,
 
     .system_reset = mpfs_system_down,
+
+    //.domains_root_regions = mpfs_domains_root_regions,
+    .domains_init = mpfs_domains_init,
 
     .vendor_ext_check = NULL,
     .vendor_ext_provider = NULL

@@ -74,6 +74,10 @@ static void opensbi_scratch_setup(enum HSSHartId hartid)
     pScratches[hartid].scratch.options = SBI_SCRATCH_DEBUG_PRINTS;
     pScratches[hartid].scratch.hartid_to_scratch = (unsigned long)l_hartid_to_scratch;
     pScratches[hartid].scratch.platform_addr = (unsigned long)&platform;
+
+    extern unsigned long _hss_start, _hss_end;
+    pScratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
+    pScratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
 }
 
 static unsigned long l_hartid_to_scratch(int hartid)
@@ -195,10 +199,6 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
         pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
         csr_write(mscratch, &(pScratches[hartid].scratch));
-
-        extern unsigned long _hss_start, _hss_end;
-        pScratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
-        pScratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
 
         pScratches[hartid].scratch.next_addr = (uintptr_t)p_extended_buffer;
         pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;

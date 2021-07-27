@@ -207,7 +207,8 @@ static int sanitize_domain(const struct sbi_platform *plat,
 	count = 0;
 	have_fw_reg = FALSE;
 	sbi_domain_for_each_memregion(dom, reg) {
-		if (reg->order == root_memregs[ROOT_FW_REGION].order &&
+		if (!have_fw_reg &&
+                    reg->order == root_memregs[ROOT_FW_REGION].order &&
 		    reg->base == root_memregs[ROOT_FW_REGION].base &&
 		    reg->flags == root_memregs[ROOT_FW_REGION].flags)
 			have_fw_reg = TRUE;
@@ -497,7 +498,14 @@ int sbi_domain_finalize(struct sbi_scratch *scratch, u32 cold_hartid)
 
 int sbi_domain_init(struct sbi_scratch *scratch, u32 cold_hartid)
 {
+	/* Check if domain already discovered - if so, lets skip setup again */
 	u32 i;
+	struct sbi_domain *tdom;
+	sbi_domain_for_each(i, tdom) {
+		if (tdom == &root)
+			return SBI_EALREADY;
+	}
+
 	struct sbi_domain_memregion *memregs;
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 

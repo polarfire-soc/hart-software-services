@@ -30,7 +30,6 @@
 
 #if IS_ENABLED(CONFIG_OPENSBI)
 #  include "sbi/riscv_asm.h"
-//#  include "sbi/sbi_bits.h"
 #  include "sbi/sbi_bitops.h"
 #  include "sbi/sbi_hart.h"
 #  include "sbi_init.h"
@@ -74,6 +73,9 @@ static void boot_zero_init_chunks_handler(struct StateMachine * const pMyMachine
 static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_handler(struct StateMachine * const pMyMachine);
 static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine);
+static void boot_opensbi_init_onEntry(struct StateMachine * const pMyMachine);
+static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine);
+static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine);
 static void boot_wait_onEntry(struct StateMachine * const pMyMachine);
 static void boot_wait_handler(struct StateMachine * const pMyMachine);
 static void boot_error_handler(struct StateMachine * const pMyMachine);
@@ -94,6 +96,7 @@ enum BootStatesEnum {
     BOOT_SETUP_PMP_COMPLETE,
     BOOT_ZERO_INIT_CHUNKS,
     BOOT_DOWNLOAD_CHUNKS,
+    BOOT_OPENSBI_INIT,
     BOOT_WAIT,
     BOOT_IDLE,
     BOOT_ERROR,
@@ -110,10 +113,10 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_SETUP_PMP_COMPLETE, (const char *)"SetupPMPComplete", &boot_setup_pmp_complete_onEntry, NULL,                         &boot_setup_pmp_complete_handler },
     { (const stateType_t)BOOT_ZERO_INIT_CHUNKS,   (const char *)"ZeroInit",         &boot_zero_init_chunks_onEntry,   NULL,                         &boot_zero_init_chunks_handler },
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
+    { (const stateType_t)BOOT_OPENSBI_INIT,       (const char *)"OpenSBIInit",      &boot_opensbi_init_onEntry,       &boot_opensbi_init_onExit,    &boot_opensbi_init_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
     { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             &boot_idle_onEntry,               NULL,                         &boot_idle_handler },
-    { (const stateType_t)BOOT_ERROR,              (const char *)"Error",            NULL,                             NULL,                         &boot_error_handler }
-};
+    { (const stateType_t)BOOT_ERROR,              (const char *)"Error",            NULL,                             NULL,                         &boot_error_handler } };
 
 /*!
  * \brief Boot Driver State Machine
@@ -127,24 +130,32 @@ struct HSS_Boot_LocalData {
     size_t ziChunkCount;
     size_t subChunkOffset;
     uint32_t msgIndex;
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-    uint32_t msgIndexAux;
-#endif
+    uint32_t hartMask;
     int perfCtr;
+    unsigned int iterator;
     uintptr_t ancilliaryData;
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
+    uint32_t msgIndexAux[MAX_NUM_HARTS-1];
+#endif
 };
 
+#define mREPEAT(x, count) mRPT##count(x)
+#define mRPT1(x) x
+#define mRPT2(x) x, mRPT1(x)
+#define mRPT3(x) x, mRPT2(x)
+#define mRPT4(x) x, mRPT3(x)
+
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-#    define mDEFAULT_MSG_INDEX_AUX 0u
+#    define mDEFAULT_MSG_INDEX_AUX { mREPEAT(0u,4) }
 #else
 #    define mDEFAULT_MSG_INDEX_AUX
 #endif
 
 static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
-    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
-    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
-    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
-    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, mDEFAULT_MSG_INDEX_AUX, 0u },
+    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
 };
 
 struct HSS_BootImage *pBootImage = NULL;
@@ -270,12 +281,12 @@ static void free_msg_index(struct HSS_Boot_LocalData * const pInstanceData)
     }
 }
 
-static void free_msg_index_aux(struct HSS_Boot_LocalData * const pInstanceData)
+static void free_msg_index_aux(struct HSS_Boot_LocalData * const pInstanceData, enum HSSHartId peer)
 {
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-    if (pInstanceData->msgIndexAux != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
-        IPI_MessageFree(pInstanceData->msgIndexAux);
-        pInstanceData->msgIndexAux = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+    if (pInstanceData->msgIndexAux[peer-1] != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
+        IPI_MessageFree(pInstanceData->msgIndexAux[peer-1]);
+        pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
     }
 #endif
 }
@@ -287,13 +298,15 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
     bool result = true;
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-    // TODO: this works for 2 cores, but needs to be extended for up to 4...
     //
-    if (pInstanceData->msgIndexAux != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
-        result = IPI_MessageCheckIfComplete(pInstanceData->msgIndexAux);
+    for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+        enum HSSHartId peer = bootMachine[i].hartId;
+        if (pInstanceData->msgIndexAux[peer-1] != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
+            result = IPI_MessageCheckIfComplete(pInstanceData->msgIndexAux[peer-1]);
 
-        if (result) {
-            free_msg_index_aux(pInstanceData);
+            if (result) {
+                free_msg_index_aux(pInstanceData, peer);
+            }
         }
     }
 #endif
@@ -339,7 +352,10 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
 
     pInstanceData->msgIndex = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-    pInstanceData->msgIndexAux = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+    for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+            enum HSSHartId peer = bootMachine[i].hartId;
+            pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+    }
 #endif
 }
 
@@ -374,7 +390,10 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-        free_msg_index_aux(pInstanceData);
+        for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+            enum HSSHartId peer = bootMachine[i].hartId;
+            free_msg_index_aux(pInstanceData, peer);
+        }
 #endif
         free_msg_index(pInstanceData);
 
@@ -527,11 +546,11 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
             //
             // either way, with a non-sentinel chunk,
             // move onto next chunk, which will be handled by next time into state machine...
-        } else {
+	} else {
             //
             // otherwise we are on a sentinel chunk and thus we are
             // finished processing the image
-            pMyMachine->state = BOOT_WAIT;
+            pMyMachine->state = BOOT_OPENSBI_INIT;
         }
     } else {
         pMyMachine->state = BOOT_IDLE;
@@ -540,62 +559,114 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
 
 static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
 {
+}
+
+/////////////////
+
+static void boot_opensbi_init_onEntry(struct StateMachine * const pMyMachine)
+{
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
 
     assert(pBootImage != NULL);
 
-    // otherwise if it has a valid entry point, allocate a message for it and send a GOTO IPI
+    if (pBootImage->hart[target-1].entryPoint) {
+        pInstanceData->iterator = 0u;
+
+        for (int i = 0; i < ARRAY_SIZE(bootMachine); i++) {
+            enum HSSHartId peer = bootMachine[i].hartId;
+
+            if (peer == target) {
+                pInstanceData->hartMask |= (1u << peer);
+                // skip myself for now
+            } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
+                pInstanceData->hartMask |= (1u << peer);
+
+                void mpfs_domains_register_hart(int myhartid, int target);
+                mpfs_domains_register_hart(peer, target);
+            }
+        }
+
+        void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, u32 boot_hartid, u32 privMode, void * entryPoint, void * pArg1); // TODO tidy up
+        mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
+            pInstanceData->hartMask, target,
+            pBootImage->hart[target-1].privMode,
+            (void *)pBootImage->hart[target-1].entryPoint,
+            (void *)pInstanceData->ancilliaryData);
+    }
+}
+
+
+static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
+{
+    struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+    enum HSSHartId const target = pInstanceData->target;
+
+    assert(pBootImage != NULL);
+
+    // if target has a valid entry point, allocate a message for it and send a OPENSBI_INIT IPI
     if (pBootImage->hart[target-1].entryPoint) {
         bool result;
 
-        //
-        // TODO: refactor this into separate states, as it currently takes reasonable time to start all
-        // Harts using the SBI.
         if (pBootImage->hart[target-1].numChunks) {
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-            // in interrupts-always-enabled world of the HSS, it would appear less
-            // racey to boot secondary cores first and have them all wait...
-            for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-                enum HSSHartId peer = bootMachine[i].hartId;
+            if (pInstanceData->iterator < ARRAY_SIZE(bootMachine)) {
+                enum HSSHartId peer = bootMachine[pInstanceData->iterator].hartId;
 
-                if (peer == target) { continue; } // skip myself
-
-                if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
+                if (peer == target) {
+                    // skip myself for now
+                } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
                     // found another hart in same boot set as me...
 
                     mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
                         peer, pBootImage->hart[peer-1].entryPoint);
-                    result = IPI_MessageAlloc(&(pInstanceData->msgIndexAux));
+                    result = IPI_MessageAlloc(&(pInstanceData->msgIndexAux[peer-1]));
                     assert(result);
 
                     mb();
                     mb_i();
 
-                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux, peer,
+                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
                         IPI_MSG_OPENSBI_INIT,
                         pBootImage->hart[peer-1].privMode,
                         (void *)pBootImage->hart[peer-1].entryPoint,
                         (void *)pInstanceData->ancilliaryData);
                     assert(result);
                 }
+                pInstanceData->iterator++;
+            } else {
+                pMyMachine->state = BOOT_WAIT;
             }
 #endif
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
-                target, pBootImage->hart[target-1].entryPoint);
-            result = IPI_MessageAlloc(&(pInstanceData->msgIndex));
-            assert(result);
-
-            mb();
-            mb_i();
-
-            result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
-                IPI_MSG_OPENSBI_INIT,
-                pBootImage->hart[target-1].privMode,
-                (void *)pBootImage->hart[target-1].entryPoint,
-                (void *)pInstanceData->ancilliaryData);
-            assert(result);
+        } else {
+            pMyMachine->state = BOOT_WAIT;
         }
+    }
+}
+
+static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
+{
+    struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+    enum HSSHartId const target = pInstanceData->target;
+
+    assert(pBootImage != NULL);
+
+    if (pBootImage->hart[target-1].entryPoint) {
+        bool result;
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
+            target, pBootImage->hart[target-1].entryPoint);
+        result = IPI_MessageAlloc(&(pInstanceData->msgIndex));
+        assert(result);
+
+        mb();
+        mb_i();
+
+        result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
+            IPI_MSG_OPENSBI_INIT,
+            pBootImage->hart[target-1].privMode,
+            (void *)pBootImage->hart[target-1].entryPoint,
+            (void *)pInstanceData->ancilliaryData);
+        assert(result);
     } else {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::target is %u, pBootImage is %p, skipping sbi_init %p" CRLF,
             pMyMachine->pMachineName, target, pBootImage, pBootImage->hart[target-1].entryPoint);
@@ -623,7 +694,10 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-        free_msg_index_aux(pInstanceData);
+        for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+            enum HSSHartId peer = bootMachine[i].hartId;
+            free_msg_index_aux(pInstanceData, peer);
+        }
 #endif
         free_msg_index(pInstanceData);
 

@@ -76,9 +76,6 @@ _start:
 .setup_scratches:
 	// Setup scratch space for all the HARTs
 	la	tp, scratches
-	mul	a5, s7, s8
-	add	tp, tp, a5
-	add	t3, tp, zero // Keep a copy of tp
 	li	t2, 1 // Counter
 	li	t1, 0 // hartid 0 is mandated by ISA
 
@@ -88,18 +85,13 @@ _start:
 	csrw	CSR_MIP, zero
 
 .validate_hart_id:
-	// HART ID should be within expected limit
-        add     s7, s7, 1 // allow for E51, which is not an application core
 	bge	a0, s7, _start_hang
 
 .find_my_scratch_space:
 	la	tp, scratches // find the scratch space for this hart
-	mul	a5, s7, s8
-	add	tp, tp, a5
-	mul	a5, s8, a0
-	sub	tp, tp, a5
 	li	a5, SBI_SCRATCH_SIZE
-	sub	tp, tp, a5
+	mul	a5, a5, a0
+	add	tp, tp, a5
 
 	csrw	CSR_MSCRATCH, tp // update the mscratch
 
@@ -128,8 +120,7 @@ _start:
 	la	a4, hss_e51_trap_handler
         call	.set_trap_handler
 
-        //call	.clear_dtim
-        //call	.clear_l2lim
+        // clearing of DTIM and L2LIM done from previous decompression stage
 
         li	a2, MIP_MSIP
 	csrc	CSR_MSTATUS, a2
