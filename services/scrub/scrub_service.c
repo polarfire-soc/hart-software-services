@@ -58,7 +58,7 @@ struct StateMachine scrub_service = {
     .lastExecutionTime = 0u,
     .executionCount    = 0u,
     .pStateDescs       = scrub_state_descs,
-    .debugFlag         = false,
+    .debugFlag         = true,
     .priority          = 0u,
     .pInstanceData     = NULL
 };
@@ -92,7 +92,7 @@ const struct {
     { (uintptr_t)&__l2lim_start,         (uintptr_t)&__l2lim_end },
     { (uintptr_t)&__l2_scratchpad_start, (uintptr_t)&__l2_scratchpad_end },
     { (uintptr_t)&__ddr_start,           (uintptr_t)&__ddr_end },
-    //{ (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end },
+    { (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end },
     //{ (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
     //{ (uintptr_t)&__e51itim_start,       (uintptr_t)&__e51itim_end },
     //{ (uintptr_t)&__u54_1_itim_start,    (uintptr_t)&__u54_1_itim_end },
@@ -113,6 +113,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
             if ((rams[index].baseAddr + offset)  >= rams[index].endAddr) {
                 index = (index + 1u) % ARRAY_SIZE(rams);
                 mHSS_DEBUG_PRINTF(LOG_NORMAL, "Scrubbing %p to %p" CRLF, rams[index].baseAddr, rams[index].endAddr);
+		offset = 0u;
             }
 
             const uintptr_t length = rams[index].endAddr - rams[index].baseAddr;
@@ -131,5 +132,14 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
         }
     }
 
-    entryCount = (entryCount + 1u) % 50000u;
+    //entryCount = (entryCount + 1u) % 0x1000;
+    entryCount = 0;
+}
+
+void scrub_dump_stats(void)
+{
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index:      0x%" PRIx64 CRLF, index);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Mem base:   0x%" PRIx64 CRLF, rams[index].baseAddr);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "offset:     0x%" PRIx64 CRLF, offset);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "entryCount: 0x%" PRIx64 CRLF, entryCount);
 }

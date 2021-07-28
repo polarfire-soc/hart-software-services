@@ -44,6 +44,10 @@
 #    include "usbdmsc_service.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+#    include "scrub_service.h"
+#endif
+
 #define mMAX_NUM_TOKENS 40
 static size_t argc_tokenCount = 0u;
 static char *argv_tokenArray[mMAX_NUM_TOKENS];
@@ -90,6 +94,9 @@ enum CmdId {
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
     CMD_USBDMSC,
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    CMD_SCRUB,
+#endif
     CMD_INVALID
 };
 
@@ -125,6 +132,9 @@ const struct tinycli_key cmdKeys[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
     { CMD_USBDMSC, "USBDMSC", "Export eMMC as USBD Mass Storage Class." },
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    { CMD_SCRUB, "SCRUB", "Dump Scrub service stats." },
 #endif
 };
 
@@ -186,6 +196,9 @@ static struct tinycli_command commands[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
     { CMD_USBDMSC, true,  tinyCLI_CmdHandler_ },
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    { CMD_SCRUB,   false, tinyCLI_CmdHandler_ },
 #endif
 };
 
@@ -856,6 +869,12 @@ static void tinyCLI_CmdHandler_(int tokenId)
             void tinycli_wait_for_usbmscd_done(void);
             tinycli_wait_for_usbmscd_done();
         }
+        break;
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    case CMD_SCRUB:
+	scrub_dump_stats();
         break;
 #endif
 
