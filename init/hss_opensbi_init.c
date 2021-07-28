@@ -28,15 +28,9 @@
 
 bool HSS_OpenSBIInit(void)
 {
-    bool result = (current_hartid() == HSS_HART_E51);
+    bool result = true;
 
-    if (result) {
-        HSS_OpenSBI_Setup(current_hartid());
-    }
-
-    /*
-     * Nothing to do on the U54s here...?
-    */
+    HSS_OpenSBI_Setup();
 
     return result;
 }

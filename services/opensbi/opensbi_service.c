@@ -109,7 +109,7 @@ enum GotoStatesEnum {
  */
 static const struct StateDesc opensbi_state_descs[] = {
     { (const stateType_t)OPENSBI_INITIALIZATION, (const char *)"Init",     NULL, NULL, &opensbi_init_handler },
-    { (const stateType_t)OPENSBI_IDLE,       (const char *)"Idle",     NULL, NULL, &opensbi_idle_handler },
+    { (const stateType_t)OPENSBI_IDLE,           (const char *)"Idle",     NULL, NULL, &opensbi_idle_handler },
 };
 
 /*!
@@ -152,16 +152,24 @@ extern unsigned long _trap_handler;
 #include "sbi/sbi_domain.h"
 #include "sbi/sbi_ecall_interface.h"
 
-void HSS_OpenSBI_Setup(enum HSSHartId hartid)
+void HSS_OpenSBI_Setup(void)
 {
-    assert(current_hartid() == hartid);
-
-    opensbi_scratch_setup(hartid);
+    enum HSSHartId hartid = current_hartid();
 
     if (hartid == HSS_HART_E51) {
-        sbi_hss_e51_init(&(pScratches[hartid].scratch), false);
+        uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);
+        mstatus_val = EXTRACT_FIELD(mstatus_val, MSTATUS_MPIE);
+        mHSS_CSR_WRITE(CSR_MSTATUS, mstatus_val);
+        mHSS_CSR_WRITE(CSR_MIE, 0u);
+
+        opensbi_scratch_setup(hartid);
+
+        int sbi_console_init(struct sbi_scratch *scratch);
+	int rc = sbi_console_init(&(pScratches[hartid].scratch));
+	if (rc)
+		sbi_hart_hang();
     } else {
-        sbi_init(&(pScratches[hartid].scratch));
+        ;
     }
 }
 
@@ -173,7 +181,9 @@ void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
     mHSS_CSR_WRITE(CSR_MSTATUS, mstatus_val);
     mHSS_CSR_WRITE(CSR_MIE, 0u);
 
-    HSS_OpenSBI_Setup(hartid);
+    opensbi_scratch_setup(hartid);
+    mpfs_mark_hart_as_booted(hartid);
+    sbi_init(&(pScratches[hartid].scratch));
 
     while (1) {
         asm("wfi");
@@ -248,15 +258,10 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
 #include "hss_boot_service.h"
 
 static int sbi_ecall_hss_handler(
-#if (OPENSBI_VERSION <=6)
-    struct sbi_scratch *scratch,
-#endif
     unsigned long extid, unsigned long funcid,
     const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
 {
     int ret = 0;
-    //struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
-    //(void)scratch;
     (void)regs;
     uint32_t index;
 
