@@ -19,7 +19,7 @@ config SERVICE_MMC_MODE_EMMC
 
 config SERVICE_MMC_MODE_SDCARD
 	bool "Use SDCard"
-	default n
+	default y
         depends on SERVICE_MMC
 	help
                 This feature sets the MMC system to use SDCard.

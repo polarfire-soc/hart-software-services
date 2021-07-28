@@ -1,7 +1,7 @@
 config SERVICE_USBDMSC
 	bool "USBD-MSC support"
 	default n
-        depends on SERVICE_TINYCLI
+        depends on SERVICE_TINYCLI && SERVICE_MMC
 	help
 		This feature enables USBD-MSC support to expose eMMC/SDCard over USB.
           

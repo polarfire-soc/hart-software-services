@@ -137,8 +137,10 @@ static void tinyCLI_PrintUptime_(void);
 static void tinyCLI_PrintHelp_(void);
 static void tinyCLI_Debug_(void);
 static void tinyCLI_Reset_(void);
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 static void tinyCLI_Boot_List_(void);
 static void tinyCLI_Boot_Select_(void);
+#endif
 static bool tinyCLI_Boot_(void);
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
 static void tinyCLI_Monitor_(void);
@@ -465,6 +467,7 @@ static void tinyCLI_Debug_(void)
     }
 }
 
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 static void tinyCLI_Boot_List_(void)
 {
     HSS_GPT_t gpt;
@@ -529,6 +532,7 @@ static void tinyCLI_Boot_Select_(void)
             CRLF);
     }
 }
+#endif
 
 static bool tinyCLI_Boot_(void)
 {
@@ -547,6 +551,7 @@ static bool tinyCLI_Boot_(void)
     if (argc_tokenCount > 1u) {
         if (tinyCLI_NameToKeyIndex_(bootKeys, ARRAY_SIZE(bootKeys), argv_tokenArray[1], &keyIndex)) {
             switch (keyIndex) {
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
             case BOOT_LIST:
                 tinyCLI_Boot_List_();
                 break;
@@ -554,6 +559,7 @@ static bool tinyCLI_Boot_(void)
             case BOOT_SELECT:
                 tinyCLI_Boot_Select_();
                 break;
+#endif
 
             default:
                 usageError = true;
