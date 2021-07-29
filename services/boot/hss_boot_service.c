@@ -17,6 +17,7 @@
 #include "hss_types.h"
 #include "hss_state_machine.h"
 #include "hss_boot_service.h"
+#include "opensbi_service.h"
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_clock.h"
@@ -349,12 +350,32 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
 static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+    enum HSSHartId const target = pInstanceData->target;
 
     pInstanceData->msgIndex = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
+    bool const boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
+
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-            enum HSSHartId peer = bootMachine[i].hartId;
-            pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+        enum HSSHartId peer = bootMachine[i].hartId;
+        pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+
+        if (boot_hart) {
+            if ((peer == target) ||
+                (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint)) {
+                pInstanceData->hartMask |= (1u << peer);
+                mpfs_domains_register_hart(peer, target);
+            }
+        }
+    }
+
+    if (boot_hart) {
+        mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
+            pInstanceData->hartMask, target,
+            pBootImage->hart[target-1].privMode,
+            (void *)pBootImage->hart[target-1].entryPoint,
+            (void *)pInstanceData->ancilliaryData);
     }
 #endif
 }
@@ -455,8 +476,8 @@ static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
     assert(pBootImage != NULL);
 
     if (pBootImage->hart[target-1].numChunks) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image:" CRLF "  \"%s\"" CRLF,
-        //    pMyMachine->pMachineName, pBootImage->hart[target-1].name);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image: \"%s\"" CRLF,
+            pMyMachine->pMachineName, pBootImage->hart[target-1].name);
         pInstanceData->pChunk =
             (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
 
@@ -535,10 +556,10 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
             } else {
                 if (pChunk->owner == target) {
                     mHSS_DEBUG_PRINTF(LOG_ERROR,
-                        "Target %d is skipping chunk %p due to invalid permissions" CRLF, target, pChunk);
+                        "%s::Skipping chunk %p due to invalid permissions" CRLF, pMyMachine->pMachineName, pChunk);
                 } else {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR,
-                        "Target %d is skipping chunk %p due to ownership %d" CRLF, target, pChunk, pChunk->owner);
+                    mHSS_DEBUG_PRINTF(LOG_WARN,
+                        "%s::Skipping chunk %p due to ownership %d" CRLF, pMyMachine->pMachineName, pChunk, pChunk->owner);
                 }
 
                 pInstanceData->pChunk++;
@@ -573,29 +594,27 @@ static void boot_opensbi_init_onEntry(struct StateMachine * const pMyMachine)
     if (pBootImage->hart[target-1].entryPoint) {
         pInstanceData->iterator = 0u;
 
+#if 0
         for (int i = 0; i < ARRAY_SIZE(bootMachine); i++) {
             enum HSSHartId peer = bootMachine[i].hartId;
 
             if (peer == target) {
                 pInstanceData->hartMask |= (1u << peer);
-                // skip myself for now
+                mpfs_domains_register_hart(peer, target);
             } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
                 pInstanceData->hartMask |= (1u << peer);
-
-                void mpfs_domains_register_hart(int myhartid, int target);
                 mpfs_domains_register_hart(peer, target);
             }
         }
 
-        void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, u32 boot_hartid, u32 privMode, void * entryPoint, void * pArg1); // TODO tidy up
         mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
             pInstanceData->hartMask, target,
             pBootImage->hart[target-1].privMode,
             (void *)pBootImage->hart[target-1].entryPoint,
             (void *)pInstanceData->ancilliaryData);
+#endif
     }
 }
-
 
 static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
 {

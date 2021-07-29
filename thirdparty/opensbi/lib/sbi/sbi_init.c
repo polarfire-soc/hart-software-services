@@ -456,7 +456,13 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 	 * HARTs which satisfy above condition.
 	 */
 
+#if 0
 	if (next_mode_supported && atomic_xchg(&coldboot_lottery, 1) == 0)
+		coldboot = TRUE;
+#endif
+
+	bool mpfs_is_last_hart_booting(void);
+        if (next_mode_supported && mpfs_is_last_hart_booting() && atomic_xchg(&coldboot_lottery, 1) == 0)
 		coldboot = TRUE;
 
 	if (coldboot)
@@ -464,15 +470,6 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 	else
 		init_warmboot(scratch, hartid);
 }
-
-void sbi_hss_e51_init(struct sbi_scratch *scratch, bool coldboot)
-{
-        (void)coldboot;
-	int rc = sbi_console_init(scratch);
-	if (rc)
-		sbi_hart_hang();
-}
-
 
 unsigned long sbi_init_count(u32 hartid)
 {
