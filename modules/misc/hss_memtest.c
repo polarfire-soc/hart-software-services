@@ -226,7 +226,7 @@ bool HSS_MemTestDDRFast(void)
             (uint32_t)(HSS_DDR_GetSize()/mMB_IN_BYTES));
     }
 
-    int perf_ctr_index;
+    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
     HSS_PerfCtr_Allocate(&perf_ctr_index, "MemTest(DDR32)");
     if ((HSS_MemTestDataBus((uint64_t *)HSS_DDR_GetStart()) != 0u)
             || (HSS_MemTestAddressBus((uint64_t *)HSS_DDR_GetStart(), HSS_DDR_GetSize()) != NULL)) {

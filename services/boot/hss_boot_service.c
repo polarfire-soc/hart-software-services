@@ -140,10 +140,10 @@ struct HSS_Boot_LocalData {
 
 
 static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
-    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
-    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
-    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
-    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, PERF_CTR_UNINITIALIZED, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, PERF_CTR_UNINITIALIZED, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, PERF_CTR_UNINITIALIZED, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, PERF_CTR_UNINITIALIZED, 0u, 0u, { 0u, 0u, 0u, 0u } },
 };
 
 struct HSS_BootImage *pBootImage = NULL;

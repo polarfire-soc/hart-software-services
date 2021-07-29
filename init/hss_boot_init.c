@@ -116,7 +116,7 @@ bool HSS_BootInit(void)
 
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image.." CRLF);
 
-    int perf_ctr_index;
+    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
     HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image Init");
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
@@ -328,7 +328,7 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
             if (!result) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "verifyMagic_() failed" CRLF);
             } else {
-                int perf_ctr_index;
+                int perf_ctr_index = PERF_CTR_UNINITIALIZED;
                 HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image MMC Copy");
                 result = copyBootImageToDDR_(&bootImage,
                     (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), srcLBAOffset * GPT_LBA_SIZE,

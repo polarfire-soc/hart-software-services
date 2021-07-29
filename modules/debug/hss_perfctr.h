@@ -29,4 +29,6 @@ void HSS_PerfCtr_Lap(int index);
 HSSTicks_t HSS_PerfCtr_GetTime(int index);
 void HSS_PerfCtr_DumpAll(void);
 
+#define PERF_CTR_UNINITIALIZED -1
+
 #endif

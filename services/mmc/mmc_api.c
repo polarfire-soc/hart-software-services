@@ -189,7 +189,7 @@ bool HSS_MMCInit(void)
     bool result = false;
 
     if (!mmc_initialized) {
-        int perf_ctr_index;
+        int perf_ctr_index = PERF_CTR_UNINITIALIZED;
         HSS_PerfCtr_Allocate(&perf_ctr_index, "MMC Init");
         mmc_reset_block();
 
