@@ -28,7 +28,6 @@ config LOGO_INVERT_COLORS
                 white text.
 
 		If you do not know what to do here, say N.
-
 endmenu
 
 

@@ -135,28 +135,15 @@ struct HSS_Boot_LocalData {
     int perfCtr;
     unsigned int iterator;
     uintptr_t ancilliaryData;
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     uint32_t msgIndexAux[MAX_NUM_HARTS-1];
-#endif
 };
 
-#define mREPEAT(x, count) mRPT##count(x)
-#define mRPT1(x) x
-#define mRPT2(x) x, mRPT1(x)
-#define mRPT3(x) x, mRPT2(x)
-#define mRPT4(x) x, mRPT3(x)
-
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-#    define mDEFAULT_MSG_INDEX_AUX { mREPEAT(0u,4) }
-#else
-#    define mDEFAULT_MSG_INDEX_AUX
-#endif
 
 static struct HSS_Boot_LocalData localData[MAX_NUM_HARTS-1] = {
-    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
-    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0u, 0u, 0u, mDEFAULT_MSG_INDEX_AUX },
+    { HSS_HART_U54_1, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_2, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_3, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
+    { HSS_HART_U54_4, NULL, NULL, 0u, 0u, 0u, IPI_MAX_NUM_OUTSTANDING_COMPLETES, 0u, 0, 0u, 0u, { 0u, 0u, 0u, 0u } },
 };
 
 struct HSS_BootImage *pBootImage = NULL;
@@ -284,12 +271,10 @@ static void free_msg_index(struct HSS_Boot_LocalData * const pInstanceData)
 
 static void free_msg_index_aux(struct HSS_Boot_LocalData * const pInstanceData, enum HSSHartId peer)
 {
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     if (pInstanceData->msgIndexAux[peer-1] != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
         IPI_MessageFree(pInstanceData->msgIndexAux[peer-1]);
         pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
     }
-#endif
 }
 
 
@@ -298,8 +283,6 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     bool result = true;
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
-    //
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
         enum HSSHartId peer = bootMachine[i].hartId;
         if (pInstanceData->msgIndexAux[peer-1] != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
@@ -310,7 +293,6 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
             }
         }
     }
-#endif
 
     if (pInstanceData->msgIndex != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
         result = result & IPI_MessageCheckIfComplete(pInstanceData->msgIndex);
@@ -354,7 +336,6 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
 
     pInstanceData->msgIndex = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     bool const boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
 
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
@@ -365,19 +346,22 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
             if ((peer == target) ||
                 (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint)) {
                 pInstanceData->hartMask |= (1u << peer);
+                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering hart %d to domain \"%s\"" CRLF,
+                //    pMyMachine->pMachineName, peer, pBootImage->hart[target-1].name);
                 mpfs_domains_register_hart(peer, target);
             }
         }
     }
 
     if (boot_hart) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering domain \"%s\" (hart mask 0x%x)" CRLF, pMyMachine->pMachineName,
+            pBootImage->hart[target-1].name, pInstanceData->hartMask);
         mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
             pInstanceData->hartMask, target,
             pBootImage->hart[target-1].privMode,
             (void *)pBootImage->hart[target-1].entryPoint,
             (void *)pInstanceData->ancilliaryData);
     }
-#endif
 }
 
 static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine)
@@ -410,12 +394,11 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
         for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
             enum HSSHartId peer = bootMachine[i].hartId;
             free_msg_index_aux(pInstanceData, peer);
         }
-#endif
+
         free_msg_index(pInstanceData);
 
         pMyMachine->state = BOOT_ERROR;
@@ -593,26 +576,6 @@ static void boot_opensbi_init_onEntry(struct StateMachine * const pMyMachine)
 
     if (pBootImage->hart[target-1].entryPoint) {
         pInstanceData->iterator = 0u;
-
-#if 0
-        for (int i = 0; i < ARRAY_SIZE(bootMachine); i++) {
-            enum HSSHartId peer = bootMachine[i].hartId;
-
-            if (peer == target) {
-                pInstanceData->hartMask |= (1u << peer);
-                mpfs_domains_register_hart(peer, target);
-            } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
-                pInstanceData->hartMask |= (1u << peer);
-                mpfs_domains_register_hart(peer, target);
-            }
-        }
-
-        mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
-            pInstanceData->hartMask, target,
-            pBootImage->hart[target-1].privMode,
-            (void *)pBootImage->hart[target-1].entryPoint,
-            (void *)pInstanceData->ancilliaryData);
-#endif
     }
 }
 
@@ -628,7 +591,6 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
         bool result;
 
         if (pBootImage->hart[target-1].numChunks) {
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
             if (pInstanceData->iterator < ARRAY_SIZE(bootMachine)) {
                 enum HSSHartId peer = bootMachine[pInstanceData->iterator].hartId;
 
@@ -656,7 +618,6 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
             } else {
                 pMyMachine->state = BOOT_WAIT;
             }
-#endif
         } else {
             pMyMachine->state = BOOT_WAIT;
         }
@@ -712,12 +673,11 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
         for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
             enum HSSHartId peer = bootMachine[i].hartId;
             free_msg_index_aux(pInstanceData, peer);
         }
-#endif
+
         free_msg_index(pInstanceData);
 
         pMyMachine->state = BOOT_ERROR;
@@ -798,7 +758,6 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
     return result;
 }
 
-
 enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 {
     enum IPIStatusCode result = IPI_FAIL;
@@ -811,7 +770,6 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 
     union HSSHartBitmask restartHartBitmask = { .uint = 0u };
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_SETS_SUPPORT)
     // in interrupts-always-enabled world of the HSS, it would appear less
     // racey to boot secondary cores first and have them all wait...
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
@@ -824,7 +782,7 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
             restartHartBitmask.uint |= (1u << peer);
         }
     }
-#endif
+
     restartHartBitmask.uint |= (1u << source);
 
     if (pBootImage->hart[source-1].numChunks) {

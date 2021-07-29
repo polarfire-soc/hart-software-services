@@ -8,17 +8,6 @@ config SERVICE_BOOT
 
 menu "Boot Service"
 
-config SERVICE_BOOT_SETS_SUPPORT
-        def_bool SERVICE_BOOT && y
-        depends on SERVICE_BOOT
-	help
-                This feature enables support for bootstrapping the U54 application harts in groups.
-                This helps prevent boot races by starting secondary processors before the primary
-                process in a group, to ensure they are ready and waiting for a wake-up signal from
-                the primary.
-
-                This setting is is enabled by default.
-
 config SERVICE_BOOT_SPI_FLASH_OFFSET
         hex "Copy payload from SPI FLASH at offset"
         default  0x400

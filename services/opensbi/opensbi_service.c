@@ -229,9 +229,9 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
        	scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
 #endif
 
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_addr to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_addr);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_arg1 to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_arg1);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_mode to PRV_", hartid);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_addr to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_addr);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_arg1 to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_arg1);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_mode to PRV_", hartid);
 	switch (scratches[hartid].scratch.next_mode) {
 	case PRV_M:
 	    mHSS_DEBUG_PRINTF_EX("M" CRLF);

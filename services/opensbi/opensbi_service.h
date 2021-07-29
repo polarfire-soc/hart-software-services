@@ -48,6 +48,7 @@ void HSS_OpenSBI_Setup(void);
 void mpfs_domains_register_hart(int hartid, int boot_hartid);
 void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid, u32 privMode, void * entryPoint, void * pArg1);
 void mpfs_mark_hart_as_booted(enum HSSHartId hartid);
+bool mpfs_is_last_hart_booting(void);
 
 extern struct StateMachine opensbi_service;
 
