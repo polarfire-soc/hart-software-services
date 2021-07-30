@@ -2,7 +2,7 @@
 #define HSS_SCRUB_TYPES_H
 
 /*******************************************************************************
- * Copyright 2021 Microchip Corporation.
+ * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2021 Microchip Corporation.
+ * Copyright 2017-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -193,7 +193,7 @@ bool HSS_E51_Banner(void)
     mHSS_FANCY_PRINTF(LOG_STATUS,
         "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" CRLF
         "MPFS HAL version %d.%d.%d" CRLF
-        "(c) Copyright 2017-2021 Microchip Corporation." CRLF CRLF,
+        "(c) Copyright 2017-2021 Microchip FPGA Embedded Systems Solutions." CRLF CRLF,
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
         MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH);
 
