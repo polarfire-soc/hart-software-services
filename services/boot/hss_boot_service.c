@@ -284,7 +284,7 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
     bool result = true;
 
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-        enum HSSHartId peer = bootMachine[i].hartId;
+        enum HSSHartId const peer = bootMachine[i].hartId;
         if (pInstanceData->msgIndexAux[peer-1] != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
             result = IPI_MessageCheckIfComplete(pInstanceData->msgIndexAux[peer-1]);
 
