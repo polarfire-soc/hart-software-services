@@ -97,6 +97,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
             pCurrentMachine->lastExecutionTime - pCurrentMachine->startTime;
         if (pCurrentMachine->lastDeltaExecutionTime > pCurrentMachine->maxExecutionTime) {
             pCurrentMachine->maxExecutionTime = pCurrentMachine->lastDeltaExecutionTime;
+            pCurrentMachine->maxState = pCurrentMachine->prevState;
         }
 
         if (IS_ENABLED(CONFIG_DEBUG_LOG_STATE_TRANSITIONS)) {
@@ -266,11 +267,13 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
 
 void DumpStateMachineStats(void)
 {
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "  State Machine Name: Max Execution Time :    Last Delta Time : State" CRLF);
+
     for (size_t i = 0u; i < spanOfPGlobalStateMachines; i++) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%20s: % 18" PRIu64 " : % 18" PRIu64 " : % 2" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "%20s: % 18" PRIu64 " : % 18" PRIu64 " : % 2" PRIu64 CRLF,
             pGlobalStateMachines[i]->pMachineName,
             pGlobalStateMachines[i]->maxExecutionTime,
             pGlobalStateMachines[i]->lastDeltaExecutionTime,
-            pGlobalStateMachines[i]->state);
+            pGlobalStateMachines[i]->maxState);
     }
 }
