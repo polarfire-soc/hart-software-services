@@ -237,13 +237,13 @@ _trap_handler_all_mode:
 	// Call C routine
 	csrr 	a0, CSR_MCAUSE
 	sext.w	a0, a0
-	blt	a0, zero, .skipHssIpi
-	call 	HSS_U54_HandleIPI 	// check if it is a HSS IPI
-	#csrc	CSR_MIP, MIP_MSIP
-	#csrc	CSR_MIP, MIP_SSIP
-	#bnez	a0, .skipOpenSbi
+	blt	a0, zero, .checkIfOpenSBITrap
 
-.skipHssIpi:
+.checkIfHssIpi:
+	call 	HSS_U54_HandleIPI 	// check if it is a HSS IPI
+	bnez	a0, .skipOpenSbi
+
+.checkIfOpenSBITrap:
 	add	a0, sp, zero
 	csrr	a1, CSR_MSCRATCH
 	call	sbi_trap_handler

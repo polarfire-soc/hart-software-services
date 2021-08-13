@@ -26,6 +26,7 @@
 #include "ssmb_ipi.h"
 
 #include "goto_service.h"
+#include "opensbi_service.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  include "hss_boot_pmp.h"
@@ -41,32 +42,36 @@
 // This routine gets executed when a U54 receives an IPI from E51 in machine mode...
 //
 
+static const struct IntentsArray
+{
+    bool enabled;
+    enum IPIMessagesEnum msg_type;
+} intentsArray[] = {
+    { IS_ENABLED(CONFIG_SERVICE_BOOT),   	IPI_MSG_PMP_SETUP },
+    { IS_ENABLED(CONFIG_SERVICE_GOTO),   	IPI_MSG_GOTO },
+    { IS_ENABLED(CONFIG_SERVICE_OPENSBI),	IPI_MSG_OPENSBI_INIT }
+};
+
+
 bool HSS_U54_HandleIPI(void);
 bool HSS_U54_HandleIPI(void)
 {
     //mHSS_DEBUG_PRINTF(">>" CRLF);
     bool intentFound = false;
+    enum HSSHartId myHartId = current_hartid();
 
     mb();
 
-    if (IS_ENABLED(CONFIG_SERVICE_BOOT)) { intentFound = IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_PMP_SETUP); }
-
-    if (IS_ENABLED(CONFIG_SERVICE_GOTO) && (!intentFound)) { intentFound =  IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_GOTO); }
-
-    if (IS_ENABLED(CONFIG_SERVICE_OPENSBI) && (!intentFound)) { intentFound =  IPI_ConsumeIntent(HSS_HART_E51, IPI_MSG_OPENSBI_INIT); }
-
-    if (IS_ENABLED(CONFIG_DEBUG_IPI_STATS)) {
-        enum HSSHartId myHartId = current_hartid();
-        static size_t count[5]; count[myHartId]++;
-
-        mHSS_DEBUG_PRINTF(LOG_STATUS, " ipi_interrupts: %" PRIu64 " (%d)" CRLF, count[myHartId],
-            intentFound);
-        IPI_DebugDumpStats();
+    for (int i = 0; i < ARRAY_SIZE(intentsArray); i++) {
+        if (intentsArray[i].enabled) { intentFound = IPI_ConsumeIntent(HSS_HART_E51, intentsArray[i].msg_type) | intentFound; }
     }
 
-    //mb();
-    // if not for me, pass to S-mode ...
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "MTVEC is now %p" CRLF, mHSS_CSR_READ(mtvec));
+    // in testing, for harts that aren't in either its domain or the root domain, U-Boot still seems to be generating some
+    // unexpected MSIP interrupts which otherwise never get cleared so if not using OpenSBI we'll clear explicitly here...
+    if (intentFound || !mpfs_is_hart_using_opensbi(myHartId)) {
+        CSR_ClearMSIP();
+    }
+
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "<<" CRLF);
 
     return intentFound;
