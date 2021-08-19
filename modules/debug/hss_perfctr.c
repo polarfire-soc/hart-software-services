@@ -44,7 +44,7 @@ bool HSS_PerfCtr_Allocate(int *pIdx, char const * pName)
     } else {
         assert(pIdx);
 
-        *pIdx = -1;
+        *pIdx = PERF_CTR_UNINITIALIZED;
 
         for (int index = 0; index < ARRAY_SIZE(perfCtrs); index++) {
             if (!perfCtrs[index].isAllocated) {
@@ -68,53 +68,55 @@ bool HSS_PerfCtr_Allocate(int *pIdx, char const * pName)
 
 void HSS_PerfCtr_Deallocate(int index)
 {
+    if (index != PERF_CTR_UNINITIALIZED) {
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-    assert(index < ARRAY_SIZE(perfCtrs));
+        assert(index < ARRAY_SIZE(perfCtrs));
 
-    if ((index >= 0) && (perfCtrs[index].isAllocated)) {
-        perfCtrs[index].isAllocated = false;
-        perfCtrs[index].pName = NULL;
-    }
-#else
-    (void)index;
+        if ((index >= 0) && (perfCtrs[index].isAllocated)) {
+            perfCtrs[index].isAllocated = false;
+            perfCtrs[index].pName = NULL;
+        }
 #endif
+    }
 }
 
 void HSS_PerfCtr_Start(int index)
 {
+    if (index != PERF_CTR_UNINITIALIZED) {
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-    assert(index < ARRAY_SIZE(perfCtrs));
-    if (index >= 0) {
-        perfCtrs[index].startTime = HSS_GetTime();
-    }
-#else
-    (void)index;
+        assert(index < ARRAY_SIZE(perfCtrs));
+        if (index >= 0) {
+            perfCtrs[index].startTime = HSS_GetTime();
+        }
 #endif
+    }
 }
 
 void HSS_PerfCtr_Lap(int index)
 {
+    if (index != PERF_CTR_UNINITIALIZED) {
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-    assert(index < ARRAY_SIZE(perfCtrs));
-    if (index >= 0) {
-        perfCtrs[index].lapTime = HSS_GetTime();
-    }
-#else
-    (void)index;
+        assert(index < ARRAY_SIZE(perfCtrs));
+        if (index >= 0) {
+            perfCtrs[index].lapTime = HSS_GetTime();
+        }
 #endif
+    }
 }
 
 HSSTicks_t HSS_PerfCtr_GetTime(int index)
 {
     HSSTicks_t result = 0u;
 
+    if (index != PERF_CTR_UNINITIALIZED) {
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-    assert(index < ARRAY_SIZE(perfCtrs));
+        assert(index < ARRAY_SIZE(perfCtrs));
 
-    if (index >= 0) {
-        result = perfCtrs[index].lapTime - perfCtrs[index].startTime;
-    }
+        if (index >= 0) {
+            result = perfCtrs[index].lapTime - perfCtrs[index].startTime;
+        }
 #endif
+    }
 
     return result;
 }
