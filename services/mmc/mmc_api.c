@@ -25,6 +25,9 @@
 
 #include "mmc_service.h"
 #include "encoding.h"
+#ifdef CONFIG_MODULE_M100PFS
+#include "mss_gpio.h"
+#endif
 #include "mss_mmc.h"
 #include "hal/hw_macros.h"
 #ifndef __IO
@@ -53,7 +56,11 @@
  * We need MSSIO settings for eMMC...
  */
 #define LIBERO_SETTING_IOMUX1_CR_eMMC			0x11111111UL
+#ifdef CONFIG_MODULE_M100PFS
+#define LIBERO_SETTING_IOMUX2_CR_eMMC			0x00BB1111UL
+#else
 #define LIBERO_SETTING_IOMUX2_CR_eMMC			0x00FF1111UL
+#endif
 #define LIBERO_SETTING_IOMUX6_CR_eMMC			0x00000000UL
 #define LIBERO_SETTING_MSSIO_BANK4_CFG_CR_eMMC		0x00040A0DUL
 #define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_eMMC	0x09280928UL
@@ -68,8 +75,13 @@
  * ... and for SDCard
  */
 #define LIBERO_SETTING_IOMUX1_CR_SD			0x00000000UL
+#ifdef CONFIG_MODULE_M100PFS
+#define LIBERO_SETTING_IOMUX2_CR_SD			0x00BB0000UL
+#define LIBERO_SETTING_IOMUX6_CR_SD			0x0000001DUL
+#else
 #define LIBERO_SETTING_IOMUX2_CR_SD			0x00000000UL
 #define LIBERO_SETTING_IOMUX6_CR_SD			0x0000001DUL
+#endif
 #define LIBERO_SETTING_MSSIO_BANK4_CFG_CR_SD		0x00080907UL
 #define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_SD	0x08290829UL
 #define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_SD	0x08290829UL
@@ -132,6 +144,9 @@ static bool mmc_init_emmc(void)
 #if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
     HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  0);
 #endif
+#ifdef CONFIG_MODULE_M100PFS
+    MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 0);
+#endif
 
     static mss_mmc_cfg_t emmcConfig =
     {
@@ -139,8 +154,13 @@ static bool mmc_init_emmc(void)
         .data_bus_width = MSS_MMC_DATA_WIDTH_8BIT,
 #if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
         .bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE,
+#ifdef CONFIG_MODULE_M100PFS
+        .clk_rate = MSS_MMC_CLOCK_50MHZ,
+        .bus_speed_mode = MSS_MMC_MODE_SDR,
+#else
         .clk_rate = MSS_MMC_CLOCK_200MHZ,
         .bus_speed_mode = MSS_MMC_MODE_HS200,
+#endif
 #elif defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
         .bus_voltage = MSS_MMC_3_3V_BUS_VOLTAGE,
         .clk_rate = MSS_MMC_CLOCK_50MHZ,
@@ -170,6 +190,9 @@ static bool mmc_init_sdcard(void)
 #if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
     HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  1);
 #endif
+#ifdef CONFIG_MODULE_M100PFS
+    MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 1);
+#endif
 
     static mss_mmc_cfg_t sdcardConfig =
     {
@@ -191,6 +214,13 @@ bool HSS_MMCInit(void)
     if (!mmc_initialized) {
         int perf_ctr_index = PERF_CTR_UNINITIALIZED;
         HSS_PerfCtr_Allocate(&perf_ctr_index, "MMC Init");
+
+#ifdef CONFIG_MODULE_M100PFS
+        MSS_GPIO_init(GPIO0_LO);
+        MSS_GPIO_config(GPIO0_LO, MSS_GPIO_12, MSS_GPIO_OUTPUT_MODE);
+        MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 0);
+#endif
+
         mmc_reset_block();
 
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)

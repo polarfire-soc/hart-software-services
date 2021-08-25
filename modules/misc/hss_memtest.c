@@ -212,7 +212,17 @@ do_return:
 #define mGB_IN_BYTES (1024llu * 1024llu * 1024llu)
 #define mMB_IN_BYTES (1024llu * 1024llu)
 
+#ifdef CONFIG_MODULE_M100PFS
+/* HACK to make memory test work with memory size more than 1GiB
+ * explicitly use uncached DDR window for memory test
+ */
+#define HSS_DDR_GetStart override_hss_ddr_getstart
 #include "ddr_service.h"
+#undef HSS_DDR_GetStart
+static void *HSS_DDR_GetStart(void) {return (void *)0x1400000000u; }
+#else
+#include "ddr_service.h"
+#endif
 
 bool HSS_MemTestDDRFast(void)
 {
