@@ -129,13 +129,15 @@ void hss_loader_ymodem_loop(void)
 {
     uint8_t rx_byte;
     bool done = false;
-    bool result = false;
 
     uint32_t receivedCount = 0u;
     uint8_t *pBuffer = (uint8_t *)HSS_DDR_GetStart();
     uint32_t g_rx_size = HSS_DDR_GetSize();
 
     while (!done) {
+#if IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_MMC)
+        bool result = false;
+#endif
         static const char menuText[] = CRLF
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
             "QSPI"
