@@ -37,7 +37,6 @@ OBJS-envm-wrapper = \
 	init/hss_sys_setup.o \
 	modules/misc/hss_crc32.o \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_cache.o \
-	baremetal/sysreg.o \
 	modules/misc/csr_helper.o \
 	modules/misc/assert.o \
 	modules/misc/c_stubs.o \

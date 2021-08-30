@@ -251,6 +251,7 @@ const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_board_init.h"
+#include "device_serial_number.h"
 #if IS_ENABLED(CONFIG_MEMTEST)
 #  include "hss_memtest.h"
 #endif
@@ -259,35 +260,36 @@ const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
 #endif
 
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
-    // Name                        FunctionPointer            Halt   Restart
-    { "HSS_Setup_L2Cache",         HSS_Setup_L2Cache,         false, false },
-    { "HSS_Init_RWDATA_BSS",       HSS_Init_RWDATA_BSS,       false, false },
-    { "HSS_BoardInit",             HSS_BoardInit,             false, false },
-    { "HSS_UARTInit",              HSS_UARTInit,              false, false },
-    { "HSS_OpenSBIInit",           HSS_OpenSBIInit,           false, false },
+    // Name                            FunctionPointer                Halt   Restart
+    { "HSS_Setup_L2Cache",             HSS_Setup_L2Cache,             false, false },
+    { "HSS_Init_RWDATA_BSS",           HSS_Init_RWDATA_BSS,           false, false },
+    { "HSS_BoardInit",                 HSS_BoardInit,                 false, false },
+    { "HSS_UARTInit",                  HSS_UARTInit,                  false, false },
+    { "HSS_OpenSBIInit",               HSS_OpenSBIInit,               false, false },
 #if IS_ENABLED(CONFIG_USE_LOGO)
-    { "HSS_LogoInit",              HSS_LogoInit,              false, false },
+    { "HSS_LogoInit",                  HSS_LogoInit,                  false, false },
 #endif
-    { "HSS_E51_Banner",            HSS_E51_Banner,            false, false },
-    { "HSS_DDRPrintSegConfig",     HSS_DDRPrintSegConfig,     false, false },
-    { "HSS_DDRPrintL2CacheConfig", HSS_DDRPrintL2CacheConfig, false, false },
+    { "HSS_E51_Banner",                HSS_E51_Banner,                false, false },
+    { "Device_Serial_Number_Init",     Device_Serial_Number_Init,     false, false },
+    { "HSS_DDRPrintSegConfig",         HSS_DDRPrintSegConfig,         false, false },
+    { "HSS_DDRPrintL2CacheWaysConfig", HSS_DDRPrintL2CacheWaysConfig, false, false },
 #if IS_ENABLED(CONFIG_MEMTEST)
-    { "HSS_MemTestDDRFast",        HSS_MemTestDDRFast,        false, false },
+    { "HSS_MemTestDDRFast",            HSS_MemTestDDRFast,            false, false },
 #endif
-    { "HSS_BoardLateInit",         HSS_BoardLateInit,         false, false },
+    { "HSS_BoardLateInit",             HSS_BoardLateInit,             false, false },
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
-    { "HSS_MMCInit",               HSS_MMCInit,               false, false },
+    { "HSS_MMCInit",                   HSS_MMCInit,                   false, false },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
-    { "HSS_QSPIInit",              HSS_QSPIInit,              false, false },
+    { "HSS_QSPIInit",                  HSS_QSPIInit,                  false, false },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-    { "HSS_TinyCLI_Parser",        HSS_TinyCLI_Parser,        false, false },
+    { "HSS_TinyCLI_Parser",            HSS_TinyCLI_Parser,            false, false },
 #endif
-    { "IPI_QueuesInit",            IPI_QueuesInit,            false, false },
+    { "IPI_QueuesInit",                IPI_QueuesInit,                false, false },
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-    { "HSS_PMP_Init",              HSS_PMP_Init,              false, false },
-    { "HSS_BootInit",              HSS_BootInit,              false, true },
+    { "HSS_PMP_Init",                  HSS_PMP_Init,                  false, false },
+    { "HSS_BootInit",                  HSS_BootInit,                  false, true },
 #endif
 };
 const size_t spanOfGlobalInitFunctions = ARRAY_SIZE(globalInitFunctions);

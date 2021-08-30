@@ -25,8 +25,10 @@
 #include "gpt.h"
 #include "hss_init.h"
 #include "hss_state_machine.h"
+
 #include "tinycli_service.h"
 #include "tinycli_hexdump.h"
+
 #include "hss_memtest.h"
 #include "hss_progress.h"
 #include "hss_version.h"
@@ -381,7 +383,8 @@ static void tinyCLI_Seg_(void)
 
 static void tinyCLI_L2Cache_(void)
 {
-    (void)HSS_DDRPrintL2CacheConfig();
+    (void)HSS_DDRPrintL2CacheWaysConfig();
+    (void)HSS_DDRPrintL2CacheWayMasks();
 }
 
 static void tinyCLI_PerfCtrs_(void)

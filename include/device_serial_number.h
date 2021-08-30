@@ -1,5 +1,5 @@
-#ifndef HSS_INIT_H
-#define HSS_INIT_H
+#ifndef DEVICE_SERIAL_NUMBER_H
+#define DEVICE_SERIAL_NUMBER_H
 
 /*******************************************************************************
  * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
@@ -25,7 +25,7 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Toplevel Init Routines
+ * Hart Software Services - Serial Number wrapper
  *
  */
 
@@ -33,42 +33,8 @@
 extern "C" {
 #endif
 
-void HSS_Init(void);
-
-bool HSS_ZeroTIMs(void);
-bool HSS_ZeroDDR(void);
-bool HSS_Init_RWDATA_BSS(void);
-bool HSS_WakeSleepingHarts(void);
-bool HSS_E51_Banner(void);
-
-bool HSS_QueuesInit(void);
-
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-#  include "qspi_service.h"
-#endif
-
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-#  include "mmc_service.h"
-#endif
-
-#if IS_ENABLED(CONFIG_OPENSBI)
-bool HSS_OpenSBIInit(void);
-#endif
-
-bool HSS_DDRInit(void);
-bool HSS_DDRPrintSegConfig(void);
-bool HSS_DDRPrintL2CacheWaysConfig(void);
-bool HSS_DDRPrintL2CacheWayMasks(void);
-bool HSS_UARTInit(void);
-#if IS_ENABLED(CONFIG_USE_LOGO)
-bool HSS_LogoInit(void);
-#endif
-
-#ifdef CONFIG_USE_PCIE
-bool HSS_PCIeInit(void);
-#endif
-
-bool HSS_PDMAInit(void);
+bool Device_Serial_Number_Init(void);
+bool Get_Device_Serial_Number(uint8_t **ppBuffer, size_t* pLen);
 
 #ifdef __cplusplus
 }

@@ -148,6 +148,7 @@ bool FLASH_DRIVE_init(void)
 
 #include "hss_clock.h"
 static size_t writeCount = 0u, readCount = 0u;
+static size_t lastWriteCount = 0u, lastReadCount = 0u;
 HSSTicks_t last_sec_time = 0u;
 
 const char throbber[] = { '/', '-', '\\', '|' };
@@ -157,7 +158,8 @@ void FLASH_DRIVE_dump_xfer_status(void)
 {
     static char activeThrobber = '/';
 
-    if (HSS_Timer_IsElapsed(last_sec_time, 5*TICKS_PER_SEC)) {
+    if (HSS_Timer_IsElapsed(last_sec_time, 5*TICKS_PER_SEC) ||
+        ((lastWriteCount == writeCount) && (lastReadCount == readCount))) {
         activeThrobber = '.';
     } else if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
         activeThrobber = throbber[throbber_iterator];
