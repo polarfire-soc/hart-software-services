@@ -72,7 +72,7 @@ static void process_blob(void *pBuffer, uintptr_t exec_addr, size_t size, size_t
 	assert(pBuffer);
 
 	struct HSS_BootChunkDesc chunk = {
-		.owner = owner | (is_ancilliary_data ? BOOT_ANCILLIARY_DATA_FLAG : 0u),
+		.owner = owner | (is_ancilliary_data ? BOOT_FLAG_ANCILLIARY_DATA : 0u),
 			.loadAddr = 0u,
 			.execAddr = (uintptr_t)exec_addr,
 			.size = size,

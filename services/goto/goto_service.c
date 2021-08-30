@@ -98,26 +98,21 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     enum IPIStatusCode result = IPI_FAIL;
     (void)p_ancilliary_buffer_in_ddr;
 
-    // goto IPI received from E51
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (goto_service.state is %u)" CRLF, goto_service.state);
+    int hartid = current_hartid();
 
     if (source != HSS_HART_E51) {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from hart %d" CRLF, source);
-        result = IPI_FAIL;
+    } else if (hartid == HSS_HART_E51) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy" CRLF, HSS_HART_E51);
     } else {
         // the following should always be true if we have consumed intents for GOTO...
         assert(p_extended_buffer != NULL);
 
         // we ain't coming back from the GOTO, so need to ACK here...
-#if __riscv //TODO
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Source is %d, transaction_id is %u" CRLF, source,
-        //    transaction_id);
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
-        // first find queue
         struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, current_hartid());
-        // now find my message in the queue
         size_t i;
 
         for (i = 0u; i < IPI_MAX_NUM_QUEUE_MESSAGES; i++) {
@@ -130,37 +125,14 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p" CRLF, *(void **)p_extended_buffer);
+            CSR_ClearMSIP();
 
-            enum HSSHartId myHartId = current_hartid();
+            uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);
+            mstatus_val = EXTRACT_FIELD(mstatus_val, MSTATUS_MPIE);
+            mHSS_CSR_WRITE(CSR_MSTATUS, mstatus_val);
+            mHSS_CSR_WRITE(CSR_MIE, 0u);
 
-            switch (myHartId) {
-            case HSS_HART_U54_1:
-                mHSS_WriteRegU32(CLINT, MSIP_U54_1, 0u);
-                result = IPI_IDLE;
-                break;
-
-            case HSS_HART_U54_2:
-                mHSS_WriteRegU32(CLINT, MSIP_U54_2, 0u);
-                result = IPI_IDLE;
-                break;
-
-            case HSS_HART_U54_3:
-                mHSS_WriteRegU32(CLINT, MSIP_U54_3, 0u);
-                result = IPI_IDLE;
-                break;
-
-            case HSS_HART_U54_4:
-                mHSS_WriteRegU32(CLINT, MSIP_U54_4, 0u);
-                result = IPI_IDLE;
-                break;
-
-            default:
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown hart ID %u" CRLF, myHartId);
-                result = IPI_FAIL;
-                break;
-            }
-        } else {
-            result = IPI_FAIL;
+            result = IPI_SUCCESS;
         }
 
         if (result != IPI_FAIL) {
@@ -172,7 +144,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             const uint32_t next_mode = immediate_arg;
 
 #if IS_ENABLED(CONFIG_OPENSBI)
-            sbi_hart_switch_mode(0u, 0u, *(unsigned long *)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
+            sbi_hart_switch_mode(0u, 0u, (unsigned long)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
 #else
             // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1
             uint32_t mstatus_val = mHSS_CSR_READ(mstatus);
@@ -212,31 +184,6 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             // IPI_FAIL otherwise
             result = IPI_IDLE;
         }
-#else
-        // state machine doesn't want outside framework to send a separate complete message, as we've
-        // jumped somewhere else
-        //
-        // for tidyness/test code, we'll return IPI_IDLE in this scenario if all is okay, or
-        // IPI_FAIL otherwise
-        enum HSSHartId myHartId = current_hartid();
-
-        switch (myHartId) {
-        case HSS_HART_U54_1:
-            __attribute__((fallthrough); // deliberate fallthrough
-        case HSS_HART_U54_2:
-            __attribute__((fallthrough); // deliberate fallthrough
-        case HSS_HART_U54_3:
-            __attribute__((fallthrough); // deliberate fallthrough
-        case HSS_HART_U54_4:
-            result = IPI_IDLE;
-            break;
-
-        default:
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown or unexpected hart ID %u" CRLF, myHartId);
-            result = IPI_FAIL;
-            break;
-        }
-#endif
 
     }
 

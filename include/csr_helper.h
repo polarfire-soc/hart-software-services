@@ -61,8 +61,8 @@ extern "C" {
 
 
 HSSTicks_t CSR_GetTickCount(void);
-
 HSSTicks_t CSR_GetTime(void);
+void CSR_ClearMSIP(void);
 
 #ifdef __cplusplus
 }

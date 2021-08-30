@@ -87,6 +87,7 @@ enum token
 	TOKEN_PAYLOAD_OWNER_HART,
 	TOKEN_PAYLOAD_SECONDARY_HART,
 	TOKEN_PAYLOAD_PRIV_MODE,
+	TOKEN_PAYLOAD_SKIP_OPENSBI,
 	TOKEN_PAYLOAD_ANCILLIARY_DATA,
 	TOKEN_PRIV_MODE_M,
 	TOKEN_PRIV_MODE_H,
@@ -112,6 +113,7 @@ const struct hss_config_token tokens[] = {
 	{ TOKEN_PAYLOAD_OWNER_HART,		"owner-hart" },
 	{ TOKEN_PAYLOAD_SECONDARY_HART,		"secondary-hart" },
 	{ TOKEN_PAYLOAD_PRIV_MODE,		"priv-mode" },
+	{ TOKEN_PAYLOAD_SKIP_OPENSBI,		"skip-opensbi" },
 	{ TOKEN_PAYLOAD_ANCILLIARY_DATA,	"ancilliary-data" },
 	{ TOKEN_PRIV_MODE_M,			"prv_m" },
 	{ TOKEN_PRIV_MODE_S,			"prv_s" },
@@ -140,6 +142,7 @@ enum ParserState
 	STATE_NEW_PAYLOAD_OWNER_HART,
 	STATE_NEW_PAYLOAD_SECONDARY_HART,
 	STATE_NEW_PAYLOAD_PRIV_MODE,
+	STATE_NEW_PAYLOAD_SKIP_OPENSBI,
 	STATE_NEW_PAYLOAD_ANCILLIARY_DATA,
 };
 
@@ -161,6 +164,7 @@ const char * const stateNames[] =
 	[ STATE_NEW_PAYLOAD_OWNER_HART ] =	"STATE_NEW_PAYLOAD_OWNER_HART",
 	[ STATE_NEW_PAYLOAD_SECONDARY_HART ] =	"STATE_NEW_PAYLOAD_SECONDARY_HART",
 	[ STATE_NEW_PAYLOAD_PRIV_MODE ] =	"STATE_NEW_PAYLOAD_PRIV_MODE",
+	[ STATE_NEW_PAYLOAD_SKIP_OPENSBI ] =	"STATE_NEW_PAYLOAD_SKIP_OPENSBI",
 	[ STATE_NEW_PAYLOAD_ANCILLIARY_DATA ] =	"STATE_NEW_PAYLOAD_ANCILLIARY_DATA",
 };
 
@@ -179,6 +183,7 @@ static uint8_t map_token_to_priv_mode(enum token token_idx);
 static void report_illegal_token(char const * const stateName, yaml_event_t *pEvent)	__attribute__((nonnull));
 static void report_illegal_event(char const * const stateName, yaml_event_t *pEvent)	__attribute__((nonnull));
 static enum token string_to_scalar(unsigned char const * const token_string)	__attribute__((nonnull));
+static void populate_boot_flags(void);
 
 static void Do_State_Transition(enum ParserState new_state);
 static void Handle_STATE_IDLE(yaml_event_t *pEvent)				__attribute__((nonnull));
@@ -197,6 +202,7 @@ static void Handle_STATE_NEW_PAYLOAD_EXEC_ADDR(yaml_event_t *pEvent)		__attribut
 static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)	__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)		__attribute__((nonnull));
+static void Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)	__attribute__((nonnull));
 
 /////////////////////////////////////////////////////////////////////////////
@@ -226,6 +232,7 @@ static struct StateHandler stateHandler[] = {
 	{ STATE_NEW_PAYLOAD_OWNER_HART,		Handle_STATE_NEW_PAYLOAD_OWNER_HART },
 	{ STATE_NEW_PAYLOAD_SECONDARY_HART,	Handle_STATE_NEW_PAYLOAD_SECONDARY_HART },
 	{ STATE_NEW_PAYLOAD_PRIV_MODE,		Handle_STATE_NEW_PAYLOAD_PRIV_MODE },
+	{ STATE_NEW_PAYLOAD_SKIP_OPENSBI,	Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI },
 	{ STATE_NEW_PAYLOAD_ANCILLIARY_DATA,	Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA },
 };
 
@@ -608,6 +615,7 @@ static size_t base_secondary[3] = { 0u, 0u, 0u };
 static uint8_t base_priv_mode = PRV_ILLEGAL;
 static size_t secondary_idx = 0u;
 static bool ancilliary_data_present_flag = false;
+static bool skip_opensbi_flag = false;
 static char ancilliary_name[BOOT_IMAGE_MAX_NAME_LEN];
 
 static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
@@ -636,6 +644,7 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 		base_secondary[2] = 0u;
 		base_priv_mode = PRV_M;
 		ancilliary_data_present_flag = false;
+		skip_opensbi_flag = false;
 
 		Do_State_Transition(STATE_NEW_PAYLOAD);
 		break;
@@ -670,12 +679,15 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 		if (!retVal) {
 			// assume it is a binary file, so just embed the entire thing...
 			if (ancilliary_data_present_flag) {
+				// legacy: smuggle this into owner highest bit...
 				blob_handler(base_name, base_exec_addr, base_owner, true, ancilliary_name);
 			} else {
 				blob_handler(base_name, base_exec_addr, base_owner, false, NULL);
 			}
+
 		}
 
+		populate_boot_flags();
 		payload_idx++;
 		Do_State_Transition(STATE_PAYLOAD_MAPPINGS);
 		break;
@@ -699,6 +711,11 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 
 		case TOKEN_PAYLOAD_PRIV_MODE:
 			Do_State_Transition(STATE_NEW_PAYLOAD_PRIV_MODE);
+			break;
+
+		case TOKEN_PAYLOAD_SKIP_OPENSBI:
+			debug_printf(1, "\tskipping OpenSBI for this payload\n");
+			Do_State_Transition(STATE_NEW_PAYLOAD_SKIP_OPENSBI);
 			break;
 
 		case TOKEN_PAYLOAD_ANCILLIARY_DATA:
@@ -841,6 +858,27 @@ static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)
 	}
 }
 
+static void populate_boot_flags(void)
+{
+	uint8_t flags = 0u;
+
+	if (ancilliary_data_present_flag) {
+		flags |= BOOT_FLAG_ANCILLIARY_DATA;
+	}
+
+	if (skip_opensbi_flag) {
+		flags |= BOOT_FLAG_SKIP_OPENSBI;
+	}
+
+	bootImage.hart[base_owner-1].flags = flags;
+
+	for (size_t i = 0u; i < ARRAY_SIZE(base_secondary); i++) {
+		if (base_secondary[i] != 0u) {
+			bootImage.hart[base_owner-1].flags = flags;
+		}
+	}
+}
+
 static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)
 {
 	assert(pEvent);
@@ -900,6 +938,40 @@ static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)
 	}
 }
 
+static void Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI(yaml_event_t *pEvent)
+{
+        assert(pEvent);
+	uint8_t value;
+
+        switch (pEvent->type) {
+        case YAML_MAPPING_START_EVENT:
+                break;
+
+        case YAML_MAPPING_END_EVENT:
+                Do_State_Transition(STATE_MAPPING);
+                break;
+
+        case YAML_SCALAR_EVENT:
+		if (!strncasecmp((char *)pEvent->data.scalar.value, "true", 4)) {
+			value = 1;
+		} else {
+			value = (uint8_t)strtoul((char *)pEvent->data.scalar.value, NULL, 0);
+		}
+
+                if (value) {
+			skip_opensbi_flag = true;
+		}
+		Do_State_Transition(STATE_NEW_PAYLOAD);
+                break;
+
+        default:
+                report_illegal_event(stateNames[parser_state], pEvent);
+                exit(EXIT_FAILURE);
+                break;
+        }
+}
+
+
 
 static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)
 {
@@ -956,6 +1028,11 @@ void yaml_parser(char const * const input_filename)
 	bootImage.hart[1].privMode = PRV_ILLEGAL;
 	bootImage.hart[2].privMode = PRV_ILLEGAL;
 	bootImage.hart[3].privMode = PRV_ILLEGAL;
+
+	bootImage.hart[0].flags = 0u;
+	bootImage.hart[1].flags = 0u;
+	bootImage.hart[2].flags = 0u;
+	bootImage.hart[3].flags = 0u;
 
 	yaml_parser_set_input_file(&parser, configFileIn);
 	yaml_event_t event;

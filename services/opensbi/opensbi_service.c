@@ -201,53 +201,48 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     } else if (hartid == HSS_HART_E51) { // prohibited by policy
         mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy" CRLF, HSS_HART_E51);
     } else {
-        result = IPI_SUCCESS;
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
         struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, hartid);
-        pMsg->msg_type = IPI_MSG_NO_MESSAGE;
+        size_t i;
 
-        csr_write(mscratch, &(pScratches[hartid].scratch));
+        for (i = 0u; i < IPI_MAX_NUM_QUEUE_MESSAGES; i++) {
+            if (pMsg->transaction_id == transaction_id) { break; }
+            pMsg++;
+        }
 
-        pScratches[hartid].scratch.next_addr = (uintptr_t)p_extended_buffer;
-        pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
+        // if message found process it...
+        if (pMsg->transaction_id == transaction_id) {
+            pMsg->msg_type = IPI_MSG_NO_MESSAGE;
+            result = IPI_SUCCESS;
+        } else {
+            result = IPI_FAIL;
+        }
 
-        // set arg1 (A1) to point to override device tree blob, if provided
+        if (result != IPI_FAIL) {
+            csr_write(mscratch, &(pScratches[hartid].scratch));
+
+            pScratches[hartid].scratch.next_addr = (uintptr_t)p_extended_buffer;
+            pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
+
+            // set arg1 (A1) to point to override device tree blob, if provided
 #if IS_ENABLED(CONFIG_PROVIDE_DTB)
 #  if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-        extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
-        scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
+            extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
+            scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
 #  elif IS_ENABLED(CONFIG_PLATFORM_FU540)
-        extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
-        pScratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
+            extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
+            pScratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
 #  else
 #    error Unknown PLATFORM settings
 #  endif
 #else
-	// else use ancilliary data if provided in boot image, assuming it is a DTB
-       	scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
+            // else use ancilliary data if provided in boot image, assuming it is a DTB
+            scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
 #endif
-
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_addr to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_addr);
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_arg1 to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_arg1);
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_mode to PRV_", hartid);
-	switch (scratches[hartid].scratch.next_mode) {
-	case PRV_M:
-	    mHSS_DEBUG_PRINTF_EX("M" CRLF);
-            break;
-	case PRV_S:
-	    mHSS_DEBUG_PRINTF_EX("S" CRLF);
-            break;
-	case PRV_U:
-	    mHSS_DEBUG_PRINTF_EX("U" CRLF);
-            break;
-	default:
-	    mHSS_DEBUG_PRINTF_EX("???" CRLF);
-            break;
-	}
-
-        HSS_OpenSBI_DoBoot(hartid);
+            HSS_OpenSBI_DoBoot(hartid);
+        }
     }
 
     return result;
