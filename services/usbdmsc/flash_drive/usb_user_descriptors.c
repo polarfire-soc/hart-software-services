@@ -12,8 +12,14 @@
  *
  */
 
+#include "config.h"
+#include "hss_types.h"
+#include "hss_debug.h"
+
 #include "./drivers/mss_usb/mss_usb_device.h"
 #include "drivers/mss_usb/mss_usb_std_def.h"
+
+#include "device_serial_number.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,7 +50,7 @@ extern "C" {
 uint8_t* flash_drive_device_descriptor(uint32_t* length);
 uint8_t* flash_drive_device_qual_descriptor(mss_usb_device_speed_t speed, uint32_t* length);
 uint8_t* flash_drive_string_descriptor(uint8_t index, uint32_t* length);
-uint8_t flash_drive_get_string(uint8_t* string, uint8_t* dest);
+uint8_t flash_drive_get_string(uint8_t const * const string, uint8_t* dest);
 
 /***************************************************************************//**
   Device descriptor.
@@ -132,41 +138,86 @@ uint8_t* flash_drive_device_qual_descriptor(mss_usb_device_speed_t speed,
     }
 }
 
+static uint8_t nibble_to_hexchar_(uint8_t nibble)
+{
+    uint8_t result;
+
+    switch (nibble) {
+    case 0u ... 9u:
+        result = '0' + nibble;
+        break;
+
+    case 10u ... 15u:
+        result = 'A' + (nibble - 10u);
+        break;
+
+    default:
+        result = '?';
+        break;
+    }
+
+    return result;
+}
+
+static uint8_t* get_device_serial_(void)
+{
+    //
+    // for CI test purposes, we'll use the device serial number to give each
+    // board a unique USBDMSC iSerial number...
+    static uint8_t string_device_serial[USB_MAX_STRING_DESCRIPTOR_SIZE] = "";
+    static uint8_t* result = NULL;
+
+    if (!result) {
+        uint8_t* p_device_number_buffer;
+        size_t serial_length;
+
+        if (Get_Device_Serial_Number(&p_device_number_buffer, &serial_length)) {
+            const size_t limit = MIN(MIN(USB_MAX_STRING_DESCRIPTOR_SIZE/2, serial_length), sizeof(USB_STRING_SERIAL)/2);
+
+            for (size_t i = 0u; i < limit; i++) {
+                string_device_serial[i*2u] = nibble_to_hexchar_(p_device_number_buffer[i] >> 4);
+                string_device_serial[(i*2u) + 1u] = nibble_to_hexchar_(p_device_number_buffer[i] & 0xF);
+            }
+
+            result = string_device_serial;
+        } else {
+	    result = (uint8_t*)USB_STRING_SERIAL;
+        }
+    }
+
+    return result;
+}
 uint8_t* flash_drive_string_descriptor(uint8_t index, uint32_t* length)
 {
     switch (index) {
         case USB_STRING_DESCRIPTOR_IDX_LANGID:
             *length = sizeof(lang_string_descriptor);
-        break;
+            break;
 
         case USB_STRING_DESCRIPTOR_IDX_MANUFACTURER:
-            *length = flash_drive_get_string((uint8_t*)USB_STRING_MANUFACTURER,
-                                             g_string_descriptor);
-        break;
+            *length = flash_drive_get_string((uint8_t*)USB_STRING_MANUFACTURER, g_string_descriptor);
+            break;
 
         case USB_STRING_DESCRIPTOR_IDX_PRODUCT:
-            *length = flash_drive_get_string((uint8_t*)USB_STRING_PRODUCT,
-                                             g_string_descriptor);
-        break;
+            *length = flash_drive_get_string((uint8_t*)USB_STRING_PRODUCT, g_string_descriptor);
+            break;
 
         case USB_STRING_DESCRIPTOR_IDX_SERIAL:
-            *length = flash_drive_get_string((uint8_t*)USB_STRING_SERIAL,
-                                             g_string_descriptor);
-        break;
+            *length = flash_drive_get_string(get_device_serial_(), g_string_descriptor);
+            break;
 
         case USB_STRING_DESCRIPTOR_IDX_CONFIG:
-            *length = flash_drive_get_string((uint8_t*)USB_STRING_CONFIG,
-                                             g_string_descriptor);
-        break;
+            *length = flash_drive_get_string((uint8_t*)USB_STRING_CONFIG, g_string_descriptor);
+            break;
 
         case USB_STRING_DESCRIPTOR_IDX_INTERFACE:
-            *length = flash_drive_get_string((uint8_t*)USB_STRING_INTERFACE,
-                                             g_string_descriptor);
-        break;
+            *length = flash_drive_get_string((uint8_t*)USB_STRING_INTERFACE, g_string_descriptor);
+            break;
+
         default:
-           /*Raise error*/
-          *length = 0;
-        break;
+            /*Raise error*/
+            *length = 0;
+            break;
     }
 
     if (USB_STRING_DESCRIPTOR_IDX_LANGID == index) {
@@ -176,25 +227,26 @@ uint8_t* flash_drive_string_descriptor(uint8_t index, uint32_t* length)
     return (g_string_descriptor);
 }
 
-uint8_t flash_drive_get_string(uint8_t* string, uint8_t* dest)
+uint8_t flash_drive_get_string(uint8_t const * const src_string, uint8_t* dest)
 {
-    const uint8_t *idx = string ;
+    const uint8_t *idx = src_string ;
     uint8_t *cp_dest;
 
     cp_dest = dest;
 
-    if ((dest != NULL) && (string != NULL)) {
+    if ((dest != NULL) && (src_string != NULL)) {
         for (; *(idx); ++idx) {
             *(dest + 2u) = *(idx);
             dest++;
+
             *(dest + 2u) = 0x00u;
             dest++;
         }
-        *cp_dest = ((idx - string) * 2u) + 2u;               /*bLength*/
+        *cp_dest = ((idx - src_string) * 2u) + 2u;               /*bLength*/
         *(cp_dest + 1u) = USB_STRING_DESCRIPTOR_TYPE;        /*bDesriptorType*/
     }
 
-    return (((idx - string) * 2u) + 2u);
+    return (((idx - src_string) * 2u) + 2u);
 }
 
 #ifdef __cplusplus

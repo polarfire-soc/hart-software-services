@@ -44,6 +44,7 @@
 
 #include "hss_memcpy_via_pdma.h"
 #include "mpfs_hal_version.h"
+#include "mss_sys_services.h"
 
 /**
  * \brief Main Initialization Function

@@ -93,6 +93,7 @@ bool USBDMSC_Poll(void)
 
     if (HSS_Timer_IsElapsed(last_poll_time, 5*TICKS_PER_SEC)) {
         FLASH_DRIVE_dump_xfer_status();
+        last_poll_time = HSS_GetTime();
     }
 
     return done;
