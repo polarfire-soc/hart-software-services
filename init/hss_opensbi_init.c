@@ -32,5 +32,10 @@ bool HSS_OpenSBIInit(void)
 
     HSS_OpenSBI_Setup();
 
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_IHCM)
+    void IHC_SBI_Ecall_Register(void);
+    IHC_SBI_Ecall_Register();
+#endif
+
     return result;
 }

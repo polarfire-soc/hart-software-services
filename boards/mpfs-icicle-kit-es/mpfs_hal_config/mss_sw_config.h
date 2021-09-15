@@ -30,6 +30,11 @@
 
 *//*==========================================================================*/
 
+/*
+ * Include any driver setup/over-rides you may require.
+ */
+#include "core_ihc_defines.h"
+#include "../drivers_config/fpga-ip/CoreIHC/core_ihc_config.h"
 
 /*------------------------------------------------------------------------------
  * MPFS_HAL_FIRST_HART and MPFS_HAL_LAST_HART defines used to specify which
@@ -194,6 +199,9 @@
  *   MPFS_HAL_LAST_HART above
  *
  */
+
+#define LIBERO_SETTING_CONTEXT_A_HART_EN    0x0000000EUL    /* harts 1 to 3 */
+#define LIBERO_SETTING_CONTEXT_B_HART_EN    0x00000010UL    /* hart 4 */
 
 /*
  * If not using item, comment out line below

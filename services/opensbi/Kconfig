@@ -5,3 +5,11 @@ config SERVICE_OPENSBI
                 This feature enables support for OPENSBI.
                 
 		If you do not know what to do here, say Y.
+
+config SERVICE_OPENSBI_IHCM
+	def_bool y
+	depends on OPENSBI && USE_IHCM
+	help
+                This feature enables support for IHCM ecall service.
+                
+		If you do not know what to do here, say Y.

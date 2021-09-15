@@ -1,8 +1,8 @@
-#ifndef HSS_INIT_H
-#define HSS_INIT_H
+#ifndef ICC_OPENSBI_SERVICE_H
+#define ICC_OPENSBI_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,54 +25,36 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Toplevel Init Routines
  *
  */
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void HSS_Init(void);
+#include <string.h> 
 
-bool HSS_ZeroTIMs(void);
-bool HSS_ZeroDDR(void);
-bool HSS_Init_RWDATA_BSS(void);
-bool HSS_WakeSleepingHarts(void);
-bool HSS_E51_Banner(void);
+#define SBI_EXT_IHC        0x12341234
+#define SBI_IHC_CTX_INIT   0x0
+#define SBI_EXT_IHC_SEND    0x1
+#define SBI_EXT_IHC_RECEIVE    0x2
 
-bool HSS_QueuesInit(void);
+enum {
+	MP_IRQ = 0x0,
+	ACK_IRQ = 0x1,
+};
 
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-#  include "qspi_service.h"
-#endif
+struct mpfs_ihc_msg {
+	uint32_t msg[IHC_MAX_MESSAGE_SIZE];
+};
 
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-#  include "mmc_service.h"
-#endif
+struct ihc_sbi_rx_msg {
+	uint8_t irq_type;
+	struct mpfs_ihc_msg ihc_msg;
+};
 
-#if IS_ENABLED(CONFIG_OPENSBI)
-bool HSS_OpenSBIInit(void);
-#endif
-
-bool HSS_DDRInit(void);
-bool HSS_DDRPrintSegConfig(void);
-bool HSS_DDRPrintL2CacheWaysConfig(void);
-bool HSS_DDRPrintL2CacheWayMasks(void);
-bool HSS_UARTInit(void);
-#if IS_ENABLED(CONFIG_USE_LOGO)
-bool HSS_LogoInit(void);
-#endif
-
-#if IS_ENABLED(CONFIG_USE_IHCM)
-bool HSS_IHCMInit(void);
-#endif
-
-#ifdef CONFIG_USE_PCIE
-bool HSS_PCIeInit(void);
-#endif
-
-bool HSS_PDMAInit(void);
+void IHC_SBI_Ecall_Register(void);
 
 #ifdef __cplusplus
 }

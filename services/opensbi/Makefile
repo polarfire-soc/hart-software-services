@@ -68,6 +68,9 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/sbi_trap.c \
 	thirdparty/opensbi/lib/sbi/sbi_unpriv.c \
 
+SRCS-$(CONFIG_SERVICE_OPENSBI_IHCM) += \
+	services/opensbi/opensbi_ihc_service.c \
+
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/riscv_hardfp.S \
 	thirdparty/opensbi/lib/sbi/sbi_expected_trap.S \
@@ -103,6 +106,7 @@ endif
 endif
 
 services/opensbi/opensbi_service.o: CFLAGS=$(CFLAGS_GCCEXT)
+services/opensbi/opensbi_ihc_service.o: CFLAGS=$(CFLAGS_GCCEXT)
 services/opensbi/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/utils/sys/clint.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/utils/irqchip/plic.o: CFLAGS=$(CFLAGS_GCCEXT)

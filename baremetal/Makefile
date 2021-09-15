@@ -37,6 +37,9 @@ EXTRA_SRCS-$(CONFIG_SERVICE_MMC) += \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc.c \
 	baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_mmc/mss_mmc_if.c \
 
+EXTRA_SRCS-$(CONFIG_USE_IHCM) += \
+	baremetal/drivers/coreIHC/core_ihc.c \
+
 endif
 
 EXTRA_SRCS-$(CONFIG_PLATFORM_MPFS) += \
@@ -70,6 +73,7 @@ INCLUDES += \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma \
         -Ibaremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_sys_services \
 	-Ibaremetal/drivers/mss_watchdog \
+	-Ibaremetal/drivers/coreIHC \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/hal \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/ \
@@ -82,6 +86,7 @@ baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_qspi/mss_qsp
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_uart/mss_uart.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss_pdma/mss_pdma.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/drivers/mss_watchdog/mss_watchdog.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/drivers/coreIHC/core_ihc.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/stubs.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/system_startup.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.o: CFLAGS=$(CFLAGS_GCCEXT)

@@ -7,6 +7,12 @@ config OPENSBI
 
 		If you don't know what to do here, say Y.
 
+config USE_IHCM
+	bool "Use Inter-hart Communication Module"
+	default y
+	help
+		Enable the Inter-Hart Communication Module (IHCM)
+
 menu "OpenSBI"
 config PROVIDE_DTB
 	bool "Provide a DTB for OpenSBI"
