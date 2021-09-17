@@ -108,8 +108,8 @@ def get_header_bytes(compressedCrc, originalCrc, compressedImageLen,
 	header[16:20] = headerCrc.to_bytes(4, "little")			# headerCrc
 
 	if (args.verbose):
-		print("Header length is " + str(headerLength) + " (0x" +  f'{headerLength:08X}' + ")")
-		print("Header CRC is 0x" + f'{headerCrc:08X}')
+		print("Header length is %d (0x%08X)" %(headerLength, headerLength) )
+		print("Header CRC is 0x%08X" %(headerCrc) )
 
 	return header
 
@@ -128,12 +128,12 @@ def main():
 
 	imageLen = len(imageData)
 	if (args.verbose):
-		print("Reading " + str(imageLen) + " (0x" + f'{imageLen:08X}' + ") bytes")
+		print("Reading %d (0x%08X) bytes" %(imageLen, imageLen) )
 
 	imageCrc = zlib.crc32(imageData)
 
 	if (args.verbose):
-		print("Image CRC is 0x" + f'{imageCrc:08X}')
+		print("Image CRC is 0x%08X" %(imageCrc) )
 		print("Deflating...")
 
 	deflatedData = deflate(imageData)
@@ -142,8 +142,8 @@ def main():
 	deflatedCrc = zlib.crc32(deflatedData)
 
 	if (args.verbose):
-		print("Deflated CRC is 0x" + f'{deflatedCrc:08X}')
-		print("Deflated length " + str(deflatedLen) + " (0x" + f'{deflatedLen:08X}' + ") bytes")
+		print("Deflated CRC is 0x%08X" %(deflatedCrc) )
+		print("Deflated length %d (0x%08X) bytes" %(deflatedLen, deflatedLen) )
 		print("Outputting to " + args.deflatedFileOut)
 
 	headerData = get_header_bytes(compressedCrc=deflatedCrc, originalCrc=imageCrc,
@@ -152,7 +152,7 @@ def main():
 		outputSize = fileOut.write(headerData)
 		outputSize += fileOut.write(deflatedData)
 	if (args.verbose):
-		print("Wrote " + str(outputSize) + " (0x" + f'{outputSize:08X}' + ") bytes")
+		print("Wrote %d (0x%08X) bytes" %(outputSize, outputSize) )
 #
 #
 #
