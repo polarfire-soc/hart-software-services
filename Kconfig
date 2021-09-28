@@ -1,5 +1,6 @@
 mainmenu "Hart Software Services (HSS) Configuration"
 
+source "boards/Kconfig"
 source "services/Kconfig"
 source "application/Kconfig.general"
 source "application/Kconfig.build"

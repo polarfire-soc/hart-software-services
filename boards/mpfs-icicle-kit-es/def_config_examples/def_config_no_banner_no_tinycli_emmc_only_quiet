@@ -1,5 +1,16 @@
 
 #
+# Board/Design Configuration Options
+#
+
+#
+# Icicle-Kit Design Configuration Options
+#
+CONFIG_SOC_FPGA_DESIGN_XML="boards/mpfs-icicle-kit-es/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml"
+# end of Icicle-Kit Design Configuration Options
+# end of Board/Design Configuration Options
+
+#
 # Services
 #
 CONFIG_SERVICE_BOOT=y

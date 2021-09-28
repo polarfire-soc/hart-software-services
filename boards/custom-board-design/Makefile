@@ -133,5 +133,3 @@ $(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/custom_design_cfg.xml
 	$(CMD_PREFIX)$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
-
-include envm-wrapper/Makefile

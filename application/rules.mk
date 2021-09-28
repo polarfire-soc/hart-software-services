@@ -148,24 +148,26 @@ endif
 OBJS = $(SRCS-y:.c=.o)
 EXTRA_OBJS += $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(EXTRA_OBJS-y) $(ASM_SRCS-y:.S=.o)
 
+.SUFFIXES:
+
 %.s: %.c config.h
-	@$(ECHO) " CC -s     $@";
+	@$(ECHO) " CC -s     $@"
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -S -g  $<  -o $@
 
 %.S: %.c config.h
-	@$(ECHO) " CC -S     $@";
+	@$(ECHO) " CC -S     $@"
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -Wa,-adhln -g  $<  > $@
 
 %.e: %.c config.h
-	@$(ECHO) " CC -E     $@";
+	@$(ECHO) " CC -E     $@"
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
 %.e: %.s config.h
-	@$(ECHO) " CC -E     $@";
+	@$(ECHO) " CC -E     $@"
 	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
 #%.dot: %.c config.h
-#	@$(ECHO) " DOT       $@";
+#	@$(ECHO) " DOT       $@"
 #	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -fdump-tree-all-graph -o $@ $<
 
 ifdef CONFIG_CC_USE_MAKEDEP
@@ -173,34 +175,34 @@ ifdef CONFIG_CC_USE_MAKEDEP
 else
   %.o: %.c config.h
 endif
-	@$(ECHO) " CC        $@";
+	@$(ECHO) " CC        $@"
 	$(CMD_PREFIX)$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 %.o: %.S config.h
-	@$(ECHO) " CC        $@";
+	@$(ECHO) " CC        $@"
 	$(CMD_PREFIX)$(CC) $(CFLAGS) $(defs) -D__ASSEMBLY__=1 -c $(INCLUDES) $< -o $@
 
 %.hex: %.elf
-	@$(ECHO) " HEX       $@";
+	@$(ECHO) " HEX       $@"
 	$(CMD_PREFIX)$(OBJCOPY) -O ihex $< $@
 	$(CMD_PREFIX)$(OBJCOPY) -O ihex $< Default/$@
 
 %.lss: %.elf
-	@$(ECHO) " LSS       $@";
+	@$(ECHO) " LSS       $@"
 	$(CMD_PREFIX)$(OBJDUMP) -h -S -z $< > $@
 
 %.sym: %.elf
-	@$(ECHO) " NM        $@";
+	@$(ECHO) " NM        $@"
 	$(CMD_PREFIX)$(NM) -n $< > $@
 
 %.bin: %.elf
-	@$(ECHO) " BIN       $@";
+	@$(ECHO) " BIN       $@"
 	$(CMD_PREFIX)$(OBJCOPY) -O binary $< $@
 
 #
 %.d: %.c
 	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d
-# @$(ECHO) " MAKEDEP   $@";
+# @$(ECHO) " MAKEDEP   $@"
 
 %.d: %.S
 	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d

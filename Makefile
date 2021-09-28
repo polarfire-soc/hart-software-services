@@ -63,6 +63,7 @@ ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
 else
   ifndef BOARD
     BOARD:=mpfs-icicle-kit-es
+    export BOARD
     $(info INFO: BOARD not specified, defaulting to ${BOARD}) # default to icicle if nothing found
     include boards/${BOARD}/Makefile
   else
@@ -99,6 +100,8 @@ include/tool_versions.h:
 
 DEPENDENCIES+=include/tool_versions.h
 endif
+
+include envm-wrapper/Makefile
 
 ################################################################################################
 #

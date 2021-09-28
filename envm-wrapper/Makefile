@@ -47,10 +47,6 @@ EXTRA_OBJS-envm-wrapper =
 
 LINKER_SCRIPT-envm-wrapper=envm-wrapper/envm-wrapper.ld
 
-%.o: %.c config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
-
 COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2lim:.elf=.bin.deflate)
 
 envm-wrapper/envm-wrapper_crt.o: envm-wrapper/envm-wrapper_crt.S $(COMPRESSED_TARGET)
