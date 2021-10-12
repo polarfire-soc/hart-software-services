@@ -92,7 +92,7 @@ ifdef CONFIG_PROVIDE_DTB
 ifdef CONFIG_DEFAULT_DEVICE_TREE
 EXTRA_OBJS += services/opensbi/mpfs_dtb.o
 services/opensbi/mpfs_dtb.o: $(CONFIG_DEFAULT_DEVICE_TREE:"%"=%).dtb
-	$(CMD_PREFIX)$(CROSS_COMPILE)ld -r -b binary -o $@ $<
+	$(CROSS_COMPILE)ld -r -b binary -o $@ $<
 endif
 endif
 
