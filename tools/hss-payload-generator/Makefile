@@ -32,9 +32,8 @@ CC = gcc
 ECHO = echo
 
 ifeq ($(V), 1)
-	CMD_PREFIX:=
 else
-	CMD_PREFIX:=@
+.SILENT:
 endif
 
 ifdef O
@@ -82,7 +81,7 @@ OBJS := $(patsubst %.c,$(build_dir)/%.o,$(SRCS))
 
 $(build_dir)/%.o: %.c
 	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 ################################################################################
 #
@@ -96,7 +95,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) $(LDFLAGS) -static -o $@ $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -static -o $@ $(OBJS) $(LIBS)
 
 README.docx: README.md
 	pandoc -o README.docx README.md
@@ -104,7 +103,7 @@ README.docx: README.md
 .phony: clean
 clean:
 	@$(ECHO) " RM      $(TARGET) $(OBJS)"
-	$(CMD_PREFIX)$(RM) $(TARGET) $(OBJS) cppcheck.log README.docx
+	$(RM) $(TARGET) $(OBJS) cppcheck.log README.docx
 
 cppcheck: $(SRCS)
 	cppcheck --suppress=missingIncludeSystem -v --enable=all --inconclusive --std=posix \

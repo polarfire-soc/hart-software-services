@@ -134,6 +134,6 @@ SOC_CONFIG_FILES =  \
 config.h: $(SOC_CONFIG_FILES)
 $(SOC_CONFIG_FILES): $(pathsubst "%",%,$(CONFIG_SOC_FPGA_DESIGN_XML))
 	@$(ECHO) " CFGGEN    $<";
-	$(CMD_PREFIX)$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
+	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)

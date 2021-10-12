@@ -55,13 +55,6 @@ else
  platform_parent_dir=$(src_dir)/platform
 endif
 
-# Check if verbosity is ON for build process
-CMD_PREFIX_DEFAULT := @
-ifeq ($(V), 1)
-	CMD_PREFIX :=
-else
-	CMD_PREFIX := $(CMD_PREFIX_DEFAULT)
-endif
 
 # Setup path of directories
 export platform_subdir=$(PLATFORM)
@@ -244,19 +237,19 @@ DTSCPPFLAGS	=	$(CPPFLAGS) -nostdinc -nostdlib -fno-builtin -D__DTS__ -x assemble
 define dynamic_flags
 -I$(shell dirname $(2)) -D__OBJNAME__=$(subst -,_,$(shell basename $(1) .o))
 endef
-merge_objs = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+merge_objs = mkdir -p `dirname $(1)`; \
 	     echo " MERGE     $(subst $(build_dir)/,,$(1))"; \
 	     $(LD) $(MERGEFLAGS) $(2) -o $(1)
-merge_deps = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+merge_deps = mkdir -p `dirname $(1)`; \
 	     echo " MERGE-DEP $(subst $(build_dir)/,,$(1))"; \
 	     cat $(2) > $(1)
-copy_file =  $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+copy_file =  mkdir -p `dirname $(1)`; \
 	     echo " COPY      $(subst $(build_dir)/,,$(1))"; \
 	     cp -f $(2) $(1)
-inst_file =  $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+inst_file =  mkdir -p `dirname $(1)`; \
 	     echo " INSTALL   $(subst $(install_root_dir)/,,$(1))"; \
 	     cp -f $(2) $(1)
-inst_file_list = $(CMD_PREFIX)if [ ! -z "$(4)" ]; then \
+inst_file_list = if [ ! -z "$(4)" ]; then \
 	     mkdir -p $(1)/$(3); \
 	     for file in $(4) ; do \
 	     rel_file=`echo $$file | sed -e 's@$(2)/$(subst $(install_firmware_path),platform,$(3))@@'`; \
@@ -267,47 +260,47 @@ inst_file_list = $(CMD_PREFIX)if [ ! -z "$(4)" ]; then \
 	     cp -f $$file $$dest_file; \
 	     done \
 	     fi
-inst_header_dir =  $(CMD_PREFIX)mkdir -p $(1); \
+inst_header_dir =  mkdir -p $(1); \
 	     echo " INSTALL   $(subst $(install_root_dir)/,,$(1))"; \
 	     cp -rf $(2) $(1)
-compile_cpp = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_cpp = mkdir -p `dirname $(1)`; \
 	     echo " CPP       $(subst $(build_dir)/,,$(1))"; \
 	     $(CPP) $(CPPFLAGS) -x c $(2) | grep -v "\#" > $(1)
-compile_cc_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_cc_dep = mkdir -p `dirname $(1)`; \
 	     echo " CC-DEP    $(subst $(build_dir)/,,$(1))"; \
 	     printf %s `dirname $(1)`/  > $(1) && \
 	     $(CC) $(CFLAGS) $(call dynamic_flags,$(1),$(2))   \
 	       -MM $(2) >> $(1) || rm -f $(1)
-compile_cc = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_cc = mkdir -p `dirname $(1)`; \
 	     echo " CC        $(subst $(build_dir)/,,$(1))"; \
 	     $(CC) $(CFLAGS) $(call dynamic_flags,$(1),$(2)) -c $(2) -o $(1)
-compile_as_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_as_dep = mkdir -p `dirname $(1)`; \
 	     echo " AS-DEP    $(subst $(build_dir)/,,$(1))"; \
 	     printf %s `dirname $(1)`/ > $(1) && \
 	     $(AS) $(ASFLAGS) $(call dynamic_flags,$(1),$(2)) \
 	       -MM $(2) >> $(1) || rm -f $(1)
-compile_as = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_as = mkdir -p `dirname $(1)`; \
 	     echo " AS        $(subst $(build_dir)/,,$(1))"; \
 	     $(AS) $(ASFLAGS) $(call dynamic_flags,$(1),$(2)) -c $(2) -o $(1)
-compile_elf = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_elf = mkdir -p `dirname $(1)`; \
 	     echo " ELF       $(subst $(build_dir)/,,$(1))"; \
 	     $(CC) $(CFLAGS) $(3) $(ELFFLAGS) -Wl,-T$(2) -o $(1)
-compile_ar = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_ar = mkdir -p `dirname $(1)`; \
 	     echo " AR        $(subst $(build_dir)/,,$(1))"; \
 	     $(AR) $(ARFLAGS) $(1) $(2)
-compile_objcopy = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_objcopy = mkdir -p `dirname $(1)`; \
 	     echo " OBJCOPY   $(subst $(build_dir)/,,$(1))"; \
 	     $(OBJCOPY) -S -O binary $(2) $(1)
-compile_dts = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_dts = mkdir -p `dirname $(1)`; \
 	     echo " DTC       $(subst $(build_dir)/,,$(1))"; \
 	     $(CPP) $(DTSCPPFLAGS) $(2) | $(DTC) -O dtb -i `dirname $(2)` -o $(1)
-compile_d2c = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_d2c = mkdir -p `dirname $(1)`; \
 	     echo " D2C       $(subst $(build_dir)/,,$(1))"; \
 	     $(if $($(2)-varalign-$(3)),$(eval D2C_ALIGN_BYTES := $($(2)-varalign-$(3))),$(eval D2C_ALIGN_BYTES := $(4))) \
 	     $(if $($(2)-varprefix-$(3)),$(eval D2C_NAME_PREFIX := $($(2)-varprefix-$(3))),$(eval D2C_NAME_PREFIX := $(5))) \
 	     $(if $($(2)-padding-$(3)),$(eval D2C_PADDING_BYTES := $($(2)-padding-$(3))),$(eval D2C_PADDING_BYTES := 0)) \
 	     $(src_dir)/scripts/d2c.sh -i $(6) -a $(D2C_ALIGN_BYTES) -p $(D2C_NAME_PREFIX) -t $(D2C_PADDING_BYTES) > $(1)
-compile_gen_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+compile_gen_dep = mkdir -p `dirname $(1)`; \
 	     echo " GEN-DEP   $(subst $(build_dir)/,,$(1))"; \
 	     echo "$(1:.dep=$(2)): $(3)" >> $(1)
 
@@ -395,14 +388,14 @@ $(platform_build_dir)/%.o: $(src_dir)/%.S
 
 # Rule for "make docs"
 $(build_dir)/docs/latex/refman.pdf: $(build_dir)/docs/latex/refman.tex
-	$(CMD_PREFIX)mkdir -p $(build_dir)/docs
-	$(CMD_PREFIX)$(MAKE) -C $(build_dir)/docs/latex
+	mkdir -p $(build_dir)/docs
+	$(MAKE) -C $(build_dir)/docs/latex
 $(build_dir)/docs/latex/refman.tex: $(build_dir)/docs/doxygen.cfg
-	$(CMD_PREFIX)mkdir -p $(build_dir)/docs
-	$(CMD_PREFIX)doxygen $(build_dir)/docs/doxygen.cfg
+	mkdir -p $(build_dir)/docs
+	doxygen $(build_dir)/docs/doxygen.cfg
 $(build_dir)/docs/doxygen.cfg: $(src_dir)/docs/doxygen.cfg
-	$(CMD_PREFIX)mkdir -p $(build_dir)/docs
-	$(CMD_PREFIX)cat docs/doxygen.cfg | sed -e "s#@@SRC_DIR@@#$(src_dir)#" -e "s#@@BUILD_DIR@@#$(build_dir)#" -e "s#@@OPENSBI_MAJOR@@#$(OPENSBI_VERSION_MAJOR)#" -e "s#@@OPENSBI_MINOR@@#$(OPENSBI_VERSION_MINOR)#" > $(build_dir)/docs/doxygen.cfg
+	mkdir -p $(build_dir)/docs
+	cat docs/doxygen.cfg | sed -e "s#@@SRC_DIR@@#$(src_dir)#" -e "s#@@BUILD_DIR@@#$(build_dir)#" -e "s#@@OPENSBI_MAJOR@@#$(OPENSBI_VERSION_MAJOR)#" -e "s#@@OPENSBI_MINOR@@#$(OPENSBI_VERSION_MINOR)#" > $(build_dir)/docs/doxygen.cfg
 .PHONY: docs
 docs: $(build_dir)/docs/latex/refman.pdf
 
@@ -467,29 +460,29 @@ install_docs: $(build_dir)/docs/latex/refman.pdf
 # Rule for "make clean"
 .PHONY: clean
 clean:
-	$(CMD_PREFIX)mkdir -p $(build_dir)
+	mkdir -p $(build_dir)
 	$(if $(V), @echo " RM        $(build_dir)/*.o")
-	$(CMD_PREFIX)find $(build_dir) -type f -name "*.o" -exec rm -rf {} +
+	find $(build_dir) -type f -name "*.o" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.a")
-	$(CMD_PREFIX)find $(build_dir) -type f -name "*.a" -exec rm -rf {} +
+	find $(build_dir) -type f -name "*.a" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.elf")
-	$(CMD_PREFIX)find $(build_dir) -type f -name "*.elf" -exec rm -rf {} +
+	find $(build_dir) -type f -name "*.elf" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.bin")
-	$(CMD_PREFIX)find $(build_dir) -type f -name "*.bin" -exec rm -rf {} +
+	find $(build_dir) -type f -name "*.bin" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.dtb")
-	$(CMD_PREFIX)find $(build_dir) -type f -name "*.dtb" -exec rm -rf {} +
+	find $(build_dir) -type f -name "*.dtb" -exec rm -rf {} +
 
 # Rule for "make distclean"
 .PHONY: distclean
 distclean: clean
-	$(CMD_PREFIX)mkdir -p $(build_dir)
+	mkdir -p $(build_dir)
 	$(if $(V), @echo " RM        $(build_dir)/*.dep")
-	$(CMD_PREFIX)find $(build_dir) -type f -name "*.dep" -exec rm -rf {} +
+	find $(build_dir) -type f -name "*.dep" -exec rm -rf {} +
 ifeq ($(build_dir),$(CURDIR)/build)
 	$(if $(V), @echo " RM        $(build_dir)")
-	$(CMD_PREFIX)rm -rf $(build_dir)
+	rm -rf $(build_dir)
 endif
 ifeq ($(install_root_dir),$(install_root_dir_default)/usr)
 	$(if $(V), @echo " RM        $(install_root_dir_default)")
-	$(CMD_PREFIX)rm -rf $(install_root_dir_default)
+	rm -rf $(install_root_dir_default)
 endif
