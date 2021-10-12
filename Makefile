@@ -94,11 +94,13 @@ endif
 
 ifdef CONFIG_DISPLAY_TOOL_VERSIONS
 include/tool_versions.h:
-	$(CMD_PREFIX)echo \#define CC_VERSION_STRING \"`$(CC) --version | head -n 1`\" > include/tool_versions.h
-	$(CMD_PREFIX)echo \#define LD_VERSION_STRING \"`$(LD) --version | head -n 1`\" >> include/tool_versions.h
+	echo \#define CC_VERSION_STRING \"`$(CC) --version | head -n 1`\" > include/tool_versions.h
+	echo \#define LD_VERSION_STRING \"`$(LD) --version | head -n 1`\" >> include/tool_versions.h
 
 DEPENDENCIES+=include/tool_versions.h
 endif
+
+include envm-wrapper/Makefile
 
 ################################################################################################
 #
@@ -112,13 +114,13 @@ OBJS-l2lim = $(OBJS)
 EXTRA_OBJS-l2lim = $(EXTRA_OBJS)
 
 define main-build-target
-	@$(ECHO) " LD        $@";
-	$(CMD_PREFIX)$(CC) -T $(LINKER_SCRIPT-$(1)) $(CFLAGS_GCCEXT) $(OPT-y) \
+	$(ECHO) " LD        $@";
+	$(CC) -T $(LINKER_SCRIPT-$(1)) $(CFLAGS_GCCEXT) $(OPT-y) \
 		 -static -nostdlib -nostartfiles -nodefaultlibs \
 		 -Wl,--build-id -Wl,-Map=$(BINDIR)/output-$(1).map -Wl,--gc-sections \
 		 -o $(BINDIR)/$@ $(OBJS-$(1)) $(EXTRA_OBJS-$(1)) $(LIBS)
-	@$(ECHO) " NM        `basename $@ .elf`.sym";
-	$(CMD_PREFIX)$(NM) -n $(BINDIR)/$@ > $(BINDIR)/`basename $@ .elf`.sym
+	$(ECHO) " NM        `basename $@ .elf`.sym";
+	$(NM) -n $(BINDIR)/$@ > $(BINDIR)/`basename $@ .elf`.sym
 endef
 
 #
@@ -127,21 +129,20 @@ endef
 
 $(TARGET-envm): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-envm) $(LIBS)
 	$(call main-build-target,envm)
-	@$(ECHO) " BIN       `basename $@ .elf`.bin"
-	$(CMD_PREFIX)$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
-	@$(ECHO) " HEX       `basename $@ .elf`.hex";
-	$(CMD_PREFIX)$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
-	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$(TARGET-envm) 2>/dev/null
+	$(ECHO) " BIN       `basename $@ .elf`.bin"
+	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
+	$(ECHO) " HEX       `basename $@ .elf`.hex";
+	$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
+	$(SIZE) $(BINDIR)/$(TARGET-envm) 2>/dev/null
 
 $(TARGET-l2lim): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2lim) $(LIBS)
 	$(call main-build-target,l2lim)
-	@$(ECHO) " BIN       `basename $@ .elf`.bin"
-	$(CMD_PREFIX)$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
-	$(CMD_PREFIX)$(SIZE) $(BINDIR)/$(TARGET-l2lim) 2>/dev/null
+	$(ECHO) " BIN       `basename $@ .elf`.bin"
+	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
+	$(SIZE) $(BINDIR)/$(TARGET-l2lim) 2>/dev/null
 
 $(BINDIR)/$(TARGET-envm): $(TARGET-envm)
 $(BINDIR)/$(TARGET-l2lim): $(TARGET-l2lim)
 
 $(TARGET-ddr): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-ddr) $(LIBS)
 	$(call main-build-target,ddr)
-
