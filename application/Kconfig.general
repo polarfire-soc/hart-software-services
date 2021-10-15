@@ -1,7 +1,6 @@
 menu "General Configuration Options"
 config OPENSBI
-	bool "OpenSBI support"
-	default y
+	def_bool y
 	help
 		This feature enables support for the RISC-V OpenSBI.
 

@@ -869,8 +869,7 @@ static void tinyCLI_CmdHandler_(int tokenId)
         {
             USBDMSC_Init();
             USBDMSC_Start();
-            void tinycli_wait_for_usbmscd_done(void);
-            tinycli_wait_for_usbmscd_done();
+            HSS_TinyCLI_WaitForUSBMSCDDone();
         }
         break;
 #endif
