@@ -192,7 +192,7 @@ endif
 
 %.ld: %.lds config.h
 	$(ECHO) " CPP       $@"
-	$(CPP) -P -I -o $@ $<
+	$(CPP) -P $(INCLUDES) -o $@ $<
 
 #
 %.d: %.c
