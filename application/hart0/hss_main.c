@@ -43,9 +43,7 @@
 #include "hss_init.h"
 #include "hss_registry.h"
 
-#if IS_ENABLED(CONFIG_SERVICE_WDOG)
-#  include "wdog_service.h"
-#endif
+#include "wdog_service.h"
 
 #include "csr_helper.h"
 
