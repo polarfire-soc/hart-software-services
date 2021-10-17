@@ -91,8 +91,6 @@ CONFIG_OPENSBI=y
 # CONFIG_PROVIDE_DTB is not set
 # end of OpenSBI
 
-# CONFIG_SUPERLOOP_IN_U_MODE is not set
-
 #
 # Memory Options
 #

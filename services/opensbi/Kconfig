@@ -5,11 +5,3 @@ config SERVICE_OPENSBI
                 This feature enables support for OPENSBI.
                 
 		If you do not know what to do here, say Y.
-
-config UART_SURRENDER
-	bool "HSS UART Surrender"
-	depends on OPENSBI
-	help
-                If enabled, this feature "surrenders" MMUART0 after boot.  After this point, HSS status messages will no longer be sent out MMUART0
-                
-		If you do not know what to do here, say N.

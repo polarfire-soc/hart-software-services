@@ -1,4 +1,27 @@
 menu "General Configuration Options"
+
+menu "Miscellaneous"
+config USE_PCIE
+	bool "Setup PCIe"
+	default y
+	help
+		Setup the PCIe prior to application load
+
+		If you don't know what to do here, say Y.
+
+config UART_SURRENDER
+	bool "HSS UART Surrender"
+	depends on OPENSBI && !SERVICE_TINYCLI_REGISTER
+        default n
+	help
+		If enabled, this feature "surrenders" MMUART0 after boot.  After this point,
+		HSS status messages will no longer be sent out MMUART0
+
+		This feature is not compatible with SERVICE_TINYCLI_REGISTER. If you want the
+		HSS to surrender MMUART0 UART after boot, do not enable SERVICE_TINYCLI_REGISTER.
+
+		If you do not know what to do here, say N.
+
 config OPENSBI
 	def_bool y
 	help
@@ -6,7 +29,11 @@ config OPENSBI
 
 		If you don't know what to do here, say Y.
 
+endmenu
+
 menu "OpenSBI"
+	visible if OPENSBI
+
 config PROVIDE_DTB
 	bool "Provide a DTB for OpenSBI"
 	depends on OPENSBI
@@ -26,21 +53,13 @@ config DEFAULT_DEVICE_TREE
 		This option specifies the default Device Tree to be used.
 endmenu
 
-config SUPERLOOP_IN_U_MODE
-	bool "Run Superloop in U-Mode"
-	default n
-	help
-		Experimental: This feature runs the HSS superloop in U-Mode.
-
-		If you don't know what to do here, say N for now.
-
 menu "Memory Options"
 config MEMTEST
 	bool "DDR Memory Tester"
 	default n
 	help
 		This feature enables a simple walking 1's style memory tester for the DDR.
-          
+
 		If you don't know what to do here, say N.
 
 config IPI_MAX_NUM_QUEUE_MESSAGES
@@ -76,12 +95,6 @@ config INITIALIZE_MEMORIES
 		Initialize memories to zero, to seed ECC.
 		
 		If you don't know what to do here, say N for now.
-
-config USE_PCIE
-	bool "Setup PCIe"
-	default y
-	help
-		Setup the PCIe prior to application load
 endmenu
 
 endmenu
