@@ -68,33 +68,24 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/sbi_trap.c \
 	thirdparty/opensbi/lib/sbi/sbi_unpriv.c \
 
-SRCS-$(CONFIG_SERVICE_OPENSBI_IHCM) += \
-	services/opensbi/opensbi_ihc_service.c \
+SRCS-$(CONFIG_SERVICE_OPENSBI_IHC) += \
+	services/opensbi/opensbi_ihc_ecall.c \
 
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/riscv_hardfp.S \
 	thirdparty/opensbi/lib/sbi/sbi_expected_trap.S \
 	thirdparty/opensbi/lib/sbi/sbi_hfence.S \
 
-ifdef CONFIG_PLATFORM_MPFS
 SRCS-$(CONFIG_SERVICE_OPENSBI) += \
-	services/opensbi/platform.c
-endif
-
-ifdef CONFIG_PLATFORM_FU540
-SRCS-$(CONFIG_SERVICE_OPENSBI) += \
-	thirdparty/opensbi/lib/utils/serial/sifive-uart.c \
-	thirdparty/opensbi/platform/sifive/fu540/platform.c
-endif
-
+	services/opensbi/platform.c \
+	services/opensbi/opensbi_ecall.c
 
 ifdef CONFIG_OPENSBI
 INCLUDES += \
 	-I./services/opensbi \
 	-I./thirdparty/opensbi/include/sbi \
 	-I./thirdparty/opensbi/include \
-	-I./thirdparty/opensbi/lib/utils/libfdt \
-
+	-I./thirdparty/opensbi/lib/utils/libfdt
 endif
 
 ifdef CONFIG_PROVIDE_DTB
@@ -106,7 +97,7 @@ endif
 endif
 
 services/opensbi/opensbi_service.o: CFLAGS=$(CFLAGS_GCCEXT)
-services/opensbi/opensbi_ihc_service.o: CFLAGS=$(CFLAGS_GCCEXT)
+services/opensbi/opensbi_ihc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
 services/opensbi/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/utils/sys/clint.o: CFLAGS=$(CFLAGS_GCCEXT)
 thirdparty/opensbi/lib/utils/irqchip/plic.o: CFLAGS=$(CFLAGS_GCCEXT)

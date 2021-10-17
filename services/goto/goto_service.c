@@ -124,7 +124,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         if (pMsg->transaction_id == transaction_id) {
             pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p" CRLF, *(void **)p_extended_buffer);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p" CRLF, (void *)p_extended_buffer);
             CSR_ClearMSIP();
 
             uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);

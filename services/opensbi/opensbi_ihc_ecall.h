@@ -1,8 +1,8 @@
-#ifndef ICC_OPENSBI_SERVICE_H
-#define ICC_OPENSBI_SERVICE_H
+#ifndef OPENSBI_IHC_SERVICE_H
+#define OPENSBI_IHC_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2021 Microchip Corporation.
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -33,28 +33,24 @@
 extern "C" {
 #endif
 
-#include <string.h> 
-
-#define SBI_EXT_IHC        0x12341234
-#define SBI_IHC_CTX_INIT   0x0
-#define SBI_EXT_IHC_SEND    0x1
-#define SBI_EXT_IHC_RECEIVE    0x2
+#include "opensbi_ecall.h"
 
 enum {
-	MP_IRQ = 0x0,
-	ACK_IRQ = 0x1,
+    MP_IRQ = 0x0,
+    ACK_IRQ = 0x1,
 };
 
 struct mpfs_ihc_msg {
-	uint32_t msg[IHC_MAX_MESSAGE_SIZE];
+    uint32_t msg[IHC_MAX_MESSAGE_SIZE];
 };
 
 struct ihc_sbi_rx_msg {
-	uint8_t irq_type;
-	struct mpfs_ihc_msg ihc_msg;
+    uint8_t irq_type;
+    struct mpfs_ihc_msg ihc_msg;
 };
 
-void IHC_SBI_Ecall_Register(void);
+int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
+    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
 
 #ifdef __cplusplus
 }

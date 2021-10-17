@@ -22,21 +22,17 @@
 #include "hss_debug.h"
 #include "hss_types.h"
 
-#include "core_ihc.h"
+#include "miv_ihc.h"
 
-bool HSS_IHCMInit(void)
+bool HSS_IHCInit(void)
 {
+    IHC_global_init();
 
-    {
-        IHC_global_init();
-
-        IHCA_local_context_init((uint32_t)HSS_HART_E51);
-        IHCA_local_context_init((uint32_t)HSS_HART_U54_1);
-        IHCA_local_context_init((uint32_t)HSS_HART_U54_2);
-        IHCA_local_context_init((uint32_t)HSS_HART_U54_3);
-        IHCA_local_context_init((uint32_t)HSS_HART_U54_4);
-
-    }
+    IHC_local_context_init((uint32_t)HSS_HART_E51);
+    IHC_local_context_init((uint32_t)HSS_HART_U54_1);
+    IHC_local_context_init((uint32_t)HSS_HART_U54_2);
+    IHC_local_context_init((uint32_t)HSS_HART_U54_3);
+    IHC_local_context_init((uint32_t)HSS_HART_U54_4);
 
     return true;
 }

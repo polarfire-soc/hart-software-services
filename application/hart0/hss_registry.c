@@ -266,8 +266,8 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_BoardInit",                 HSS_BoardInit,                 false, false },
     { "HSS_UARTInit",                  HSS_UARTInit,                  false, false },
     { "HSS_OpenSBIInit",               HSS_OpenSBIInit,               false, false },
-#if IS_ENABLED(CONFIG_USE_IHCM)
-    { "HSS_IHCMInit",                 HSS_IHCMInit,                   false, false },
+#if IS_ENABLED(CONFIG_USE_IHC)
+    { "HSS_IHCInit",                   HSS_IHCInit,                   false, false },
 #endif
 #if IS_ENABLED(CONFIG_USE_LOGO)
     { "HSS_LogoInit",                  HSS_LogoInit,                  false, false },

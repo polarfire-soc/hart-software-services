@@ -31,8 +31,8 @@ EXTRA_SRCS-y += \
 	init/hss_boot_init.c \
 	init/hss_sys_setup.c \
 
-EXTRA_SRCS-$(CONFIG_USE_IHCM) += \
-	init/hss_ihcm_init.c
+EXTRA_SRCS-$(CONFIG_USE_IHC) += \
+	init/hss_ihc_init.c
 
 EXTRA_SRCS-$(CONFIG_USE_PCIE) += \
 	init/hss_pcie_init.c

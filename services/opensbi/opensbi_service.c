@@ -29,6 +29,7 @@
 #include "ssmb_ipi.h"
 
 #include "opensbi_service.h"
+#include "opensbi_ecall.h"
 #include "riscv_encoding.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
@@ -248,53 +249,6 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     return result;
 }
 
-#include <sbi/sbi_ecall.h>
-#include <sbi/sbi_error.h>
-#include "hss_boot_service.h"
-
-static int sbi_ecall_hss_handler(
-    unsigned long extid, unsigned long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
-{
-    int ret = 0;
-    (void)regs;
-    uint32_t index;
-
-    switch (funcid) {
-    case SBI_EXT_HSS_REBOOT:
-sbi_printf("%s() SBI_EXT_HSS_REBOOT\n", __func__);
-        IPI_MessageAlloc(&index);
-        IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
-        ret = 0; //ret = hss_reboot_req(scratch, args[0], args[1], args[2]);
-        break;
-
-    default:
-        ret = SBI_ENOTSUPP;
-    };
-
-    if (ret >= 0) {
-        *out_val = ret;
-        ret = 0;
-    }
-
-    return ret;
-}
-
-struct sbi_ecall_extension ecall_hss = {
-    .extid_start = SBI_EXT_HSS,
-    .extid_end = SBI_EXT_HSS,
-    .handle = sbi_ecall_hss_handler
-};
-
-void HSS_SBI_Ecall_Register(void)
-{
-    int result = sbi_ecall_register_extension(&ecall_hss);
-    //if (result)
-    //    sbi_hart_hang();
-    (void)result;
-}
-
-void HSS_OpenSBI_Reboot(void);
 void HSS_OpenSBI_Reboot(void)
 {
     uint32_t index;

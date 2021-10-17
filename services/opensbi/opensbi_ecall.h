@@ -1,5 +1,5 @@
-#ifndef HSS_INIT_H
-#define HSS_INIT_H
+#ifndef OPENSBI_ECALL_H
+#define OPENSBI_ECALL_H
 
 /*******************************************************************************
  * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
@@ -25,54 +25,44 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Toplevel Init Routines
- *
+ * Hart Software Services - OpenSBI ECALL Interface
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void HSS_Init(void);
+#include <string.h>
 
-bool HSS_ZeroTIMs(void);
-bool HSS_ZeroDDR(void);
-bool HSS_Init_RWDATA_BSS(void);
-bool HSS_WakeSleepingHarts(void);
-bool HSS_E51_Banner(void);
+// Previously the vendor ID was to be a number allocated by RISC-V International,
+// but this duplicates the work of JEDEC in maintaining a manufacturer ID standard.
+// SBI ECALLs in the VENDOR region are by MVENDORID as per section 3.1.2 of
+// RISC-V Priviliged Architectures spec (2.2-draft or later)
+//
+// mvendorid[6:0] = JEDEC[6:0]
+// mvendorid[XLEN-1:7] = number of 0x7f continuation codes
 
-bool HSS_QueuesInit(void);
 
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-#  include "qspi_service.h"
-#endif
+// Microchip Technology JEDEC Id: Bank 1, 0x29 => MVENDORID = 0x029
+#define MICROCHIP_TECHNOLOGY_MVENDOR_ID  0x029
 
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-#  include "mmc_service.h"
-#endif
+#define SBI_EXT_MICROCHIP_TECHNOLOGY       (SBI_EXT_VENDOR_START | MICROCHIP_TECHNOLOGY_MVENDOR_ID)
 
-#if IS_ENABLED(CONFIG_OPENSBI)
-bool HSS_OpenSBIInit(void);
-#endif
+#define SBI_EXT_IHC_CTX_INIT   0x00
+#define SBI_EXT_IHC_SEND       0x01
+#define SBI_EXT_IHC_RECEIVE    0x02
 
-bool HSS_DDRInit(void);
-bool HSS_DDRPrintSegConfig(void);
-bool HSS_DDRPrintL2CacheWaysConfig(void);
-bool HSS_DDRPrintL2CacheWayMasks(void);
-bool HSS_UARTInit(void);
-#if IS_ENABLED(CONFIG_USE_LOGO)
-bool HSS_LogoInit(void);
-#endif
+#define SBI_EXT_HSS_REBOOT     0x10
 
-#if IS_ENABLED(CONFIG_USE_IHC)
-bool HSS_IHCInit(void);
-#endif
+#include <sbi/sbi_ecall.h>
+#include <sbi/sbi_ecall_interface.h>
+#include <sbi/sbi_error.h>
+#include <sbi/sbi_platform.h>
+#include <sbi/sbi_trap.h>
 
-#ifdef CONFIG_USE_PCIE
-bool HSS_PCIeInit(void);
-#endif
-
-bool HSS_PDMAInit(void);
+int HSS_SBI_ECALL_Handler(long extid, long funcid,
+    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
+int HSS_SBI_Vendor_Ext_Check(long extid);
 
 #ifdef __cplusplus
 }

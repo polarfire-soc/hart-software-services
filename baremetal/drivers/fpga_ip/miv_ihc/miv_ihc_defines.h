@@ -7,24 +7,24 @@
  *
  */
 
- /*========================================================================*//**
-  @mainpage Fixed defines for the Core IHC driver
+ /*
+  @mainpage Fixed defines for the MiV IHC driver
 
     @section The defines in this file are used by the user configuration
     header and the driver files. The header files need to be included in a
     project in the following order to allow over-ride of user settings.
-    core_ihc_defines.h
-    core_ihc_config.h    we can over-ride default setting in this file
+        - miv_ihc_defines.h
+        - miv_ihc_config.h    we can over-ride default setting in this file
                          This config file is stored in the boards directory and
                          is called from the mss_sw_config.h file.
-    core_ihc_regs.h
-    core_ihc.h
+        - miv_ihc_regs.h
+        - miv_ihc.h
     @section
 
 *//*==========================================================================*/
 
-#ifndef CORE_IHC_FIXED_DEFINES_H_
-#define CORE_IHC_FIXED_DEFINES_H_
+#ifndef MIV_IHC_FIXED_DEFINES_H_
+#define MIV_IHC_FIXED_DEFINES_H_
 
 /*------------------------------------------------------------------------------
  * hart mask defines
@@ -41,8 +41,56 @@
 #define HART3_MASK              8U
 #define HART4_MASK              0x10U
 
-/*------------------------------------------------------------------------------
- * Remote harts interrupts enable bits in the concentrator
+/*-------------------------------------------------------------------------*//**
+
+  ## Defines for the INT_EN register in the IHCA
+
+  These defines are used to set interrupt enables in the INT_EN register.
+
+  ### HSS_HART_DEFAULT_INT_EN
+
+  By default, no interrupts are enabled.
+
+  ### HSS_HART_MP_INT_EN
+
+    Enable MP interrupt fopr hart0
+
+  ### HSS_HART_ACK_INT_EN
+
+    Enable ACK interrupt for hart0
+
+  ### HART1_MP_INT_EN
+
+    Enable MP interrupt fopr hart1
+
+  ### HART1_ACK_INT_EN
+
+    Enable ACK interrupt for hart1
+
+  ### HART2_MP_INT_EN
+
+    Enable MP interrupt fopr hart2
+
+  ### HART2_ACK_INT_EN
+
+    Enable ACK interrupt for hart2
+
+   ### HART3_MP_INT_EN
+
+    Enable MP interrupt fopr hart3
+
+  ### HART3_ACK_INT_EN
+
+    Enable ACK interrupt for hart3
+
+ ### HART4_MP_INT_EN
+
+    Enable MP interrupt fopr hart4
+
+  ### HART4_ACK_INT_EN
+
+    Enable ACK interrupt for hart4
+
  */
 #define HSS_HART_DEFAULT_INT_EN     (0U<<0U)
 
@@ -61,5 +109,5 @@
 #define HART4_MP_INT_EN             (1U<<8U)
 #define HART4_ACK_INT_EN            (1U<<9U)
 
-#endif /* CORE_IHC_FIXED_DEFINES_H_ */
+#endif /* MIV_IHC_FIXED_DEFINES_H_ */
 

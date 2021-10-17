@@ -42,23 +42,21 @@ extern "C" {
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 
-enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source, uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);
+enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId source,
+    uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);
 void HSS_OpenSBI_Setup(void);
+void HSS_OpenSBI_Reboot(void);
 
 void mpfs_domains_register_hart(int hartid, int boot_hartid);
 void mpfs_domains_deregister_hart(int hartid);
 
-void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid, u32 privMode, void * entryPoint, void * pArg1);
+void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid,
+    u32 privMode, void * entryPoint, void * pArg1);
 void mpfs_mark_hart_as_booted(int hartid);
 bool mpfs_is_last_hart_booting(void);
 bool mpfs_is_hart_using_opensbi(int hartid);
 
 extern struct StateMachine opensbi_service;
-
-#define SBI_EXT_HSS        0x12341234
-#define SBI_EXT_HSS_REBOOT    0x0
-
-void HSS_SBI_Ecall_Register(void);
 
 #ifdef __cplusplus
 }

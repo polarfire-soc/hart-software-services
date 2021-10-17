@@ -7,11 +7,11 @@ config OPENSBI
 
 		If you don't know what to do here, say Y.
 
-config USE_IHCM
-	bool "Use Inter-hart Communication Module"
+config USE_IHC
+	bool "Use MiV Inter-hart Communication"
 	default y
 	help
-		Enable the Inter-Hart Communication Module (IHCM)
+		Enable MiV Inter-Hart Communication (IHC)
 
 menu "OpenSBI"
 config PROVIDE_DTB

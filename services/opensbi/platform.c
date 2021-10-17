@@ -57,6 +57,7 @@
 #include <sbi_utils/sys/clint.h>
 
 #include "opensbi_service.h"
+#include "opensbi_ecall.h"
 
 
 #define MPFS_HART_COUNT            5
@@ -213,7 +214,6 @@ static void mpfs_system_down(u32 reset_type, u32 reset_reason)
     csr_write(CSR_MSTATUS, MIP_MSIP);
     csr_write(CSR_MIE, MIP_MSIP);
 
-    void HSS_OpenSBI_Reboot(void);
     HSS_OpenSBI_Reboot();
 
     while (1);
@@ -349,7 +349,6 @@ static int mpfs_domains_init(void)
             if (!pDom->index) { // { pDom->boot_hartid != boot_hartid) {
                 pDom->boot_hartid = boot_hartid;
 
-                // TODO: replace memcpy with something like strlcpy
                 memcpy(pDom->name, hart_table[boot_hartid].name, ARRAY_SIZE(dom_table[0].name)-1);
 
                 struct sbi_hartmask * const pMask = &(hart_table[boot_hartid].hartMask);
@@ -415,8 +414,8 @@ const struct sbi_platform_operations platform_ops = {
     //.domains_root_regions = mpfs_domains_root_regions,
     .domains_init = mpfs_domains_init,
 
-    .vendor_ext_check = NULL,
-    .vendor_ext_provider = NULL
+    .vendor_ext_check = HSS_SBI_Vendor_Ext_Check,
+    .vendor_ext_provider = HSS_SBI_ECALL_Handler
 };
 
 const struct sbi_platform platform = {
