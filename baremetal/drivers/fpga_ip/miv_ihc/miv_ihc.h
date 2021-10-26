@@ -359,7 +359,8 @@ extern IHC_TypeDef * IHC[];
   | 1    | **IHC_CHANNEL_TO_HART1**     | channel connected to hart 1          |
   | 2    | **IHC_CHANNEL_TO_HART2**     | channel connected to hart 2          |
   | 3    | **IHC_CHANNEL_TO_HART3**     | channel connected to hart 3          |
-  | 4    | **IHC_CHANNEL_TO_HART4**     | channel context A                    |
+  | 4    | **IHC_CHANNEL_TO_HART4**     | channel connected to hart 4          |
+  | 5    | **IHC_CHANNEL_TO_CONTEXTA**  | channel context A                    |
   | 6    | **IHC_CHANNEL_TO_CONTEXTB**  | channel context B                    |
 
  */
@@ -621,8 +622,7 @@ uint32_t IHC_context_to_remote_hart_id(IHC_CHANNEL channel);
   @param message
     Pointer to message being sent
 
-  @return status
-    hartID
+  @return MP_BUSY / MESSAGE_SENT
 
   @code
         // example code showing use

@@ -111,11 +111,21 @@ _start:
 
         jal	HSS_U54_Banner
 
+#if defined(CONFIG_HSS_USE_IHC)
+.enable_ihc:
+        jal	HSS_IHCInit_U54
+#endif
+
 .spin_forever:
         wfi
         j	.spin_forever
 
 .boot_e51:
+#if defined(CONFIG_HSS_USE_IHC)
+        // initialise PLIC if required for IHC
+        jal	HSS_Setup_PLIC
+#endif
+
 	// Setup E51 trap handler
 	la	a4, hss_e51_trap_handler
         call	.set_trap_handler

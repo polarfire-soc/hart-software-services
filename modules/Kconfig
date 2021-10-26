@@ -1,2 +1,3 @@
 source "modules/compression/Kconfig"
 source "modules/debug/Kconfig"
+source "modules/ssmb/Kconfig"

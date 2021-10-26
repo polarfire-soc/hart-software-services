@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "mpfs_hal/mss_hal.h"
 #include "miv_ihc.h"
+#include "assert.h"
 
 /******************************************************************************/
 /* configuration           arrays populated from user defines                 */
@@ -22,51 +23,60 @@ IHC_TypeDef             IHC_H2_IP_GROUP ;
 IHC_TypeDef             IHC_H3_IP_GROUP ;
 IHC_TypeDef             IHC_H4_IP_GROUP ;
 
-IHC_TypeDef * IHC[]={ &IHC_H0_IP_GROUP , &IHC_H1_IP_GROUP, &IHC_H2_IP_GROUP, &IHC_H3_IP_GROUP, &IHC_H4_IP_GROUP};
+IHC_TypeDef * IHC[] = { &IHC_H0_IP_GROUP, &IHC_H1_IP_GROUP, &IHC_H2_IP_GROUP, &IHC_H3_IP_GROUP, &IHC_H4_IP_GROUP};
 
 /**
  * \brief IHC configuration
  *
  */
-const uint64_t ihc_base_addess[][5U] = {
-        /* hart 0 */
-        {0x0,
+const uint64_t ihc_base_address[][5U] = {
+    /* hart 0 */
+    {
+        0x0,
         IHC_LOCAL_H0_REMOTE_H1,
         IHC_LOCAL_H0_REMOTE_H2,
         IHC_LOCAL_H0_REMOTE_H3,
-        IHC_LOCAL_H0_REMOTE_H4},
-        /* hart 1 */
-        {IHC_LOCAL_H1_REMOTE_H0,
+        IHC_LOCAL_H0_REMOTE_H4
+    },
+    /* hart 1 */
+    {
+        IHC_LOCAL_H1_REMOTE_H0,
         0x0,
         IHC_LOCAL_H1_REMOTE_H2,
         IHC_LOCAL_H1_REMOTE_H3,
-        IHC_LOCAL_H1_REMOTE_H4},
-        /* hart 2 */
-        {IHC_LOCAL_H2_REMOTE_H0,
+        IHC_LOCAL_H1_REMOTE_H4
+    },
+    /* hart 2 */
+    {
+        IHC_LOCAL_H2_REMOTE_H0,
         IHC_LOCAL_H2_REMOTE_H1,
         0x0,
         IHC_LOCAL_H2_REMOTE_H3,
-        IHC_LOCAL_H2_REMOTE_H4},
-        /* hart 3 */
-        {IHC_LOCAL_H3_REMOTE_H0,
+        IHC_LOCAL_H2_REMOTE_H4
+    },
+    /* hart 3 */
+    {
+        IHC_LOCAL_H3_REMOTE_H0,
         IHC_LOCAL_H3_REMOTE_H1,
         IHC_LOCAL_H3_REMOTE_H2,
         0x0,
-        IHC_LOCAL_H3_REMOTE_H4},
-        /* hart 4 */
-        {IHC_LOCAL_H4_REMOTE_H0,
+        IHC_LOCAL_H3_REMOTE_H4
+    },
+    /* hart 4 */
+    {
+        IHC_LOCAL_H4_REMOTE_H0,
         IHC_LOCAL_H4_REMOTE_H1,
         IHC_LOCAL_H4_REMOTE_H2,
         IHC_LOCAL_H4_REMOTE_H3,
-        0x0},
+        0x0
+    },
 };
 
 /**
  * \brief IHC configuration
  *
  */
-const uint64_t IHCIA_base_addess[5U] = {
-
+const uint64_t IHCIA_base_address[5U] = {
         IHCIA_LOCAL_H0,
         IHCIA_LOCAL_H1,
         IHCIA_LOCAL_H2,
@@ -105,7 +115,7 @@ const uint32_t IHCIA_remote_hart_ints[5U] = {
 /******************************************************************************/
 static uint32_t parse_incoming_hartid(uint32_t my_hart_id, bool *is_ack, bool polling);
 static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint32_t * message_storage_ptr);
-static void  message_present_isr(void);
+static void message_present_isr(void);
 
 /******************************************************************************/
 /* Public API Functions                                                       */
@@ -136,14 +146,14 @@ void IHC_global_init(void)
             /*
              * Configure base addresses
              */
-            IHC[my_hart_id]->HART_IHC[remote_hart_id] = (IHC_IP_TypeDef *)ihc_base_addess[my_hart_id][remote_hart_id];
+            IHC[my_hart_id]->HART_IHC[remote_hart_id] = (IHC_IP_TypeDef *)ihc_base_address[my_hart_id][remote_hart_id];
             IHC[my_hart_id]->HART_IHC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
             remote_hart_id++;
         }
         /*
          * Configure base addresses
          */
-        IHC[my_hart_id]->interrupt_concentrator = (IHCIA_IP_TypeDef *)IHCIA_base_addess[my_hart_id];
+        IHC[my_hart_id]->interrupt_concentrator = (IHCIA_IP_TypeDef *)IHCIA_base_address[my_hart_id];
         /*
          *
          */
@@ -180,18 +190,18 @@ uint8_t IHC_local_context_init(uint32_t hart_to_configure)
             /*
              * Configure base addresses
              */
-            IHC[hart_to_configure]->HART_IHC[remote_hart_id] = (IHC_IP_TypeDef *)ihc_base_addess[hart_to_configure][remote_hart_id];
+            IHC[hart_to_configure]->HART_IHC[remote_hart_id] = (IHC_IP_TypeDef *)ihc_base_address[hart_to_configure][remote_hart_id];
             IHC[hart_to_configure]->HART_IHC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
             remote_hart_id++;
         }
         /*
          * Configure base addresses
          */
-        IHC[hart_to_configure]->interrupt_concentrator = (IHCIA_IP_TypeDef *)IHCIA_base_addess[hart_to_configure];
+        IHC[hart_to_configure]->interrupt_concentrator = (IHCIA_IP_TypeDef *)IHCIA_base_address[hart_to_configure];
         /*
          *
          */
-        IHC[hart_to_configure]->interrupt_concentrator->INT_EN.INT_EN          = 0x0U;
+        IHC[hart_to_configure]->interrupt_concentrator->INT_EN.INT_EN = 0x0U;
     }
 
 
@@ -292,7 +302,7 @@ uint32_t IHC_tx_message(IHC_CHANNEL channel, uint32_t *message)
  * See miv_ihc.h or the miv_ihc user guide for details of how to use this
  * function.
  */
-void  IHC_message_present_poll(void)
+void IHC_message_present_poll(void)
 {
     bool is_ack;
     uint64_t my_hart_id = read_csr(mhartid);
@@ -318,7 +328,7 @@ void  IHC_message_present_poll(void)
  * See miv_ihc.h or the miv_ihc user guide for details of how to use this
  * function.
  */
-void  IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_channel, uint32_t * message_storage_ptr)
+void IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_channel, uint32_t * message_storage_ptr)
 {
     bool is_ack;
 
@@ -333,7 +343,7 @@ void  IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_chan
         /*
          * process incoming packet
          */
-        rx_message(origin_hart, IHC[my_hart_id]->local_h_setup.msg_in_handler[origin_hart], is_ack, message_storage_ptr );
+        rx_message(origin_hart, IHC[my_hart_id]->local_h_setup.msg_in_handler[origin_hart], is_ack, message_storage_ptr);
         if(is_ack == true)
         {
             /* clear the ack */
@@ -358,7 +368,7 @@ uint32_t IHC_context_to_local_hart_id(IHC_CHANNEL channel)
 
     /*
      * If we are sending to a Context, assume we are a Context.
-     * i.e. HSS will not send directly to a contect
+     * i.e. HSS will not send directly to a context
      */
     if(channel <= IHC_CHANNEL_TO_HART4)
     {
@@ -510,7 +520,7 @@ uint8_t IHCIA_hart4_IRQHandler(void)
  * user registered function:
  * IHC[my_hart_id]->local_h_setup.msg_in_handler[origin_hart]
  */
-static void  message_present_isr(void)
+static void message_present_isr(void)
 {
     bool is_ack;
     uint64_t my_hart_id = read_csr(mhartid);
@@ -549,6 +559,8 @@ static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incomi
     uint32_t remote_hart_id = IHC_context_to_remote_hart_id(channel);
     uint32_t message_size = IHC[my_hart_id]->HART_IHC[remote_hart_id]->size_msg;
 
+    assert(handle_incoming);
+
     if (is_ack == true)
     {
         handle_incoming(remote_hart_id, (uint32_t *)&IHC[my_hart_id]->HART_IHC[remote_hart_id]->mesg_in[0U], message_size, is_ack, message_storage_ptr);
@@ -559,10 +571,11 @@ static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incomi
          * check if we have a message
          */
         handle_incoming(remote_hart_id, (uint32_t *)&IHC[my_hart_id]->HART_IHC[remote_hart_id]->mesg_in[0U], message_size, is_ack, message_storage_ptr);
+
         {
             /*
              * set MP to 0
-             * Note this generates an interrupt on the other hart if it has RMPIE
+             * Note this generates an interrupt on the other hart if it has MPIE
              * bit set in the control register
              */
 
@@ -594,7 +607,6 @@ static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incomi
  */
 static uint32_t parse_incoming_hartid(uint32_t my_hart_id, bool *is_ack, bool polling)
 {
-
     uint32_t hart_id = 0U;
     uint32_t return_hart_id = 99U;
 

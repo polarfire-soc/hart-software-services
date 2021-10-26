@@ -53,7 +53,7 @@
 
   ### HSS_HART_MP_INT_EN
 
-    Enable MP interrupt fopr hart0
+    Enable MP interrupt for hart0
 
   ### HSS_HART_ACK_INT_EN
 

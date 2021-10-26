@@ -785,7 +785,9 @@ static inline void PLIC_init(void)
     }
 
     /* Enable machine external interrupts. */
-    set_csr(mie, MIP_MEIP);
+    unsigned long value = read_csr(mie);
+    value |= MIP_MEIP;
+    set_csr(mie, value);
 }
 
 

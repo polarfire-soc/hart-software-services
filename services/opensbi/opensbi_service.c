@@ -43,6 +43,9 @@
 #  error OPENSBI needed for this module
 #endif
 
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+#  include "miv_ihc.h"
+#endif
 
 extern const struct sbi_platform platform;
 static unsigned long l_hartid_to_scratch(int hartid);
@@ -204,6 +207,14 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     } else {
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
+
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+        __sync_synchronize();
+
+        // small delay to ensure that IHC message has been sent before jumping into OpenSBI
+        // without this, HSS never receives ack from U54 that OPENSBI_INIT was successful
+        HSS_SpinDelay_MilliSecs(250u);
+#endif
 
         struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, hartid);
         size_t i;

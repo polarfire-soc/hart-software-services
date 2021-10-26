@@ -266,9 +266,6 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_BoardInit",                 HSS_BoardInit,                 false, false },
     { "HSS_UARTInit",                  HSS_UARTInit,                  false, false },
     { "HSS_OpenSBIInit",               HSS_OpenSBIInit,               false, false },
-#if IS_ENABLED(CONFIG_USE_IHC)
-    { "HSS_IHCInit",                   HSS_IHCInit,                   false, false },
-#endif
 #if IS_ENABLED(CONFIG_USE_LOGO)
     { "HSS_LogoInit",                  HSS_LogoInit,                  false, false },
 #endif
@@ -288,6 +285,9 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
     { "HSS_TinyCLI_Parser",            HSS_TinyCLI_Parser,            false, false },
+#endif
+#if IS_ENABLED(CONFIG_USE_IHC)
+    { "HSS_IHCInit",                   HSS_IHCInit,                   false, false },
 #endif
     { "IPI_QueuesInit",                IPI_QueuesInit,                false, false },
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)

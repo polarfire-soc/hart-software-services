@@ -33,6 +33,10 @@
 #include "hss_registry.h"
 #include "hss_atomic.h"
 
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+#  include "miv_ihc.h"
+#endif
+
 #include <string.h>
 #include <assert.h>
 
@@ -80,9 +84,7 @@ struct IPI_Data {
 #endif
 
 #if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
-// TODO... this code needs to move to tabular searches, and needs to move into a debug
-// module
-static const char * const hartName[] = { // MAX_NUM_HARTS
+__extension__ static const char * const hartName[] = { // MAX_NUM_HARTS
     [ HSS_HART_E51 ]   = "E51",
     [ HSS_HART_U54_1 ] = "U54_1",
     [ HSS_HART_U54_2 ] = "U54_2",
@@ -90,7 +92,7 @@ static const char * const hartName[] = { // MAX_NUM_HARTS
     [ HSS_HART_U54_4 ] = "U54_4"
 };
 
-static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
+__extension__ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
     [ IPI_MSG_NO_MESSAGE ]        = "IPI_MSG_NO_MESSAGE",
     [ IPI_MSG_BOOT_REQUEST ]      = "IPI_MSG_BOOT_REQUEST",
     [ IPI_MSG_PMP_SETUP ]         = "IPI_MSG_PMP_SETUP",
@@ -178,57 +180,47 @@ uint32_t IPI_GetQueuePendingCount(uint32_t queueIndex)
     return (IPI_DATA.ipi_queues[queueIndex].count);
 }
 
-//
-// @brief Set the MSIP of a particular target hart
-// @param target [in] target hart to set
-// @param val [in] is the value to set the MSIP to
+// @brief Send an IPI to a particular target hart
+// @param target [in] target hart to send an IPI to
 // @return bool indicating success
 //
-bool clint_set_MSIP(enum HSSHartId const target, uint32_t val);
-bool clint_set_MSIP(enum HSSHartId const target, uint32_t val)
+
+static bool clint_set_MSIP(enum HSSHartId const target, uint32_t value)
 {
     bool result = true;
 
     switch (target) {
     case HSS_HART_E51:
-        mHSS_WriteRegU32(CLINT, MSIP_E51_0, val);
+        mHSS_WriteRegU32(CLINT, MSIP_E51_0, value);
         break;
 
     case HSS_HART_U54_1:
-        mHSS_WriteRegU32(CLINT, MSIP_U54_1, val);
+        mHSS_WriteRegU32(CLINT, MSIP_U54_1, value);
         break;
 
     case HSS_HART_U54_2:
-        mHSS_WriteRegU32(CLINT, MSIP_U54_2, val);
+        mHSS_WriteRegU32(CLINT, MSIP_U54_2, value);
         break;
 
     case HSS_HART_U54_3:
-        mHSS_WriteRegU32(CLINT, MSIP_U54_3, val);
+        mHSS_WriteRegU32(CLINT, MSIP_U54_3, value);
         break;
 
     case HSS_HART_U54_4:
-        mHSS_WriteRegU32(CLINT, MSIP_U54_4, val);
+        mHSS_WriteRegU32(CLINT, MSIP_U54_4, value);
         break;
 
     default:
-        assert(0==1);
+        assert((target >= HSS_HART_E51) && (target <= HSS_HART_U54_4));
         result = false;
     }
 
     return result;
 }
 
-// @brief Send an IPI to a particular target hart
-// @param target [in] target hart to send an IPI to
-// @return bool indicating success
-//
-#include <sbi_ipi.h>
-
 bool CLINT_Raise_MSIP(enum HSSHartId const target)
 {
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "sending IPI to %u" CRLF, target);
-
-    //extern static int sbi_ipi_send(struct sbi_scratch *scratch, u32 remote_hardid, u32 event, void *data);
     bool result = clint_set_MSIP(target, 1u);
 
     if (result) {
@@ -244,7 +236,6 @@ bool CLINT_Raise_MSIP(enum HSSHartId const target)
 void CLINT_Clear_MSIP(enum HSSHartId const target)
 {
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "clearing IPI on %u" CRLF, target);
-
     (void)clint_set_MSIP(target, 0u);
 }
 
@@ -301,8 +292,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
             space_available = true;
             break;
         } else {
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "pMsg: %p, index: %u, msg_type: %u" CRLF, pMsg, i,
-            //    pMsg->msg_type);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "pMsg: %p, index: %u, msg_type: %u" CRLF, pMsg, i, pMsg->msg_type);
         }
         pMsg++;
     }
@@ -316,8 +306,15 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
 
         IPI_DATA.txId_per_queue.last[index] = transaction_id;
 
-        mb();
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+        const uint32_t hss_message[] = { (uint32_t)message, (uint32_t)transaction_id, 0x0, 0x0 };
+        uint32_t tx_status = IHC_tx_message((IHC_CHANNEL)target, (uint32_t *)&hss_message);
+        if (tx_status == MESSAGE_SENT) {
+            result = true;
+	}
+#else
         result = CLINT_Raise_MSIP(target);
+#endif
     } else {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "No space in queue!!!!!!" CRLF);
     }
@@ -348,10 +345,15 @@ bool IPI_PollReceive(union HSSHartBitmask hartMask)
     bool result = false;
     uint32_t i;
 
-    (void)hartMask; // TODO: ignoring for now, but can only check IPIs on selected harts...
+    (void)hartMask;
     enum HSSHartId const myHartId = current_hartid();
 
     for (i = 0u; i < MAX_NUM_HARTS; i++) {
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+        IHC_message_present_poll();
+        __sync_synchronize();
+#endif
+
         if (i == myHartId) { continue; } // don't handle messages if to my own hartid
         if (!((1u << i) & hartMask.uint)) { continue; } // only look at selected harts
 

@@ -51,14 +51,14 @@ extern "C" {
 
   Register Bit definitions of the control register of the MiV-IHCC.
 
-  |bit position|constant|description|
-  |---|-----------------------------| -----------------------------------------|
-  | 0 | **RMP_MESSAGE_PRESENT**     | Remote side message present |
-  | 1 | **MP_MESSAGE_PRESENT**      | local side message present |
-  | 2 | **MPIE_EN**                 | Enable MP interrupt |
-  | 3 | **ACK_INT**                 | Incoming ACK |
-  | 4 | **ACK_CLR**                 | Clear ACK |
-  | 5 | **ACKIE_EN**                | Enable Ack Interrupt                     |
+  | bit position | constant                | description                 |
+  |--------------|-------------------------|-----------------------------|
+  | 0            | **RMP_MESSAGE_PRESENT** | Remote side message present |
+  | 1            | **MP_MESSAGE_PRESENT**  | local side message present  |
+  | 2            | **MPIE_EN**             | Enable MP interrupt         |
+  | 3            | **ACK_INT**             | Incoming ACK                |
+  | 4            | **ACK_CLR**             | Clear ACK                   |
+  | 5            | **ACKIE_EN**            | Enable Ack Interrupt        |
 
  */
 #define RMP_MESSAGE_PRESENT         (0x01U << 0U)

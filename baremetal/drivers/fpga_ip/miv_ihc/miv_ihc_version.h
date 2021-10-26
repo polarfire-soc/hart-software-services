@@ -1,8 +1,8 @@
-#ifndef HSS_INIT_H
-#define HSS_INIT_H
+#ifndef MIV_IHC_VERSION_H
+#define MIV_IHC_VERSION_H
 
 /*******************************************************************************
- * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,7 +25,13 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Toplevel Init Routines
+ *
+ */
+
+/*******************************************************************************
+ * @file miv_ihc_version.h
+ * @author Microchip-FPGA Embedded Systems Solutions
+ * @brief Version file miv Inter Hart Communication driver
  *
  */
 
@@ -33,50 +39,23 @@
 extern "C" {
 #endif
 
-void HSS_Init(void);
+/*-------------------------------------------------------------------------*//**
 
-bool HSS_ZeroTIMs(void);
-bool HSS_ZeroDDR(void);
-bool HSS_Init_RWDATA_BSS(void);
-bool HSS_WakeSleepingHarts(void);
-bool HSS_E51_Banner(void);
+  ## Version of the MiV Inter Hart Communication driver
 
-bool HSS_QueuesInit(void);
+  |constant|Value|
+  |-------------------------------------------------| -------------------------|
+  | **MIV_IHC_VERSION_MAJOR**                       | **0**                    |
+  | **MIV_IHC_VERSION_MINOR**                       | **1**                    |
+  | **MIV_IHC_VERSION_MINOR**                       | **0**                    |
 
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-#  include "qspi_service.h"
-#endif
-
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-#  include "mmc_service.h"
-#endif
-
-#if IS_ENABLED(CONFIG_OPENSBI)
-bool HSS_OpenSBIInit(void);
-#endif
-
-bool HSS_DDRInit(void);
-bool HSS_DDRPrintSegConfig(void);
-bool HSS_DDRPrintL2CacheWaysConfig(void);
-bool HSS_DDRPrintL2CacheWayMasks(void);
-bool HSS_UARTInit(void);
-#if IS_ENABLED(CONFIG_USE_LOGO)
-bool HSS_LogoInit(void);
-#endif
-
-#if IS_ENABLED(CONFIG_USE_IHC)
-bool HSS_IHCInit(void);
-void HSS_IHCInit_U54(void);
-#endif
-
-#ifdef CONFIG_USE_PCIE
-bool HSS_PCIeInit(void);
-#endif
-
-bool HSS_PDMAInit(void);
+ */
+#define MIV_IHC_VERSION_MAJOR 0
+#define MIV_IHC_VERSION_MINOR 1
+#define MIV_IHC_VERSION_PATCH 0
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* end MIV_IHC_VERSION_H */

@@ -26,8 +26,8 @@
 /*------------------------------------------------------------------------------
  * define the monitor hart (HSS hart) used in our system
  */
-#define HSS_HART_MASK		    HART0_MASK
-#define HSS_HART_ID             HART0_ID
+#define HSS_HART_MASK               HART0_MASK
+#define HSS_HART_ID                 HART0_ID
 
 /*------------------------------------------------------------------------------
  * HSS_REMOTE_HARTS_MASK
@@ -45,11 +45,11 @@
  * Define which harts are connected via comms channels to a particular hart
  * user defined
  */
-#define IHCIA_H0_REMOTE_HARTS	((~HSS_HART_MASK) & HSS_REMOTE_HARTS_MASK) /* connected to all harts */
-#define IHCIA_H1_REMOTE_HARTS	(HSS_HART_MASK | (HART4_MASK)) /* HSS and Context B connected */
+#define IHCIA_H0_REMOTE_HARTS	(HSS_REMOTE_HARTS_MASK) /* connected to all harts */
+#define IHCIA_H1_REMOTE_HARTS	(HSS_HART_MASK | HART4_MASK) /* HSS and Context B connected */
 #define IHCIA_H2_REMOTE_HARTS	(HSS_HART_MASK)
 #define IHCIA_H3_REMOTE_HARTS	(HSS_HART_MASK)
-#define IHCIA_H4_REMOTE_HARTS	(HSS_HART_MASK | (HART1_MASK)) /* HSS and Context A connected */
+#define IHCIA_H4_REMOTE_HARTS	(HSS_HART_MASK | HART1_MASK) /* HSS and Context A connected */
 
 /*------------------------------------------------------------------------------
  * interrupts enabled in this system design for a particular hart
@@ -57,8 +57,8 @@
  */
 #define IHCIA_H0_REMOTE_HARTS_INTS    HSS_HART_DEFAULT_INT_EN  /* connected to all harts */
 #define IHCIA_H1_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN | HART4_MP_INT_EN | HART4_ACK_INT_EN) /* HSS and Context B connected */
-#define IHCIA_H2_REMOTE_HARTS_INTS    HSS_HART_DEFAULT_INT_EN
-#define IHCIA_H3_REMOTE_HARTS_INTS    HSS_HART_DEFAULT_INT_EN
+#define IHCIA_H2_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN)
+#define IHCIA_H3_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN)
 #define IHCIA_H4_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN | HART1_MP_INT_EN | HART1_ACK_INT_EN) /* HSS and Context A connected */
 
 #endif /* MIV_IHC_CONFIG_H_ */
