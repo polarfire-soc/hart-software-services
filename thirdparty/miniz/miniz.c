@@ -518,7 +518,6 @@ int mz_inflate(mz_streamp pStream, int flush)
         pState->m_dict_ofs = (pState->m_dict_ofs + n) & (TINFL_LZ_DICT_SIZE - 1);
 
         if (status < 0) {
-            //asm("ebreak");
             return MZ_DATA_ERROR; /* Stream is corrupted (there could be some uncompressed data left in the output dictionary - oh well). */
         } else if ((status == TINFL_STATUS_NEEDS_MORE_INPUT) && (!orig_avail_in))
             return MZ_BUF_ERROR; /* Signal caller that we can't make forward progress without supplying more input or by setting flush to MZ_FINISH. */

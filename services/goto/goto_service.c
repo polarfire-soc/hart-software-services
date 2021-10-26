@@ -170,8 +170,6 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             // set MEPC to function address (smuggled in p_extended_buffer argument)
             mHSS_CSR_WRITE(mepc, *((void **)p_extended_buffer));
 
-            //mb();
-            //mb_i();
             // execute MRET, causing MIE <= MPIE, new priv mode <= PRV_S, MPIE <= 1, MPP <= U
             asm("mret");
             __builtin_unreachable();
