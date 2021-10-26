@@ -387,10 +387,12 @@ static void tinyCLI_L2Cache_(void)
     (void)HSS_DDRPrintL2CacheWayMasks();
 }
 
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
 static void tinyCLI_PerfCtrs_(void)
 {
     HSS_PerfCtr_DumpAll();
 }
+#endif
 
 static void tinyCLI_Debug_(void)
 {
@@ -405,7 +407,9 @@ static void tinyCLI_Debug_(void)
 #endif
         DBG_SEG,
         DBG_L2CACHE,
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
         DBG_PERFCTR,
+#endif
         DBG_WDOG,
     };
     const struct tinycli_key debugKeys[] = {
@@ -418,7 +422,9 @@ static void tinyCLI_Debug_(void)
 #endif
         { DBG_SEG,      "SEG",     "display seg registers" },
         { DBG_L2CACHE,  "L2CACHE", "display l2cache settings" },
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
         { DBG_PERFCTR , "PERFCTR", "display perf counters" },
+#endif
         { DBG_WDOG ,    "WDOG",    "display watchdog statistics" },
     };
 
@@ -456,9 +462,11 @@ static void tinyCLI_Debug_(void)
             tinyCLI_L2Cache_();
             break;
 
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
         case DBG_PERFCTR:
             tinyCLI_PerfCtrs_();
             break;
+#endif
 
         case DBG_WDOG:
 #if IS_ENABLED(CONFIG_SERVICE_WDOG)
