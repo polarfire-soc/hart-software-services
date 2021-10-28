@@ -142,6 +142,16 @@ bool HSS_DDRPrintL2CacheWaysConfig(void)
     mHSS_DEBUG_PRINTF_EX("         L2-Cache: % 2u way%c (%u KiB)" CRLF, cache_ways, cache_ways==1u ? ' ':'s', cache_ways * 128u);
     mHSS_DEBUG_PRINTF_EX("           L2-LIM: % 2u way%c (%u KiB)" CRLF, lim_ways, lim_ways==1 ? ' ':'s', lim_ways * 128);
 
+    // sanity check on L2 Size and LIM size...
+    // to ensure Libero and the HSS linker script match
+    extern const uint64_t __l2lim_start;
+    extern const uint64_t _hss_start;
+    extern const uint64_t _hss_end;
+    const uintptr_t libero_l2lim_end = (uintptr_t)&__l2lim_start + (lim_ways * 128u * 1024u);
+
+    assert(&_hss_start == &__l2lim_start);
+    assert((uintptr_t)&_hss_end <= libero_l2lim_end);
+
     return true;
 }
 
