@@ -1,0 +1,7 @@
+config SERVICE_BEU
+	bool "Bus Error Unit support"
+	default n
+	help
+                This feature enables support for E51-delegated Bus Error Unit monitoring.
+
+		If you do not know what to do here, say Y.
