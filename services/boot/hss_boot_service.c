@@ -56,10 +56,8 @@
 
 
 /* Timeouts */
-//#define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 5u)
-//#define BOOT_WAIT_TIMEOUT               (ONE_SEC * 5u)
 #define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 5u)
-#define BOOT_WAIT_TIMEOUT               (ONE_SEC / 2u)
+#define BOOT_WAIT_TIMEOUT               (ONE_SEC * 2u)
 
 #define BOOT_SUB_CHUNK_SIZE 256u
 
