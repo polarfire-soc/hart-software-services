@@ -86,8 +86,6 @@ baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 #
 
 $(BOARD_DIR)/hss-l2lim.ld: $(BOARD_DIR)/hss-l2lim.lds config.h
-	@$(ECHO) " CPP       $@";
-	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
 
 ################################################################################################
 

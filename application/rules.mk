@@ -199,6 +199,10 @@ endif
 	@$(ECHO) " BIN       $@"
 	$(CMD_PREFIX)$(OBJCOPY) -O binary $< $@
 
+%.ld: %.lds config.h
+	@$(ECHO) " CPP       $@";
+	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
+
 #
 %.d: %.c
 	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d
