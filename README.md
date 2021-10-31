@@ -70,6 +70,8 @@ Both Linux and Windows are supported by Kconfiglib.
  
 The HSS currently support PolarFire SoC-based icicle kit (mpfs-icicle-kit-es) as a board build target.
 
+### Building on Linux
+
 For building on Linux from the command line you must configure the path appropriately, e.g.:
 
     $ export PATH=$PATH:$HOME/Microchip/SoftConsole-v2021.1/python/bin:$HOME/Microchip/SoftConsole-v2021.1/riscv-unknown-elf-gcc/bin
