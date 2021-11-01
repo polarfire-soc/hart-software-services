@@ -132,7 +132,7 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(pathsubst "%",%,$(CONFIG_SOC_FPGA_DESIGN_XML))
+$(SOC_CONFIG_FILES): $(subst $\",,$(CONFIG_SOC_FPGA_DESIGN_XML))
 	@$(ECHO) " CFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
