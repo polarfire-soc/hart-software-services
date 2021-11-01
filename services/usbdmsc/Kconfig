@@ -8,6 +8,7 @@ config SERVICE_USBDMSC
 		If you do not know what to do here, say N.
 
 menu "USB Device Mass Storage Class"
+	visible if SERVICE_USBDMSC
 
 config SERVICE_USBDMSC_REGISTER
         depends on SERVICE_USBDMSC

@@ -190,13 +190,15 @@ void HSS_PrintToolVersions(void)
 
 bool HSS_E51_Banner(void)
 {
+#ifndef VENDOR_STRING
+#    define VENDOR_STRING ""
+#endif
     mHSS_FANCY_PRINTF(LOG_STATUS,
-        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" CRLF
+        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" VENDOR_STRING CRLF
         "MPFS HAL version %d.%d.%d"
 #if IS_ENABLED(CONFIG_USE_IHC)
 	" / Mi-V IHC version %d.%d.%d"
 #endif
-        CRLF
         "(c) Copyright 2017-2021 Microchip FPGA Embedded Systems Solutions." CRLF CRLF,
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
         MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH,
@@ -230,4 +232,11 @@ void HSS_Init(void)
 {
     RunInitFunctions(spanOfGlobalInitFunctions, globalInitFunctions);
     HSS_Boot_RestartCore(HSS_HART_ALL);
+#if IS_ENABLED(CONFIG_UART_SURRENDER)
+#    if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+    HSS_TinyCLI_SurrenderUART();
+#    endif
+    void uart_surrender(void);
+    uart_surrender();
+#endif
 }

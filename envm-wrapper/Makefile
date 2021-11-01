@@ -78,6 +78,7 @@ PACKAGE?=FCVG484
 DIE?=MPFS250T_ES
 FPGENPROG?=/opt/microsemi/Libero_SoC_v12.6/Libero/bin64/fpgenprog
 FPGENPROG:=$(FPGENPROG:_bin=)
+
 program: $(BIN_FILE-envm-wrapper)
 	-$(RM) -r $(BINDIR)/bootmode1
 	[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )

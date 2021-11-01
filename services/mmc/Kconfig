@@ -6,7 +6,11 @@ config SERVICE_MMC
 
 		If you do not know what to do here, say Y.
 
+menu "MMC"
+	visible if SERVICE_MMC
+
 menu "MMC Mode"
+
 config SERVICE_MMC_MODE_EMMC
 	bool "Use eMMC"
 	default y
@@ -30,6 +34,7 @@ config SERVICE_MMC_MODE_SDCARD
 endmenu
 
 menu "MMC Voltage"
+
 config SERVICE_MMC_BUS_VOLTAGE_1V8
 	bool "Use 1.8V Bus Voltage with MMC"
 	default n
@@ -52,6 +57,7 @@ config SERVICE_MMC_BUS_VOLTAGE_3V3
 endmenu
 
 menu "SDIO Control"
+
 config SERVICE_SDIO_REGISTER_PRESENT
 	bool "SDIO register present"
 	default n
@@ -69,4 +75,6 @@ config SERVICE_SDIO_REGISTER_ADDRESS
                 This value represents the memory mapped address of a register in the FPGA fabric.
                 This register is used to select between eMMC and SD card when a de-mux is present on a board.
                 
+endmenu
+
 endmenu

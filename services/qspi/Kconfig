@@ -6,6 +6,9 @@ config SERVICE_QSPI
 
 		If you do not know what to do here, say Y.
 
+menu "QSPI"
+	visible if SERVICE_QSPI
+
 config SERVICE_QSPI_COPY_TO_DDR
 	bool "QSPI support"
         depends on SERVICE_QSPI
@@ -25,3 +28,5 @@ config SERVICE_QSPI_USE_XIP
                 as a means of speeding up booting.
 
 		If you do not know what to do here, say N for now.
+
+endmenu

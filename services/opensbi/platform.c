@@ -124,17 +124,35 @@ static int mpfs_final_init(bool cold_boot)
 
 static bool console_initialized = false;
 
+#if IS_ENABLED(CONFIG_UART_SURRENDER)
+static bool uart_surrendered_flag = false;
+
+void uart_surrender(void);
+void uart_surrender(void)
+{
+    uart_surrendered_flag = true;
+}
+#endif
+
 static void mpfs_console_putc(char ch)
 {
     if (console_initialized) {
         u32 hartid = current_hartid();
-        int uart_putc(int hartid, const char ch); //TBD
-        uart_putc(hartid, ch);
+
+#if IS_ENABLED(CONFIG_UART_SURRENDER)
+        if (hartid || !uart_surrendered_flag) {
+#else
+        {
+#endif
+            int uart_putc(int hartid, const char ch); //TBD
+            uart_putc(hartid, ch);
+        }
     }
 }
 
 #define NO_BLOCK 0
 #define GETC_EOF -1
+
 static int mpfs_console_getc(void)
 {
     int result = GETC_EOF;
