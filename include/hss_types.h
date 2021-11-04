@@ -39,12 +39,33 @@ extern "C" {
 #endif
 
 #include <stddef.h>     // ptrdiff_t
+/*
+ * We'll use the same trick as used by Linux for its Kconfig options...
+ *
+ * With variable arguments to our macro, if our config option is defined, it will cause
+ * the insertion of "0, " as a prefix the arguments to ___IS_ENABLED(CONFIG_), which will
+ * then cause __IS_ENABLED(CONFIG_) itself to resolve to 1, otherwise 0
+ *
+ */
+#define _ARG_SHUFFLE_RIGHT_IF_1                 0,
+#define IS_ENABLED(cfg)                         _IS_ENABLED(cfg)
+#define _IS_ENABLED(val)                        __IS_ENABLED(_ARG_SHUFFLE_RIGHT_IF_##val)
+#define __IS_ENABLED(shuffle_or_blank)          ___IS_ENABLED(shuffle_or_blank 1, 0)
+#define ___IS_ENABLED(ignored, desiredVal, ...) desiredVal
+
+#define ARRAY_SIZE(x)		(sizeof(x)/sizeof(x[0]))
+
+#define mHSS_BOOT_MAGIC		(0xB007C0DEu)
+#define mHSS_COMPRESSED_MAGIC	(0xC08B8355u)
+
 #ifndef CONFIG_OPENSBI
+#  define MIN(A,B)		((A) < (B) ? A : B)
+#  define likely(x)		__builtin_expect((x), 1)
+#  define unlikely(x)		__builtin_expect((x), 0)
 #  ifndef __ssize_t_defined
 #    define __ssize_t_defined
        typedef long			ssize_t;
 #  endif
-
 #  include <sys/types.h>  // for size_t
 #  include <stdbool.h> // for bool, true, false
 #  include <stdint.h>
@@ -122,6 +143,11 @@ struct HSS_BootZIChunkDesc {
  */
 #define BOOT_IMAGE_MAX_NAME_LEN (256)
 
+struct HSS_Signature {
+    uint8_t digest[48];     // SHA384
+    uint8_t ecdsaSig[96]; // SECP384R1
+};
+
 #pragma pack(8)
 struct HSS_BootImage {
     uint32_t magic;
@@ -141,8 +167,9 @@ struct HSS_BootImage {
     } hart[MAX_NUM_HARTS-1]; // E51 is not counted, only U54s
     char set_name[BOOT_IMAGE_MAX_NAME_LEN];
     size_t bootImageLength;
-    uint8_t hash[32];
-    uint8_t ecdsaSig[32];
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+    struct HSS_Signature signature;
+#endif
 };
 
 
@@ -160,36 +187,13 @@ struct HSS_CompressedImage {
     uint32_t originalCrc;
     size_t compressedImageLen;
     size_t originalImageLen;
-    uint8_t hash[32];
-    uint8_t ecdsaSig[32];
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+    struct HSS_Signature signature;
+#endif
 };
 
 #define mHSS_COMPRESSED_VERSION_DEFLATE  1u
 
-/*
- * We'll use the same trick as used by Linux for its Kconfig options...
- *
- * With variable arguments to our macro, if our config option is defined, it will cause
- * the insertion of "0, " as a prefix the arguments to ___IS_ENABLED(CONFIG_), which will
- * then cause __IS_ENABLED(CONFIG_) itself to resolve to 1, otherwise 0
- *
- */
-#define _ARG_SHUFFLE_RIGHT_IF_1                 0,
-#define IS_ENABLED(cfg)                         _IS_ENABLED(cfg)
-#define _IS_ENABLED(val)                        __IS_ENABLED(_ARG_SHUFFLE_RIGHT_IF_##val)
-#define __IS_ENABLED(shuffle_or_blank)          ___IS_ENABLED(shuffle_or_blank 1, 0)
-#define ___IS_ENABLED(ignored, desiredVal, ...) desiredVal
-
-#define ARRAY_SIZE(x)		(sizeof(x)/sizeof(x[0]))
-
-#define mHSS_BOOT_MAGIC		(0xB007C0DEu)
-#define mHSS_COMPRESSED_MAGIC	(0xC08B8355u)
-
-#ifndef CONFIG_OPENSBI
-#  define MIN(A,B)		((A) < (B) ? A : B)
-#  define likely(x)		__builtin_expect((x), 1)
-#  define unlikely(x)		__builtin_expect((x), 0)
-#endif
 
 #ifdef __cplusplus
 }

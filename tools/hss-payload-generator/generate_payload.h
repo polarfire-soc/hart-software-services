@@ -34,7 +34,7 @@
 
 #include "hss_types.h"
 
-void generate_payload(char const * const filename_output);
+void generate_payload(char const * const filename_output, char const * const private_key_filename);
 void generate_init(void);
 
 size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *buffer) __attribute__((nonnull));

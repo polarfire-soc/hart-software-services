@@ -29,6 +29,8 @@
 SRCS-$(CONFIG_SERVICE_CRYPTO) += \
 	services/crypto/crypto_service.c \
 	services/crypto/crypto_api.c \
+
+SRCS-$(CONFIG_CRYPTO_USER_CRYPTO) += \
 	services/crypto/athena_cal_stub.c \
 
 INCLUDES +=\

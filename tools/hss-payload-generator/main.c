@@ -30,6 +30,9 @@
 #include <stdbool.h>
 #include <getopt.h>
 
+#ifndef CONFIG_CRYPTO_SIGNING
+#	define CONFIG_CRYPTO_SIGNING
+#endif
 #include "hss_types.h"
 #include "blob_handler.h"
 #include "elf_parser.h"
@@ -59,12 +62,13 @@ static void intro_banner(void)
 
 static void print_usage(char **argv)
 {
-	printf("Usage: %s [-v] [-w] [-h] [[-c <configfile.yaml> <output.bin>] [-n <override-set-name>]] [-d <output.bin>]\n\n", argv[0]);
+	printf("Usage: %s [-v] [-w] [-h] [[-c <configfile.yaml> <output.bin>] [-p <private-key.pem>] ] [-d <output.bin>]\n\n", argv[0]);
 	printf("\nMultiple '-v' arguments increases verbosity of output.\n\n");
 
 	printf(" -c		Run generator and specify path to configuration YAML\n");
 	printf(" -d		Run analyzer and specifiy path to payload binary\n");
 	printf(" -h		print this help\n");
+	printf(" -p		enabled secure boot and specify private key\n");
 	printf(" -v		Increase verbosity of output\n");
 	printf(" -w		Extra-wide output (used with verbosity)\n\n");
 
@@ -86,7 +90,8 @@ int main(int argc, char **argv)
 	int opt;
 	char *config_filename = NULL;
 	char *dump_payload_filename = NULL;
-	while ((opt = getopt(argc, argv, (const char *)"c:d:hvw")) != -1) {
+	char *private_key_filename = NULL;
+	while ((opt = getopt(argc, argv, (const char *)"c:d:hp:vw")) != -1) {
 		switch (opt) {
 		case 'c':
 			config_filename = optarg;
@@ -99,6 +104,10 @@ int main(int argc, char **argv)
 		case 'h':
 			print_usage(argv);
 			exit(EXIT_SUCCESS);
+			break;
+
+		case 'p':
+			private_key_filename = optarg;
 			break;
 
 		case 'v':
@@ -125,7 +134,7 @@ int main(int argc, char **argv)
 	//
 	if ((config_filename) && (argc > optind)) {
 		yaml_parser(config_filename);
-		generate_payload(argv[optind]);
+		generate_payload(argv[optind], private_key_filename);
 	} else if (dump_payload_filename) {
 		dump_payload(dump_payload_filename);
 	} else {

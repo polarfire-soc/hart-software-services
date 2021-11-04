@@ -41,7 +41,6 @@
 #include "generate_payload.h"
 
 #include "debug_printf.h"
-#include "hss_types.h"
 
 
 #define ARRAY_SIZE(x)		(sizeof(x)/sizeof(x[0]))

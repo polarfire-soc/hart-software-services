@@ -31,6 +31,9 @@ SRCS-$(CONFIG_SERVICE_BOOT) += \
 	services/boot/hss_boot_pmp.c \
 	services/boot/gpt.c \
 
+SRCS-$(CONFIG_CRYPTO_SIGNING) += \
+	services/boot/hss_boot_secure.c \
+
 INCLUDES +=\
 	-I./services/boot \
 

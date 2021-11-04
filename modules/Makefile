@@ -28,6 +28,7 @@
 
 
 include modules/compression/Makefile
+include modules/crypto/Makefile
 include modules/debug/Makefile
 include modules/misc/Makefile
 include modules/ssmb/Makefile

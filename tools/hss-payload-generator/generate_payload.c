@@ -34,8 +34,13 @@
 #include <assert.h>
 #include <libgen.h>
 #include "crc32.h"
-#include "generate_payload.h"
 #include "debug_printf.h"
+
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/pem.h>
+#include <openssl/obj_mac.h>
+#include <openssl/sha.h>
 
 static_assert(sizeof(void *)==8, "Fatal: this program requires a 64bit compiler");
 
@@ -56,10 +61,14 @@ static_assert(sizeof(void *)==8, "Fatal: this program requires a 64bit compiler"
 #endif
 
 #ifndef CONFIG_CC_HAS_INTTYPES
-#	define CONFIG_CC_HAS_INTTYPES
+#	define CONFIG_CC_HAS_INTTYPES 1
+#endif
+#ifndef CONFIG_CRYPTO_SIGNING
+#	define CONFIG_CRYPTO_SIGNING 1
 #endif
 
 #include "hss_types.h"
+#include "generate_payload.h"
 
 #ifdef __riscv
 #	error 1
@@ -313,10 +322,9 @@ static void generate_blobs(FILE *pFileOut)
 	assert(pFileOut);
 }
 
-void generate_payload(char const * const filename_output)
+void generate_payload(char const * const filename_output, char const * const private_key_filename)
 {
 	assert(filename_output);
-
 	printf("Output filename is >>%s<<\n", filename_output);
 
 	FILE *pFileOut = fopen(filename_output, "w+");
@@ -339,6 +347,91 @@ void generate_payload(char const * const filename_output)
 
     	bootImage.headerCrc =
 		CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
+
+	if (private_key_filename) {
+		//
+		// first compute the SHA384 hash digest of the entire boot image
+		//
+		assert(ARRAY_SIZE(bootImage.signature.digest) == SHA384_DIGEST_LENGTH);
+		uint8_t digest[SHA384_DIGEST_LENGTH];
+
+		// read in entire payload to calculate signature...
+		uint8_t *pEntirePayloadBuffer = malloc(bootImage.bootImageLength);
+		assert(pEntirePayloadBuffer != NULL);
+
+		if (fseek(pFileOut, 0, SEEK_SET) != 0) {
+			perror("fseek()");
+			exit(EXIT_SUCCESS);
+		}
+
+		size_t fileSize = fread((void *)pEntirePayloadBuffer, 1u, bootImage.bootImageLength, pFileOut);
+		assert(fileSize == bootImage.bootImageLength);
+
+		SHA384(pEntirePayloadBuffer, bootImage.bootImageLength, (uint8_t *)&digest[0]);
+                memcpy(bootImage.signature.digest, digest, SHA384_DIGEST_LENGTH);
+		free(pEntirePayloadBuffer);
+
+		{
+			char *hexString = OPENSSL_buf2hexstr(&digest[0], SHA384_DIGEST_LENGTH);
+			debug_printf(5, "SHA384: %s\n", hexString);
+			OPENSSL_free(hexString);
+		}
+
+		//
+		// now compute the ECDSA P-384 signature
+		//
+		EC_KEY *pEcKey = NULL;
+		EVP_PKEY *pPrivKey = NULL;
+
+		// read in the private key, and convert to an EC key
+		FILE *privKeyFileIn = fopen(private_key_filename, "r");
+		assert(privKeyFileIn != NULL);
+
+		EVP_PKEY *pkey_result = PEM_read_PrivateKey(privKeyFileIn, &pPrivKey, NULL /* pasword callback*/, NULL /* parameter to callback or password if callback is NULL */);
+		assert(pkey_result != NULL);
+
+		pEcKey = EVP_PKEY_get1_EC_KEY(pPrivKey);
+		EC_KEY_check_key(pEcKey);
+
+		// validate that the key is indeed SECP384r1
+		const EC_GROUP *pTestGroup = EC_KEY_get0_group(pEcKey);
+		int flags = EC_GROUP_get_asn1_flag(pTestGroup);
+		assert(flags & OPENSSL_EC_NAMED_CURVE);
+		assert(NID_secp384r1 == EC_GROUP_get_curve_name(pTestGroup));
+
+		// create the signature
+		ECDSA_SIG *pSignature = ECDSA_do_sign(digest, ARRAY_SIZE(digest), pEcKey);
+		assert(pSignature != NULL);
+
+		// the signature is in an opaque ECDSA_SIG structure, which contains two
+		// BIGNUMs, r and s.  These are max half the curve size in bytes
+		// => 384 / (8*2) = 48 bytes each... but they may be less, and need to be
+		// zero padded, so extract separately...
+		const BIGNUM *pR = NULL;
+		const BIGNUM *pS = NULL;
+		ECDSA_SIG_get0(pSignature, &pR, &pS);
+
+		const int rBytes = BN_num_bytes(pR);
+		const int sBytes = BN_num_bytes(pS);
+		uint8_t signatureBuffer[96] = { 0u, };
+		BN_bn2bin(pR, signatureBuffer + 48 - rBytes);
+		BN_bn2bin(pS, signatureBuffer + 96 - sBytes);
+
+		// new clean-up...
+		EC_KEY_free(pEcKey);
+		EVP_PKEY_free(pPrivKey);
+		ECDSA_SIG_free(pSignature);
+
+		// copy the signature to the boot image header...
+		memcpy(bootImage.signature.ecdsaSig, signatureBuffer, 96);
+
+		{
+			char *hexString = OPENSSL_buf2hexstr(&signatureBuffer[0], ARRAY_SIZE(signatureBuffer));
+			debug_printf(5, "P-384 Signature: %s\n", hexString);
+			OPENSSL_free(hexString);
+		}
+	}
+
 	generate_header(pFileOut, &bootImage); // rewrite header...
 
 	if (fclose(pFileOut) != 0) {

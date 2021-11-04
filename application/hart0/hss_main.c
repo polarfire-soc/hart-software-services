@@ -32,6 +32,7 @@
 
 #include "config.h"
 #include "hss_types.h"
+#include "hss_debug.h"
 
 #include <assert.h>
 
@@ -43,11 +44,17 @@
 #include "hss_init.h"
 #include "hss_registry.h"
 
-#include "wdog_service.h"
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#  include "wdog_service.h"
+#endif
 
 #include "csr_helper.h"
 
 #include <string.h>
+
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+#  include "hss_crypto.h"
+#endif
 
 /******************************************************************************************/
 

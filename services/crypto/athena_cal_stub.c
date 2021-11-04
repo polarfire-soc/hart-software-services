@@ -1,5 +1,8 @@
-#include "athena_cal.h"
 #include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "athena_cal.h"
+
 
 // General Functions
 SATR CALIni(void) {

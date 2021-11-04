@@ -19,6 +19,12 @@ To print diagnostics about a pre-existing image, use `-d`:
 
     $ ./hss-payload-generator -d output.bin
 
+To enable secure boot authentication (via image signing), use `-p` to specify the location of an X.509 Private Key for the Elliptic Curve P-384 (SECP384r1):
+
+    $ ./hss-payload-generator -c test/config.yaml payload.bin -p /path/to/private.pem
+
+See the documentation on secure boot authentication for more details.
+
 ## Config File example
 
 First, we can optionally set a name for our image, otherwise one will be created dynamically:
@@ -77,6 +83,7 @@ Here is another example, this time of a bare metal SMP application that doesn't 
     hart-entry-points: {u54_1: '0x80000000', u54_2: '0x80000000', u54_3: '0x80000000', u54_4: '0x80000000'}
     payloads:
       path/to/smp-baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_m, skip-opensbi: true}
+
 ## File Structure
 
 ````
@@ -106,7 +113,7 @@ Here is another example, this time of a bare metal SMP application that doesn't 
 
 ## Dependencies
 
-This software uses libelf and libyaml, as well as zlib (a dependency of libelf).
+This software uses libelf and libyaml, as well as zlib (a dependency of libelf) and libcryto (OpenSSL).
 
 ### libelf
 
@@ -128,15 +135,21 @@ zlib is a library implementing the deflate compression method found in gzip and 
 
 **Homepage:** [http://zlib.net/](http://zlib.net/)
 
+### OpenSSL
+
+OpenSSL is a robust, commercial-grade, full-featured toolkit for general-purpose cryptography and secure communication.
+
+**Homepage:** [https://www.openssl.org/](https://www.openssl.org/)
+
 ### Installing Dependencies
 
 To install libyaml-dev and libelf-dev in Ubuntu, use:
 
-    $ apt install libyaml-dev libelf-dev zlib1g-dev
+    $ apt install libyaml-dev libelf-dev zlib1g-dev libssl-dev
 
 To install libyaml and libelf in MSYS2, use:
 
-    $ pacman -S libyaml libyaml-devel libelf libelf-devel zlib zlib-devel
+    $ pacman -S libyaml libyaml-devel libelf libelf-devel zlib zlib-devel openssl-devel
 
 ## Verbosity (for Developers Only)
 

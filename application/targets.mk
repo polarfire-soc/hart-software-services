@@ -99,6 +99,7 @@ clean: envm-wrapper_clean
 	$(RM) *.gcov
 	$(RM) *.lss *.hex *.sym
 	$(RM) $(BINDIR)/hss* $(BINDIR)/output.map
+	$(RM) x509-ec-secp384r1-public.h
 
 distclean:
 	$(RM) $(OBJS) $(TARGET) cppcheck.log splint.log valgrind.log \

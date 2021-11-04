@@ -59,6 +59,7 @@ LIBS=\
 	-lyaml \
 	-lelf \
 	-lz \
+	-lcrypto \
 
 SRCS=\
 	main.c \
@@ -94,7 +95,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@$(ECHO) " LD        $@";
-	$(CC) $(CFLAGS) $(LDFLAGS) -static -o $@ $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 README.docx: README.md
 	pandoc -o README.docx README.md

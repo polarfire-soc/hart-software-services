@@ -34,9 +34,6 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stdbool.h>
-
 typedef enum {
     SATASYMKEYTYPE_NULL,
     SATASYMKEYTYPE_RSA_PUBLIC,
@@ -158,6 +155,10 @@ typedef uint64_t SATUINT64_t;
 
 typedef void * DRBGCTXPTR;
 
+#define SAT_TRUE true
+#define SAT_FALSE false
+
+#define SAT_NULL 0
 
 // General Functions
 SATR CALIni(void);

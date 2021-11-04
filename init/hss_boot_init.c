@@ -59,6 +59,10 @@
 #  include "hss_decompress.h"
 #endif
 
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+#  include "hss_boot_secure.h"
+#endif
+
 #include "hss_boot_pmp.h"
 #include "hss_atomic.h"
 
@@ -152,7 +156,7 @@ bool HSS_BootInit(void)
 #  endif
 
     //
-    // now have a Boot Image, let's check it is a valid one...
+    // now have a Full Boot Image, let's check it is a valid one...
     //
     {
         if (!pBootImage) {
@@ -161,6 +165,11 @@ bool HSS_BootInit(void)
         } else if (pBootImage->magic != mHSS_BOOT_MAGIC) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
             result = false;
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+        } else if (!HSS_Boot_Secure_CheckCodeSigning(pBootImage)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing" CRLF);
+            result = false;
+#endif
         } else if (validateCrc_(pBootImage)) {
             mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");

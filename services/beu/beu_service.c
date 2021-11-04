@@ -107,18 +107,18 @@ char const * const BEU_Event_Name[] = {
     [BEU_EVENT_DATA_CACHE_UNCORRECTABLE] = "Data cache uncorrectable ECC error"
 };
 
-const uint64_t BEU_ENABLE_MASK = (BIT(BEU_EVENT_ITIM_CORRECTABLE) | 
-    BIT(BEU_EVENT_ITIM_UNCORRECTABLE) | 
+const uint64_t BEU_ENABLE_MASK = (BIT(BEU_EVENT_ITIM_CORRECTABLE) |
+    BIT(BEU_EVENT_ITIM_UNCORRECTABLE) |
     BIT(BEU_EVENT_TILELINK_BUS_ERROR) |
-    BIT(BEU_EVENT_DATA_CACHE_CORRECTABLE) | 
+    BIT(BEU_EVENT_DATA_CACHE_CORRECTABLE) |
     BIT(BEU_EVENT_DATA_CACHE_UNCORRECTABLE));
 
-const uint64_t BEU_ENABLE_UNCORRECTABLE_MASK = (BIT(BEU_EVENT_ITIM_UNCORRECTABLE) | 
+const uint64_t BEU_ENABLE_UNCORRECTABLE_MASK = (BIT(BEU_EVENT_ITIM_UNCORRECTABLE) |
     BIT(BEU_EVENT_DATA_CACHE_UNCORRECTABLE));
 
 static struct {
   const enum BEU_Event_Cause bit_position;
-  char const * const pName; 
+  char const * const pName;
   size_t counter;
 } beu_stats_[] = {
   { BEU_EVENT_ITIM_CORRECTABLE, BEU_Event_Name[BEU_EVENT_ITIM_CORRECTABLE], 0llu },
@@ -162,7 +162,7 @@ static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
                 }
 
                 // hart has experienced fatal error, so stop checking for BEU errors for this hart...
-                BEU->regs[hartid].ENABLE = 0llu; 
+                BEU->regs[hartid].ENABLE = 0llu;
             } else {
                 (void)(shadow_accrued_[hartid]); // reference to avoid compiler warning...
             }

@@ -119,7 +119,7 @@ define main-build-target
 	$(CC) -T $(LINKER_SCRIPT-$(1)) $(CFLAGS_GCCEXT) $(OPT-y) \
 		 -static -nostdlib -nostartfiles -nodefaultlibs \
 		 -Wl,--build-id -Wl,-Map=$(BINDIR)/output-$(1).map -Wl,--gc-sections \
-		 -o $(BINDIR)/$@ $(OBJS-$(1)) $(EXTRA_OBJS-$(1)) $(LIBS)
+		 -o $(BINDIR)/$@ $(OBJS-$(1)) $(EXTRA_OBJS-$(1)) $(LIBS) $(LIBS-y)
 	$(ECHO) " NM        `basename $@ .elf`.sym";
 	$(NM) -n $(BINDIR)/$@ > $(BINDIR)/`basename $@ .elf`.sym
 endef
@@ -136,7 +136,7 @@ $(TARGET-envm): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-
 	$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm) 2>/dev/null
 
-$(TARGET-l2lim): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2lim) $(LIBS)
+$(TARGET-l2lim): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2lim) $(LIBS) $(LIBS-y)
 	$(call main-build-target,l2lim)
 	$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin

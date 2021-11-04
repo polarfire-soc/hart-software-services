@@ -1,0 +1,52 @@
+menu "Crypto"
+
+config CRYPTO_SIGNING
+	bool "Cryptographic Signing support"
+        depends on SERVICE_BOOT
+	default y
+	help
+		This feature enables support for signing of boot images
+
+		If you don't know what to do here, say Y.
+
+menu "Signing Configuration"
+        visible if CRYPTO_SIGNING
+
+config CRYPTO_SIGNING_KEY_PUBLIC
+        depends on CRYPTO_SIGNING
+	string "Enter path to X.509 DER Public Key"
+	help
+		This option specifies the ECC SECP384R1 public key (DER binary format) to use.
+choice
+	prompt "Crypto Library"
+	default CRYPTO_LIBECC
+
+config CRYPTO_LIBECC
+	bool "libecc (SHA2 and ECDSA P-384)"
+	depends on CRYPTO_SIGNING
+	help
+		This feature enables support for the libecc library for SHA2 hashing
+                and ECDSA P-384 code signing.
+
+config CRYPTO_USER_CRYPTO
+	bool "User Crypto (SHA2 and ECDSA P-384)"
+	depends on CRYPTO_SIGNING
+	help
+		This feature enables support for the UserCrypto core for SHA384 hashing
+                and ECDSA P-384 code signing.
+endchoice
+
+choice
+	prompt "Hash"
+	default CRYPTO_SHA384
+
+config CRYPTO_SHA384
+	bool "SHA384"
+	depends on CRYPTO_SIGNING
+	help
+		This feature enables SHA384 as the Hash Function for code signing.
+
+endchoice
+
+endmenu
+endmenu

@@ -214,9 +214,7 @@ __attribute__((weak)) int strncmp(const char *s1, const char *s2, size_t n)
     assert(s2);
 
     for (size_t i = 0u; i < n; i++) {
-        if ((*s1 == '\0') || (*s2 == '\0')) {
-            break;
-        } else if (*s1 < *s2) {
+        if (*s1 < *s2) {
             result = -1;
             break;
         } else if (*s1 > *s2) {
