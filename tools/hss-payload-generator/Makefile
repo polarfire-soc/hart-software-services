@@ -36,10 +36,9 @@ else
 .SILENT:
 endif
 
-ifdef O
-	build_dir=$(O)
-else
-	build_dir=$(CURDIR)
+build_dir?=$(CURDIR)
+ifneq ($(O),)
+	build_dir:=$(O)
 endif
 
 CFLAGS= -g3 -ggdb -std=gnu11 -O3 \
