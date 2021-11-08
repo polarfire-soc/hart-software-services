@@ -81,6 +81,10 @@
 #  include "wdog_service.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+#  include "beu_service.h"
+#endif
+
 #include "hss_debug.h"
 #include "hss_registry.h"
 
@@ -235,6 +239,9 @@ struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
     &scrub_service,
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+    &beu_service,
 #endif
 };
 const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
