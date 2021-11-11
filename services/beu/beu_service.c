@@ -170,6 +170,7 @@ static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
             for (size_t i = 0u; i < ARRAY_SIZE(beu_stats_); i++) {
                 if (accrued & BIT(beu_stats_[i].bit_position)) {
                     beu_stats_[i].counter++;
+                    BEU->regs[hartid].ACCRUED &= ~(BIT(beu_stats_[i].bit_position));
                 }
             }
 
