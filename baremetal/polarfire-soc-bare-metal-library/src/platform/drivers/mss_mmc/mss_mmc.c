@@ -1288,9 +1288,14 @@ uint8_t  mmc_main_plic_IRQHandler(void)
         address = (uint32_t)address64;
         highaddr = (uint32_t)(address64 >> MMC_64BIT_UPPER_ADDR_SHIFT);
 
+        /**
+         * Clear interrupt flag here, in order to prevent masking the next
+         * interrupt that might be triggered when the SDMA is restarting (by
+         * writing in address register)
+         */
+        MMC->SRS12 = SRS12_DMA_INTERRUPT;
         MMC->SRS22 = address;
         MMC->SRS23 = highaddr;
-        MMC->SRS12 = SRS12_DMA_INTERRUPT;
     }
     else if ((trans_status_isr & SRS12_CMD_QUEUING_INT) != MMC_CLEAR)
     {
