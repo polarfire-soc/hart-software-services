@@ -61,7 +61,7 @@ menu "SDIO Control"
 config SERVICE_SDIO_REGISTER_PRESENT
 	bool "SDIO register present"
 	default n
-        depends on SERVICE_MMC_MODE_SDCARD && SERVICE_MMC_MODE_EMMC
+        depends on SERVICE_MMC_MODE_SDCARD || SERVICE_MMC_MODE_EMMC
 	help
                 This feature will enable the use of a register in the FPGA fabric for SDIO control.
 
@@ -70,7 +70,7 @@ config SERVICE_SDIO_REGISTER_PRESENT
 config SERVICE_SDIO_REGISTER_ADDRESS
 	hex "Memory mapped address of SDIO register"
 	default 0x4f000000
-	depends on SERVICE_MMC_MODE_SDCARD && SERVICE_MMC_MODE_EMMC && SERVICE_SDIO_REGISTER_PRESENT
+	depends on SERVICE_SDIO_REGISTER_PRESENT
         help
                 This value represents the memory mapped address of a register in the FPGA fabric.
                 This register is used to select between eMMC and SD card when a de-mux is present on a board.
