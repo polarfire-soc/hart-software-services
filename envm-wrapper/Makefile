@@ -52,13 +52,21 @@ COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2lim:.elf=.bin.deflate)
 envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) 
 thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
 
+define common-boot-mode-programmer
+	-$(RM) -r $(BINDIR)/bootmode1
+	[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
+	[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
+	$(SC_INSTALL_DIR)/eclipse/jre/bin/java -jar $(SC_INSTALL_DIR)/extras/mpfs/mpfsBootmodeProgrammer.jar --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(1) # $(2)
+endef
+
 $(TARGET-envm-wrapper): LIBS:=
 $(TARGET-envm-wrapper): $(COMPRESSED_TARGET) $(OBJS-envm-wrapper)
 	$(call main-build-target,envm-wrapper)
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
-	$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
+	$(call common-boot-mode-programmer,--dryrun,`pwd`/Default/$@)
+	@$(CP) $(BINDIR)/bootmode1/hss-envm-wrapper-bm1-p0.hex $(BINDIR)/`basename $@ .elf`.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm-wrapper) 2>/dev/null
 
 $(COMPRESSED_TARGET): $(BINDIR)/$(TARGET-l2lim:.elf=.bin) $(COMPRESS)
@@ -76,11 +84,8 @@ BIN_FILE-envm-wrapper: $(TARGET-envm-wrapper)
 BOOTMODE?=1
 PACKAGE?=FCVG484
 DIE?=MPFS250T_ES
-FPGENPROG?=/opt/microsemi/Libero_SoC_v12.6/Libero/bin64/fpgenprog
+FPGENPROG?=/opt/microsemi/Libero_SoC_v2021.2/Libero/bin64/fpgenprog
 FPGENPROG:=$(FPGENPROG:_bin=)
 
 program: $(BIN_FILE-envm-wrapper)
-	-$(RM) -r $(BINDIR)/bootmode1
-	[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
-	[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
-	$(SC_INSTALL_DIR)/eclipse/jre/bin/java -jar $(SC_INSTALL_DIR)/extras/mpfs/mpfsBootmodeProgrammer.jar --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE)
+	$(call common-boot-mode-programmer,--verify,$(TARGET-envm-wrapper))

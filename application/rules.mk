@@ -175,10 +175,10 @@ endif
 	$(ECHO) " CC        $@"
 	$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -D__ASSEMBLY__=1 -c -o $@ $<
 
-%.hex: %.elf
-	$(ECHO) " HEX       $@"
-	$(OBJCOPY) -O ihex $< $@
-	$(OBJCOPY) -O ihex $< Default/$@
+#%.hex: %.elf
+#	$(ECHO) " HEX       $@"
+#	$(OBJCOPY) -O ihex $< $@
+#	$(OBJCOPY) -O ihex $< Default/$@
 
 %.lss: %.elf
 	$(ECHO) " LSS       $@"
