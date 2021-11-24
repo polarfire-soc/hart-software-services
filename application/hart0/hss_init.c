@@ -59,7 +59,7 @@
 
 #define mMEM_SIZE(REGION)      (REGION##_END - REGION##_START + 1u)
 extern const uint64_t __dtim_start,    __dtim_end;
-extern const uint64_t __l2lim_start;
+extern const uint64_t __l2_start;
 extern const uint64_t __ddr_start,        __ddr_end;
 extern const uint64_t _hss_start;
 
@@ -81,11 +81,8 @@ extern const uint64_t _hss_start;
 #define U54_4_ITIM_START       (&__u54_4_itim_start)
 #define U54_4_ITIM_END         (&__u54_4_itim_end)
 
-#define L2LIM_START            (&__l2lim_start)
-#define L2LIM_END              (&__l2lim_end)
-
-#define L2_ZERO_DEVICE_START   0x0A000000u
-#define L2_ZERO_DEVICE_END     0x0BFFFFFFu
+#define L2_START               (&__l2_start)
+#define L2_END                 (&__l2_end)
 
 #define DDR_START              (&__ddr_start)
 // can't access DDR_END without getting an error:
@@ -219,8 +216,8 @@ bool HSS_E51_Banner(void)
     HSS_PrintToolVersions();
 #endif
 
-    if (&_hss_start == &__l2lim_start) {
-        mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2LIM" CRLF CRLF);
+    if (&_hss_start == &__l2_start) {
+        mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2 Scratchpad" CRLF CRLF);
     }
 
     return true;

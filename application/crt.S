@@ -410,11 +410,6 @@ init_memory:
         la	a2, __data_end
 	call	copy_section
 
-        la	a0, __l2_scratchpad_load
-        la	a1, __l2_scratchpad_start
-        la	a2, __l2_scratchpad_end
-	call	copy_section
-
         //
         // Clear zero-init memory
         //  (SBSS and BSS sections)

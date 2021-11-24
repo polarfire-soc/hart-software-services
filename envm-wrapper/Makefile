@@ -51,6 +51,7 @@ COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2lim:.elf=.bin.deflate)
 
 envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) 
 thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
+envm-wrapper/envm-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 define common-boot-mode-programmer
 	-$(RM) -r $(BINDIR)/bootmode1

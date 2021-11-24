@@ -113,14 +113,12 @@ _start:
         j	.decompress_done
 
 .e51_decompress:
+	call	config_l2_cache
         call	.clear_dtim
         call	.clear_l2lim
+        call	.clear_l2scratchpad
 	call	init_memory
 	call	HSS_Setup_Clocks
-
-	#ebreak
-	#call	config_l2_cache_ex				# setup L2Cache
-	#ebreak
 
 	la	a0, hss_l2lim_lz				# compressed image header
 	lw	a1, OFFSET_OF(HSS_CompressedImage, version)(a0)	# version
@@ -143,7 +141,7 @@ _start:
 	REG_S	a0, 0(a1)
 
 	# a0 => pointer to destination (where to decompress to)
-	la	a0, __l2lim_start		# destination
+	la	a0, __l2_start		# destination
 	call 	mz_uncompress
 	j	.clear_progress
 
@@ -238,10 +236,12 @@ init_memory:
         la	a2, __data_end
 	call	copy_section
 
+/*
         la	a0, __l2_scratchpad_load
         la	a1, __l2_scratchpad_start
         la	a2, __l2_scratchpad_end
 	call	copy_section
+*/
 
         //
         // Clear zero-init memory
@@ -289,12 +289,23 @@ config_copy:
  *
  */
 
+.clear_l2scratchpad:
+	// Clear the LIM
+	//
+	// On reset, the first 15 ways are L2 and the last way is cache
+	// We can initialize all, as cache write through to DDR is blocked
+	// until DDR is initialized, so will have no effect other than clear ECC
+	//
+	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
+	la	a4, __l2_start
+	la	a5, __l2_end
+	j	1f
 .clear_l2lim:
 	// Clear the LIM
 	//
 	// On reset, the first 15 ways are L2 and the last way is cache
 	// We can initialize all, as cache write through to DDR is blocked
-	// until DDR in initialized, so will have no effect other than clear ECC
+	// until DDR is initialized, so will have no effect other than clear ECC
 	//
 	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
 	//

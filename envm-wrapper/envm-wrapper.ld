@@ -71,8 +71,6 @@ MEMORY
     u54_3_itim (rwx) :	ORIGIN = 0x01818000,	LENGTH = 28k
     u54_4_itim (rwx) :	ORIGIN = 0x01820000,	LENGTH = 28k
     l2lim (rwx) :	ORIGIN = 0x08000000,	LENGTH = (1920k-144k)
-    l2lim_stack (rwx) :	ORIGIN = 0x081BC000,	LENGTH = 80k
-    l2lim_heap (rwx) :	ORIGIN = 0x081D0000,	LENGTH = 64k
     l2zerodevice (rwx) :ORIGIN = 0x0A000000,	LENGTH = 512k
     ddr (rwx) :		ORIGIN = 0x80000000,	LENGTH = 1024m
     ddrhi (rwx) :	ORIGIN = 0x1400000000,	LENGTH = 1024m
@@ -84,6 +82,8 @@ SECTIONS
     PROVIDE(__envm_end =		ORIGIN(envm)		+ LENGTH(envm));
     PROVIDE(__l2lim_start =		ORIGIN(l2lim));
     PROVIDE(__l2lim_end =		ORIGIN(l2lim)		+ LENGTH(l2lim));
+    PROVIDE(__l2_start =		ORIGIN(l2zerodevice));
+    PROVIDE(__l2_end =			ORIGIN(l2zerodevice)	+ LENGTH(l2zerodevice));
     PROVIDE(__ddr_start =		ORIGIN(ddr));
     PROVIDE(__ddr_end =			ORIGIN(ddr)		+ LENGTH(ddr));
     PROVIDE(__ddrhi_start =		ORIGIN(ddrhi));
@@ -100,12 +100,9 @@ SECTIONS
     PROVIDE(__u54_3_itim_end =		ORIGIN(u54_3_itim)	+ LENGTH(u54_3_itim));
     PROVIDE(__u54_4_itim_start =	ORIGIN(u54_4_itim));
     PROVIDE(__u54_4_itim_end =		ORIGIN(u54_4_itim)	+ LENGTH(u54_4_itim));
-    PROVIDE(__l2lim_start =		ORIGIN(l2lim));
-    PROVIDE(__l2lim_end =		ORIGIN(l2lim)		+ LENGTH(l2lim));
-    PROVIDE(_hss_start = 		__l2lim_start);
-
-    PROVIDE(__l2lim_heap_base =		ORIGIN(l2lim_heap));
-    PROVIDE(__l2lim_heap_end  =		ORIGIN(l2lim_heap)	+ LENGTH(l2lim_heap));
+    PROVIDE(_hss_start = 		ORIGIN(l2zerodevice));
+    PROVIDE(__l2_scratchpad_vma_start = ORIGIN(l2zerodevice));
+    PROVIDE(__l2_scratchpad_vma_end =   ORIGIN(l2zerodevice)	+ LENGTH(l2zerodevice));
 
     . = __envm_start;
 
@@ -153,16 +150,6 @@ SECTIONS
     } >envm
 
     PROVIDE(_hss_end = .);
-    .l2_scratchpad : ALIGN(0x10)
-    {
-        __l2_scratchpad_load = LOADADDR(.l2_scratchpad);
-        __l2_scratchpad_start = .;
-        __l2_scratchpad_vma_start = .;
-        *(.l2_scratchpad)
-        . = ALIGN(0x10);
-        __l2_scratchpad_end = .;
-        __l2_scratchpad_vma_end = .;
-    } >l2lim AT>envm
 
     .sdata : ALIGN(0x40)
     {
@@ -184,6 +171,7 @@ SECTIONS
         . = ALIGN(0x10);
         __data_end = .;
     } >dtim AT>envm
+    _end = .;
 
     .sbss : ALIGN(0x40)
     {
@@ -223,7 +211,14 @@ SECTIONS
         . += STACK_SIZE_PER_HART;
         __stack_top_h4$ = . - 8;
         __stack_top = . - 8;
-    } >l2lim_stack
+    } >l2lim
 
-    _end = .;
+   .heap : ALIGN(0x40)
+    {
+        PROVIDE(__l2lim_heap_base = .);
+        . += HEAP_SIZE;
+    } >l2lim
+    PROVIDE(__l2lim_heap_end  =.);
+
+    PROVIDE(_hss_end = .);
 }

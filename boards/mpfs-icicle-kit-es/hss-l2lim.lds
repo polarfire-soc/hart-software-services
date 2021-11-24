@@ -122,6 +122,9 @@ SECTIONS
     PROVIDE(__l2lim_start      = ORIGIN(l2lim));
     PROVIDE(__l2lim_end        = ORIGIN(l2lim) + LENGTH(l2lim));
 
+    PROVIDE(__l2_start         = ORIGIN(l2zerodevice));
+    PROVIDE(__l2_end           = ORIGIN(l2zerodevice) + LENGTH(l2zerodevice));
+
     PROVIDE(__ddr_start        = ORIGIN(ddr));
     PROVIDE(__ddr_end          = ORIGIN(ddr) + LENGTH(ddr));
 
@@ -149,9 +152,10 @@ SECTIONS
     /*
      * Code and RO data lives in l2lim
      */
-    . = __l2lim_start;
+    . = __l2_start;
 
     PROVIDE(_hss_start = .);
+    PROVIDE(__l2_scratchpad_vma_start = .);
 
     .text : ALIGN(0x10)
     {
@@ -193,27 +197,14 @@ SECTIONS
         KEEP (*(SORT(.fini_array.*)))
         PROVIDE_HIDDEN (__fini_array_end = .);
         . = ALIGN(0x10);
-    } >l2lim
+    } >l2zerodevice
 
     .gnu_build_id : ALIGN(8) {
         PROVIDE(gnu_build_id = .);
         *(.note.gnu.build-id)
-    } >l2lim
+    } >l2zerodevice
 
     PROVIDE(_hss_end = .);
-
-    .l2_scratchpad : ALIGN(0x10)
-    {
-        __l2_scratchpad_load = LOADADDR(.l2_scratchpad);
-        __l2_scratchpad_start = .;
-        __l2_scratchpad_vma_start = .;
-        *(.l2_scratchpad)
-
-        . = ALIGN(0x10);
-        __l2_scratchpad_end = .;
-        __l2_scratchpad_vma_end = .;
-    } >l2zerodevice AT>l2lim
-
 
     /*******************************************************************************
      *
@@ -256,7 +247,7 @@ SECTIONS
         *(.sdata .sdata.* .gnu.linkonce.s.*)
         . = ALIGN(0x10);
         __sdata_end = .;
-    } >l2lim
+    } >l2zerodevice
 
     /*******************************************************************************
      *
@@ -281,7 +272,7 @@ SECTIONS
         *(.data .data.* .gnu.linkonce.d.*)
         . = ALIGN(0x10);
         __data_end = .;
-    } >l2lim
+    } >l2zerodevice
 
     /*******************************************************************************
      *
@@ -301,7 +292,7 @@ SECTIONS
         *(.scommon)
         . = ALIGN(0x10);
         __sbss_end = .;
-    } >l2lim
+    } >l2zerodevice
 
     /*
      * General Zero-initialized section
@@ -316,7 +307,7 @@ SECTIONS
         *(COMMON)
         . = ALIGN(0x10);
         __bss_end = .;
-    } >l2lim
+    } >l2zerodevice
 
     /*
      * Reserved space for Hart stacks
@@ -346,9 +337,10 @@ SECTIONS
         __stack_top_h4$ = . - 8;
 
         __stack_top = .;
-    } >l2lim
+    } >l2zerodevice
 
     _end = .;
+    PROVIDE(__l2_scratchpad_vma_end = .);
 
     /*
      * End of uninitialized data segment
