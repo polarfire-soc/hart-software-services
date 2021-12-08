@@ -51,8 +51,11 @@
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 #  include "qspi_service.h"
-//#  include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
+#if IS_ENABLED(CONFIG_MT15Q)
+#  include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
+#else
 #  include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
+#endif
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
@@ -67,7 +70,7 @@
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 static bool hss_loader_qspi_init(void);
 static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount);
-static bool hss_loader_qspi_erase(void);
+bool hss_loader_qspi_erase(void);
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
@@ -79,7 +82,7 @@ static bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t recei
 static bool hss_loader_qspi_init(void)
 {
     static bool initialized = false;
-    bool result = false;
+    bool result = true;
 
     if (!initialized) {
         result = HSS_QSPIInit();
@@ -96,7 +99,7 @@ static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t rece
     return result;
 }
 
-static bool hss_loader_qspi_erase(void)
+bool hss_loader_qspi_erase(void)
 {
     Flash_erase();
     return true;
@@ -124,15 +127,18 @@ bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCoun
 }
 #endif
 
+#define U_BOOT_OFFSET 0x400000
+
 void hss_loader_ymodem_loop(void);
 void hss_loader_ymodem_loop(void)
 {
     uint8_t rx_byte;
     bool done = false;
     bool result = false;
+    int offset = 0;
 
     uint32_t receivedCount = 0u;
-    uint8_t *pBuffer = (uint8_t *)HSS_DDR_GetStart();
+    uint8_t *pBuffer = 0x10000000 + (uint8_t *)HSS_DDR_GetStart();
     uint32_t g_rx_size = HSS_DDR_GetSize();
 
     while (!done) {
@@ -163,6 +169,7 @@ void hss_loader_ymodem_loop(void)
             " 6. Quit -- quit QSPI Utility" CRLF CRLF
             " Select a number:" CRLF;
 
+        mHSS_PRINTF(CRLF "hss_loader_ymodem_loop pBuffer %p, g_rx_size = %u offset %d" CRLF, pBuffer, g_rx_size, offset);
         mHSS_PUTS(menuText);
 
         if (uart_getchar(&rx_byte, -1, false)) {
@@ -176,11 +183,15 @@ void hss_loader_ymodem_loop(void)
                     mHSS_PUTS(" Success" CRLF);
 
                     mHSS_PUTS(CRLF "Erasing all of QSPI ... ");
+#ifdef OUT
                     result = hss_loader_qspi_erase();
 
                     if (result) {
                         mHSS_PUTS(" Success" CRLF);
                     }
+#else
+                    mHSS_PUTS(" is disabled " CRLF);
+#endif
                 }
 
                 if (!result) {
@@ -228,7 +239,7 @@ void hss_loader_ymodem_loop(void)
                     mHSS_PUTS(" Success" CRLF);
 
                     mHSS_PUTS(CRLF "Programming QSPI ... ");
-                    result = hss_loader_qspi_program((uint8_t *)pBuffer, 0u, receivedCount);
+                    result = hss_loader_qspi_program((uint8_t *)pBuffer, U_BOOT_OFFSET, receivedCount);
 
                     if (result) {
                         mHSS_PUTS(" Success" CRLF);
@@ -272,6 +283,92 @@ void hss_loader_ymodem_loop(void)
                 done = true;
                 break;
 
+            case 'r':
+                mHSS_PUTS(CRLF "QSPI READ ... " CRLF CRLF);
+                mHSS_PUTS(CRLF "Initializing QSPI ... " CRLF);
+                result = hss_loader_qspi_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+
+                    mHSS_PUTS(CRLF "Reading all of QSPI ... ");
+                    result = 1;
+                    memset(pBuffer, 0x0, 0x200);
+                    mHSS_PRINTF(CRLF "Before %02x %02x %02x" CRLF, pBuffer[0], pBuffer[1], pBuffer[2]);
+                    Flash_read((uint8_t *)pBuffer, U_BOOT_OFFSET + offset, 256);
+                    offset += 256;
+
+                    if (result) {
+                        mHSS_PUTS(" Success" CRLF);
+                        mHSS_PRINTF(CRLF "%02x %02x %02x" CRLF, pBuffer[0], pBuffer[1], pBuffer[2]);
+                    }
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
+                break;
+            case 'w':
+                mHSS_PUTS(CRLF "QSPI WRITE ... " CRLF CRLF);
+                mHSS_PUTS(CRLF "Initializing QSPI ... ");
+                result = hss_loader_qspi_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+
+                    mHSS_PUTS(CRLF "Writeing to QSPI ... ");
+                    memset(pBuffer, 0xe, 0x200);
+                    mHSS_PRINTF(CRLF "%02x %02x" CRLF, pBuffer[0], pBuffer[1]);
+                    result = hss_loader_qspi_program((uint8_t *)pBuffer, U_BOOT_OFFSET, 0x100);
+                    if (result) {
+                        mHSS_PUTS(" Success" CRLF);
+                    }
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
+                break;
+            case 'e':
+                mHSS_PUTS(CRLF "QSPI ERASE ... " CRLF CRLF);
+                mHSS_PUTS(CRLF "Initializing QSPI ... ");
+                result = hss_loader_qspi_init();
+
+                if (result) {
+                    mHSS_PUTS(" Success" CRLF);
+
+                    mHSS_PUTS(CRLF "Erasing all of QSPI ... ");
+#if IS_ENABLED(CONFIG_MT15Q)
+                    Flash_sector_erase(U_BOOT_OFFSET);
+#endif
+                    result = 1; //hss_loader_qspi_erase();
+
+                    if (result) {
+                        mHSS_PUTS(" Success" CRLF);
+                    }
+                }
+
+                if (!result) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS(" FAILED" CRLF);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
+                break;
+            case 'd':
+                {
+                    uint32_t *pBuffer32 = (uint32_t *)(pBuffer + offset);
+                    int i;
+                    mHSS_PUTS(CRLF "Dump memory ... " CRLF CRLF);
+                    for ( i = 0; i < 0x100 /4; i = i + 4) {
+                        mHSS_PRINTF(CRLF "%08x: %08x %08x %08x %08x" CRLF, &pBuffer32[i], pBuffer32[i],
+                        pBuffer32[i + 1], pBuffer32[i + 2], pBuffer32[i + 3]);
+                    }
+                    offset += 256;
+                }
             default: // ignore
                 break;
 	    }

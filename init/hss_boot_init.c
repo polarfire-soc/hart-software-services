@@ -367,7 +367,7 @@ static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
         sizeof(struct HSS_BootImage));
 
-    size_t srcOffset = 0u; // assuming zero as sector/block offset for now
+    size_t srcOffset = 0x400000; // assuming zero as sector/block offset for now
     HSS_QSPI_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
 
     result = verifyMagic_(&bootImage);
