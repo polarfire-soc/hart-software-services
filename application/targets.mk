@@ -68,6 +68,11 @@ config.h: .config
 
 genconfig: config.h
 
+%_defconfig:
+	$(CMD_PREFIX)defconfig boards/${BOARD}/$@
+	@$(ECHO) " DEFCONFIG boards/${BOARD}/$@"
+	$(CMD_PREFIX)genconfig
+
 ##############################################################################
 #
 # Build Targets
