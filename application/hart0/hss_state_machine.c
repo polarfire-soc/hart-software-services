@@ -107,7 +107,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
                 prevState =    pCurrentMachine->prevState;
                 currentState = pCurrentMachine->state;
 
-#ifdef DEBUG
+#if 0
                 {
                     const char *pLastStateName =
                         (pCurrentMachine->pStateDescs[prevState]).pStateName;

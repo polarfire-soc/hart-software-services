@@ -1,5 +1,5 @@
 /***************************************************************************//**
- * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -8,8 +8,11 @@
  *
  */
 
+#include "config.h"
+#include "hss_types.h"
+#include "hss_debug.h"
+#include "mpfs_hal/mss_hal.h"
 #include "mss_qspi.h"
-#include "mss_plic.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +20,7 @@ extern "C" {
 
 #define QSPI_BYTESUPPER_MASK     ((uint32_t)0xFFFF0000u)
 
-static void default_status_handler(uint32_t value);
+static void default_status_hanlder(uint32_t value);
 static volatile uint32_t g_irq_rd_byte_size = 0u;
 static volatile uint8_t g_rx_complete = 0u;
 static void * g_rd_buffer;
@@ -31,7 +34,7 @@ void MSS_QSPI_init
     void
 )
 {
-    g_handler = default_status_handler;
+    g_handler = default_status_hanlder;
 
     QSPI->CONTROL = CTRL_EN_MASK |
                     CTRL_SAMPLE_SCK |
@@ -281,10 +284,12 @@ void MSS_QSPI_set_status_handler
 static void qspi_isr(void)
 {
     uint32_t idx;
-    //static uint32_t empty = 0u; // unused
-    //static uint32_t tx_fifo_full = 0u; // unused
+    static uint32_t empty = 0u;
+    static uint32_t tx_fifo_full = 0u;
     uint32_t status;
 
+    (void)tx_fifo_full;
+    (void)empty;
     status = QSPI->STATUS;
 
     if (STTS_TDONE_MASK == (uint32_t)(status & STTS_TDONE_MASK))
@@ -323,6 +328,7 @@ static void qspi_isr(void)
             }
 
             uint32_t skips = 0;
+            (void)skips;
 
             while (0u == (QSPI->STATUS & STTS_RFEMPTY_MASK))
             {
@@ -331,7 +337,6 @@ static void qspi_isr(void)
                   have been received.*/
                 skips = (uint32_t)((QSPI->STATUS & STTS_FLAGSX4_MASK) ?
                                             QSPI->RXDATAX4 : QSPI->RXDATAX1);
-                (void) skips; /* use skips to avoid compiler warning */
             }
         }
     }
@@ -350,7 +355,7 @@ static void qspi_isr(void)
     }
 }
 
-static void default_status_handler(uint32_t value)
+static void default_status_hanlder(uint32_t value)
 {
     /*Take some default interrupt handling action here*/
 }

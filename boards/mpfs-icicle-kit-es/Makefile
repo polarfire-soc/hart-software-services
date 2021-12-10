@@ -69,14 +69,23 @@ $(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 INCLUDES += \
 	-Ibaremetal/ \
 	-Ibaremetal/drivers/winbond_w25n01gv \
+	-Ibaremetal/drivers/cypress_s25fl512s \
+	-Ibaremetal/drivers/micron_mt25q
 
 EXTRA_SRCS-$(CONFIG_SERVICE_YMODEM) += \
 	baremetal/drivers/mss_envm/mss_envm.c
 
-EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
+EXTRA_SRCS-$(CONFIG_W25N01GV) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
+EXTRA_SRCS-$(CONFIG_W25N01GV) += \
+	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
+EXTRA_SRCS-$(CONFIG_S25FL512S) += \
+	baremetal/drivers/cypress_s25fl512s/cypress_s25fl512s.c
+EXTRA_SRCS-$(CONFIG_MT15Q) += \
+	baremetal/drivers/micron_mt25q/micron_mt25q.c
 
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
+baremetal/drivers/cypress_s25fl512s/cypress_s25fl512s.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 

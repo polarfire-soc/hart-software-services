@@ -10,10 +10,13 @@
  */
 
 #include "drivers/mss_qspi/mss_qspi.h"
-#include "micron_mt25q.h"
-#include "mss_plic.h"
-#include "mss_assert.h"
-#include "drivers/mss_uart/mss_uart.h"
+#include "drivers/micron_mt25q/micron_mt25q.h"
+#include "hss_debug.h"
+//#include "mpfs_hal/mss_plic.h"
+//#include "mpfs_hal/mss_assert.h"
+
+//#include "drivers/mss_mmuart/mss_uart.h"
+//#include "terminal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,12 +30,15 @@ mss_qspi_config_t beforexip_qspi_config={0};
 mss_qspi_config_t qspi_config={0};
 mss_qspi_config_t qspi_config_read={0};
 
-static uint8_t g_flash_io_format = 0;
+static uint8_t g_flash_io_format = MSS_QSPI_UNINITIALIZED;
 volatile uint8_t xip_en = 0xF3;
 volatile uint8_t xip_dis = 0x0;
 volatile uint8_t volatile_config_reg = 0u;
 static volatile uint8_t g_enh_v_val = 0x0;
 static volatile uint16_t g_nh_cfg_val = 0x0;
+
+#define PAGE_LENGTH     256
+#define SECT_LENGTH     64*1024
 
 /*Make sure that the erase operation is complete. i.e. wait for  write enable bit to go 0*/
 static void wait_for_wel(void)
@@ -82,8 +88,9 @@ mss_qspi_io_format Flash_probe_io_format(void)
     return MSS_QSPI_NORMAL; // ??
 }
 
-void Flash_force_normal_mode(void)
+int Flash_force_normal_mode(void)
 {
+    mHSS_PRINTF(CRLF "Trying Normal (x1) Mode...\r\n");
     qspi_config.io_format = MSS_QSPI_NORMAL;
     MSS_QSPI_configure(&qspi_config);
 
@@ -91,9 +98,10 @@ void Flash_force_normal_mode(void)
     if (0xFF != g_enh_v_val) {
         Flash_read_nvcfgreg((uint8_t*)&g_nh_cfg_val);
         g_flash_io_format = MSS_QSPI_NORMAL;
-        return;
+        return 0;
     }
 
+    mHSS_PRINTF(CRLF "Trying Dual (x2) Mode...\r\n");
     qspi_config.io_format = MSS_QSPI_DUAL_FULL;
     MSS_QSPI_configure(&qspi_config);
     Flash_readid((uint8_t*)&g_enh_v_val);
@@ -103,6 +111,7 @@ void Flash_force_normal_mode(void)
         goto push_normal;
     }
 
+    mHSS_PRINTF(CRLF "Trying Quad (x4) Mode...\r\n");
     qspi_config.io_format = MSS_QSPI_QUAD_FULL;
     MSS_QSPI_configure(&qspi_config);
     Flash_readid((uint8_t*)&g_enh_v_val);
@@ -111,8 +120,12 @@ void Flash_force_normal_mode(void)
         goto push_normal;
     }
 
+    mHSS_PRINTF(CRLF "Failed to establish communication with SPI Flash.\r\n");
+    return 0;
+
 push_normal:
     {
+        mHSS_PRINTF(CRLF "Comms established.  Setting to normal mode.\r\n");
         qspi_config.io_format = g_flash_io_format;
         MSS_QSPI_configure(&qspi_config);
 
@@ -131,14 +144,22 @@ push_normal:
 
         Flash_read_nvcfgreg((uint8_t*)&g_nh_cfg_val);
     }
+
+    return 1;
 }
 
-void Flash_init(mss_qspi_io_format io_format)
+int Flash_init(mss_qspi_io_format io_format)
 {
-    qspi_config.clk_div =  MSS_QSPI_CLK_DIV_2;
+    qspi_config.clk_div =  MSS_QSPI_CLK_DIV_30;
     qspi_config.sample = MSS_QSPI_SAMPLE_POSAGE_SPICLK;
     qspi_config.spi_mode = MSS_QSPI_MODE3;
     qspi_config.xip = MSS_QSPI_DISABLE;
+    qspi_config.io_format = io_format;
+
+    if (g_flash_io_format == MSS_QSPI_UNINITIALIZED)
+    {
+        MSS_QSPI_configure(&qspi_config);
+    }
 
     Flash_read_enh_v_confreg((uint8_t*)&g_enh_v_val);
 
@@ -154,19 +175,34 @@ void Flash_init(mss_qspi_io_format io_format)
 
     Flash_write_enh_v_confreg((uint8_t*)&g_enh_v_val);
 
-    qspi_config.io_format = io_format;
     MSS_QSPI_configure(&qspi_config);
+
     Flash_read_enh_v_confreg((uint8_t*)&g_enh_v_val);
 
-    uint32_t maxRetryCount = 1u<<31;
+    uint32_t maxRetryCount = 100u;
     do {
         Flash_readid((uint8_t*)&g_enh_v_val);
 
         // we don't want to get stuck forever here, so break out after a significant period of time
-        maxRetryCount--; if (!maxRetryCount) { break; }
+        maxRetryCount--;
+
+        if (maxRetryCount == 0)
+        {
+            mHSS_PRINTF(CRLF "Failed to read SPI Flash ID during init.\r\n");
+            break;
+        }
     } while(0xFF == g_enh_v_val);
 
+
+    if (g_enh_v_val == 0xFF)
+    {
+        return 0;
+    }
+    else
+    {
     g_flash_io_format = io_format; //store the value for future reference.
+        return 1;
+    }
 }
 
 void Flash_enter_xip(void) {
@@ -302,32 +338,64 @@ void Flash_readid
 )
 {
     uint8_t command_buf[1] __attribute__ ((aligned (4))) = {MICRON_MIO_READ_ID_OPCODE};
+    //uint8_t command_buf[1] __attribute__ ((aligned (4))) = {MICRON_READ_ID_OPCODE};
 
     /*This command works for all modes. No Dummy cycles.
      * MICRON_READ_ID_OPCODE works only for Normal mode*/
-    MSS_QSPI_polled_transfer_block(0, command_buf, 0, rd_buf, 1,0);
+    MSS_QSPI_polled_transfer_block(0, command_buf, 0, rd_buf, 3, 0);
+}
+
+ void read_page (uint8_t* buf, uint32_t read_addr, uint32_t read_len);
+ void read_page (uint8_t* buf, uint32_t read_addr, uint32_t read_len)
+{
+    uint8_t command_buf[5] __attribute__ ((aligned (4))) = {MICRON_4BYTE_FAST_READ};
+    command_buf[1] = (read_addr >> 24) & 0xFF;
+    command_buf[2] = (read_addr >> 16) & 0xFF;
+    command_buf[3] = (read_addr >> 8) & 0xFF;
+    command_buf[4] = read_addr & 0xFF;
+
+    if(MSS_QSPI_NORMAL == g_flash_io_format) {
+        MSS_QSPI_polled_transfer_block(4, command_buf, 0, buf, read_len,8);
+    } else {
+        if(g_flash_io_format & 0x01) //quad
+            MSS_QSPI_polled_transfer_block(4, command_buf, 0, buf, read_len,10);
+        else
+            MSS_QSPI_polled_transfer_block(4, command_buf, 0, buf, read_len, 8);
+    }
 }
 
 void Flash_read(uint8_t* buf, uint32_t read_addr, uint32_t read_len)
 {
-    uint8_t command_buf[4] __attribute__ ((aligned (4))) = {MICRON_FAST_READ};
-    command_buf[1] = (read_addr >> 16) & 0xFF;
-    command_buf[2] = (read_addr >> 8) & 0xFF;
-    command_buf[3] = read_addr & 0xFF;
+    uint32_t page_nb;
+    uint8_t * target_buf = buf;
+    int32_t remaining_length = (int32_t)read_len;
 
-    if(MSS_QSPI_NORMAL == g_flash_io_format) {
-        MSS_QSPI_polled_transfer_block(3, command_buf, 0, buf, read_len,8);
-    } else {
-        if(g_flash_io_format & 0x01) //quad
-            MSS_QSPI_polled_transfer_block(3, command_buf, 0, buf, read_len,10);
+    page_nb = read_addr;
+
+    while(remaining_length > 0)
+    {
+        uint32_t length;
+
+        if(remaining_length > PAGE_LENGTH)
+        {
+            length = PAGE_LENGTH;
+        }
         else
-            MSS_QSPI_polled_transfer_block(3, command_buf, 0, buf, read_len, 8);
+        {
+            length = remaining_length;
+        }
+
+        read_page(target_buf, page_nb, length);
+        remaining_length = remaining_length - length;
+        page_nb += length;
+        target_buf = target_buf + length;
     }
 }
 
-uint8_t Flash_program(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
+uint8_t program_page(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len);
+uint8_t program_page(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
 {
-    uint8_t command_buf[512] __attribute__ ((aligned (4))) = {0};
+    uint8_t command_buf[600] __attribute__ ((aligned (4))) = {0};
     /*All commands in this function work in all modes....*/
 
     wait_for_wel();
@@ -340,7 +408,8 @@ uint8_t Flash_program(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
     /*This command works for all modes. No Dummy cycles*/
     /*now program the sector. This will set the desired bits to 0.*/
 
-    command_buf[0] = MICRON_PAGE_PROGRAM;
+    command_buf[0] = 0x02;
+//    command_buf[1] = (wr_addr >> 24) & 0xFF;
     command_buf[1] = (wr_addr >> 16) & 0xFF;
     command_buf[2] = (wr_addr >> 8) & 0xFF;
     command_buf[3] = wr_addr & 0xFF;
@@ -358,11 +427,48 @@ uint8_t Flash_program(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
     return flag_status_reg;
 }
 
+uint8_t Flash_program(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
+{
+    int32_t remaining_length = (int32_t)wr_len;
+    uint32_t target_offset = wr_addr;
+
+    while(remaining_length > 0) {
+        Flash_sector_erase(target_offset);
+        mHSS_PRINTF(CRLF "erase %x ...\r\n", target_offset);
+        remaining_length = remaining_length - SECT_LENGTH;
+        target_offset += SECT_LENGTH;
+
+    }
+
+    target_offset = wr_addr;
+    remaining_length = (int32_t)wr_len;
+    while(remaining_length > 0)
+    {
+        uint32_t page_length;
+
+        if(remaining_length >= PAGE_LENGTH)
+        {
+            page_length = PAGE_LENGTH;
+        }
+        else
+        {
+            page_length = remaining_length;
+        }
+
+        mHSS_PRINTF(CRLF "program %x len %x ...\r\n", target_offset, page_length);
+        program_page(buf, target_offset, page_length);
+        remaining_length = remaining_length - page_length;
+        buf += page_length;
+        target_offset += page_length;
+    }
+    return 0;
+}
+
 /*Micron sector size is = 64k (65536 bytes).
  * addr parameter value should be any address  within the sector that needs to be erased */
 void Flash_sector_erase(uint32_t addr)
 {
-    uint8_t command_buf[5] __attribute__ ((aligned (4))) = {MICRON_WRITE_ENABLE};
+    uint8_t command_buf[6] __attribute__ ((aligned (4))) = {MICRON_WRITE_ENABLE};
 
     /*This command works for all modes. No Dummy cycles*/
     /*Write enable command must be executed before erase*/
@@ -370,13 +476,14 @@ void Flash_sector_erase(uint32_t addr)
 
     /*This command works for all modes. No Dummy cycles*/
     /*Erase the sector. This will write 1 to all bits*/
-    command_buf[0] = MICRON_DIE_ERASE;
-    command_buf[1] = (addr >> 16) & 0xFF;
-    command_buf[2] = (addr >> 8) & 0xFF;
-    command_buf[3] = addr & 0xFF;
+    command_buf[0] = MICRON_4BYTE_SECTOR_ERASE;
+    command_buf[1] = (addr >> 24) & 0xFF;
+    command_buf[2] = (addr >> 16) & 0xFF;
+    command_buf[3] = (addr >> 8) & 0xFF;
+    command_buf[4] = addr & 0xFF;
 
 
-    MSS_QSPI_polled_transfer_block(3, command_buf, 0, (uint8_t*)0, 0,0);
+    MSS_QSPI_polled_transfer_block(4, command_buf, 0, (uint8_t*)0, 0,0);
 }
 
 void Flash_die_erase(void)

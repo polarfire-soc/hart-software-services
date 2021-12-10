@@ -70,12 +70,21 @@ bool HSS_QSPIInit(void)
         // EFh => Winbond, AA21h => W25N01GV
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Winbond W25N01GV detected" CRLF);
     }
+
+    if (((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2])) == 0x010220) {
+        //  01h => AMD/Spansion, 0220h => S25FL512S
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Cypress S25FL512S detected" CRLF);
+    }
+    if (((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2])) == 0x20BB21) {
+          //02h => Micron, bb21h => n25q00a bbh 1.8V 21h 1G
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Micron n25q00a detected" CRLF);
+    }
 #endif
 
     return true;
 }
 
-#define HSS_QSPI_PAGE_SIZE 512u
+#define HSS_QSPI_PAGE_SIZE 256u
 bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
     bool result = true;

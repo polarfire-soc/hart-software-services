@@ -25,3 +25,21 @@ config SERVICE_QSPI_USE_XIP
                 as a means of speeding up booting.
 
 		If you do not know what to do here, say N for now.
+
+config W25N01GV
+        bool "Winbond W25N01GV  SPI flash support"
+        depends on SERVICE_QSPI
+        help
+                QSPI is use S25FL512S SPI flash 
+config S25FL512S
+        bool "AMD/Spansion S25FL512S SPI flash support"
+        depends on SERVICE_QSPI
+        help
+                QSPI is use S25FL512S SPI flash 
+
+config MT15Q
+        bool "Micron bool SPI flash support"
+        depends on SERVICE_QSPI
+        help
+                QSPI is use S25FL512S SPI flash 
+		
