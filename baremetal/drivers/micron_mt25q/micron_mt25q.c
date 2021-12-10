@@ -408,8 +408,7 @@ uint8_t program_page(uint8_t* buf, uint32_t wr_addr, uint32_t wr_len)
     /*This command works for all modes. No Dummy cycles*/
     /*now program the sector. This will set the desired bits to 0.*/
 
-    command_buf[0] = 0x02;
-//    command_buf[1] = (wr_addr >> 24) & 0xFF;
+    command_buf[0] = MICRON_PAGE_PROGRAM;
     command_buf[1] = (wr_addr >> 16) & 0xFF;
     command_buf[2] = (wr_addr >> 8) & 0xFF;
     command_buf[3] = wr_addr & 0xFF;
