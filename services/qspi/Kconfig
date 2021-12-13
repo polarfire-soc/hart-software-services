@@ -42,4 +42,4 @@ config MT15Q
         depends on SERVICE_QSPI
         help
                 QSPI is use S25FL512S SPI flash 
-		
+

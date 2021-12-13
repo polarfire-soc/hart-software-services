@@ -1,10 +1,13 @@
 /***************************************************************************//**
- * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * PolarFire SoC Microprocessor Subsystem SPI bare metal software driver
+ * PolarFire SoC(PSE) microcontroller subsystem SPI bare metal software driver
  * implementation.
+ *
+ * SVN $Revision$
+ * SVN $Date$
  */
 
 #include "mss_spi.h"

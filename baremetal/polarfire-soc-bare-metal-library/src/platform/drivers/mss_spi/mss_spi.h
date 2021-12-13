@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -21,14 +21,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * PolarFire SoC Microprocessor Subsystem SPI bare metal software
+ * PolarFire SoC (PSE) microprocessor subsystem SPI bare metal software
  * driver public API.
+ *
+ * SVN $Revision$
+ * SVN $Date$
  */
 /*=========================================================================*//**
   @mainpage PolarFire SoC MSS SPI Bare Metal Driver.
 
   @section intro_sec Introduction
-  The PolarFire SoC Microprocessor Subsystem (MSS) includes two serial
+  The PolarFire SoC Microprocessor Subsystem (MSS) includes two serial 
   peripheral interface (SPI) peripherals for serial communication. This driver
   provides a set of functions for controlling the MSS SPIs as part of a bare
   metal system where no operating system is available. These drivers can be
@@ -58,18 +61,18 @@
 
   @section theory_op Theory of Operation
 The MSS SPI driver functions are grouped in following categories:
-    •   Initialization
-    •   Configure either master or slave mode
-    •   SPI Master frame transfer control
-    •   SPI Master block transfer control
-    •   SPI Slave frame transfer control
-    •   SPI Slave block transfer control
+    *   Initialization
+    *   Configure either master or slave mode
+    *   SPI Master frame transfer control
+    *   SPI Master block transfer control
+    *   SPI Slave frame transfer control
+    *   SPI Slave block transfer control
   Frame transfer allows the MSS SPI to write or read up to 32 bits of data in a
   SPI transaction. For example, a frame transfer of 12 bits might be used to
   read the result of ADC conversion from SPI analog to digital converter.
   Block transfer allows the MSS SPI to write and read several bytes in a SPI
   transaction. Block transfer transaction allow the data transfer in multiple of
-  8 bits (8, 16, 24, 32 ….). Block transfers are typically used with the
+  8 bits (8, 16, 24, 32 ....). Block transfers are typically used with the
   byte-oriented devices such as SPI FLASH device.
 
 
@@ -100,10 +103,10 @@ The MSS SPI driver functions are grouped in following categories:
   SPI slave device which the MSS SPI block will communicate with. It is used to
   provide the following information about each SPI slave’s communication
   characteristics:
-    •   The SPI protocol mode
-    •   The SPI clock speed
-    •   The frame bit length
-    •   The SPI overflow handler
+    *   The SPI protocol mode
+    *   The SPI clock speed
+    *   The frame bit length
+    *   The SPI overflow handler
   This information is held by the driver and will be used to alter the
   configuration of the MSS SPI block each time a slave is selected through a
   call to MSS_SPI_set_slave_select(). The SPI protocol mode defines the initial
@@ -120,9 +123,9 @@ The MSS SPI driver functions are grouped in following categories:
   The MSS_SPI_configure_slave_mode() function configures the specified MSS SPI
   block for operations  as a SPI slave. It configures the following SPI
   communication characteristics:
-    •   The SPI protocol mode
-    •   The frame bit length
-    •   The SPI overflow handler
+    *   The SPI protocol mode
+    *   The frame bit length
+    *   The SPI overflow handler
   The SPI protocol mode defines the initial state of the clock signal at the
   start of a transaction and which clock edge will be used to sample the data
   signal (Motorola SPI modes), or it defines whether the SPI block will operate
