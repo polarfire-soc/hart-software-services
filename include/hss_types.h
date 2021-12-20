@@ -169,6 +169,9 @@ struct HSS_BootImage {
     size_t bootImageLength;
 #if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
     struct HSS_Signature signature;
+#else
+    uint8_t pad1[32]; // padding to keep compatibility with older format
+    uint8_t pad2[32]; // padding to keep compatibility with older format
 #endif
 };
 
@@ -189,6 +192,9 @@ struct HSS_CompressedImage {
     size_t originalImageLen;
 #if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
     struct HSS_Signature signature;
+#else
+    uint8_t pad1[32]; // padding to keep compatibility with older format
+    uint8_t pad2[32]; // padding to keep compatibility with older format
 #endif
 };
 
