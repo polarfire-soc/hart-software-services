@@ -75,7 +75,7 @@ static void scrub_init_handler(struct StateMachine * const pMyMachine)
 /////////////////
 #define MAX_SCRUB_SIZE_PER_LOOP_ITER (4096u)
 extern const uint64_t __l2lim_start,         __l2lim_end;
-extern const uint64_t __l2_scratchpad_start, __l2_scratchpad_end;
+extern const uint64_t __l2_start, __l2_end;
 extern const uint64_t __ddr_start,           __ddr_end;
 extern const uint64_t __ddrhi_start,         __ddrhi_end;
 extern const uint64_t __dtim_start,          __dtim_end;
@@ -90,7 +90,7 @@ const struct {
 	uintptr_t endAddr;
 } rams[] = {
     { (uintptr_t)&__l2lim_start,         (uintptr_t)&__l2lim_end },
-    { (uintptr_t)&__l2_scratchpad_start, (uintptr_t)&__l2_scratchpad_end },
+    { (uintptr_t)&__l2_start, (uintptr_t)&__l2_end },
     { (uintptr_t)&__ddr_start,           (uintptr_t)&__ddr_end },
     { (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end },
     //{ (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
