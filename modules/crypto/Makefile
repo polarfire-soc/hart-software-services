@@ -35,7 +35,6 @@ INCLUDES +=\
 ifdef CONFIG_CRYPTO_SIGNING
 x509-ec-sepc384r1-public.h: $(subst $\",,$(CONFIG_CRYPTO_SIGNING_KEY_PUBLIC))
 	tools/secure-boot/der_to_c_header.py $< x509-ec-secp384r1-public.h
-endif
 
 #
 # libecc
@@ -203,4 +202,5 @@ SRCS-$(CONFIG_CRYPTO_USER_CRYPTO) += \
 
 modules/crypto/hss_crypto_cal.o: x509-ec-sepc384r1-public.h
 modules/crypto/hss_crypto_cal.o: CFLAGS=$(CFLAGS_GCCEXT)
+endif
 endif
