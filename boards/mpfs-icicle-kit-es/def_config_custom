@@ -152,6 +152,12 @@ CONFIG_COMPRESSION_MINIZ=y
 # end of Compression
 
 #
+# Crypto
+#
+# CONFIG_CRYPTO_SIGNING is not set
+# end of Crypto
+
+#
 # Debug Options
 #
 CONFIG_DEBUG_LOG_STATE_TRANSITIONS=y
