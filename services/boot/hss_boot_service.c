@@ -948,7 +948,7 @@ bool HSS_Boot_Custom(void)
 
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "All HARTs jumping to entry address 0x%lx in M-mode" CRLF, custom_entryPoint);
     for (i = 1; i < MAX_NUM_HARTS; i++) {
-        IPI_Send(i, IPI_MSG_OPENSBI_INIT, 0, custom_privMode, custom_entryPoint, NULL);
+        IPI_Send(i, IPI_MSG_OPENSBI_INIT, 0, custom_privMode, (void * const)custom_entryPoint, NULL);
     }
 
     ((void (*)(uintptr_t, uintptr_t))custom_entryPoint)(current_hartid(), 0);
