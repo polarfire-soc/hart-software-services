@@ -69,10 +69,6 @@
 #  include "powermode_service.h"
 #endif
 
-#if IS_ENABLED(CONFIG_SERVICE_FLASHFREEZE)
-#  include "flashfreeze_service.h"
-#endif
-
 #if IS_ENABLED(CONFIG_SERVICE_CRYPTO)
 #  include "crypto_service.h"
 #endif
@@ -162,11 +158,6 @@ const struct IPI_Handler ipiRegistry[] = {
 #else
     { IPI_MSG_POWERMODE,                HSS_Null_IPIHandler },
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_FLASHFREEZE)
-    { IPI_MSG_FLASHFREEZE,              HSS_Null_IPIHandler },
-#else
-    { IPI_MSG_FLASHFREEZE,              HSS_Null_IPIHandler },
-#endif
     { IPI_MSG_ACK_PENDING, 	        IPI_ACK_IPIHandler },
     { IPI_MSG_ACK_COMPLETE, 		IPI_ACK_IPIHandler },
     { IPI_MSG_HALT, 			HSS_Null_IPIHandler },
@@ -218,9 +209,6 @@ struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_POWERMODE)
     &powermode_service,
-#endif
-#if IS_ENABLED(CONFIG_SERVICE_FLASHFREEZE)
-    &flashfreeze_service,
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_CRYPTO)
     &crypto_service,

@@ -105,7 +105,6 @@ __extension__ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
     [ IPI_MSG_UART_TX ]           = "IPI_MSG_UART_TX",
     [ IPI_MSG_UART_POLL_RX ]      = "IPI_MSG_UART_POLL_RX",
     [ IPI_MSG_POWERMODE ]         = "IPI_MSG_POWERMODE",
-    [ IPI_MSG_FLASHFREEZE ]       = "IPI_MSG_FLASHFREEZE",
     [ IPI_MSG_ACK_PENDING ]       = "IPI_MSG_ACK_PENDING",
     [ IPI_MSG_ACK_COMPLETE ]      = "IPI_MSG_ACK_COMPLETE",
     [ IPI_MSG_HALT ]              = "IPI_MSG_HALT",

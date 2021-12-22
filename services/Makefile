@@ -30,7 +30,6 @@ include services/beu/Makefile
 include services/boot/Makefile
 include services/crypto/Makefile
 include services/ddr/Makefile
-include services/flashfreeze/Makefile
 include services/goto/Makefile
 include services/ipi_poll/Makefile
 include services/mmc/Makefile
