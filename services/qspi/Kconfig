@@ -1,5 +1,5 @@
 config SERVICE_QSPI
-	bool "QSPI support"
+	bool "Boot from Microprocessor Subsystem (MSS) QSPI flash support"
 	default y
 	help
                 This feature enables support for booting via QSPI.
