@@ -124,7 +124,7 @@ static const struct StateDesc boot_state_descs[] = {
  *
  */
 struct HSS_Boot_LocalData {
-    enum HSSHartId target;
+    const enum HSSHartId target;
     struct HSS_BootChunkDesc const *pChunk;
     struct HSS_BootZIChunkDesc const *pZiChunk;
     size_t chunkCount;
@@ -342,13 +342,13 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
 
     pInstanceData->msgIndex = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
 
-    bool const boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
+    bool const primary_boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
 
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
         enum HSSHartId peer = bootMachine[i].hartId;
         pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
 
-        if (boot_hart) {
+        if (primary_boot_hart) {
             if (pBootImage->hart[peer-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
                 // skipping OpenSBI => don't register as a hart
                 mpfs_domains_deregister_hart(peer);
@@ -362,7 +362,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
         }
     }
 
-    if (boot_hart) {
+    if (primary_boot_hart) {
         if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
             // skipping OpenSBI => don't register as a domain
         } else {
@@ -602,56 +602,51 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
     assert(pBootImage != NULL);
 
     // if target has a valid entry point, allocate a message for it and send a OPENSBI_INIT IPI
-    if (pBootImage->hart[target-1].entryPoint) {
+    bool const primary_boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
+
+    if (primary_boot_hart) {
         bool result;
 
-        if (pBootImage->hart[target-1].numChunks) {
-            if (pInstanceData->iterator < ARRAY_SIZE(bootMachine)) {
-                enum HSSHartId peer = bootMachine[pInstanceData->iterator].hartId;
+        if (pInstanceData->iterator < ARRAY_SIZE(bootMachine)) {
+            enum HSSHartId peer = bootMachine[pInstanceData->iterator].hartId;
 
-                if (peer == target) {
-                    // skip myself for now
-                } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
-                    // found another hart in same boot set as me...
+            if (peer == target) {
+                // skip myself for now
+            } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
+                // found another hart in same boot set as me...
 
-                    result = IPI_MessageAlloc(&(pInstanceData->msgIndexAux[peer-1]));
+                result = IPI_MessageAlloc(&(pInstanceData->msgIndexAux[peer-1]));
+                assert(result);
+
+                if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p" CRLF, pMyMachine->pMachineName,
+                        peer, pBootImage->hart[peer-1].entryPoint);
+
+                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
+                        IPI_MSG_GOTO,
+                        pBootImage->hart[peer-1].privMode,
+                        (void *)pBootImage->hart[peer-1].entryPoint,
+                        (void *)pInstanceData->ancilliaryData);
                     assert(result);
+                } else {
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
+                        peer, pBootImage->hart[peer-1].entryPoint);
 
-                    //mb(); // TODO
-                    //mb_i(); // TODO
+                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
+                        IPI_MSG_OPENSBI_INIT,
+                        pBootImage->hart[peer-1].privMode,
+                        (void *)pBootImage->hart[peer-1].entryPoint,
+                        (void *)pInstanceData->ancilliaryData);
 
-                    if (pBootImage->hart[peer-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p" CRLF, pMyMachine->pMachineName,
-                            peer, pBootImage->hart[peer-1].entryPoint);
+                    if (!result) {
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::u54_%u:sbi_init failed" CRLF,
+                            pMyMachine->pMachineName, peer);
 
-                        result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
-                            IPI_MSG_GOTO,
-                            pBootImage->hart[peer-1].privMode,
-                            (void *)pBootImage->hart[peer-1].entryPoint,
-                            (void *)pInstanceData->ancilliaryData);
-                        assert(result);
-                    } else {
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
-                            peer, pBootImage->hart[peer-1].entryPoint);
-
-                        result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
-                            IPI_MSG_OPENSBI_INIT,
-                            pBootImage->hart[peer-1].privMode,
-                            (void *)pBootImage->hart[peer-1].entryPoint,
-                            (void *)pInstanceData->ancilliaryData);
-
-                        if (!result) {
-                            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::u54_%u:sbi_init failed" CRLF,
-                                pMyMachine->pMachineName, peer);
-
-                            pMyMachine->state = BOOT_ERROR;
-                        }
+                        pMyMachine->state = BOOT_ERROR;
                     }
                 }
-                pInstanceData->iterator++;
-            } else {
-                pMyMachine->state = BOOT_WAIT;
             }
+            pInstanceData->iterator++;
         } else {
             pMyMachine->state = BOOT_WAIT;
         }
