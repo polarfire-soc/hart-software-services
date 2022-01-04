@@ -873,7 +873,7 @@ static void populate_boot_flags(void)
 
 	for (size_t i = 0u; i < ARRAY_SIZE(base_secondary); i++) {
 		if (base_secondary[i] != 0u) {
-			bootImage.hart[base_owner-1].flags = flags;
+			bootImage.hart[base_secondary[i]-1].flags = flags;
 		}
 	}
 }
