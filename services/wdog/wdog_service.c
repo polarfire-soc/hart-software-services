@@ -143,9 +143,8 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
     if ((hartBitmask.uint)
         && (HSS_Timer_IsElapsed(lastEntryTime,
             (HSSTicks_t)CONFIG_SERVICE_WDOG_DEBUG_TIMEOUT_SEC * TICKS_PER_SEC))) {
-#  if WDOG_DEBUG
         HSS_Wdog_DumpStats();
-#  endif
+    }
 #endif
 
     uint32_t status = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
