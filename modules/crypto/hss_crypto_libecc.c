@@ -46,18 +46,6 @@
 #include "libsig.h"
 #pragma GCC diagnostic pop
 
-
-bool HSS_Crypto_SHA384(const size_t hashBufSize, uint8_t hashBuffer[hashBufSize],
-    const size_t dataBufSize, uint8_t dataBuf[dataBufSize])
-{
-    bool result = false;
-
-    assert(hashBufSize == SHA384_DIGEST_SIZE);
-
-    sha384(dataBuf, dataBufSize, hashBuffer);
-    return result;
-}
-
 #define ECDSA_P384_SIG_LEN ((384u/8)*2)
 bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen],
     const size_t dataBufSize, uint8_t dataBuf[dataBufSize])

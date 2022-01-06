@@ -36,17 +36,5 @@ config CRYPTO_USER_CRYPTO
                 and ECDSA P-384 code signing.
 endchoice
 
-choice
-	prompt "Hash"
-	default CRYPTO_SHA384
-
-config CRYPTO_SHA384
-	bool "SHA384"
-	depends on CRYPTO_SIGNING
-	help
-		This feature enables SHA384 as the Hash Function for code signing.
-
-endchoice
-
 endmenu
 endmenu

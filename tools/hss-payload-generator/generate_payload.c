@@ -118,6 +118,7 @@ static void generate_header(FILE *pFileOut, struct HSS_BootImage *pBootImage) __
 static void generate_chunks(FILE *pFileOut) __attribute__((nonnull));
 static void generate_ziChunks(FILE *pFileOut) __attribute__((nonnull));
 static void generate_blobs(FILE *pFileOut) __attribute__((nonnull));
+static void sign_payload(FILE *pFileOut, char const * const private_key_filename) __attribute__((nonnull(1)));
 
 extern struct HSS_BootImage bootImage;
 
@@ -322,32 +323,8 @@ static void generate_blobs(FILE *pFileOut)
 	assert(pFileOut);
 }
 
-void generate_payload(char const * const filename_output, char const * const private_key_filename)
+static void sign_payload(FILE *pFileOut, char const * const private_key_filename)
 {
-	assert(filename_output);
-	printf("Output filename is >>%s<<\n", filename_output);
-
-	FILE *pFileOut = fopen(filename_output, "w+");
-	if (!pFileOut) {
-		perror("fopen()");
-		exit(EXIT_FAILURE);
-	}
-
-	generate_header(pFileOut, &bootImage);
-	generate_chunks(pFileOut);
-	generate_ziChunks(pFileOut);
-
-	bootImage.headerLength = (size_t)ftello(pFileOut);
-	assert(bootImage.headerLength ==
-		bootImagePaddedSize + chunkTablePaddedSize + ziChunkTablePaddedSize);
-	debug_printf(4, "End of header is %lu\n", bootImage.headerLength);
-
-	generate_blobs(pFileOut);
-	bootImage.bootImageLength = (size_t)ftello(pFileOut);
-
-    	bootImage.headerCrc =
-		CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
-
 	if (private_key_filename) {
 		//
 		// first compute the SHA384 hash digest of the entire boot image
@@ -430,9 +407,40 @@ void generate_payload(char const * const filename_output, char const * const pri
 			debug_printf(5, "P-384 Signature: %s\n", hexString);
 			OPENSSL_free(hexString);
 		}
+
+		generate_header(pFileOut, &bootImage); // rewrite header for signing...
+	}
+}
+
+void generate_payload(char const * const filename_output, char const * const private_key_filename)
+{
+	assert(filename_output);
+	printf("Output filename is >>%s<<\n", filename_output);
+
+	FILE *pFileOut = fopen(filename_output, "w+");
+	if (!pFileOut) {
+		perror("fopen()");
+		exit(EXIT_FAILURE);
 	}
 
-	generate_header(pFileOut, &bootImage); // rewrite header...
+	generate_header(pFileOut, &bootImage);
+	generate_chunks(pFileOut);
+	generate_ziChunks(pFileOut);
+
+	bootImage.headerLength = (size_t)ftello(pFileOut);
+	assert(bootImage.headerLength ==
+		bootImagePaddedSize + chunkTablePaddedSize + ziChunkTablePaddedSize);
+	debug_printf(4, "End of header is %lu\n", bootImage.headerLength);
+
+	generate_blobs(pFileOut);
+	bootImage.bootImageLength = (size_t)ftello(pFileOut);
+
+	bootImage.headerCrc =
+		CRC32_calculate((const unsigned char *)&bootImage, sizeof(struct HSS_BootImage));
+
+	generate_header(pFileOut, &bootImage); // rewrite header for CRC...
+
+	sign_payload(pFileOut, private_key_filename);
 
 	if (fclose(pFileOut) != 0) {
 		perror("fclose()");
@@ -493,4 +501,5 @@ size_t generate_add_ziChunk(struct HSS_BootZIChunkDesc ziChunk)
 void generate_init(void)
 {
 	bootImage.magic = mHSS_BOOT_MAGIC;
+	bootImage.version = mHSS_BOOT_VERSION;
 }

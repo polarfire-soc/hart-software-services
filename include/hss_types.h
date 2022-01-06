@@ -58,6 +58,8 @@ extern "C" {
 #define mHSS_BOOT_MAGIC		(0xB007C0DEu)
 #define mHSS_COMPRESSED_MAGIC	(0xC08B8355u)
 
+#define mHSS_BOOT_VERSION       1u
+
 #ifndef CONFIG_OPENSBI
 #  define MIN(A,B)		((A) < (B) ? A : B)
 #  define likely(x)		__builtin_expect((x), 1)
@@ -143,6 +145,32 @@ struct HSS_BootZIChunkDesc {
  */
 #define BOOT_IMAGE_MAX_NAME_LEN (256)
 
+#pragma pack(8)
+
+// pre crypto-signing, the BootImage format was slightly different, so to ensure
+// no CRC failures on older images, we provide a legacy structure here purely for sizing
+struct HSS_BootImage_v0 {
+    uint32_t magic;
+    uint32_t version;
+    size_t headerLength;
+    uint32_t headerCrc;
+    size_t chunkTableOffset;
+    size_t ziChunkTableOffset;
+    struct {
+        uintptr_t entryPoint;
+        uint8_t privMode;
+        uint8_t flags;
+        size_t numChunks;
+        size_t firstChunk;
+        size_t lastChunk;
+        char name[BOOT_IMAGE_MAX_NAME_LEN];
+    } hart[MAX_NUM_HARTS-1]; // E51 is not counted, only U54s
+    char set_name[BOOT_IMAGE_MAX_NAME_LEN];
+    size_t bootImageLength;
+    uint8_t pad1[32];
+    uint8_t pad2[32];
+};
+
 struct HSS_Signature {
     uint8_t digest[48];     // SHA384
     uint8_t ecdsaSig[96]; // SECP384R1
@@ -167,12 +195,7 @@ struct HSS_BootImage {
     } hart[MAX_NUM_HARTS-1]; // E51 is not counted, only U54s
     char set_name[BOOT_IMAGE_MAX_NAME_LEN];
     size_t bootImageLength;
-#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
     struct HSS_Signature signature;
-#else
-    uint8_t pad1[32]; // padding to keep compatibility with older format
-    uint8_t pad2[32]; // padding to keep compatibility with older format
-#endif
 };
 
 

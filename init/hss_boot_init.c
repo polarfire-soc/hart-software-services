@@ -192,8 +192,6 @@ bool HSS_BootInit(void)
         } else {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot image failed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calculated CRC32 of image in DDR is 0x%08x" CRLF,
-                CRC32_calculate((const uint8_t *)pBootImage, pBootImage->bootImageLength));
         }
     }
 #endif
@@ -207,21 +205,32 @@ bool HSS_BootInit(void)
 static bool validateCrc_(struct HSS_BootImage *pImageHdr)
 {
     bool result = false;
-    uint32_t headerCrc, originalCrc;
+    uint32_t headerCrc;
 
-    originalCrc = pImageHdr->headerCrc;
-    pImageHdr->headerCrc = 0u;
+    struct HSS_BootImage shadowHdr = *pImageHdr;
 
-    headerCrc = CRC32_calculate((const uint8_t *)pImageHdr, sizeof(struct HSS_BootImage));
+    shadowHdr.headerCrc = 0u;
+    memset(&(shadowHdr.signature), 0, sizeof(shadowHdr.signature));
 
-    if (headerCrc == originalCrc) {
-        result = true;
-    } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF, pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, originalCrc);
+    size_t crcLen;
+    switch (pImageHdr->version) {
+    case 0:
+        // pre crypto-signing, the BootImage format was slightly different, so to ensure
+        // no CRC failures on older images, we use a legacy structure size...
+        crcLen = sizeof(struct HSS_BootImage_v0);
+        break;
+
+    default:
+        crcLen = sizeof(struct HSS_BootImage);
+        break;
     }
 
-    // restore original headerCrc
-    pImageHdr->headerCrc = originalCrc;
+    headerCrc = CRC32_calculate((const uint8_t *)&shadowHdr, crcLen);
+    if (headerCrc == pImageHdr->headerCrc) {
+        result = true;
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF, pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, pImageHdr->headerCrc);
+    }
 
     return result;
 }

@@ -33,8 +33,6 @@
 extern "C" {
 #endif
 
-bool HSS_Crypto_SHA384(const size_t hashBufSize, uint8_t hashBuffer[hashBufSize], const size_t dataBufSize, uint8_t dataBuf[dataBufSize]);
-
 bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen], const size_t dataBufSize, uint8_t dataBuf[dataBufSize]);
 
 #if defined (__cplusplus)

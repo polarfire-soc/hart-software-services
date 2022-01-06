@@ -42,6 +42,7 @@
 #include "hss_types.h"
 #include "debug_printf.h"
 #include "dump_payload.h"
+#include "crc32.h"
 
 #define PRV_U (0u)
 #define PRV_S (1u)
@@ -103,7 +104,8 @@ void dump_payload(const char *filename_input)
 			" (expected magic %x, got %x)\n", mHSS_BOOT_MAGIC, pBootImage->magic);
 	}
 
-	printf("magic:	            0x%x\n",	 pBootImage->magic);
+	printf("magic:	            0x%x\n",	pBootImage->magic);
+	printf("version:	    0x%x\n",	pBootImage->version);
 	printf("headerLength:       0x%lx\n",	pBootImage->headerLength);
 	printf("chunkTableOffset:   0x%lx\n",	pBootImage->chunkTableOffset);
 	printf("ziChunkTableOffset: 0x%lx\n",	pBootImage->ziChunkTableOffset);
@@ -137,6 +139,22 @@ void dump_payload(const char *filename_input)
 	printf("set_name            >>%s<<\n", pBootImage->set_name);
 	printf("bootImageLength:    %lu\n",	(unsigned long)pBootImage->bootImageLength);
 	printf("headerCrc:          0x%08x\n", (unsigned int)pBootImage->headerCrc);
+
+	// sanity check: verify calculated CRC
+	{
+		struct HSS_BootImage shadowBootImage = *pBootImage;
+		shadowBootImage.headerCrc = 0u;
+
+		memset(&(shadowBootImage.signature), 0, sizeof(shadowBootImage.signature));
+
+		uint32_t calculatedCrc =
+			CRC32_calculate((const unsigned char *)&shadowBootImage, sizeof(struct HSS_BootImage));
+
+		if (pBootImage->headerCrc != calculatedCrc) {
+			printf("calculatedCrc:          0x%08x\n", calculatedCrc);
+			printf(" **** CRCs do not match!!! ****\n\n");
+		}
+	}
 
 	off_t chunkOffset = 0u;
 	size_t totalChunkCount = 0u;
