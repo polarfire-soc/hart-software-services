@@ -4,7 +4,7 @@
       <design_name>ICICLE_MSS</design_name>
       <mpfs_part_no>MPFS250T_ES</mpfs_part_no>
       <mpfs_package>FCVG484</mpfs_package>
-      <creation_date_time>10-21-2021_14:49:05</creation_date_time>
+      <creation_date_time>01-14-2022_13:09:15</creation_date_time>
       <xml_format_version>0.5.6</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -2287,7 +2287,7 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000004" description="Cached access at 0x10_0000_000" name="SEG0_1">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7030</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7002</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
@@ -2332,7 +2332,7 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x0</field>
           </register>
           <register address="0x00000008" description="Non-Cached access at 0x00_c000_0000" name="SEG1_2">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7FB0</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7FB8</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
@@ -2342,7 +2342,7 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000016" description="Non-Cached WCB access at 0x00_d000_0000" name="SEG1_4">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7FA0</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7FA8</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
