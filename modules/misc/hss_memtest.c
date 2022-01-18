@@ -209,8 +209,7 @@ do_return:
 //
 //
 //
-#define mGB_IN_BYTES (1024llu * 1024llu * 1024llu)
-#define mMB_IN_BYTES (1024llu * 1024llu)
+#define mMiB_IN_BYTES (1024llu * 1024llu)
 
 #include "ddr_service.h"
 
@@ -218,38 +217,27 @@ bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    if (HSS_DDR_GetSize() >= mGB_IN_BYTES) {
-        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is %lu GiB" CRLF,
-            (uint32_t)(HSS_DDR_GetSize()/mGB_IN_BYTES));
-    } else {
-        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is %lu MiB" CRLF,
-            (uint32_t)(HSS_DDR_GetSize()/mMB_IN_BYTES));
-    }
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is %lu MiB" CRLF,
+        (uint32_t)(HSS_DDR_GetSize()/mMiB_IN_BYTES));
 
-    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
-    HSS_PerfCtr_Allocate(&perf_ctr_index, "MemTest(DDR32)");
+    static int perf_ctr_index_mem32 = PERF_CTR_UNINITIALIZED;
+    static int perf_ctr_index_mem64 = PERF_CTR_UNINITIALIZED;
+    HSS_PerfCtr_Allocate(&perf_ctr_index_mem32, "MemTest(DDR32)");
     if ((HSS_MemTestDataBus((uint64_t *)HSS_DDR_GetStart()) != 0u)
             || (HSS_MemTestAddressBus((uint64_t *)HSS_DDR_GetStart(), HSS_DDR_GetSize()) != NULL)) {
         result = false;
     }
-    HSS_PerfCtr_Lap(perf_ctr_index);
+    HSS_PerfCtr_Lap(perf_ctr_index_mem32);
 
-    if (HSS_DDRHi_GetSize() >= mGB_IN_BYTES) {
-        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is %lu GiB" CRLF,
-            (uint32_t)(HSS_DDRHi_GetSize()/mGB_IN_BYTES));
-    } else {
-        mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is %lu MiB" CRLF,
-            (uint32_t)(HSS_DDRHi_GetSize()/mMB_IN_BYTES));
-    }
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is %lu MiB" CRLF,
+        (uint32_t)(HSS_DDRHi_GetSize()/mMiB_IN_BYTES));
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "DDRHi start is %p" CRLF, HSS_DDRHi_GetStart());
-
-    HSS_PerfCtr_Allocate(&perf_ctr_index, "MemTest(DDR64)");
+    HSS_PerfCtr_Allocate(&perf_ctr_index_mem64, "MemTest(DDR64)");
     if ((HSS_MemTestDataBus((uint64_t *)HSS_DDRHi_GetStart()) != 0u)
             || (HSS_MemTestAddressBus((uint64_t *)HSS_DDRHi_GetStart(), HSS_DDRHi_GetSize()) != NULL)) {
         result = false;
     }
-    HSS_PerfCtr_Lap(perf_ctr_index);
+    HSS_PerfCtr_Lap(perf_ctr_index_mem64);
 
     return result;
 }
