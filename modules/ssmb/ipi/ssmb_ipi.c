@@ -307,7 +307,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
 
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
         const uint32_t hss_message[] = { (uint32_t)message, (uint32_t)transaction_id, 0x0, 0x0 };
-        uint32_t tx_status = IHC_tx_message((IHC_CHANNEL)target, (uint32_t *)&hss_message);
+        uint32_t tx_status = IHC_tx_message((IHC_CHANNEL)target, (uint64_t *)&hss_message);
         if (tx_status == MESSAGE_SENT) {
             result = true;
 	}

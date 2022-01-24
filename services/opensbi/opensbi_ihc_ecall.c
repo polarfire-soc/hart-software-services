@@ -33,7 +33,7 @@
 #include "opensbi_ihc_ecall.h"
 
 static uint32_t message_present_handler(uint32_t remote_hart_id, uint32_t * message,
-    uint32_t message_size , bool is_ack, uint32_t *message_storage_ptr)
+    uint32_t message_size , bool is_ack, uint64_t *message_storage_ptr)
 {
     struct ihc_sbi_rx_msg msg;
 
@@ -46,7 +46,7 @@ static uint32_t message_present_handler(uint32_t remote_hart_id, uint32_t * mess
         memcpy((uint32_t *) &msg.ihc_msg, message, message_size);
     }
 
-    memcpy((uint32_t *) message_storage_ptr, (uint32_t *) &msg, sizeof(struct ihc_sbi_rx_msg));
+    memcpy((uint64_t *) message_storage_ptr, (uint64_t *) &msg, sizeof(struct ihc_sbi_rx_msg));
 
     return 0u;
 }
@@ -58,7 +58,7 @@ int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
     uint32_t remote_hart_id;
     int result = 0;
     uint32_t remote_channel = (uint32_t) regs->a0;
-    uint32_t * message_ptr = (uint32_t *) regs->a1;
+    uint64_t * message_ptr = (uint64_t *) regs->a1;
 
     if ((remote_channel < IHC_CHANNEL_TO_CONTEXTA) || (remote_channel > IHC_CHANNEL_TO_CONTEXTB)) {
         result = SBI_EINVAL;
@@ -73,11 +73,11 @@ int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
             result = SBI_OK;
             break;
         case SBI_EXT_IHC_SEND:
-            if (IHC_tx_message(remote_channel, (uint32_t *) message_ptr))
+            if (IHC_tx_message(remote_channel, (uint64_t *) message_ptr))
                 result = SBI_ERR_DENIED;
             break;
         case SBI_EXT_IHC_RECEIVE:
-            IHC_message_present_indirect_isr(current_hartid(), remote_channel, (uint32_t *) message_ptr);
+            IHC_message_present_indirect_isr(current_hartid(), remote_channel, (uint64_t *) message_ptr);
             result = SBI_OK;
             break;
         default:

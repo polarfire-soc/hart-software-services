@@ -635,7 +635,7 @@ uint32_t IHC_context_to_remote_hart_id(IHC_CHANNEL channel);
             // you can try again...
   @endcode
  */
-extern uint32_t IHC_tx_message(IHC_CHANNEL channel, uint32_t *message);
+extern uint32_t IHC_tx_message(IHC_CHANNEL channel, uint64_t *message);
 
 /*-------------------------------------------------------------------------*//**
   The IHC_message_present_poll()
@@ -717,7 +717,7 @@ void  IHC_message_present_poll(void);
         // to add example code showing use
   @endcode
  */
-void  IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_channel, uint32_t * message_storage_ptr);
+void  IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_channel, uint64_t * message_storage_ptr);
 
 
 #ifdef __cplusplus

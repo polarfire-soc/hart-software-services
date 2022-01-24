@@ -114,7 +114,7 @@ const uint32_t IHCIA_remote_hart_ints[5U] = {
 /* Private Functions                                                          */
 /******************************************************************************/
 static uint32_t parse_incoming_hartid(uint32_t my_hart_id, bool *is_ack, bool polling);
-static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint32_t * message_storage_ptr);
+static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint64_t * message_storage_ptr);
 static void message_present_isr(void);
 
 /******************************************************************************/
@@ -256,7 +256,7 @@ uint8_t IHC_local_remote_config(uint32_t hart_to_configure, uint32_t remote_hart
  * @param message
  * @return MP_BUSY / MESSAGE_SENT
  */
-uint32_t IHC_tx_message(IHC_CHANNEL channel, uint32_t *message)
+uint32_t IHC_tx_message(IHC_CHANNEL channel, uint64_t *message)
 {
     uint32_t i, ret_value = MESSAGE_SENT;
 
@@ -282,7 +282,7 @@ uint32_t IHC_tx_message(IHC_CHANNEL channel, uint32_t *message)
         */
         for(i = 0;i < message_size; i++)
         {
-            IHC[my_hart_id]->HART_IHC[remote_hart_id]->mesg_out[i] = message[i];
+            IHC[my_hart_id]->HART_IHC[remote_hart_id]->mesg_out[i] = (uint32_t) message[i];
         }
         /*
          * set the MP bit. This will notify other of incoming hart message
@@ -328,7 +328,7 @@ void IHC_message_present_poll(void)
  * See miv_ihc.h or the miv_ihc user guide for details of how to use this
  * function.
  */
-void IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_channel, uint32_t * message_storage_ptr)
+void IHC_message_present_indirect_isr(uint32_t my_hart_id, uint32_t remote_channel, uint64_t * message_storage_ptr)
 {
     bool is_ack;
 
@@ -551,7 +551,7 @@ static void message_present_isr(void)
  * upper layer. It will read/copy the incoming message.
  * @return
  */
-static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint32_t * message_storage_ptr)
+static uint32_t rx_message(IHC_CHANNEL channel, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint64_t * message_storage_ptr)
 {
 
     uint32_t ret_value = NO_MESSAGE_RX;
