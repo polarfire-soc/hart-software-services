@@ -111,8 +111,8 @@ include envm-wrapper/Makefile
 OBJS-envm = $(OBJS)
 EXTRA_OBJS-envm = $(EXTRA_OBJS)
 
-OBJS-l2lim = $(OBJS)
-EXTRA_OBJS-l2lim = $(EXTRA_OBJS)
+OBJS-l2scratch = $(OBJS)
+EXTRA_OBJS-l2scratch = $(EXTRA_OBJS)
 
 define main-build-target
 	$(ECHO) " LD        $@";
@@ -136,14 +136,14 @@ $(TARGET-envm): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-
 	$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm) 2>/dev/null
 
-$(TARGET-l2lim): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2lim) $(LIBS) $(LIBS-y)
-	$(call main-build-target,l2lim)
+$(TARGET-l2scratch): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2scratch) $(LIBS) $(LIBS-y)
+	$(call main-build-target,l2scratch)
 	$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
-	$(SIZE) $(BINDIR)/$(TARGET-l2lim) 2>/dev/null
+	$(SIZE) $(BINDIR)/$(TARGET-l2scratch) 2>/dev/null
 
 $(BINDIR)/$(TARGET-envm): $(TARGET-envm)
-$(BINDIR)/$(TARGET-l2lim): $(TARGET-l2lim)
+$(BINDIR)/$(TARGET-l2scratch): $(TARGET-l2scratch)
 
 $(TARGET-ddr): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-ddr) $(LIBS)
 	$(call main-build-target,ddr)

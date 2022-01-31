@@ -30,12 +30,12 @@
 $(info custom-board-design selected)
 
 BINDIR=Default
-TARGET-l2lim=hss-l2lim.elf
+TARGET-l2scratch=hss-l2scratch.elf
 TARGET-envm-wrapper=hss-envm-wrapper.elf
-RISCV_TARGET=$(TARGET-l2lim) $(TARGET-envm-wrapper)
+RISCV_TARGET=$(TARGET-l2scratch) $(TARGET-envm-wrapper)
 TARGET:=$(RISCV_TARGET)
 
-LINKER_SCRIPT-l2lim=boards/${BOARD}/hss-l2lim.ld
+LINKER_SCRIPT-l2scratch=boards/${BOARD}/hss-l2scratch.ld
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
@@ -79,7 +79,7 @@ baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 # Linker Scripts
 #
 
-$(BOARD_DIR)/hss-l2lim.ld: $(BOARD_DIR)/hss-l2lim.lds config.h
+$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds config.h
 
 ################################################################################################
 

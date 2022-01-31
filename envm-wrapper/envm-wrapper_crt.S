@@ -120,7 +120,7 @@ _start:
 	call	init_memory
 	call	HSS_Setup_Clocks
 
-	la	a0, hss_l2lim_lz				# compressed image header
+	la	a0, hss_l2scratch_lz				# compressed image header
 	lw	a1, OFFSET_OF(HSS_CompressedImage, version)(a0)	# version
 	li	a2, mHSS_COMPRESSED_VERSION_DEFLATE
 	beq	a1, a2, .e51_miniz_decompress
@@ -334,9 +334,9 @@ config_copy:
 	.option push
 	.option norelax
 	.align 4
-	.globl	hss_l2lim_lz
-hss_l2lim_lz:
-	.incbin	"Default/hss-l2lim.bin.deflate"
+	.globl	hss_l2scratch_lz
+hss_l2scratch_lz:
+	.incbin	"Default/hss-l2scratch.bin.deflate"
 
 	.section .data
 	.align 8

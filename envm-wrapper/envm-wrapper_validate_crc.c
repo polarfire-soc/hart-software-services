@@ -23,11 +23,11 @@
 void validate_crc(void);
 void validate_crc(void)
 {
-    extern const struct HSS_CompressedImage hss_l2lim_lz;
+    extern const struct HSS_CompressedImage hss_l2scratch_lz;
     extern const unsigned char __l2_start;
-    uint32_t crc32 = CRC32_calculate(&__l2_start, hss_l2lim_lz.originalImageLen);
+    uint32_t crc32 = CRC32_calculate(&__l2_start, hss_l2scratch_lz.originalImageLen);
 
-    if (hss_l2lim_lz.originalCrc == crc32) {
+    if (hss_l2scratch_lz.originalCrc == crc32) {
     } else {
         while (1) { ; } // spin forever
     }
