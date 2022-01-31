@@ -67,17 +67,17 @@ int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
 
     switch (funcid) {
         case SBI_EXT_IHC_CTX_INIT:
-            my_hart_id = IHC_context_to_local_hart_id(remote_channel);
-            remote_hart_id = IHC_context_to_remote_hart_id(remote_channel);
+            my_hart_id = IHC_context_to_context_hart_id(current_hartid());
+            remote_hart_id = IHC_context_to_context_hart_id(remote_channel);
             IHC_local_remote_config(my_hart_id, remote_hart_id, message_present_handler, true, true);
             result = SBI_OK;
             break;
         case SBI_EXT_IHC_SEND:
-            if (IHC_tx_message(remote_channel, (uint64_t *) message_ptr))
+            if (IHC_tx_message_from_context(remote_channel, (uint64_t *) message_ptr))
                 result = SBI_ERR_DENIED;
             break;
         case SBI_EXT_IHC_RECEIVE:
-            IHC_message_present_indirect_isr(current_hartid(), remote_channel, (uint64_t *) message_ptr);
+            IHC_context_indirect_isr((uint64_t *) message_ptr);
             result = SBI_OK;
             break;
         default:

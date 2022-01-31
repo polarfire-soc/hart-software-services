@@ -36,12 +36,6 @@
 #define HSS_REMOTE_HARTS_MASK 		(HART1_MASK | HART2_MASK |HART3_MASK | HART4_MASK)
 
 /*------------------------------------------------------------------------------
- * Contex A and B hart ID's used in this system - user defined
- */
-#define CONTEXTA_HARTID         0x01U
-#define CONTEXTB_HARTID         0x04U
-
-/*------------------------------------------------------------------------------
  * Define which harts are connected via comms channels to a particular hart
  * user defined
  */

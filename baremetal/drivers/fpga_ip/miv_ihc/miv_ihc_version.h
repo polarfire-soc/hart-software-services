@@ -2,7 +2,7 @@
 #define MIV_IHC_VERSION_H
 
 /*******************************************************************************
- * Copyright 2019-2021 Microchip Corporation.
+ * Copyright 2021-2022 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -47,12 +47,12 @@ extern "C" {
   |-------------------------------------------------| -------------------------|
   | **MIV_IHC_VERSION_MAJOR**                       | **0**                    |
   | **MIV_IHC_VERSION_MINOR**                       | **1**                    |
-  | **MIV_IHC_VERSION_MINOR**                       | **0**                    |
+  | **MIV_IHC_VERSION_MINOR**                       | **1**                    |
 
  */
 #define MIV_IHC_VERSION_MAJOR 0
 #define MIV_IHC_VERSION_MINOR 1
-#define MIV_IHC_VERSION_PATCH 0
+#define MIV_IHC_VERSION_PATCH 1
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -11,8 +11,13 @@
   @mainpage Configuration for the MiV-IHC driver
 
     @section intro_sec Introduction
-    Used to configure the driver
-
+    Used to configure the driver with base addresses from your Libero Projext.
+    These addresses will not change unless you change the Libero design 
+    IHC subsytem design.
+    This file is used for reference only.
+    When usiing in a project copy to 
+    src/boards/your-board/platform-config/drivers_config/fpga-ip/miv_ihc
+    and rename dropping the _reference.
     @section
 
 *//*==========================================================================*/
@@ -154,11 +159,11 @@
  * choose the interrupt mapping used in our system
  * Please see miv_ihc_regs.h for the defaults
  */
-#define IHCIA_hart0_int fabric_f2h_63_plic_IRQHandler
-#define IHCIA_hart1_int fabric_f2h_62_plic_IRQHandler
-#define IHCIA_hart2_int fabric_f2h_61_plic_IRQHandler
-#define IHCIA_hart3_int fabric_f2h_60_plic_IRQHandler
-#define IHCIA_hart4_int fabric_f2h_59_plic_IRQHandler
+#define IHCIA_hart0_IRQHandler fabric_f2h_63_plic_IRQHandler
+#define IHCIA_hart1_IRQHandler fabric_f2h_62_plic_IRQHandler
+#define IHCIA_hart2_IRQHandler fabric_f2h_61_plic_IRQHandler
+#define IHCIA_hart3_IRQHandler fabric_f2h_60_plic_IRQHandler
+#define IHCIA_hart4_IRQHandler fabric_f2h_59_plic_IRQHandler
 
 #define IHCIA_hart0_INT  FABRIC_F2H_63_PLIC
 #define IHCIA_hart1_INT  FABRIC_F2H_62_PLIC
@@ -167,4 +172,3 @@
 #define IHCIA_hart4_INT  FABRIC_F2H_59_PLIC
 
 #endif /* MIV_IHC_ADD_MAPPING_H_ */
-

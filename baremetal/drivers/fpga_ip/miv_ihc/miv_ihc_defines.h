@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -12,9 +12,9 @@
 
     @section The defines in this file are used by the user configuration
     header and the driver files. The header files need to be included in a
-    project in the following order to allow over-ride of user settings.
+    project in the following order to allow override of user settings.
         - miv_ihc_defines.h
-        - miv_ihc_config.h    we can over-ride default setting in this file
+        - miv_ihc_config.h    we can override default setting in this file
                          This config file is stored in the boards directory and
                          is called from the mss_sw_config.h file.
         - miv_ihc_regs.h
@@ -43,7 +43,7 @@
 
 /*-------------------------------------------------------------------------*//**
 
-  ## Defines for the INT_EN register in the IHCA
+  ## Defines for the INT_EN register in the IHCIA
 
   These defines are used to set interrupt enables in the INT_EN register.
 
@@ -53,7 +53,7 @@
 
   ### HSS_HART_MP_INT_EN
 
-    Enable MP interrupt for hart0
+    Enable MP interrupt fopr hart0
 
   ### HSS_HART_ACK_INT_EN
 
@@ -110,4 +110,3 @@
 #define HART4_ACK_INT_EN            (1U<<9U)
 
 #endif /* MIV_IHC_FIXED_DEFINES_H_ */
-
