@@ -31,6 +31,9 @@ EXTRA_SRCS-y += \
 	init/hss_boot_init.c \
 	init/hss_sys_setup.c \
 
+EXTRA_SRCS-y += \
+	init/hss_usb_init.c
+
 EXTRA_SRCS-$(CONFIG_USE_IHC) += \
 	init/hss_ihc_init.c
 
@@ -47,6 +50,7 @@ EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
         init/hss_logo_init.c
 
 INCLUDES +=\
+	-Ibaremetal/drivers/mss_usb \
 
 init/hss_ddr_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_pdma_init.o: CFLAGS=$(CFLAGS_GCCEXT)
@@ -54,3 +58,4 @@ init/hss_boot_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_opensbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_sys_setup.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_pcie_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+init/hss_usb_init.o: CFLAGS=$(CFLAGS_GCCEXT)

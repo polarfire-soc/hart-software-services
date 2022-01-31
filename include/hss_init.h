@@ -73,6 +73,8 @@ void HSS_IHCInit_U54(void);
 bool HSS_PCIeInit(void);
 #endif
 
+bool HSS_USBInit(void);
+
 bool HSS_PDMAInit(void);
 
 #ifdef __cplusplus

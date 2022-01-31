@@ -20,6 +20,7 @@
 #include "mss_plic.h"
 #include "uart_helper.h"
 #include "usbdmsc_service.h"
+#include "hss_init.h"
 
 /**************************************************************************//**
  */
@@ -39,6 +40,8 @@ void USBDMSC_Init(void)
     PLIC_SetPriority(MMC_wakeup_PLIC, 2u);
     PLIC_EnableIRQ(MMC_main_PLIC);
     PLIC_EnableIRQ(MMC_wakeup_PLIC);
+
+    HSS_USBInit();
 
     MSS_MPU_configure(MSS_MPU_USB, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
         MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
