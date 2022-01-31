@@ -42,7 +42,6 @@ extern "C" {
 /**
  * Interface
  */
-bool HSS_Setup_PAD_IO(void);
 bool HSS_Setup_PLIC(void);
 bool HSS_Setup_MPU(void);
 bool HSS_Setup_L2Cache(void);

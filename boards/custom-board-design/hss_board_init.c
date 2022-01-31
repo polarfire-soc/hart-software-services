@@ -37,8 +37,6 @@
 
 const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     // Name                     FunctionPointer         Halt   Restart
-    { "HSS_Setup_Clocks",       HSS_Setup_Clocks,       false, false },
-    //{ "HSS_Setup_PAD_IO",       HSS_Setup_PAD_IO,       false, false },
     { "HSS_ZeroTIMs",           HSS_ZeroTIMs,           false, false },
     { "HSS_Setup_BusErrorUnit", HSS_Setup_BusErrorUnit, false, false },
     { "HSS_Setup_MPU",          HSS_Setup_MPU,          false, false },

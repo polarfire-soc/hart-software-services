@@ -15,7 +15,6 @@
  * auto-generated code from an external tool, e.g. Libero.
  *
  * What needs to be implemented are the following functions:
- *     bool HSS_Setup_PAD_IO(void);
  *     bool HSS_Setup_PLIC(void);
  *     bool HSS_Setup_MPU(void);
  *     bool HSS_Setup_L2Cache(void);
@@ -65,34 +64,6 @@
 //
 // Setup Functions
 //
-
-/*!
- * \brief PAD I/O Configuration
- *
- * There is no dynamic PVT calibration required for the MSSIOs. Instead, pcode and ncode values
- * is read by MPFS HSS Embedded Software from system registers, which are initialized by G5C at
- * boot time (reading from factory data).
- *
- * The pcode and ncode values to be applied to each bank depend on the user selection of voltage
- * threshold standard (specified in MSS configurator) to be applied to the bank.
- *
- * MPFS HSS Embedded Software performs the setting of the pcode and ncode values to the MSSIOs,
- * to avoid requiring dedicated hardware decode them from the system registers.
- * The E51 will need to setup per-bank and per-IO configurations for MSSIO.
- *
- * Per bank configuration includes weak pullup/pulldown, drive strength etc. configured as per
- * user requirement (specified in MSS configurator).
- *
- * Per I/O configuration includes mux configuration.
- */
-bool HSS_Setup_PAD_IO(void)
-{
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-    (void)mssio_setup();
-#endif
-
-    return true;
-}
 
 /*!
  * \brief PLIC Setup and Configuration
