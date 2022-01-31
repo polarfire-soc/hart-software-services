@@ -182,6 +182,7 @@ static uint8_t map_token_to_priv_mode(enum token token_idx);
 static void report_illegal_token(char const * const stateName, yaml_event_t *pEvent)	__attribute__((nonnull));
 static void report_illegal_event(char const * const stateName, yaml_event_t *pEvent)	__attribute__((nonnull));
 static enum token string_to_scalar(unsigned char const * const token_string)	__attribute__((nonnull));
+static void concatenate(char *existing, char const * const new_chars, const size_t n)	__attribute__((nonnull));
 static void populate_boot_flags(void);
 
 static void Do_State_Transition(enum ParserState new_state);
@@ -307,6 +308,20 @@ static enum token string_to_scalar(unsigned char const * const token_string)
 
 	return result;
 }
+
+static void concatenate(char *existing, char const * const new_chars, const size_t n)
+{
+	char tempBuffer[n];
+
+	strncpy(tempBuffer, existing, ARRAY_SIZE(tempBuffer));
+	int ret_val = snprintf(existing, n-1, "%s%s", tempBuffer, new_chars);
+	if (ret_val < 0) {
+		// silently truncate
+		debug_printf(3, "\t\tYAML Parser: string truncation occurred\n");
+	}
+	existing[n-1] = '\0';
+}
+
 
 static void Do_State_Transition(enum ParserState new_state)
 {
@@ -667,11 +682,7 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 
 	case YAML_MAPPING_END_EVENT:
 		if (!override_set_name_flag) {
-			if (payload_idx) {
-				strncat(bootImage.set_name, "+", BOOT_IMAGE_MAX_NAME_LEN-1);
-			}
-			strncat(bootImage.set_name, base_name, BOOT_IMAGE_MAX_NAME_LEN-1);
-			bootImage.set_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
+			concatenate(bootImage.set_name, base_name, ARRAY_SIZE(bootImage.set_name));
 		}
 
 		bool retVal = elf_parser(base_name, base_owner);
@@ -789,9 +800,11 @@ static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)
 		case TOKEN_HART_U54_4:
 			base_owner = (token_idx - TOKEN_HART_U54_1 + 1u);
 
-			strncat(bootImage.hart[base_owner-1].name, base_name, BOOT_IMAGE_MAX_NAME_LEN-2);
-			bootImage.hart[base_owner-1].name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
+			if (strlen(bootImage.hart[base_owner-1].name)) {
+				concatenate(bootImage.hart[base_owner-1].name, "+", ARRAY_SIZE(bootImage.hart[base_owner-1].name));
+			}
 
+			concatenate(bootImage.hart[base_owner-1].name, base_name, ARRAY_SIZE(bootImage.hart[base_owner-1].name));
 
 			debug_printf(1, "\towner is %" PRIu64 "\n", base_owner);
 			Do_State_Transition(STATE_NEW_PAYLOAD);

@@ -95,9 +95,12 @@ void dump_payload(const char *filename_input)
 
 	struct HSS_BootImage *pBootImage;
 
-	pBootImage = mmap(NULL, fileSize, PROT_READ,
-		MAP_PRIVATE, fdIn, 0);
+	pBootImage = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fdIn, 0);
 	assert(pBootImage);
+	if (pBootImage == MAP_FAILED) {
+		perror("mmap()");
+		exit(EXIT_FAILURE);
+	}
 
 	if (pBootImage->magic != mHSS_BOOT_MAGIC) {
 		printf("Warning: does not look like a valid boot image"
