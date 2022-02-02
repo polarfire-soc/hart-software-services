@@ -46,9 +46,6 @@ EXTRA_SRCS-$(CONFIG_USE_PDMA) += \
 EXTRA_SRCS-$(CONFIG_OPENSBI) += \
         init/hss_opensbi_init.c
 
-EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
-        init/hss_logo_init.c
-
 INCLUDES +=\
 	-Ibaremetal/drivers/mss_usb \
 

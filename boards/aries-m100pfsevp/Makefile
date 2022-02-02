@@ -33,12 +33,12 @@
 $(info aries-m100pfsevp selected)
 
 BINDIR=Default
-TARGET-l2lim=hss-l2lim.elf
+TARGET-l2scratch=hss-l2scratch.elf
 TARGET-envm-wrapper=hss-envm-wrapper.elf
-RISCV_TARGET=$(TARGET-l2lim) $(TARGET-envm-wrapper)
+RISCV_TARGET=$(TARGET-l2scratch) $(TARGET-envm-wrapper)
 TARGET:=$(RISCV_TARGET)
 
-LINKER_SCRIPT-l2lim=boards/${BOARD}/hss-l2lim.ld
+LINKER_SCRIPT-l2scratch=boards/${BOARD}/hss-l2scratch.ld
 
 CONFIG_PLATFORM_MPFS=y
 PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1 -DCONFIG_MODULE_M100PFS=1 -DCONFIG_BOARD_M100PFSEVP=1
@@ -54,6 +54,9 @@ EXTRA_SRCS-y += \
 	$(BOARD_DIR)/hss_uart_init.c \
         $(BOARD_DIR)/uart_helper.c \
         $(BOARD_DIR)/hss_board_init.c \
+
+EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
+        $(BOARD_DIR)/hss_logo_init.c
 
 $(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
@@ -85,9 +88,7 @@ baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 # Linker Scripts
 #
 
-$(BOARD_DIR)/hss-l2lim.ld: $(BOARD_DIR)/hss-l2lim.lds config.h
-	@$(ECHO) " CPP       $@";
-	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
+$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds config.h
 
 ################################################################################################
 
@@ -134,10 +135,8 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/m100pfs_reference.xml
+$(SOC_CONFIG_FILES): $(subst $\",,$(CONFIG_SOC_FPGA_DESIGN_XML))
 	@$(ECHO) " CFGGEN    $<";
-	$(CMD_PREFIX)$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
+	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
-
-include envm-wrapper/Makefile

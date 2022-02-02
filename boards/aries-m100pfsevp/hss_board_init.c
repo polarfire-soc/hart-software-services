@@ -37,8 +37,6 @@
 
 const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     // Name                     FunctionPointer         Halt   Restart
-    { "HSS_Setup_Clocks",       HSS_Setup_Clocks,       false, false },
-    //{ "HSS_Setup_PAD_IO",       HSS_Setup_PAD_IO,       false, false },
     { "HSS_ZeroTIMs",           HSS_ZeroTIMs,           false, false },
     { "HSS_Setup_PLIC",         HSS_Setup_PLIC,         false, false },
     { "HSS_Setup_BusErrorUnit", HSS_Setup_BusErrorUnit, false, false },
@@ -48,6 +46,7 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
 #ifdef CONFIG_USE_PCIE
     { "HSS_PCIeInit",           HSS_PCIeInit,           false, false },
 #endif
+    //{ "HSS_USBInit",            HSS_USBInit,            false, false },
 };
 
 /******************************************************************************************************/

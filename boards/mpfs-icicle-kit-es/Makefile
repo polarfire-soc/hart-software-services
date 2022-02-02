@@ -55,6 +55,9 @@ EXTRA_SRCS-y += \
         $(BOARD_DIR)/uart_helper.c \
         $(BOARD_DIR)/hss_board_init.c \
 
+EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
+        init/hss_logo_init.c
+
 $(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += $(BOARD_DIR)/payload.o

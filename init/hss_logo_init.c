@@ -18,7 +18,6 @@
 #include "hss_init.h"
 #include "hss_debug.h"
 
-#ifndef CONFIG_MODULE_M100PFS
 //
 // A variety of colored pixels are needed - red, white, black
 // define these as ASCII characters if color output is not enabled
@@ -181,12 +180,10 @@ const struct __attribute__((packed))  {
 
     { 4, W0 }, { 1, r1 }, { 1, r3 }, { 7, r4 }, { 1, r3 }, { 61, W0 }, { 1, RST }, {1, CRLF_token}
 };
-#endif	/* !CONFIG_MODULE_M100PFS */
 
 bool HSS_LogoInit(void)
 {
     mHSS_PUTS(CRLF);
-#ifndef CONFIG_MODULE_M100PFS
     int i;
 
     // decode and output our RLE Logo
@@ -197,14 +194,6 @@ bool HSS_LogoInit(void)
             mHSS_PUTS(tokenStringTable[rleLogoElements[i].tokenIndex]);
         }
     }
-#else
-    mHSS_PUTS("-------------------------" CRLF);
-    mHSS_PUTS("--      M100PFS        --" CRLF);
-    mHSS_PUTS("-- PolarFire SoC FPGA  --" CRLF);
-    mHSS_PUTS("--                     --" CRLF);
-    mHSS_PUTS("-- Copyright (c) 2021  --" CRLF);
-    mHSS_PUTS("-- ARIES Embedded GmbH --" CRLF);
-    mHSS_PUTS("-------------------------" CRLF);
-#endif
+
     return true;
 }

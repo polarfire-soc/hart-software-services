@@ -1,0 +1,9 @@
+menu "aries-m100pfsevp Design Configuration Options"
+
+config SOC_FPGA_DESIGN_XML
+	string "Enter path to Libero XML file"
+	default "boards/$(BOARD)/soc_fpga_design/xml/m100pfs_reference.xml"
+	help
+		This option specifies the design XML file to use.
+endmenu
+
