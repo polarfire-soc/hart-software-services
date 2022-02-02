@@ -144,7 +144,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             const uint32_t next_mode = immediate_arg;
 
 #if IS_ENABLED(CONFIG_OPENSBI)
-            sbi_hart_switch_mode(0u, 0u, (unsigned long)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
+            sbi_hart_switch_mode(hartid, 0u, (unsigned long)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
 #else
             // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1
             uint32_t mstatus_val = mHSS_CSR_READ(mstatus);
@@ -171,7 +171,9 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             mHSS_CSR_WRITE(mepc, *((void **)p_extended_buffer));
 
             // execute MRET, causing MIE <= MPIE, new priv mode <= PRV_S, MPIE <= 1, MPP <= U
-            asm("mret");
+            register unsigned long a0 asm("a0") = hartid;
+            register unsigned long a1 asm("a1") = 0u;
+            asm("mret" : : "r"(a0), "r"(a1));
             __builtin_unreachable();
 #endif
 
