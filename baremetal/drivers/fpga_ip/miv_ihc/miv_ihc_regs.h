@@ -117,12 +117,12 @@ extern "C" {
 
   ___CTL_REG___:
      32 bit register:
-      - _RMP_       – Remote Message Present.
-      - _MP_        – Message present.
-      - _ACK_       – 1 => ACK present
-      - _CLR_ACK_   – Set to 0 to clear ACK
-      - _ACKIE_     – Enable ACK on reading of MP
-      - _reserve28_ – Reserved.
+      - _RMP_       - Remote Message Present.
+      - _MP_        - Message present.
+      - _ACK_       - 1 => ACK present
+      - _CLR_ACK_   - Set to 0 to clear ACK
+      - _ACKIE_     - Enable ACK on reading of MP
+      - _reserve28_ - Reserved.
  */
 typedef union{      /*!< IHCC_CTL_REG register definition*/
     __IO  uint32_t              CTL_REG;
@@ -188,17 +188,17 @@ typedef struct IHCC_IP_TypeDef_
 
   ___MSG_AVAIL___:
      32 bit register:
-      - _MP_H0_     – Message Present from hart 0
-      - _ACK_H0_    – ACK coming from hart 0
-      - _MP_H1_     – Message Present from hart 1
-      - _ACK_H1_    – ACK coming from hart 1
-      - _MP_H2_     – Message Present from hart 2
-      - _ACK_H2_    – ACK coming from hart 2
-      - _MP_H3_     – Message Present from hart 3
-      - _ACK_H3_    – ACK coming from hart 3
-      - _MP_H4_     – Message Present from hart 4
-      - _ACK_H4_    – ACK coming from hart 4
-      - _reserved_ – Reserved.
+      - _MP_H0_     - Message Present from hart 0
+      - _ACK_H0_    - ACK coming from hart 0
+      - _MP_H1_     - Message Present from hart 1
+      - _ACK_H1_    - ACK coming from hart 1
+      - _MP_H2_     - Message Present from hart 2
+      - _ACK_H2_    - ACK coming from hart 2
+      - _MP_H3_     - Message Present from hart 3
+      - _ACK_H3_    - ACK coming from hart 3
+      - _MP_H4_     - Message Present from hart 4
+      - _ACK_H4_    - ACK coming from hart 4
+      - _reserved_ - Reserved.
  */
 typedef union IHCIA_IP_MSG_AVAIL_STAT_TypeDef_{    /*!< IHCIA_IP_MSG_AVAIL_STAT register definition*/
     __IO  uint32_t                        MSG_AVAIL;
@@ -225,17 +225,17 @@ typedef union IHCIA_IP_MSG_AVAIL_STAT_TypeDef_{    /*!< IHCIA_IP_MSG_AVAIL_STAT 
 
   ___INT_EN___:
      32 bit register:
-      - _MP_H0_     – Enable interrupt from Message Present from hart 0
-      - _ACK_H0_    – Enable interrupt from ACK coming from hart 0
-      - _MP_H1_     – Enable interrupt from Message Present from hart 1
-      - _ACK_H1_    – Enable interrupt from ACK coming from hart 1
-      - _MP_H2_     – Enable interrupt from Message Present from hart 2
-      - _ACK_H2_    – Enable interrupt from ACK coming from hart 2
-      - _MP_H3_     – Enable interrupt from Message Present from hart 3
-      - _ACK_H3_    – Enable interrupt from ACK coming from hart 3
-      - _MP_H4_     – Enable interrupt from Message Present from hart 4
-      - _ACK_H4_    – Enable interrupt from ACK coming from hart 4
-      - _reserved_ – Reserved.
+      - _MP_H0_     - Enable interrupt from Message Present from hart 0
+      - _ACK_H0_    - Enable interrupt from ACK coming from hart 0
+      - _MP_H1_     - Enable interrupt from Message Present from hart 1
+      - _ACK_H1_    - Enable interrupt from ACK coming from hart 1
+      - _MP_H2_     - Enable interrupt from Message Present from hart 2
+      - _ACK_H2_    - Enable interrupt from ACK coming from hart 2
+      - _MP_H3_     - Enable interrupt from Message Present from hart 3
+      - _ACK_H3_    - Enable interrupt from ACK coming from hart 3
+      - _MP_H4_     - Enable interrupt from Message Present from hart 4
+      - _ACK_H4_    - Enable interrupt from ACK coming from hart 4
+      - _reserved_ - Reserved.
  */
 
 typedef union IHCIA_IP_INT_EN_TypeDef_ {                       /*!< IHCIA_IP_INT_EN_TypeDef register definition*/

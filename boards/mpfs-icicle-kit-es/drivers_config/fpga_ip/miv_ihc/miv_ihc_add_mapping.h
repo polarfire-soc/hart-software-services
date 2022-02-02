@@ -12,10 +12,10 @@
 
     @section intro_sec Introduction
     Used to configure the driver with base addresses from your Libero Projext.
-    These addresses will not change unless you change the Libero design 
+    These addresses will not change unless you change the Libero design
     IHC subsytem design.
     This file is used for reference only.
-    When usiing in a project copy to 
+    When usiing in a project copy to
     src/boards/your-board/platform-config/drivers_config/fpga-ip/miv_ihc
     and rename dropping the _reference.
     @section
