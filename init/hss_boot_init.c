@@ -108,7 +108,151 @@ static HSS_GetBootImageFnPtr_t getBootImageFunction =
 #    error Unable to determine boot mechanism
 #endif
 
+#define SPU_LOAD_ADDR      0x3C0000
+#define SPU_SIZE           0x80000
+#define SPU_EXEC_LOAD_ADDR 0xb00000f0 
+u64 exec_address = 0;
+
 #define UBOOT_LOAD_ADDR    0x400000
+#define UBOOT_SIZE         0x80000
+#define UBOOT_EXEC_ADDR    0x80200000
+
+#include "riscv_encoding.h"
+
+int custom_boot_image = 0;
+
+void custom_boot_setup_pmp_onEntry(enum HSSHartId target);
+void custom_boot_setup_pmp_onEntry(enum HSSHartId target)
+{
+    uintptr_t entryPoint;
+    uint8_t privMode;
+    const char * pMachineName;
+    uint32_t hartMask;
+
+    if ( target == 1 ) {
+        mpfs_domains_register_hart(target, 1);
+        entryPoint = UBOOT_EXEC_ADDR;
+        privMode = PRV_S;
+        pMachineName = "U-Boot";
+        hartMask = 0xe;
+    } else if ( target == 4 ) {
+        mpfs_domains_register_hart(target, 4);
+        entryPoint = exec_address;
+        privMode = PRV_M;
+        pMachineName = "SPU";
+        hartMask = 0x10;
+    } else {
+        mpfs_domains_register_hart(target, 1);
+        return;
+    }
+
+    mpfs_domains_register_boot_hart((char *)pMachineName,
+            	hartMask, target, privMode, (void *)entryPoint, NULL);
+    return;
+}
+
+void custom_boot_setup_pmp_handler(enum HSSHartId target);
+void custom_boot_setup_pmp_handler(enum HSSHartId target)
+{
+    uint32_t msgIndex;
+    bool result = false;
+
+    result = IPI_MessageAlloc(&msgIndex);
+    assert(result);
+
+    sbi_printf("%s:%d IPI msgIndex %d\n", __func__, __LINE__, msgIndex);
+    mb();
+    mb_i();
+
+    result = IPI_MessageDeliver(msgIndex, target,
+            	IPI_MSG_PMP_SETUP, 0, NULL, NULL);
+    return;
+}
+
+void custom_boot_opensbi_init_handler(enum HSSHartId target);
+void custom_boot_opensbi_init_handler(enum HSSHartId target)
+{
+    uint32_t msgIndex;
+    uintptr_t entryPoint;
+    uint8_t privMode;
+    int i;
+
+    if ( target != 1 )
+        return;
+
+    sbi_printf("%s:%d IPI U-Boot\n", __func__, __LINE__);
+    entryPoint = UBOOT_EXEC_ADDR;
+    privMode = PRV_S;
+
+    for ( i = 2; i < 4; i++ ) {
+        bool result;
+        result = IPI_MessageAlloc(&msgIndex);
+        assert(result);
+
+        mb();
+        mb_i();
+
+        result = IPI_MessageDeliver(msgIndex, i, IPI_MSG_OPENSBI_INIT,
+            	privMode, (void *)entryPoint, (void *)NULL);
+    }
+    return;
+}
+
+void custom_boot_opensbi_init_onExit(enum HSSHartId target);
+void custom_boot_opensbi_init_onExit(enum HSSHartId target)
+{
+    uint32_t msgIndex;
+    uintptr_t entryPoint;
+    uint8_t privMode;
+    bool result;
+
+    if ( target == 1 ) {
+        entryPoint = UBOOT_EXEC_ADDR;
+        privMode = PRV_S;
+        sbi_printf("%s:%d IPI U-Boot\n", __func__, __LINE__);
+    } else if ( target == 4 ) {
+        entryPoint = exec_address;
+        privMode = PRV_M;
+        sbi_printf("%s:%d IPI SPU\n", __func__, __LINE__);
+    } else {
+        return;
+    }
+
+    result = IPI_MessageAlloc(&msgIndex);
+    assert(result);
+
+    mb();
+    mb_i();
+
+    result = IPI_MessageDeliver(msgIndex, target, IPI_MSG_OPENSBI_INIT,
+            	privMode, (void *)entryPoint, (void *)NULL);
+    return;
+}
+
+bool HSS_Load_SPU(void);
+bool HSS_Load_SPU(void)
+{
+    const u64 * addr64 = (u64 *)SPU_EXEC_LOAD_ADDR;
+    u64 load_address = 0;
+    exec_address = 0;
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read SPU image"
+        " from %x to %x (%d bytes) ..."
+        CRLF, SPU_LOAD_ADDR, SPU_EXEC_LOAD_ADDR, SPU_SIZE);
+    HSS_QSPI_ReadBlock((char *)SPU_EXEC_LOAD_ADDR, SPU_LOAD_ADDR, SPU_SIZE);
+    load_address = __builtin_bswap64(addr64[0]);
+    exec_address = __builtin_bswap64(addr64[1]);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "load_address %x exec_address %x..." CRLF, load_address, exec_address);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "load_address %x exec_address %x..." CRLF, (load_address - 2 * sizeof(u64)), SPU_EXEC_LOAD_ADDR);
+    if ( (load_address - 2 * sizeof(u64)) != SPU_EXEC_LOAD_ADDR ) {
+        HSS_QSPI_ReadBlock((char *)load_address - 2 * sizeof(u64),
+                           SPU_LOAD_ADDR, SPU_SIZE);
+    }
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read U-Boot image from %x to %x (%d bytes) ..." CRLF, UBOOT_LOAD_ADDR, UBOOT_EXEC_ADDR, UBOOT_SIZE);
+    HSS_QSPI_ReadBlock((char *)UBOOT_EXEC_ADDR, UBOOT_LOAD_ADDR, UBOOT_SIZE);
+    custom_boot_image = 1;
+    return true;
+}
 
 bool HSS_BootInit(void)
 {
@@ -191,6 +335,10 @@ bool HSS_BootInit(void)
     }
 #endif
 
+    if ( !result ) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Custom Image" CRLF);
+        result = HSS_Load_SPU();
+    }
     HSS_PerfCtr_Lap(perf_ctr_index);
     return result;
 }

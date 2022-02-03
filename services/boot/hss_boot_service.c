@@ -61,6 +61,8 @@
 
 #define BOOT_SUB_CHUNK_SIZE 256u
 
+extern int custom_boot_image;
+
 /*
  * Module Prototypes (states)
  */
@@ -311,6 +313,13 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
 //
 static void boot_init_handler(struct StateMachine * const pMyMachine)
 {
+    if ( custom_boot_image ) {
+        struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+        HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
+
+        pMyMachine->state = BOOT_SETUP_PMP;
+        return;
+    }
     if (pBootImage) {
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot" CRLF, pMyMachine->pMachineName);
 
@@ -328,6 +337,10 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
 }
 
 /////////////////
+void custom_boot_setup_pmp_onEntry(enum HSSHartId target);
+void custom_boot_setup_pmp_handler(enum HSSHartId target);
+void custom_boot_opensbi_init_handler(enum HSSHartId target);
+void custom_boot_opensbi_init_onExit(enum HSSHartId target);
 
 static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
 {
@@ -335,6 +348,11 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
     enum HSSHartId const target = pInstanceData->target;
 
     pInstanceData->msgIndex = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
+
+    if ( custom_boot_image ) {
+        custom_boot_setup_pmp_onEntry(target);
+        return;
+    }
 
     bool const boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
 
@@ -371,6 +389,12 @@ static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine)
 
     bool result = false;
 
+    if ( custom_boot_image ) {
+        custom_boot_setup_pmp_handler(target);
+        pMyMachine->state = BOOT_SETUP_PMP_COMPLETE;
+        return;
+    }
+
     if (pInstanceData->msgIndex == IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
         result = HSS_Boot_PMPSetupRequest(target, &(pInstanceData->msgIndex));
     } else {
@@ -389,6 +413,15 @@ static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachi
 
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
 {
+    if ( custom_boot_image ) {
+        struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+        enum HSSHartId const target = pInstanceData->target;
+        if ( target == 1 || target == 4 )
+            pMyMachine->state = BOOT_OPENSBI_INIT;
+        else
+    	    pMyMachine->state = BOOT_IDLE;
+        return;
+    }
     if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_SETUP_PMP_COMPLETE_TIMEOUT)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
             pMyMachine->pMachineName, pMyMachine->executionCount);
@@ -571,6 +604,9 @@ static void boot_opensbi_init_onEntry(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
+    if ( custom_boot_image ) {
+	    return;
+    }
 
     assert(pBootImage != NULL);
 
@@ -583,6 +619,11 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
+    if ( custom_boot_image ) {
+        custom_boot_opensbi_init_handler(target);
+        pMyMachine->state = BOOT_WAIT;
+        return;
+    }
 
     assert(pBootImage != NULL);
 
@@ -628,6 +669,10 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
+    if ( custom_boot_image ) {
+	    custom_boot_opensbi_init_onExit(target);
+	    return;
+    }
 
     assert(pBootImage != NULL);
 
@@ -657,6 +702,8 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
 
 static void boot_wait_onEntry(struct StateMachine * const pMyMachine)
 {
+    if ( custom_boot_image )
+	    return;
     (void)pMyMachine;
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
 }
@@ -666,6 +713,10 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
 
+    if ( custom_boot_image ) {
+            pMyMachine->state = BOOT_IDLE;
+	    return;
+    }
     if (!pBootImage->hart[target-1].entryPoint) {
         // nothing for me to do, not expecting GOTO ack...
         pMyMachine->state = BOOT_IDLE;
@@ -769,6 +820,14 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
     }
 
     union HSSHartBitmask restartHartBitmask = { .uint = 0u };
+
+    if ( custom_boot_image ) {
+        restartHartBitmask.uint |= (1u << source);
+        if (HSS_Boot_Harts(restartHartBitmask)) {
+            result = IPI_SUCCESS;
+        }
+        return result;
+    }
 
     // in interrupts-always-enabled world of the HSS, it would appear less
     // racey to boot secondary cores first and have them all wait...
