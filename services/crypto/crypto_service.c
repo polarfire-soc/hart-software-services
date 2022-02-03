@@ -50,21 +50,8 @@ static const struct StateDesc crypto_state_descs[] = {
  * \brief Crypto Driver State Machine
  */
 struct StateMachine crypto_service = {
-    (stateType_t)CRYPTO_INITIALIZATION,
-    (stateType_t)SM_INVALID_STATE,
-    (const uint32_t)CRYPTO_NUM_STATES,
-    (const char *)"crypto_service",
-    0u,
-    0u,
-    0u,
-    0u,
-    0u,
-    crypto_state_descs,
-    false,
-    0u,
-    NULL
+    (stateType_t)CRYPTO_INITIALIZATION, (stateType_t)SM_INVALID_STATE, (const uint32_t)CRYPTO_NUM_STATES, (const char *)"crypto_service", 0u, 0u, 0u, crypto_state_descs, false, 0u, NULL
 };
-
 
 // --------------------------------------------------------------------------------------------------
 // Handlers for each state in the state machine

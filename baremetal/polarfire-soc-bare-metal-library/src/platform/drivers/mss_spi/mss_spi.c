@@ -11,9 +11,10 @@
  */
 
 #include "mss_spi.h"
-#include "mpfs_hal/mss_sysreg.h"
-#include "mpfs_hal/mss_ints.h"
-#include "mpfs_hal/mss_plic.h"
+#include "mss_assert.h"
+#include "mss_sysreg.h"
+#include "mss_ints.h"
+#include "mss_plic.h"
 
 #include <string.h>
 
@@ -203,8 +204,7 @@ void MSS_SPI_configure_slave_mode
     mss_spi_oveflow_handler_t recieve_buffer_overflow_handler
 )
 {
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                                 
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
     ASSERT(frame_bit_length <= MAX_FRAME_LENGTH);
 
     /* Shut down interrupts from the MSS SPI while we do this */
@@ -252,8 +252,7 @@ void MSS_SPI_configure_master_mode
     mss_spi_oveflow_handler_t recieve_buffer_overflow_handler
 )
 {
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
     ASSERT(slave < MSS_SPI_MAX_NB_OF_SLAVES);
     ASSERT(frame_bit_length <= MAX_FRAME_LENGTH);
 
@@ -330,8 +329,7 @@ void MSS_SPI_set_slave_select
 )
 {
     uint32_t rx_overflow;
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     /* This function is only intended to be used with an SPI master. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK)
@@ -376,8 +374,7 @@ void MSS_SPI_clear_slave_select
 )
 {
     uint32_t rx_overflow;
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     /* This function is only intended to be used with an SPI master. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK)
@@ -410,8 +407,7 @@ uint32_t MSS_SPI_transfer_frame
 {
     uint32_t rx_ready;
     uint32_t tx_done;
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     /* This function is only intended to be used with an SPI master. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK)
@@ -473,8 +469,7 @@ void MSS_SPI_transfer_block
 
     uint32_t transfer_size;     /* Total number of bytes transfered. */
 
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     /* This function is only intended to be used with an SPI master. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK)
@@ -597,8 +592,7 @@ void MSS_SPI_set_frame_rx_handler
 )
 {
     uint32_t tx_fifo_empty;
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     /* This function is only intended to be used with an SPI slave. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK)
@@ -660,8 +654,7 @@ void MSS_SPI_set_slave_tx_frame
     uint32_t frame_value
 )
 {
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
     /* This function is only intended to be used with an SPI slave. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK)
                 != CTRL_MASTER_MASK);
@@ -742,8 +735,7 @@ void MSS_SPI_set_slave_block_buffers
 {
     uint32_t frame_count;
     uint32_t done = 0u;
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     /* This function is only intended to be used with an SPI slave. */
     ASSERT((this_spi->hw_reg->CONTROL & CTRL_MASTER_MASK) != CTRL_MASTER_MASK);
@@ -1121,8 +1113,7 @@ static void mss_spi_isr
     volatile uint32_t rx_frame;
     volatile  uint32_t *this_mis = &this_spi->hw_reg->MIS;
 
-    ASSERT((this_spi == &g_mss_spi0_lo) || (this_spi == &g_mss_spi0_hi) 
-                || (this_spi == &g_mss_spi1_lo) || (this_spi == &g_mss_spi1_hi));                                                                                                                                         
+    ASSERT((this_spi == &g_mss_spi0) || (this_spi == &g_mss_spi1));
 
     if (0u != (*this_mis & RXDONE_IRQ_MASK))
     {

@@ -176,8 +176,8 @@
 #ifndef MSS_QSPI_H_
 #define MSS_QSPI_H_             1
 
+#include "mss_plic.h"
 #include "drivers/mss_qspi/mss_qspi_regs.h"
-#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -248,8 +248,7 @@ typedef enum mss_qspi_io_format_t
     MSS_QSPI_DUAL_EX_RW  = 4u,
     MSS_QSPI_QUAD_EX_RW  = 5u,
     MSS_QSPI_DUAL_FULL   = 6u,
-    MSS_QSPI_QUAD_FULL   = 7u,
-    MSS_QSPI_UNINITIALIZED = 255u
+    MSS_QSPI_QUAD_FULL   = 7u
 
 } mss_qspi_io_format;
 
@@ -299,21 +298,21 @@ typedef enum mss_qspi_protocol_mode_t
 */
 typedef enum mss_qspi_clk_div_t
 {
-    MSS_QSPI_CLK_DIV_2     = 0x1u,      // 75MHz
-    MSS_QSPI_CLK_DIV_4     = 0x2u,      // 37.5MHz
-    MSS_QSPI_CLK_DIV_6     = 0x3u,      // 25MHz
-    MSS_QSPI_CLK_DIV_8     = 0x4u,      // 18.75MHz
-    MSS_QSPI_CLK_DIV_10    = 0x5u,      // 15MHz
-    MSS_QSPI_CLK_DIV_12    = 0x6u,      // 12.5MHz
-    MSS_QSPI_CLK_DIV_14    = 0x7u,      // 10.714MHz
-    MSS_QSPI_CLK_DIV_16    = 0x8u,      // 9.375MHz
-    MSS_QSPI_CLK_DIV_18    = 0x9u,      // 8.333MHz
-    MSS_QSPI_CLK_DIV_20    = 0xAu,      // 7.5MHz
-    MSS_QSPI_CLK_DIV_22    = 0xBu,      // 6.818MHz
-    MSS_QSPI_CLK_DIV_24    = 0xCu,      // 6.25MHz
-    MSS_QSPI_CLK_DIV_26    = 0xDu,      // 5.769MHz
-    MSS_QSPI_CLK_DIV_28    = 0xEu,      // 5.357MHz
-    MSS_QSPI_CLK_DIV_30    = 0xFu       // 5MHz
+    MSS_QSPI_CLK_DIV_2     = 0x1u,
+    MSS_QSPI_CLK_DIV_4     = 0x2u,
+    MSS_QSPI_CLK_DIV_6     = 0x3u,
+    MSS_QSPI_CLK_DIV_8     = 0x4u,
+    MSS_QSPI_CLK_DIV_10    = 0x5u,
+    MSS_QSPI_CLK_DIV_12    = 0x6u,
+    MSS_QSPI_CLK_DIV_14    = 0x7u,
+    MSS_QSPI_CLK_DIV_16    = 0x8u,
+    MSS_QSPI_CLK_DIV_18    = 0x9u,
+    MSS_QSPI_CLK_DIV_20    = 0xAu,
+    MSS_QSPI_CLK_DIV_22    = 0xBu,
+    MSS_QSPI_CLK_DIV_24    = 0xCu,
+    MSS_QSPI_CLK_DIV_26    = 0xDu,
+    MSS_QSPI_CLK_DIV_28    = 0xEu,
+    MSS_QSPI_CLK_DIV_30    = 0xFu
 
 } mss_qspi_clk_div;
 
@@ -551,7 +550,7 @@ void MSS_QSPI_get_config
     The num_idle_cycles parameter indicates the number of Idle cycles/dummy clock
     edges that must be generated after the address bytes are transmitted and
     before target memory device starts sending data. This must be correctly set
-    based on the target memory device and the SPI command being used – this may
+    based on the target memory device and the SPI command being used - this may
     also vary based on SPI clock and the way the target memory device is
     configured.
 
@@ -625,7 +624,7 @@ void MSS_QSPI_polled_transfer_block
     The num_idle_cycles parameter indicates the The number of IDLE/dummy clock
     edges that must be generated after the address bytes are transmitted and
     before target memory device starts sending data. This must be correctly set
-    based on the target memory device and the SPI command being used – this may
+    based on the target memory device and the SPI command being used - this may
     also vary based on SPI clock and the way the target memory device is
     configured.
 

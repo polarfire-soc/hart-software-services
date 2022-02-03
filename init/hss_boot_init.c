@@ -62,7 +62,6 @@
 #include "hss_boot_pmp.h"
 #include "hss_atomic.h"
 
-#define BOOT_DEBUG
 //
 // local module functions
 
@@ -97,17 +96,19 @@ static bool validateCrc_(struct HSS_BootImage *pImage);
 typedef bool (*HSS_GetBootImageFnPtr_t)(struct HSS_BootImage **ppBootImage);
 
 static HSS_GetBootImageFnPtr_t getBootImageFunction =
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-    getBootImageFromQSPI_;
-#elif IS_ENABLED(CONFIG_SERVICE_SPI) && (SPI_FLASH_BOOT_ENABLED)
+#if IS_ENABLED(CONFIG_SERVICE_SPI) && (SPI_FLASH_BOOT_ENABLED)
     getBootImageFromSpiFlash_;
 #elif IS_ENABLED(CONFIG_SERVICE_MMC)
     getBootImageFromMMC_;
+#elif IS_ENABLED(CONFIG_SERVICE_QSPI)
+    getBootImageFromQSPI_;
 #elif IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     getBootImageFromPayload_;
 #  else
 #    error Unable to determine boot mechanism
 #endif
+
+#define UBOOT_LOAD_ADDR    0x400000
 
 bool HSS_BootInit(void)
 {
@@ -364,7 +365,7 @@ static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
 #  if !IS_ENABLED(CONFIG_SERVICE_QSPI_USE_XIP)
     // if we are not using XIP, then we need to do an initial copy of the
     // boot header into our structure, for subsequent use
-    size_t srcOffset = 0x400000; // assuming zero as sector/block offset for now
+    size_t srcOffset = UBOOT_LOAD_ADDR; // assuming zero as sector/block offset for now
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI srcOffset 0x%lx to DDR ..." CRLF, srcOffset);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
         sizeof(struct HSS_BootImage));
