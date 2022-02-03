@@ -154,6 +154,9 @@ static void process_sections_in_segment(Elf *pElf, GElf_Phdr *pPhdr, size_t owne
 
 					numZIChunks = generate_add_ziChunk(ziChunk);
 				}
+			} else {
+				debug_printf(5, "pPhdr->p_type: %lx >>%s<<\n", pPhdr->p_type,
+					ElfProgramTypeToString(pPhdr->p_type));
 			}
 		} else { // if (verbose > 4) {
 			name = elf_strptr(pElf, shstrndx, shdr.sh_name);

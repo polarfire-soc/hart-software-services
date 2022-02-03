@@ -450,27 +450,31 @@ void generate_payload(char const * const filename_output, char const * const pri
 
 size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *pBuffer)
 {
-	assert(pBuffer);
-	numChunks++;
+	if (chunk.size) {
+		assert(pBuffer);
+		numChunks++;
 
-	debug_printf(6, "\nAttempting to realloc %lu at %p",
-		numChunks * sizeof(struct chunkTableEntry), chunkTable);
-	void *tmpPtr = realloc(chunkTable, numChunks * sizeof(struct chunkTableEntry));
-	debug_printf(6, " => %p\n", tmpPtr);
-	if (!tmpPtr) {
-		perror("realloc()");
-		exit(EXIT_FAILURE);
+		debug_printf(6, "\nAttempting to realloc %lu at %p",
+			numChunks * sizeof(struct chunkTableEntry), chunkTable);
+		void *tmpPtr = realloc(chunkTable, numChunks * sizeof(struct chunkTableEntry));
+		debug_printf(6, " => %p\n", tmpPtr);
+		if (!tmpPtr) {
+			perror("realloc()");
+			exit(EXIT_FAILURE);
+		} else {
+			chunkTable = tmpPtr;
+		}
+
+		memset(&chunkTable[numChunks-1], 0, sizeof(struct chunkTableEntry));
+		chunkTable[numChunks-1].chunk = chunk;
+		chunkTable[numChunks-1].pBuffer = pBuffer;
+
+		debug_printf(4, "chunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 ", CRC32=%x\n",
+			chunk.execAddr, chunk.size,
+			CRC32_calculate((const unsigned char *)pBuffer, chunk.size));
 	} else {
-		chunkTable = tmpPtr;
+		debug_printf(4, "chunk: execAddr = 0x%.16" PRIx64 ", size = 0 => Skipping\n", chunk.execAddr);
 	}
-
-	memset(&chunkTable[numChunks-1], 0, sizeof(struct chunkTableEntry));
-	chunkTable[numChunks-1].chunk = chunk;
-	chunkTable[numChunks-1].pBuffer = pBuffer;
-
-	debug_printf(4, "chunk: execAddr = 0x%.16" PRIx64 ", size = 0x%.16" PRIx64 ", CRC32=%x\n",
-		chunk.execAddr, chunk.size,
-		CRC32_calculate((const unsigned char *)pBuffer, chunk.size));
 
 	return numChunks;
 }
