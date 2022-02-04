@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "drivers/mss_qspi/mss_qspi.h"
+#include "mss_qspi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +22,7 @@ extern "C" {
 
 extern mss_qspi_config_t qspi_config;
 
-int Flash_init
+void Flash_init
 (
     mss_qspi_io_format io_format
 );
@@ -93,7 +93,7 @@ void Flash_read_nvcfgreg
     uint8_t* rd_buf
 );
 
-int Flash_force_normal_mode
+void Flash_force_normal_mode
 (
     void
 );
