@@ -26,6 +26,7 @@
 #
 # Services
 
+include services/beu/Makefile
 include services/boot/Makefile
 include services/crypto/Makefile
 include services/ddr/Makefile

@@ -1,0 +1,36 @@
+menu "SSMB Options"
+
+config HSS_USE_IHC
+	bool "IHC Support"
+	default y
+	depends on USE_IHC
+	help
+		This feature enables support for signalling to the E51 monitor
+		core via IHC. The alternative is to use a shared memory buffer
+		and IPIs for signalling.
+
+		If you don't know what to do here, say Y.
+
+config IPI_MAX_NUM_QUEUE_MESSAGES
+	int "Maximum number of outstanding IPI queue messages"
+	default 128
+	help
+		This feature determines the maximum number of queue messages
+		supported for IPIs from different harts.
+
+config IPI_FIXED_BASE
+	bool "Fix IPI Base address"
+	default n
+        help
+		Use a fixed base address for the IPI-based Secure Signalling Message Bus.
+
+		If you don't know what to do here, say N.
+
+config IPI_BASE_ADDR
+	hex "Base address for IPI Queueus"
+	default 0xC0000000
+	depends on IPI_FIXED_BASE
+        help
+		Specify the fixed base address for the IPI-based Secure Signalling Message Bus.
+
+endmenu

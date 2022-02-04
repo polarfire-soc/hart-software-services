@@ -42,7 +42,7 @@
  * through some other method
  */
 #ifndef MPFS_HAL_FIRST_HART
-#define MPFS_HAL_FIRST_HART  0
+#define MPFS_HAL_FIRST_HART  1
 #endif
 
 #ifndef MPFS_HAL_LAST_HART

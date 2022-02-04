@@ -1,5 +1,6 @@
 menu "Services"
 
+source "services/beu/Kconfig"
 source "services/boot/Kconfig"
 source "services/crypto/Kconfig"
 source "services/ddr/Kconfig"

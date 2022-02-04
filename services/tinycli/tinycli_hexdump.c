@@ -23,8 +23,7 @@
 void HSS_TinyCLI_HexDump(uint8_t *pStart, ptrdiff_t count);
 void HSS_TinyCLI_HexDump(uint8_t *pStart, ptrdiff_t count)
 {
-    assert(pStart);
-    if (count == 0u) { return; }
+    if ((!pStart) || (count == 0u)) { return; }
 
     for (ptrdiff_t i = 0u; i < count; i+=STEP_SIZE) {
         mHSS_PRINTF("%08x:%08x  ",

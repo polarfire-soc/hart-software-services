@@ -39,6 +39,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine);
 static void tinycli_readline_onExit(struct StateMachine * const pMyMachine);
 static void tinycli_parseline_handler(struct StateMachine * const pMyMachine);
 static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine);
+static void tinycli_uart_surrender_handler(struct StateMachine * const pMyMachine);
 
 /*!
  * \brief TINYCLI Driver States
@@ -49,7 +50,8 @@ enum UartStatesEnum {
     TINYCLI_READLINE,
     TINYCLI_PARSELINE,
     TINYCLI_USBDMSC,
-    TINYCLI_NUM_STATES = TINYCLI_USBDMSC+1
+    TINYCLI_UART_SURRENDER,
+    TINYCLI_NUM_STATES = TINYCLI_UART_SURRENDER+1
 };
 
 /*!
@@ -57,10 +59,11 @@ enum UartStatesEnum {
  *
  */
 static const struct StateDesc tinycli_state_descs[] = {
-    { (const stateType_t)TINYCLI_INITIALIZATION, (const char *)"init",      NULL,                      NULL,                     &tinycli_init_handler },
-    { (const stateType_t)TINYCLI_READLINE,       (const char *)"readline",  &tinycli_readline_onEntry, &tinycli_readline_onExit, &tinycli_readline_handler },
-    { (const stateType_t)TINYCLI_PARSELINE,      (const char *)"parseline", NULL,                      NULL,                     &tinycli_parseline_handler },
-    { (const stateType_t)TINYCLI_USBDMSC,        (const char *)"usbdmsc",   NULL,                      NULL,                     &tinycli_usbdmsc_handler }
+    { (const stateType_t)TINYCLI_INITIALIZATION, (const char *)"init",           NULL,                      NULL,                     &tinycli_init_handler },
+    { (const stateType_t)TINYCLI_READLINE,       (const char *)"readline",       &tinycli_readline_onEntry, &tinycli_readline_onExit, &tinycli_readline_handler },
+    { (const stateType_t)TINYCLI_PARSELINE,      (const char *)"parseline",      NULL,                      NULL,                     &tinycli_parseline_handler },
+    { (const stateType_t)TINYCLI_USBDMSC,        (const char *)"usbdmsc",        NULL,                      NULL,                     &tinycli_usbdmsc_handler },
+    { (const stateType_t)TINYCLI_UART_SURRENDER, (const char *)"uart_surrender", NULL,                      NULL,                     &tinycli_uart_surrender_handler }
 };
 
 /*!
@@ -306,8 +309,17 @@ static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine)
 }
 
 /////////////////
-void tinycli_wait_for_usbmscd_done(void);
-void tinycli_wait_for_usbmscd_done(void)
+void HSS_TinyCLI_WaitForUSBMSCDDone(void)
 {
     tinycli_service.state = TINYCLI_USBDMSC;
+}
+
+static void tinycli_uart_surrender_handler(struct StateMachine * const pMyMachine)
+{
+	; // nothing to do here
+}
+
+void HSS_TinyCLI_SurrenderUART(void)
+{
+    tinycli_service.state = TINYCLI_UART_SURRENDER;
 }

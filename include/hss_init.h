@@ -57,10 +57,16 @@ bool HSS_OpenSBIInit(void);
 
 bool HSS_DDRInit(void);
 bool HSS_DDRPrintSegConfig(void);
-bool HSS_DDRPrintL2CacheConfig(void);
+bool HSS_DDRPrintL2CacheWaysConfig(void);
+bool HSS_DDRPrintL2CacheWayMasks(void);
 bool HSS_UARTInit(void);
 #if IS_ENABLED(CONFIG_USE_LOGO)
 bool HSS_LogoInit(void);
+#endif
+
+#if IS_ENABLED(CONFIG_USE_IHC)
+bool HSS_IHCInit(void);
+void HSS_IHCInit_U54(void);
 #endif
 
 #ifdef CONFIG_USE_PCIE

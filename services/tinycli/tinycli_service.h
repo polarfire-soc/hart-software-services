@@ -42,12 +42,14 @@ extern "C" {
  * \brief Tiny CLI parser
  */
 
-bool   HSS_TinyCLI_Parser(void);
+bool HSS_TinyCLI_Parser(void);
 size_t HSS_TinyCLI_ParseIntoTokens(char *buffer);
-void   HSS_TinyCLI_Execute(void);
-bool   HSS_TinyCLI_IndicatePostInit(void);
+void HSS_TinyCLI_Execute(void);
+bool HSS_TinyCLI_IndicatePostInit(void);
 
-void   HSS_TinyCLI_RunMonitors(void);
+void HSS_TinyCLI_RunMonitors(void);
+void HSS_TinyCLI_WaitForUSBMSCDDone(void);
+void HSS_TinyCLI_SurrenderUART(void);
 
 extern struct StateMachine tinycli_service;
 
@@ -56,3 +58,4 @@ extern struct StateMachine tinycli_service;
 #endif
 
 #endif
+

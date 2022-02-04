@@ -1,0 +1,9 @@
+menu "Board/Design Configuration Options"
+
+config BOARD
+	string
+	option env="BOARD"
+
+source "boards/$(BOARD)/Kconfig"
+endmenu
+

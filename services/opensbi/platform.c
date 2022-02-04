@@ -57,6 +57,7 @@
 #include <sbi_utils/sys/clint.h>
 
 #include "opensbi_service.h"
+#include "opensbi_ecall.h"
 
 
 #define MPFS_HART_COUNT            5
@@ -123,17 +124,35 @@ static int mpfs_final_init(bool cold_boot)
 
 static bool console_initialized = false;
 
+#if IS_ENABLED(CONFIG_UART_SURRENDER)
+static bool uart_surrendered_flag = false;
+
+void uart_surrender(void);
+void uart_surrender(void)
+{
+    uart_surrendered_flag = true;
+}
+#endif
+
 static void mpfs_console_putc(char ch)
 {
     if (console_initialized) {
         u32 hartid = current_hartid();
-        int uart_putc(int hartid, const char ch); //TBD
-        uart_putc(hartid, ch);
+
+#if IS_ENABLED(CONFIG_UART_SURRENDER)
+        if (hartid || !uart_surrendered_flag) {
+#else
+        {
+#endif
+            int uart_putc(int hartid, const char ch); //TBD
+            uart_putc(hartid, ch);
+        }
     }
 }
 
 #define NO_BLOCK 0
 #define GETC_EOF -1
+
 static int mpfs_console_getc(void)
 {
     int result = GETC_EOF;
@@ -213,7 +232,6 @@ static void mpfs_system_down(u32 reset_type, u32 reset_reason)
     csr_write(CSR_MSTATUS, MIP_MSIP);
     csr_write(CSR_MIE, MIP_MSIP);
 
-    void HSS_OpenSBI_Reboot(void);
     HSS_OpenSBI_Reboot();
 
     while (1);
@@ -263,15 +281,46 @@ static struct {
     int boot_pending;
 } hart_table[MAX_NUM_HARTS] = { 0 };
 
+u32 mpfs_hart_index2id[MPFS_HART_COUNT] = {
+    [0] = -1,
+    [1] = 1,
+    [2] = 2,
+    [3] = 3,
+    [4] = 4,
+};
+
 void mpfs_domains_register_hart(int hartid, int boot_hartid)
 {
     hart_table[hartid].owner_hartid = boot_hartid;
     hart_table[hartid].boot_pending = 1;
 }
 
-void mpfs_mark_hart_as_booted(enum HSSHartId hartid)
+void mpfs_domains_deregister_hart(int hartid)
+{
+    hart_table[hartid].owner_hartid = 0;
+    hart_table[hartid].boot_pending = 0;
+
+    assert((hartid > 0) & (hartid < ARRAY_SIZE(mpfs_hart_index2id)));
+    mpfs_hart_index2id[hartid] = -1;
+}
+
+bool mpfs_is_hart_using_opensbi(int hartid)
+{
+    bool result = true;
+
+    assert((hartid > 0) & (hartid < ARRAY_SIZE(mpfs_hart_index2id)));
+
+    if (mpfs_hart_index2id[hartid] == -1) {
+        result = false;
+    }
+
+    return result;
+}
+
+void mpfs_mark_hart_as_booted(int hartid)
 {
     assert(hartid < ARRAY_SIZE(hart_table));
+    assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_table)));
 
     if (hartid < ARRAY_SIZE(hart_table)) {
         hart_table[hartid].boot_pending = 0;
@@ -318,7 +367,6 @@ static int mpfs_domains_init(void)
             if (!pDom->index) { // { pDom->boot_hartid != boot_hartid) {
                 pDom->boot_hartid = boot_hartid;
 
-                // TODO: replace memcpy with something like strlcpy
                 memcpy(pDom->name, hart_table[boot_hartid].name, ARRAY_SIZE(dom_table[0].name)-1);
 
                 struct sbi_hartmask * const pMask = &(hart_table[boot_hartid].hartMask);
@@ -342,7 +390,7 @@ static int mpfs_domains_init(void)
                 }
             }
         } else {
-           sbi_printf("%s(): boot_hart_id not set\n", __func__);
+           //sbi_printf("%s(): boot_hart_id not set for hart %d\n", __func__, hartid);
         }
     }
 
@@ -384,16 +432,8 @@ const struct sbi_platform_operations platform_ops = {
     //.domains_root_regions = mpfs_domains_root_regions,
     .domains_init = mpfs_domains_init,
 
-    .vendor_ext_check = NULL,
-    .vendor_ext_provider = NULL
-};
-
-const u32 mpfs_hart_index2id[MPFS_HART_COUNT] = {
-    [0] = -1,
-    [1] = 1,
-    [2] = 2,
-    [3] = 3,
-    [4] = 4,
+    .vendor_ext_check = HSS_SBI_Vendor_Ext_Check,
+    .vendor_ext_provider = HSS_SBI_ECALL_Handler
 };
 
 const struct sbi_platform platform = {

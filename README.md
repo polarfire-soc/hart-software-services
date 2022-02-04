@@ -70,6 +70,8 @@ Both Linux and Windows are supported by Kconfiglib.
  
 The HSS currently support PolarFire SoC-based icicle kit (mpfs-icicle-kit-es) as a board build target.
 
+### Building on Linux
+
 For building on Linux from the command line you must configure the path appropriately, e.g.:
 
     $ export PATH=$PATH:$HOME/Microchip/SoftConsole-v2021.1/python/bin:$HOME/Microchip/SoftConsole-v2021.1/riscv-unknown-elf-gcc/bin
@@ -104,7 +106,7 @@ Verbose builds (which show each individual command) are possible by adding V=1 t
 
 The HSS relies only on SoftConsole v2021.1 or later to build on Windows. One workaround that is needed is to copy `python3\bin\python.exe` to `python3\bin\python3.exe` in the SoftConsole v2021.1 installation folder on Windows, e.g.:
 
-    C:\> copy C:\Microchip\SoftConsole-v2021.1\python\python.exe C:\Microchip\SoftConsole-v2021.1\python\python3.exe
+    C:\> copy C:\Microchip\SoftConsole-v2021.1\python3\python.exe C:\Microchip\SoftConsole-v2021.1\python3\python3.exe
 
 For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/software-development/polarfire-soc-software-tool-flow.md#build-the-hss.
 

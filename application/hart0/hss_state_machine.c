@@ -66,7 +66,13 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
         assert(pCurrentStateDesc != NULL); // mandatory handler
         assert(pCurrentStateDesc->state == currentState);
 
-        pCurrentMachine->startTime = HSS_GetTickCount();
+        HSSTicks_t lastEntry = HSS_GetTime();
+
+        if (!pCurrentMachine->startTime) {
+            pCurrentMachine->startTime = lastEntry;
+        }
+        pCurrentMachine->lastExecutionTime = lastEntry;
+
         if (prevState != currentState) {
             if (IsValidState(pCurrentMachine, prevState)) {
                 struct StateDesc const * const pLastStateDesc =
@@ -90,13 +96,15 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
         if (likely(pCurrentStateDesc->state_handler != NULL)) {
             pCurrentStateDesc->state_handler(pCurrentMachine);
         }
-        pCurrentMachine->lastExecutionTime = HSS_GetTickCount();
+
         ++pCurrentMachine->executionCount;
 
-        pCurrentMachine->lastDeltaExecutionTime =
-            pCurrentMachine->lastExecutionTime - pCurrentMachine->startTime;
+        HSSTicks_t lastExit = HSS_GetTime();
+        pCurrentMachine->lastDeltaExecutionTime = lastExit - lastEntry;
+
         if (pCurrentMachine->lastDeltaExecutionTime > pCurrentMachine->maxExecutionTime) {
             pCurrentMachine->maxExecutionTime = pCurrentMachine->lastDeltaExecutionTime;
+            pCurrentMachine->maxState = pCurrentMachine->prevState;
         }
 
         if (IS_ENABLED(CONFIG_DEBUG_LOG_STATE_TRANSITIONS)) {
@@ -266,10 +274,13 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
 
 void DumpStateMachineStats(void)
 {
+    mHSS_DEBUG_PRINTF(LOG_STATUS, " State Machine Name: Max Exec Time / State : Last Delta Time / Current State" CRLF);
+
     for (size_t i = 0u; i < spanOfPGlobalStateMachines; i++) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%20s: % 18" PRIu64 " : % 18" PRIu64 " : % 2" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "%19s: % 13" PRIu64 " /    % 2" PRIu64 " : % 15" PRIu64 " /    % 2" PRIu64 CRLF,
             pGlobalStateMachines[i]->pMachineName,
             pGlobalStateMachines[i]->maxExecutionTime,
+            pGlobalStateMachines[i]->maxState,
             pGlobalStateMachines[i]->lastDeltaExecutionTime,
             pGlobalStateMachines[i]->state);
     }

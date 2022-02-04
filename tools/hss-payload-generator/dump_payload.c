@@ -43,6 +43,11 @@
 #include "debug_printf.h"
 #include "dump_payload.h"
 
+#define PRV_U (0u)
+#define PRV_S (1u)
+#define PRV_M (3u)
+
+
 /*
  * Local function prototypes
  */
@@ -53,6 +58,30 @@ static size_t getFileSize(const char *filename)
 	struct stat st;
 	stat(filename, &st);
 	return (size_t)st.st_size;
+}
+
+static char const * privModeToString(uint8_t privMode)
+{
+	char const * result = "??";
+	switch (privMode) {
+	case PRV_U:
+		result = "PRV_U";
+		break;
+
+	case PRV_S:
+		result = "PRV_S";
+		break;
+
+	case PRV_M:
+		result = "PRV_M";
+		break;
+
+	default:
+		result = "Unknown";
+		break;
+	}
+
+	return result;
 }
 
 void dump_payload(const char *filename_input)
@@ -80,9 +109,23 @@ void dump_payload(const char *filename_input)
 	printf("ziChunkTableOffset: 0x%lx\n",	pBootImage->ziChunkTableOffset);
 
 	for (unsigned int i = 0u; i < NR_CPUs; i++) {
-		printf("name[%u]:            >>%s<<\n", i, pBootImage->hart[i].name);
-		printf("entryPoint[%u]:      0x%lx\n",	i, pBootImage->hart[i].entryPoint);
-		printf("privMode[%u]:        %u\n",	i, pBootImage->hart[i].privMode);
+		printf("name[%u]:            >>%s<<\n",  i, pBootImage->hart[i].name);
+		printf("entryPoint[%u]:      0x%lx\n",	 i, pBootImage->hart[i].entryPoint);
+		printf("privMode[%u]:        %u (%s)\n", i, pBootImage->hart[i].privMode,
+			privModeToString(pBootImage->hart[i].privMode));
+		printf("flags[%u]:           %x\n",	 i, pBootImage->hart[i].flags);
+
+		if (pBootImage->hart[i].flags) {
+			printf("\t");
+			if (pBootImage->hart[i].flags & BOOT_FLAG_ANCILLIARY_DATA) {
+				printf(" ANCILLIARY_DATA");
+			}
+			if (pBootImage->hart[i].flags & BOOT_FLAG_SKIP_OPENSBI) {
+				printf(" SKIP_OPENSBI");
+			}
+			printf("\n");
+		}
+
 		printf("firstChunk[%u]       %lu\n",	i,
 			(unsigned long)pBootImage->hart[i].firstChunk);
 		printf("lastChunk[%u]        %lu\n",	i,

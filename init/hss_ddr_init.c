@@ -125,13 +125,9 @@ __attribute__((weak)) int64_t __popcountdi2(int64_t n)
     return n;
 }
 
-bool HSS_DDRPrintL2CacheConfig(void)
+bool HSS_DDRPrintL2CacheWaysConfig(void)
 {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     mHSS_DEBUG_PRINTF(LOG_STATUS, "L2 Cache Configuration:" CRLF);
-
-    //unsigned int way_enable = LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS;
-    //int cache_ways = (unsigned int)(way_enable - LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS);
 
     const unsigned int way_enable = CACHE_CTRL->WAY_ENABLE + 1u;
     const unsigned int way_mask = (1u << way_enable) - 1u;
@@ -146,9 +142,21 @@ bool HSS_DDRPrintL2CacheConfig(void)
     mHSS_DEBUG_PRINTF_EX("         L2-Cache: % 2u way%c (%u KiB)" CRLF, cache_ways, cache_ways==1u ? ' ':'s', cache_ways * 128u);
     mHSS_DEBUG_PRINTF_EX("           L2-LIM: % 2u way%c (%u KiB)" CRLF, lim_ways, lim_ways==1 ? ' ':'s', lim_ways * 128);
 
-#define CONFIG_DUMP_L2CACHE_WAYMASKS 1
-#    if IS_ENABLED(CONFIG_DUMP_L2CACHE_WAYMASKS)
-    // enable these if you want extra debug on the way mask settings...
+    // sanity check on L2 Size and LIM size...
+    // to ensure Libero and the HSS linker script match
+    extern const uint64_t __l2lim_start;
+    extern const uint64_t _hss_start;
+    extern const uint64_t _hss_end;
+    const uintptr_t libero_l2lim_end = (uintptr_t)&__l2lim_start + (lim_ways * 128u * 1024u);
+
+    assert(&_hss_start == &__l2lim_start);
+    assert((uintptr_t)&_hss_end <= libero_l2lim_end);
+
+    return true;
+}
+
+bool HSS_DDRPrintL2CacheWayMasks(void)
+{
     struct {
          char const * const name;
          uint64_t volatile const * const pWayMask;
@@ -176,8 +184,7 @@ bool HSS_DDRPrintL2CacheConfig(void)
         assert(wayMaskTable[i].pWayMask);
 	mHSS_DEBUG_PRINTF_EX("% 17s: 0x%x" CRLF, wayMaskTable[i].name, *(wayMaskTable[i].pWayMask));
     }
-#    endif
-#endif
+
     return true;
 }
 

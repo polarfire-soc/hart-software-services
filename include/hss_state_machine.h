@@ -70,9 +70,12 @@ struct StateMachine {
     stateType_t prevState;
     const uint32_t numStates;
     const char * const pMachineName;
+    HSSTicks_t startTick;
+    HSSTicks_t lastExecutionTick;
     HSSTicks_t startTime;
     HSSTicks_t lastExecutionTime;
     HSSTicks_t maxExecutionTime;
+    stateType_t maxState;
     HSSTicks_t lastDeltaExecutionTime;
     uint64_t executionCount;
     struct StateDesc const * const pStateDescs;

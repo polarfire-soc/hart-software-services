@@ -48,10 +48,12 @@ In the following example:
  * `test/u-boot-dtb.bin` is the Das U-Boot bootloader application, and it runs on `U54_1`, `U54_2` and `U54_4`.  It expects to start in `PRV_S`.  (Note that the output of U-Boot creates an ELF file, but typically it does not prepend the `.elf` extension. In this case, we are using the binary created by `CONFIG_OF_SEPARATE`, which appends a device tree blob to the U-Boot binary.)
  
     payloads:
-      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
+      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m, skip-opensbi: true}
       test/u-boot-dtb.bin:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
 
 Case only matters for the file path names, not the keywords. So, for instance, `u54_1` is considered the same as `U54_1` and `exec-addr` is considered the same as `EXEC-ADDR`. If an `.elf` or `.bin` extension is present, it needs to be included in the configuration file.
+
+For a bare metal application that doesn't want to be concerned with OpenSBI, the option `skip-opensbi`, if true, will cause the payload on that hart to be invoked using a simple mret rather than an OpenSBI `sbi_init()` call. This means the hart will start running the bare metal code irrespective of any OpenSBI HSM considerations. Note that this also means the hart cannot use `ECALL`s to invoke OpenSBI functionality.  The `skip-opensbi` option is optional, and defaults to false.
 
 It is also possible to associate ancilliary data with each payload, for example a devicetree blob (DTB) file, by specifying the ancilliary-data filename as follows:
 
@@ -63,12 +65,18 @@ This ancilliary data will get included in the payload (placed straight after the
 
 Here is the complete example:
 
-    set-name: 'PolarFire-SoC-HSS::TestImage'
+    set-name: 'PolarFire-SoC-HSS::AmpTestImage'
     hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
     payloads:
-      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
+      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m, skip-opensbi: true}
       test/u-boot-dtb.bin:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
 
+Here is another example, this time of a bare metal SMP application that doesn't require OpenSBI:
+
+    set-name: 'PolarFire-SoC-HSS::SMPBareMetal'
+    hart-entry-points: {u54_1: '0x80000000', u54_2: '0x80000000', u54_3: '0x80000000', u54_4: '0x80000000'}
+    payloads:
+      path/to/smp-baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_m, skip-opensbi: true}
 ## File Structure
 
 ````

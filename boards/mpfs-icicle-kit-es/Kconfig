@@ -1,0 +1,9 @@
+menu "Icicle-Kit Design Configuration Options"
+
+config SOC_FPGA_DESIGN_XML
+	string "Enter path to Libero XML file"
+	default "boards/$(BOARD)/soc_fpga_design/xml/ICICLE_MSS_mss_cfg.xml"
+	help
+		This option specifies the design XML file to use.
+endmenu
+

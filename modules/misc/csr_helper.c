@@ -41,3 +41,31 @@ HSSTicks_t CSR_GetTime(void)
 
     return time;
 }
+
+void CSR_ClearMSIP(void)
+{
+    int hartid = current_hartid();
+
+    switch (hartid) {
+    case HSS_HART_U54_1:
+        mHSS_WriteRegU32(CLINT, MSIP_U54_1, 0u);
+        break;
+
+    case HSS_HART_U54_2:
+        mHSS_WriteRegU32(CLINT, MSIP_U54_2, 0u);
+        break;
+
+    case HSS_HART_U54_3:
+        mHSS_WriteRegU32(CLINT, MSIP_U54_3, 0u);
+        break;
+
+    case HSS_HART_U54_4:
+        mHSS_WriteRegU32(CLINT, MSIP_U54_4, 0u);
+        break;
+
+    default:
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown hart ID %u" CRLF, hartid);
+        assert(0 == 1);
+        break;
+    }
+}

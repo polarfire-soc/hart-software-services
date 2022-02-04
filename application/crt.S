@@ -111,11 +111,21 @@ _start:
 
         jal	HSS_U54_Banner
 
+#if defined(CONFIG_HSS_USE_IHC)
+.enable_ihc:
+        jal	HSS_IHCInit_U54
+#endif
+
 .spin_forever:
         wfi
         j	.spin_forever
 
 .boot_e51:
+#if defined(CONFIG_HSS_USE_IHC)
+        // initialise PLIC if required for IHC
+        jal	HSS_Setup_PLIC
+#endif
+
 	// Setup E51 trap handler
 	la	a4, hss_e51_trap_handler
         call	.set_trap_handler
@@ -237,13 +247,13 @@ _trap_handler_all_mode:
 	// Call C routine
 	csrr 	a0, CSR_MCAUSE
 	sext.w	a0, a0
-	blt	a0, zero, .skipHssIpi
-	call 	HSS_U54_HandleIPI 	// check if it is a HSS IPI
-	#csrc	CSR_MIP, MIP_MSIP
-	#csrc	CSR_MIP, MIP_SSIP
-	#bnez	a0, .skipOpenSbi
+	blt	a0, zero, .checkIfOpenSBITrap
 
-.skipHssIpi:
+.checkIfHssIpi:
+	call 	HSS_U54_HandleIPI 	// check if it is a HSS IPI
+	bnez	a0, .skipOpenSbi
+
+.checkIfOpenSBITrap:
 	add	a0, sp, zero
 	csrr	a1, CSR_MSCRATCH
 	call	sbi_trap_handler

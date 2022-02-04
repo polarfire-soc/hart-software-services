@@ -36,17 +36,17 @@ all: config.h $(TARGET)
 
 defconfig:
 	@$(ECHO) " CP       def_config";
-	$(CMD_PREFIX)cp boards/${BOARD}/def_config .config
+	cp boards/${BOARD}/def_config .config
 	@$(ECHO) " GENCONFIG"
-	$(CMD_PREFIX)$(GENCONFIG)
+	$(GENCONFIG)
 
 menuconfig:
 	@$(ECHO) " MENUCONFIG"
-	$(CMD_PREFIX)$(MENUCONFIG)
+	$(MENUCONFIG)
 
 config:
 	@$(ECHO) " MENUCONFIG"
-	$(CMD_PREFIX)$(MENUCONFIG)
+	$(MENUCONFIG)
 
 # we can't run curses in SoftConsole, so just copy a pre-canned
 # config, and the user can tweak if necessary
@@ -54,17 +54,17 @@ config:
 ifeq ($(HOST_WINDOWS), true)
 	$(info Using boards/${BOARD}/def_config - edit as necessary.)
 	@$(ECHO) " CP       def_config";
-	@$(CMD_PREFIX)cp boards/${BOARD}/def_config .config
+	cp boards/${BOARD}/def_config .config
 	@$(ECHO) " GENCONFIG"
-	@$(CMD_PREFIX)$(GENCONFIG)
+	$(GENCONFIG)
 else
 	@$(ECHO) " MENUCONFIG"
-	$(CMD_PREFIX)$(MENUCONFIG)
+	$(MENUCONFIG)
 endif
 
 config.h: .config
 	@$(ECHO) " GENCONFIG"
-	$(CMD_PREFIX)$(GENCONFIG)
+	$(GENCONFIG)
 
 genconfig: config.h
 
@@ -86,7 +86,7 @@ profile: clean $(TARGET)
 .PHONY: clean cppcheck splint cscope cscope.files
 
 clean: envm-wrapper_clean
-	$(CMD_PREFIX)$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
+	$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
 		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) $(OBJS:.o=.su) \
                 $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) $(EXTRA_OBJS:.o=.su) \
 		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) $(TEST_OBJS:.o=.su) \
@@ -94,16 +94,16 @@ clean: envm-wrapper_clean
 		gmon.out cscope.out \
 		error.log flawfinder.log sparse.log $(BINDIR)/output-*.map config.h \
                 $(TARGET:.elf=.hex) $(TARGET:.elf=.lss) $(TARGET:.elf=.sym) $(TARGET:.elf=.bin)
-	$(CMD_PREFIX)$(RM) -r docs/DoxygenOutput
-	$(CMD_PREFIX)$(RM) -r lcovOutput coverage.info
-	$(CMD_PREFIX)$(RM) *.gcov
-	$(CMD_PREFIX)$(RM) *.lss *.hex *.sym
-	$(CMD_PREFIX)$(RM) $(BINDIR)/hss* $(BINDIR)/output.map
+	$(RM) -r docs/DoxygenOutput
+	$(RM) -r lcovOutput coverage.info
+	$(RM) *.gcov
+	$(RM) *.lss *.hex *.sym
+	$(RM) $(BINDIR)/hss* $(BINDIR)/output.map
 
 distclean:
-	$(CMD_PREFIX)$(RM) $(OBJS) $(TARGET) cppcheck.log splint.log valgrind.log \
+	$(RM) $(OBJS) $(TARGET) cppcheck.log splint.log valgrind.log \
 		 cscope.out cscope.files
-	$(CMD_PREFIX)$(RM) -r docs/DoxygenOutput
+	$(RM) -r docs/DoxygenOutput
 
 cppcheck: $(SRCS-y)
 	cppcheck --suppress=missingIncludeSystem -v --enable=all --inconclusive --std=posix \

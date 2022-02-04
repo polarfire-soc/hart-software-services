@@ -137,71 +137,68 @@ endif
 # Build Rules
 #
 
-# Check if verbosity is ON for build process
-CMD_PREFIX_DEFAULT:=@
 ifeq ($(V), 1)
-  CMD_PREFIX :=
 else
-  CMD_PREFIX := $(CMD_PREFIX_DEFAULT)
+.SILENT:
 endif
 
 OBJS = $(SRCS-y:.c=.o)
 EXTRA_OBJS += $(EXTRA_SRCS-y:.c=.o) $(ASM_SRCS:.S=.o) $(EXTRA_OBJS-y) $(ASM_SRCS-y:.S=.o)
 
+.SUFFIXES:
+
 %.s: %.c config.h
-	@$(ECHO) " CC -s     $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -S -g  $<  -o $@
+	$(ECHO) " CC -s     $@"
+	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -S -g  $<  -o $@
 
 %.S: %.c config.h
-	@$(ECHO) " CC -S     $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -Wa,-adhln -g  $<  > $@
+	$(ECHO) " CC -S     $@"
+	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -Wa,-adhln -g  $<  > $@
 
 %.e: %.c config.h
-	@$(ECHO) " CC -E     $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
+	$(ECHO) " CC -E     $@"
+	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
 %.e: %.s config.h
-	@$(ECHO) " CC -E     $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
-
-#%.dot: %.c config.h
-#	@$(ECHO) " DOT       $@";
-#	$(CMD_PREFIX)$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -fdump-tree-all-graph -o $@ $<
+	$(ECHO) " CC -E     $@"
+	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
 ifdef CONFIG_CC_USE_MAKEDEP
   %.o: %.c config.h %.d
 else
   %.o: %.c config.h
 endif
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
+	$(ECHO) " CC        $@"
+	$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
 %.o: %.S config.h
-	@$(ECHO) " CC        $@";
-	$(CMD_PREFIX)$(CC) $(CFLAGS) $(defs) -D__ASSEMBLY__=1 -c $(INCLUDES) $< -o $@
+	$(ECHO) " CC        $@"
+	$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -D__ASSEMBLY__=1 -c -o $@ $<
 
 %.hex: %.elf
-	@$(ECHO) " HEX       $@";
-	$(CMD_PREFIX)$(OBJCOPY) -O ihex $< $@
-	$(CMD_PREFIX)$(OBJCOPY) -O ihex $< Default/$@
+	$(ECHO) " HEX       $@"
+	$(OBJCOPY) -O ihex $< $@
+	$(OBJCOPY) -O ihex $< Default/$@
 
 %.lss: %.elf
-	@$(ECHO) " LSS       $@";
-	$(CMD_PREFIX)$(OBJDUMP) -h -S -z $< > $@
+	$(ECHO) " LSS       $@"
+	$(OBJDUMP) -h -S -z $< > $@
 
 %.sym: %.elf
-	@$(ECHO) " NM        $@";
-	$(CMD_PREFIX)$(NM) -n $< > $@
+	$(ECHO) " NM        $@"
+	$(NM) -n $< > $@
 
 %.bin: %.elf
-	@$(ECHO) " BIN       $@";
-	$(CMD_PREFIX)$(OBJCOPY) -O binary $< $@
+	$(ECHO) " BIN       $@"
+	$(OBJCOPY) -O binary $< $@
+
+%.ld: %.lds config.h
+	$(ECHO) " CPP       $@"
+	$(CPP) -P $(INCLUDES) $< -o $@
 
 #
 %.d: %.c
-	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d
-# @$(ECHO) " MAKEDEP   $@";
+	$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d
 
 %.d: %.S
-	$(CMD_PREFIX)$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d
-# @$(ECHO) " MAKEDEP   $@"
+	$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $*.d

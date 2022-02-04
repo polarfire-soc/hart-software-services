@@ -43,9 +43,7 @@
 #include "hss_init.h"
 #include "hss_registry.h"
 
-#if IS_ENABLED(CONFIG_SERVICE_WDOG)
-#  include "wdog_service.h"
-#endif
+#include "wdog_service.h"
 
 #include "csr_helper.h"
 
@@ -78,11 +76,7 @@ int main(int argc, char **argv)
         sbi_hart_hang();
     }
 
-    if (IS_ENABLED(CONFIG_SUPERLOOP_IN_U_MODE)) {
-        sbi_hart_switch_mode(current_hartid(), 0lu, (unsigned long)hss_main, PRV_U, false);
-    } else {
-        hss_main();
-    }
+    hss_main();
 
     // will never be reached
     __builtin_unreachable();

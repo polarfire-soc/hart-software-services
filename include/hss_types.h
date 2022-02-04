@@ -73,7 +73,8 @@ enum HSSHartId {
 #define MAX_NUM_HARTS ((unsigned)HSS_HART_NUM_PEERS)
 #define mHSS_BITMASK_ALL_U54 (0x1Eu)
 
-#define BOOT_ANCILLIARY_DATA_FLAG (0x80u)
+#define BOOT_FLAG_ANCILLIARY_DATA (0x80u)
+#define BOOT_FLAG_SKIP_OPENSBI    (0x40u)
 
 typedef union HSSHartBitmask {
     unsigned int uint;
@@ -132,6 +133,7 @@ struct HSS_BootImage {
     struct {
         uintptr_t entryPoint;
         uint8_t privMode;
+        uint8_t flags;
         size_t numChunks;
         size_t firstChunk;
         size_t lastChunk;
@@ -142,6 +144,7 @@ struct HSS_BootImage {
     uint8_t hash[32];
     uint8_t ecdsaSig[32];
 };
+
 
 /**
  * \brief Compressed Image Structure

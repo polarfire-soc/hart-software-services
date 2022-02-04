@@ -57,7 +57,7 @@
 
 /* Timeouts */
 #define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 5u)
-#define BOOT_WAIT_TIMEOUT               (ONE_SEC / 5u) /* TODO - refactor out */
+#define BOOT_WAIT_TIMEOUT               (ONE_SEC * 2u)
 
 #define BOOT_SUB_CHUNK_SIZE 256u
 
@@ -286,7 +286,7 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
     bool result = true;
 
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-        enum HSSHartId peer = bootMachine[i].hartId;
+        enum HSSHartId const peer = bootMachine[i].hartId;
         if (pInstanceData->msgIndexAux[peer-1] != IPI_MAX_NUM_OUTSTANDING_COMPLETES) {
             result = IPI_MessageCheckIfComplete(pInstanceData->msgIndexAux[peer-1]);
 
@@ -324,6 +324,12 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot" CRLF, pMyMachine->pMachineName);
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+        enum HSSHartId const target = pInstanceData->target;
+
+        if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+	   mHSS_DEBUG_PRINTF(LOG_STATUS, "%s:: BOOT_FLAG_SKIP_OPENSBI found" CRLF, pMyMachine->pMachineName);
+        }
+
         HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
 
         pMyMachine->state = BOOT_SETUP_PMP;
@@ -361,7 +367,10 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
         pInstanceData->msgIndexAux[peer-1] = IPI_MAX_NUM_OUTSTANDING_COMPLETES;
 
         if (boot_hart) {
-            if ((peer == target) ||
+            if (pBootImage->hart[peer-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+                // skipping OpenSBI => don't register as a hart
+                mpfs_domains_deregister_hart(peer);
+            } else if ((peer == target) ||
                 (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint)) {
                 pInstanceData->hartMask |= (1u << peer);
                 //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering hart %d to domain \"%s\"" CRLF,
@@ -372,13 +381,18 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
     }
 
     if (boot_hart) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering domain \"%s\" (hart mask 0x%x)" CRLF, pMyMachine->pMachineName,
-            pBootImage->hart[target-1].name, pInstanceData->hartMask);
-        mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
-            pInstanceData->hartMask, target,
-            pBootImage->hart[target-1].privMode,
-            (void *)pBootImage->hart[target-1].entryPoint,
-            (void *)pInstanceData->ancilliaryData);
+        if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+            // skipping OpenSBI => don't register as a domain
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering domain \"%s\" (hart mask 0x%x)" CRLF,
+                pMyMachine->pMachineName, pBootImage->hart[target-1].name, pInstanceData->hartMask);
+
+            mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
+                pInstanceData->hartMask, target,
+                pBootImage->hart[target-1].privMode,
+                (void *)pBootImage->hart[target-1].entryPoint,
+                (void *)pInstanceData->ancilliaryData);
+        }
     }
 }
 
@@ -529,7 +543,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
         if ((pInstanceData->chunkCount <= pBootImage->hart[target-1].lastChunk) && (pChunk->size)) {
             //
             // and it is for us, then download it if we have permission
-            if (((pChunk->owner & ~BOOT_ANCILLIARY_DATA_FLAG) == target)
+            if (((pChunk->owner & ~BOOT_FLAG_ANCILLIARY_DATA) == target)
                 && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
                 if (!pInstanceData->subChunkOffset) {
@@ -548,7 +562,8 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
 #endif
                 );
 
-                if ((pChunk->owner & BOOT_ANCILLIARY_DATA_FLAG) && (!pInstanceData->ancilliaryData)) {
+		if ((pBootImage->hart[target-1].flags & BOOT_FLAG_ANCILLIARY_DATA)
+                    && (!pInstanceData->ancilliaryData)) {
                     mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ancilliary data found at 0x%x" CRLF,
                         pMyMachine->pMachineName, pInstanceData->chunkCount, pChunk->execAddr);
                     pInstanceData->ancilliaryData = pChunk->execAddr;
@@ -640,20 +655,39 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
                 } else if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint) {
                     // found another hart in same boot set as me...
 
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
-                        peer, pBootImage->hart[peer-1].entryPoint);
                     result = IPI_MessageAlloc(&(pInstanceData->msgIndexAux[peer-1]));
                     assert(result);
 
-                    mb();
-                    mb_i();
+                    //mb(); // TODO
+                    //mb_i(); // TODO
 
-                    result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
-                        IPI_MSG_OPENSBI_INIT,
-                        pBootImage->hart[peer-1].privMode,
-                        (void *)pBootImage->hart[peer-1].entryPoint,
-                        (void *)pInstanceData->ancilliaryData);
-                    assert(result);
+                    if (pBootImage->hart[peer-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p" CRLF, pMyMachine->pMachineName,
+                            peer, pBootImage->hart[peer-1].entryPoint);
+
+                        result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
+                            IPI_MSG_GOTO,
+                            pBootImage->hart[peer-1].privMode,
+                            (void *)pBootImage->hart[peer-1].entryPoint,
+                            (void *)pInstanceData->ancilliaryData);
+                        assert(result);
+                    } else {
+                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
+                            peer, pBootImage->hart[peer-1].entryPoint);
+
+                        result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
+                            IPI_MSG_OPENSBI_INIT,
+                            pBootImage->hart[peer-1].privMode,
+                            (void *)pBootImage->hart[peer-1].entryPoint,
+                            (void *)pInstanceData->ancilliaryData);
+
+                        if (!result) {
+                            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::u54_%u:sbi_init failed" CRLF,
+                                pMyMachine->pMachineName, peer);
+
+                            pMyMachine->state = BOOT_ERROR;
+                        }
+                    }
                 }
                 pInstanceData->iterator++;
             } else {
@@ -678,22 +712,38 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
 
     if (pBootImage->hart[target-1].entryPoint) {
         bool result;
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
-            target, pBootImage->hart[target-1].entryPoint);
+
         result = IPI_MessageAlloc(&(pInstanceData->msgIndex));
         assert(result);
 
         mb();
         mb_i();
 
-        result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
-            IPI_MSG_OPENSBI_INIT,
-            pBootImage->hart[target-1].privMode,
-            (void *)pBootImage->hart[target-1].entryPoint,
-            (void *)pInstanceData->ancilliaryData);
-        assert(result);
+        if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p" CRLF, pMyMachine->pMachineName,
+                target, pBootImage->hart[target-1].entryPoint);
+
+            result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
+                IPI_MSG_GOTO,
+                pBootImage->hart[target-1].privMode,
+                (void *)pBootImage->hart[target-1].entryPoint,
+                (void *)pInstanceData->ancilliaryData);
+
+            assert(result);
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
+                target, pBootImage->hart[target-1].entryPoint);
+
+            result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
+                IPI_MSG_OPENSBI_INIT,
+                pBootImage->hart[target-1].privMode,
+                (void *)pBootImage->hart[target-1].entryPoint,
+                (void *)pInstanceData->ancilliaryData);
+
+            assert(result);
+        }
     } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::target is %u, pBootImage is %p, skipping sbi_init %p" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::target is %u, pBootImage is %p, skipping goto/sbi_init %p" CRLF,
             pMyMachine->pMachineName, target, pBootImage, pBootImage->hart[target-1].entryPoint);
     }
 }
@@ -1040,7 +1090,7 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing" CRLF, target); //TODO
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing" CRLF, target);
             IPI_MessageFree(*indexOut);
         }
     }

@@ -8,6 +8,7 @@ config SERVICE_WDOG
 		If you do not know what to do here, say Y.
 
 menu "Watchdog Service"
+	visible if SERVICE_WDOG
 
 config SERVICE_WDOG_DEBUG
 	bool "Virtual Watchdog Debug Messages"

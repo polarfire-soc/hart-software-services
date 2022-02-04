@@ -308,7 +308,7 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
             result = false;
         } else if (validateCrc_(pBootImage)) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image passed CRC" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");
 
         // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the
@@ -578,7 +578,6 @@ void HSS_BootSelectPayload(void)
 #if IS_ENABLED(CONFIG_SERVICE_SPI)
 static bool spiFlashReadBlock_(void *dst, size_t offs, size_t count) {
    int retval = MSS_SYS_spi_copy((uintptr_t)dst, offs, count, /* options */ 3, /* mb_offset */ 0);
-   mb();
 
    if (retval) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to read 0x%lx bytes from SPI flash @0x%lx (error code %d)!\n", count, offs, retval);

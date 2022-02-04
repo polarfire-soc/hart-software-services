@@ -95,8 +95,6 @@ baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 #
 
 $(BOARD_DIR)/hss-l2lim.ld: $(BOARD_DIR)/hss-l2lim.lds config.h
-	@$(ECHO) " CPP       $@";
-	$(CMD_PREFIX)$(CPP) -P -I. -o $@ $<
 
 ################################################################################################
 
@@ -143,10 +141,8 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/ICICLE_MSS_eMMC_cfg.xml
+$(SOC_CONFIG_FILES): $(subst $\",,$(CONFIG_SOC_FPGA_DESIGN_XML))
 	@$(ECHO) " CFGGEN    $<";
-	$(CMD_PREFIX)$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
+	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
-
-include envm-wrapper/Makefile

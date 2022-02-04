@@ -29,6 +29,7 @@
 #include "ssmb_ipi.h"
 
 #include "opensbi_service.h"
+#include "opensbi_ecall.h"
 #include "riscv_encoding.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
@@ -42,6 +43,9 @@
 #  error OPENSBI needed for this module
 #endif
 
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+#  include "miv_ihc.h"
+#endif
 
 extern const struct sbi_platform platform;
 static unsigned long l_hartid_to_scratch(int hartid);
@@ -201,105 +205,61 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     } else if (hartid == HSS_HART_E51) { // prohibited by policy
         mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy" CRLF, HSS_HART_E51);
     } else {
-        result = IPI_SUCCESS;
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
+        __sync_synchronize();
+
+        // small delay to ensure that IHC message has been sent before jumping into OpenSBI
+        // without this, HSS never receives ack from U54 that OPENSBI_INIT was successful
+        HSS_SpinDelay_MilliSecs(250u);
+#endif
+
         struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, hartid);
-        pMsg->msg_type = IPI_MSG_NO_MESSAGE;
+        size_t i;
 
-        csr_write(mscratch, &(pScratches[hartid].scratch));
+        for (i = 0u; i < IPI_MAX_NUM_QUEUE_MESSAGES; i++) {
+            if (pMsg->transaction_id == transaction_id) { break; }
+            pMsg++;
+        }
 
-        pScratches[hartid].scratch.next_addr = (uintptr_t)p_extended_buffer;
-        pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
+        // if message found process it...
+        if (pMsg->transaction_id == transaction_id) {
+            pMsg->msg_type = IPI_MSG_NO_MESSAGE;
+            result = IPI_SUCCESS;
+        } else {
+            result = IPI_FAIL;
+        }
 
-        // set arg1 (A1) to point to override device tree blob, if provided
+        if (result != IPI_FAIL) {
+            csr_write(mscratch, &(pScratches[hartid].scratch));
+
+            pScratches[hartid].scratch.next_addr = (uintptr_t)p_extended_buffer;
+            pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
+
+            // set arg1 (A1) to point to override device tree blob, if provided
 #if IS_ENABLED(CONFIG_PROVIDE_DTB)
 #  if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-        extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
-        scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
+            extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
+            scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
 #  elif IS_ENABLED(CONFIG_PLATFORM_FU540)
-        extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
-        pScratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
+            extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
+            pScratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
 #  else
 #    error Unknown PLATFORM settings
 #  endif
 #else
-	// else use ancilliary data if provided in boot image, assuming it is a DTB
-       	scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
+            // else use ancilliary data if provided in boot image, assuming it is a DTB
+            scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
 #endif
-
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_addr to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_addr);
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_arg1 to 0x%x" CRLF, hartid, scratches[hartid].scratch.next_arg1);
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %d: Setting next_mode to PRV_", hartid);
-	switch (scratches[hartid].scratch.next_mode) {
-	case PRV_M:
-	    mHSS_DEBUG_PRINTF_EX("M" CRLF);
-            break;
-	case PRV_S:
-	    mHSS_DEBUG_PRINTF_EX("S" CRLF);
-            break;
-	case PRV_U:
-	    mHSS_DEBUG_PRINTF_EX("U" CRLF);
-            break;
-	default:
-	    mHSS_DEBUG_PRINTF_EX("???" CRLF);
-            break;
-	}
-
-        HSS_OpenSBI_DoBoot(hartid);
+            HSS_OpenSBI_DoBoot(hartid);
+        }
     }
 
     return result;
 }
 
-#include <sbi/sbi_ecall.h>
-#include <sbi/sbi_error.h>
-#include "hss_boot_service.h"
-
-static int sbi_ecall_hss_handler(
-    unsigned long extid, unsigned long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
-{
-    int ret = 0;
-    (void)regs;
-    uint32_t index;
-
-    switch (funcid) {
-    case SBI_EXT_HSS_REBOOT:
-sbi_printf("%s() SBI_EXT_HSS_REBOOT\n", __func__);
-        IPI_MessageAlloc(&index);
-        IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
-        ret = 0; //ret = hss_reboot_req(scratch, args[0], args[1], args[2]);
-        break;
-
-    default:
-        ret = SBI_ENOTSUPP;
-    };
-
-    if (ret >= 0) {
-        *out_val = ret;
-        ret = 0;
-    }
-
-    return ret;
-}
-
-struct sbi_ecall_extension ecall_hss = {
-    .extid_start = SBI_EXT_HSS,
-    .extid_end = SBI_EXT_HSS,
-    .handle = sbi_ecall_hss_handler
-};
-
-void HSS_SBI_Ecall_Register(void)
-{
-    int result = sbi_ecall_register_extension(&ecall_hss);
-    //if (result)
-    //    sbi_hart_hang();
-    (void)result;
-}
-
-void HSS_OpenSBI_Reboot(void);
 void HSS_OpenSBI_Reboot(void)
 {
     uint32_t index;

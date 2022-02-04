@@ -6,6 +6,9 @@ config SERVICE_QSPI
 
 		If you do not know what to do here, say Y.
 
+menu "QSPI"
+	visible if SERVICE_QSPI
+
 config SERVICE_QSPI_COPY_TO_DDR
 	bool "QSPI support"
         depends on SERVICE_QSPI
@@ -43,3 +46,4 @@ config MT15Q
         help
                 QSPI is use S25FL512S SPI flash 
 
+endmenu

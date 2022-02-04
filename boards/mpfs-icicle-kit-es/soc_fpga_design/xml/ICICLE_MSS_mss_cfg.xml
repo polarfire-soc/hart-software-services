@@ -1,11 +1,11 @@
   <mss xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mpfs_hw_description.xsd">
     <design_information>
-      <libero_version>2021.1</libero_version>
+      <libero_version>2021.2</libero_version>
       <design_name>ICICLE_MSS</design_name>
       <mpfs_part_no>MPFS250T_ES</mpfs_part_no>
       <mpfs_package>FCVG484</mpfs_package>
-      <creation_date_time>04-11-2021_22:30:25</creation_date_time>
-      <xml_format_version>0.5.3</xml_format_version>
+      <creation_date_time>10-21-2021_14:49:05</creation_date_time>
+      <xml_format_version>0.5.6</xml_format_version>
     </design_information>
     <mss_memory_map>
       <map>
@@ -1249,22 +1249,22 @@
             <field Type="RW" name="MDIO1_FABRIC" offset="13" width="1">0x0</field>
           </register>
           <register address="0x00000204" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="IOMUX1_CR">
-            <field Type="RW" name="PAD0" offset="0" width="4">0x1</field>
-            <field Type="RW" name="PAD1" offset="4" width="4">0x1</field>
-            <field Type="RW" name="PAD2" offset="8" width="4">0x1</field>
-            <field Type="RW" name="PAD3" offset="12" width="4">0x1</field>
-            <field Type="RW" name="PAD4" offset="16" width="4">0x1</field>
-            <field Type="RW" name="PAD5" offset="20" width="4">0x1</field>
-            <field Type="RW" name="PAD6" offset="24" width="4">0x1</field>
-            <field Type="RW" name="PAD7" offset="28" width="4">0x1</field>
+            <field Type="RW" name="PAD0" offset="0" width="4">0x0</field>
+            <field Type="RW" name="PAD1" offset="4" width="4">0x0</field>
+            <field Type="RW" name="PAD2" offset="8" width="4">0x0</field>
+            <field Type="RW" name="PAD3" offset="12" width="4">0x0</field>
+            <field Type="RW" name="PAD4" offset="16" width="4">0x0</field>
+            <field Type="RW" name="PAD5" offset="20" width="4">0x0</field>
+            <field Type="RW" name="PAD6" offset="24" width="4">0x0</field>
+            <field Type="RW" name="PAD7" offset="28" width="4">0x0</field>
           </register>
           <register address="0x00000208" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="IOMUX2_CR">
-            <field Type="RW" name="PAD8" offset="0" width="4">0x1</field>
-            <field Type="RW" name="PAD9" offset="4" width="4">0x1</field>
-            <field Type="RW" name="PAD10" offset="8" width="4">0x1</field>
-            <field Type="RW" name="PAD11" offset="12" width="4">0x1</field>
-            <field Type="RW" name="PAD12" offset="16" width="4">0xF</field>
-            <field Type="RW" name="PAD13" offset="20" width="4">0xF</field>
+            <field Type="RW" name="PAD8" offset="0" width="4">0x0</field>
+            <field Type="RW" name="PAD9" offset="4" width="4">0x0</field>
+            <field Type="RW" name="PAD10" offset="8" width="4">0x0</field>
+            <field Type="RW" name="PAD11" offset="12" width="4">0x0</field>
+            <field Type="RW" name="PAD12" offset="16" width="4">0x0</field>
+            <field Type="RW" name="PAD13" offset="20" width="4">0x0</field>
           </register>
           <register address="0x0000020C" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="IOMUX3_CR">
             <field Type="RW" name="PAD14" offset="0" width="4">0x4</field>
@@ -1297,11 +1297,11 @@
             <field Type="RW" name="PAD37" offset="28" width="4">0xF</field>
           </register>
           <register address="0x00000218" description="Sets whether the MMC/SD Voltage select lines are inverted on entry to the IOMUX structure" name="IOMUX6_CR">
-            <field Type="RW" name="VLT_SEL" offset="0" width="1">0x0</field>
+            <field Type="RW" name="VLT_SEL" offset="0" width="1">0x1</field>
             <field Type="RW" name="VLT_EN" offset="1" width="1">0x0</field>
-            <field Type="RW" name="VLT_CMD_DIR" offset="2" width="1">0x0</field>
-            <field Type="RW" name="VLT_DIR_0" offset="3" width="1">0x0</field>
-            <field Type="RW" name="VLT_DIR_1_3" offset="4" width="1">0x0</field>
+            <field Type="RW" name="VLT_CMD_DIR" offset="2" width="1">0x1</field>
+            <field Type="RW" name="VLT_DIR_0" offset="3" width="1">0x1</field>
+            <field Type="RW" name="VLT_DIR_1_3" offset="4" width="1">0x1</field>
             <field Type="RW" name="SD_LED" offset="5" width="1">0x0</field>
             <field Type="RW" name="SD_VOLT_0" offset="6" width="1">0x0</field>
             <field Type="RW" name="SD_VOLT_1" offset="7" width="1">0x0</field>
@@ -1436,77 +1436,77 @@
             <field Type="R" name="RESERVED" offset="15" width="17">0x0</field>
           </register>
           <register address="0x0000027C" description="Indicates if eMMC is configured for use (bit 0 == 1), If SD is configued for use (bit 1 == 1). Bit 2 indicates which one should be used by default on MSS embedded software startup ( bit2 == 0,  implies  default is eMMC, bit2 == 1,  implies  default is SD). The eMMC configuration is always defined in xml tag (io_mux, the SD configuration is always defined in xml tag (io_mux_alt). All other elements in the (o_mux) and (io_mux_alt) not releating to eMMC/SD differences should be the same values." name="MSSIO_CONFIGURATION_OPTIONS">
-            <field Type="RW" name="EMMC_CONFIGURED" offset="0" width="1">0x0</field>
-            <field Type="RW" name="SD_CONFIGURED" offset="1" width="1">0x0</field>
-            <field Type="RW" name="DEFAULT_ON_START" offset="2" width="1">0x0</field>
+            <field Type="RW" name="EMMC_CONFIGURED" offset="0" width="1">0x1</field>
+            <field Type="RW" name="SD_CONFIGURED" offset="1" width="1">0x1</field>
+            <field Type="RW" name="DEFAULT_ON_START" offset="2" width="1">0x1</field>
           </register>
         </registers>
       </io_mux>
       <io_mux_alt>
         <registers>
           <register address="0x00000200" description="Selects whether the peripheral is connected to the Fabric or IOMUX structure." name="ALT_IOMUX0_CR">
-            <field Type="RW" name="SPI0_FABRIC" offset="0" width="1">0x0</field>
+            <field Type="RW" name="SPI0_FABRIC" offset="0" width="1">0x1</field>
             <field Type="RW" name="SPI1_FABRIC" offset="1" width="1">0x0</field>
-            <field Type="RW" name="I2C0_FABRIC" offset="2" width="1">0x0</field>
-            <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x0</field>
-            <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x0</field>
+            <field Type="RW" name="I2C0_FABRIC" offset="2" width="1">0x1</field>
+            <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x1</field>
+            <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x1</field>
             <field Type="RW" name="CAN1_FABRIC" offset="5" width="1">0x0</field>
             <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x0</field>
-            <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x0</field>
-            <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x0</field>
-            <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x0</field>
-            <field Type="RW" name="MMUART3_FABRIC" offset="10" width="1">0x0</field>
-            <field Type="RW" name="MMUART4_FABRIC" offset="11" width="1">0x0</field>
+            <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x1</field>
+            <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x1</field>
+            <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x1</field>
+            <field Type="RW" name="MMUART3_FABRIC" offset="10" width="1">0x1</field>
+            <field Type="RW" name="MMUART4_FABRIC" offset="11" width="1">0x1</field>
             <field Type="RW" name="MDIO0_FABRIC" offset="12" width="1">0x0</field>
             <field Type="RW" name="MDIO1_FABRIC" offset="13" width="1">0x0</field>
           </register>
           <register address="0x00000204" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="ALT_IOMUX1_CR">
-            <field Type="RW" name="PAD0" offset="0" width="4">0x0</field>
-            <field Type="RW" name="PAD1" offset="4" width="4">0x0</field>
-            <field Type="RW" name="PAD2" offset="8" width="4">0x0</field>
-            <field Type="RW" name="PAD3" offset="12" width="4">0x0</field>
-            <field Type="RW" name="PAD4" offset="16" width="4">0x0</field>
-            <field Type="RW" name="PAD5" offset="20" width="4">0x0</field>
-            <field Type="RW" name="PAD6" offset="24" width="4">0x0</field>
-            <field Type="RW" name="PAD7" offset="28" width="4">0x0</field>
+            <field Type="RW" name="PAD0" offset="0" width="4">0x1</field>
+            <field Type="RW" name="PAD1" offset="4" width="4">0x1</field>
+            <field Type="RW" name="PAD2" offset="8" width="4">0x1</field>
+            <field Type="RW" name="PAD3" offset="12" width="4">0x1</field>
+            <field Type="RW" name="PAD4" offset="16" width="4">0x1</field>
+            <field Type="RW" name="PAD5" offset="20" width="4">0x1</field>
+            <field Type="RW" name="PAD6" offset="24" width="4">0x1</field>
+            <field Type="RW" name="PAD7" offset="28" width="4">0x1</field>
           </register>
           <register address="0x00000208" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="ALT_IOMUX2_CR">
-            <field Type="RW" name="PAD8" offset="0" width="4">0x0</field>
-            <field Type="RW" name="PAD9" offset="4" width="4">0x0</field>
-            <field Type="RW" name="PAD10" offset="8" width="4">0x0</field>
-            <field Type="RW" name="PAD11" offset="12" width="4">0x0</field>
-            <field Type="RW" name="PAD12" offset="16" width="4">0x0</field>
-            <field Type="RW" name="PAD13" offset="20" width="4">0x0</field>
+            <field Type="RW" name="PAD8" offset="0" width="4">0x1</field>
+            <field Type="RW" name="PAD9" offset="4" width="4">0x1</field>
+            <field Type="RW" name="PAD10" offset="8" width="4">0x1</field>
+            <field Type="RW" name="PAD11" offset="12" width="4">0x1</field>
+            <field Type="RW" name="PAD12" offset="16" width="4">0xF</field>
+            <field Type="RW" name="PAD13" offset="20" width="4">0xF</field>
           </register>
           <register address="0x0000020C" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="ALT_IOMUX3_CR">
-            <field Type="RW" name="PAD14" offset="0" width="4">0x0</field>
-            <field Type="RW" name="PAD15" offset="4" width="4">0x0</field>
-            <field Type="RW" name="PAD16" offset="8" width="4">0x0</field>
-            <field Type="RW" name="PAD17" offset="12" width="4">0x0</field>
-            <field Type="RW" name="PAD18" offset="16" width="4">0x0</field>
-            <field Type="RW" name="PAD19" offset="20" width="4">0x0</field>
-            <field Type="RW" name="PAD20" offset="24" width="4">0x0</field>
-            <field Type="RW" name="PAD21" offset="28" width="4">0x0</field>
+            <field Type="RW" name="PAD14" offset="0" width="4">0x4</field>
+            <field Type="RW" name="PAD15" offset="4" width="4">0x4</field>
+            <field Type="RW" name="PAD16" offset="8" width="4">0x4</field>
+            <field Type="RW" name="PAD17" offset="12" width="4">0x4</field>
+            <field Type="RW" name="PAD18" offset="16" width="4">0x4</field>
+            <field Type="RW" name="PAD19" offset="20" width="4">0x4</field>
+            <field Type="RW" name="PAD20" offset="24" width="4">0x4</field>
+            <field Type="RW" name="PAD21" offset="28" width="4">0x4</field>
           </register>
           <register address="0x00000210" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="ALT_IOMUX4_CR">
-            <field Type="RW" name="PAD22" offset="0" width="4">0x0</field>
-            <field Type="RW" name="PAD23" offset="4" width="4">0x0</field>
-            <field Type="RW" name="PAD24" offset="8" width="4">0x0</field>
-            <field Type="RW" name="PAD25" offset="12" width="4">0x0</field>
-            <field Type="RW" name="PAD26" offset="16" width="4">0x0</field>
-            <field Type="RW" name="PAD27" offset="20" width="4">0x0</field>
-            <field Type="RW" name="PAD28" offset="24" width="4">0x0</field>
-            <field Type="RW" name="PAD29" offset="28" width="4">0x0</field>
+            <field Type="RW" name="PAD22" offset="0" width="4">0x4</field>
+            <field Type="RW" name="PAD23" offset="4" width="4">0x4</field>
+            <field Type="RW" name="PAD24" offset="8" width="4">0x4</field>
+            <field Type="RW" name="PAD25" offset="12" width="4">0x4</field>
+            <field Type="RW" name="PAD26" offset="16" width="4">0xC</field>
+            <field Type="RW" name="PAD27" offset="20" width="4">0xC</field>
+            <field Type="RW" name="PAD28" offset="24" width="4">0x8</field>
+            <field Type="RW" name="PAD29" offset="28" width="4">0x8</field>
           </register>
           <register address="0x00000214" description="Configures the IO Mux structure for each IO pad.  0  implies  SD/SDIO, 1 implies  EMMC, 2 implies QSPI, 3 implies SPI,4 implies USB,5 implies MMUART,6 implies I2C,7 implies CAN,8 implies MDIO,9 implies Miscellaneous,0xA implies Reserved (Equivalent to Tristate),0xB implies GPIO ,0xC implies Fabric-test,0xD implies Logic 0,0xE implies Logic 1, 0xF implies Tristate" name="ALT_IOMUX5_CR">
-            <field Type="RW" name="PAD30" offset="0" width="4">0x0</field>
-            <field Type="RW" name="PAD31" offset="4" width="4">0x0</field>
-            <field Type="RW" name="PAD32" offset="8" width="4">0x0</field>
-            <field Type="RW" name="PAD33" offset="12" width="4">0x0</field>
-            <field Type="RW" name="PAD34" offset="16" width="4">0x0</field>
-            <field Type="RW" name="PAD35" offset="20" width="4">0x0</field>
-            <field Type="RW" name="PAD36" offset="24" width="4">0x0</field>
-            <field Type="RW" name="PAD37" offset="28" width="4">0x0</field>
+            <field Type="RW" name="PAD30" offset="0" width="4">0x2</field>
+            <field Type="RW" name="PAD31" offset="4" width="4">0x2</field>
+            <field Type="RW" name="PAD32" offset="8" width="4">0x2</field>
+            <field Type="RW" name="PAD33" offset="12" width="4">0x2</field>
+            <field Type="RW" name="PAD34" offset="16" width="4">0x7</field>
+            <field Type="RW" name="PAD35" offset="20" width="4">0x7</field>
+            <field Type="RW" name="PAD36" offset="24" width="4">0x7</field>
+            <field Type="RW" name="PAD37" offset="28" width="4">0xF</field>
           </register>
           <register address="0x00000218" description="Sets whether the MMC/SD Voltage select lines are inverted on entry to the IOMUX structure" name="ALT_IOMUX6_CR">
             <field Type="RW" name="VLT_SEL" offset="0" width="1">0x0</field>
@@ -1520,96 +1520,96 @@
             <field Type="RW" name="SD_VOLT_2" offset="8" width="1">0x0</field>
           </register>
           <register address="0x00000230" description="Configures the MSSIO block using SCB write" name="ALT_MSSIO_BANK4_CFG_CR">
-            <field Type="RW" name="BANK_PCODE" offset="0" width="6">0x3F</field>
+            <field Type="RW" name="BANK_PCODE" offset="0" width="6">0xD</field>
             <field Type="RW" name="RESERVED0" offset="6" width="2">0x00</field>
-            <field Type="RW" name="BANK_NCODE" offset="8" width="6">0x3F</field>
+            <field Type="RW" name="BANK_NCODE" offset="8" width="6">0xA</field>
             <field Type="RW" name="RESERVED1" offset="14" width="2">0x0</field>
-            <field Type="RW" name="VS" offset="16" width="4">0x0</field>
+            <field Type="RW" name="VS" offset="16" width="4">0x4</field>
             <field Type="RW" name="RESERVED2" offset="20" width="12">0x0</field>
           </register>
           <register address="0x00000234" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_0_1_CR">
-            <field Type="RW" name="IO_CFG_0" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_1" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_0" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_1" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x00000238" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_2_3_CR">
-            <field Type="RW" name="IO_CFG_2" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_3" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_2" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_3" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x0000023C" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_4_5_CR">
-            <field Type="RW" name="IO_CFG_4" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_5" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_4" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_5" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x00000240" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_6_7_CR">
-            <field Type="RW" name="IO_CFG_6" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_7" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_6" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_7" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x00000244" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_8_9_CR">
-            <field Type="RW" name="IO_CFG_8" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_9" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_8" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_9" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x00000248" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_10_11_CR">
-            <field Type="RW" name="IO_CFG_10" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_11" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_10" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_11" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x0000024C" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK4_IO_CFG_12_13_CR">
-            <field Type="RW" name="IO_CFG_12" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_13" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_12" offset="0" width="16">0x0928</field>
+            <field Type="RW" name="IO_CFG_13" offset="16" width="16">0x0928</field>
           </register>
           <register address="0x00000250" description="Configures the MSSIO block using SCB write" name="ALT_MSSIO_BANK2_CFG_CR">
-            <field Type="RW" name="BANK_PCODE" offset="0" width="6">0x3F</field>
+            <field Type="RW" name="BANK_PCODE" offset="0" width="6">0x7</field>
             <field Type="RW" name="RESERVED0" offset="6" width="2">0x00</field>
-            <field Type="RW" name="BANK_NCODE" offset="8" width="6">0x3F</field>
+            <field Type="RW" name="BANK_NCODE" offset="8" width="6">0x9</field>
             <field Type="RW" name="RESERVED1" offset="14" width="2">0x0</field>
-            <field Type="RW" name="VS" offset="16" width="4">0x0</field>
+            <field Type="RW" name="VS" offset="16" width="4">0x8</field>
             <field Type="RW" name="RESERVED2" offset="20" width="12">0x0</field>
           </register>
           <register address="0x00000254" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_0_1_CR">
-            <field Type="RW" name="IO_CFG_0" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_1" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_0" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_1" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000258" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_2_3_CR">
-            <field Type="RW" name="IO_CFG_2" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_3" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_2" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_3" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x0000025C" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_4_5_CR">
-            <field Type="RW" name="IO_CFG_4" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_5" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_4" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_5" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000260" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_6_7_CR">
-            <field Type="RW" name="IO_CFG_6" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_7" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_6" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_7" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000264" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_8_9_CR">
-            <field Type="RW" name="IO_CFG_8" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_9" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_8" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_9" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000268" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_10_11_CR">
-            <field Type="RW" name="IO_CFG_10" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_11" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_10" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_11" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x0000026C" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_12_13_CR">
-            <field Type="RW" name="IO_CFG_12" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_13" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_12" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_13" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000270" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_14_15_CR">
-            <field Type="RW" name="IO_CFG_14" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_15" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_14" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_15" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000274" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_16_17_CR">
-            <field Type="RW" name="IO_CFG_16" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_17" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_16" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_17" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000278" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_18_19_CR">
-            <field Type="RW" name="IO_CFG_18" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_19" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_18" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_19" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x0000027C" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_20_21_CR">
-            <field Type="RW" name="IO_CFG_20" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_21" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_20" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_21" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000280" description="IO electrical configuration for MSSIO pad" name="ALT_MSSIO_BANK2_IO_CFG_22_23_CR">
-            <field Type="RW" name="IO_CFG_22" offset="0" width="16">0x0</field>
-            <field Type="RW" name="IO_CFG_23" offset="16" width="16">0x0</field>
+            <field Type="RW" name="IO_CFG_22" offset="0" width="16">0x0829</field>
+            <field Type="RW" name="IO_CFG_23" offset="16" width="16">0x0829</field>
           </register>
           <register address="0x00000278" description="default dpc values for MSSIO bank 2 " name="ALT_MSSIO_VB2_CFG">
             <field Type="RW" name="DPC_IO_CFG_IBUFMD_0" offset="0" width="1">0x0</field>
@@ -1682,7 +1682,7 @@
             <field Type="RW" name="REG_DLL_ADJ_CODE" offset="10" width="4">0x9</field>
             <field Type="RW" name="REG_CH0_CDR_RESET_B" offset="14" width="1">0x1</field>
             <field Type="RW" name="REG_CH1_CDR_RESET_B" offset="15" width="1">0x1</field>
-            <field Type="RW" name="REG_BC_VRGEN" offset="16" width="6">0x00</field>
+            <field Type="RW" name="REG_BC_VRGEN" offset="16" width="6">0x0</field>
             <field Type="RW" name="REG_CDR_MOVE_STEP" offset="22" width="1">0x1</field>
             <field Type="RW" name="REG_REFCLK_EN_RDIFF" offset="23" width="1">0x1</field>
             <field Type="RW" name="REG_BC_VS" offset="24" width="4">0x8</field>
@@ -3251,7 +3251,7 @@
             <field Type="RW" name="CFG_DM_EN" offset="0" width="32">0x1</field>
           </register>
           <register address="0x00005404" description="IP Blk = RMW Access=RW " name="CFG_RMW_EN">
-            <field Type="RW" name="CFG_RMW_EN" offset="0" width="32">0x0</field>
+            <field Type="RW" name="CFG_RMW_EN" offset="0" width="32">0x1</field>
           </register>
           <register address="0x00005800" description="IP Blk = ECC Access=RW " name="CFG_ECC_CORRECTION_EN">
             <field Type="RW" name="CFG_ECC_CORRECTION_EN" offset="0" width="32">0x0</field>
@@ -3478,37 +3478,52 @@
     <mss_clocks>
       <clocks>
         <registers>
-          <register address="0" description="Ref Clock rate in MHz" name="MSS_EXT_SGMII_REF_CLK">
+          <register address="0" description="This version incrments when change to format of this file" name="MSS_CLKS_VERSION">
+            <field Type="RW" name="VERSION" offset="0" width="32">0x1</field>
+          </register>
+          <register address="4" description="Ref Clock rate in MHz" name="MSS_EXT_SGMII_REF_CLK">
             <field Type="RW" name="MSS_EXT_SGMII_REF_CLK" offset="0" width="32">125000000</field>
           </register>
-          <register address="0" description="CPU Clock rate in MHz" name="MSS_COREPLEX_CPU_CLK">
+          <register address="8" description="CPU Clock rate in MHz" name="MSS_COREPLEX_CPU_CLK">
             <field Type="RW" name="MSS_COREPLEX_CPU_CLK" offset="0" width="32">600000000</field>
           </register>
-          <register address="0" description="System Clock rate in MHz static power." name="MSS_SYSTEM_CLK">
+          <register address="12" description="System Clock rate in MHz static power." name="MSS_SYSTEM_CLK">
             <field Type="RW" name="MSS_SYSTEM_CLK" offset="0" width="32">600000000</field>
           </register>
-          <register address="0" description="RTC toggle Clock rate in MHz static power." name="MSS_RTC_TOGGLE_CLK">
+          <register address="16" description="RTC toggle Clock rate in MHz static power." name="MSS_RTC_TOGGLE_CLK">
             <field Type="RW" name="MSS_RTC_TOGGLE_CLK" offset="0" width="32">1000000</field>
           </register>
-          <register address="0" description="AXI Clock rate in MHz static power." name="MSS_AXI_CLK">
+          <register address="20" description="AXI Clock rate in MHz static power." name="MSS_AXI_CLK">
             <field Type="RW" name="MSS_AXI_CLK" offset="0" width="32">300000000</field>
           </register>
-          <register address="0" description="AXI Clock rate in MHz static power." name="MSS_APB_AHB_CLK">
+          <register address="24" description="AXI Clock rate in MHz static power." name="MSS_APB_AHB_CLK">
             <field Type="RW" name="MSS_APB_AHB_CLK" offset="0" width="32">150000000</field>
+          </register>
+          <register address="28" description="DDR clock rate in MHz (clk rate x 2)" name="DDR_CLK">
+            <field Type="RW" name="DDR_CLK" offset="0" width="32">1600000000</field>
           </register>
         </registers>
       </clocks>
       <mss_sys>
         <registers>
-          <register address="0x00000008" description="Master clock config  (00=/1 01=/2 10=/4 11=/8 )" name="CLOCK_CONFIG_CR">
+          <register address="0x00000000" description="This version incrments when change to format of this file" name="SYSREG_CLKS_VERSION">
+            <field Type="RW" name="VERSION" offset="0" width="32">0x1</field>
+          </register>
+          <register address="0x00000004" description="Master clock config  (00=/1 01=/2 10=/4 11=/8 )" name="CLOCK_CONFIG_CR">
             <field Type="RW" name="DIVIDER_CPU" offset="0" width="2">0x0</field>
             <field Type="RW" name="DIVIDER_AXI" offset="2" width="2">0x1</field>
             <field Type="RW" name="DIVIDER_APB_AHB" offset="4" width="2">0x2</field>
+            <field Type="RW" name="RESERVED" offset="6" width="2">0x0</field>
+            <field Type="RW" name="ENABLE_1MHZ" offset="8" width="1">0x0</field>
+            <field Type="RW" name="RESERVED1" offset="9" width="7">0x0</field>
+            <field Type="RW" name="MMC_CLOCK_FABRIC" offset="16" width="1">0x0</field>
+            <field Type="RW" name="CAN_CLOCK_FABRIC" offset="17" width="1">0x0</field>
+            <field Type="RW" name="RESERVED2" offset="18" width="14">0x0</field>
           </register>
-          <register address="0x0000000C" description="RTC clock divider" name="RTC_CLOCK_CR">
+          <register address="0x00000008" description="RTC clock divider" name="RTC_CLOCK_CR">
             <field Type="RW" name="PERIOD" offset="0" width="12">0x7D</field>
           </register>
-          <register address="0x000000B8" description="ENVM AHB Controller setup - - Clock period = (Value+1) * (1000/AHBFREQMHZ) e.g. 7 will generate a 40ns period 25MHz clock if the AHB clock is 200MHz" name="ENVM_CR">
+          <register address="0x0000000C" description="ENVM AHB Controller setup - - Clock period = (Value+1) * (1000/AHBFREQMHZ) e.g. 7 will generate a 40ns period 25MHz clock if the AHB clock is 200MHz" name="ENVM_CR">
             <field Type="RW" name="CLOCK_PERIOD" offset="0" width="6">0x6</field>
             <field Type="RW" name="CLOCK_CONTINUOUS" offset="8" width="1">0x0</field>
             <field Type="RW" name="CLOCK_SUPPRESS" offset="9" width="1">0x0</field>
@@ -3564,7 +3579,7 @@
             <field Type="RO" name="VCO0PH_SEL" offset="0" width="3">0x0</field>
             <field Type="RW" name="DIV0_START" offset="3" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE18" offset="6" width="2">0x0</field>
-            <field Type="RW" name="POST0DIV" offset="8" width="7">0x2</field>
+            <field Type="RW" name="POST0DIV" offset="8" width="7">0x1</field>
             <field Type="RSVD" name="RESERVE19" offset="15" width="1">0x0</field>
             <field Type="RO" name="VCO1PH_SEL" offset="16" width="3">0x0</field>
             <field Type="RW" name="DIV1_START" offset="19" width="3">0x0</field>
@@ -3576,12 +3591,12 @@
             <field Type="RO" name="VCO2PH_SEL" offset="0" width="3">0x0</field>
             <field Type="RW" name="DIV2_START" offset="3" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE22" offset="6" width="2">0x0</field>
-            <field Type="RW" name="POST2DIV" offset="8" width="7">0x6</field>
+            <field Type="RW" name="POST2DIV" offset="8" width="7">0x3</field>
             <field Type="RSVD" name="RESERVE23" offset="15" width="1">0x0</field>
             <field Type="RO" name="VCO3PH_SEL" offset="16" width="3">0x0</field>
             <field Type="RW" name="DIV3_START" offset="19" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE24" offset="22" width="2">0x0</field>
-            <field Type="RW" name="POST3DIV" offset="24" width="7">0xF</field>
+            <field Type="RW" name="POST3DIV" offset="24" width="7">0x4B</field>
             <field Type="RW" name="CKPOST3_SEL" offset="31" width="1">0x0</field>
           </register>
           <register address="0x00000018" description="PLL control register" name="PLL_CTRL2">
@@ -3628,7 +3643,7 @@
             <field Type="RSVD" name="RESERVE01" offset="30" width="2">0x0</field>
           </register>
           <register address="0x0000002C" description="SSCG registers 2" name="SSCG_REG_2">
-            <field Type="RW" name="INTIN" offset="0" width="12">0xC0</field>
+            <field Type="RW" name="INTIN" offset="0" width="12">0x60</field>
             <field Type="RO" name="INTMOD" offset="12" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE02" offset="24" width="8">0x0</field>
           </register>

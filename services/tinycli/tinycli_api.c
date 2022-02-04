@@ -25,8 +25,10 @@
 #include "gpt.h"
 #include "hss_init.h"
 #include "hss_state_machine.h"
+
 #include "tinycli_service.h"
 #include "tinycli_hexdump.h"
+
 #include "hss_memtest.h"
 #include "hss_progress.h"
 #include "hss_version.h"
@@ -46,6 +48,10 @@
 
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
 #    include "scrub_service.h"
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+#    include "beu_service.h"
 #endif
 
 #define mMAX_NUM_TOKENS 40
@@ -381,18 +387,31 @@ static void tinyCLI_Seg_(void)
 
 static void tinyCLI_L2Cache_(void)
 {
-    (void)HSS_DDRPrintL2CacheConfig();
+    (void)HSS_DDRPrintL2CacheWaysConfig();
+    (void)HSS_DDRPrintL2CacheWayMasks();
 }
 
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+static void tinyCLI_BEU_(void)
+{
+    HSS_BEU_DumpStats();
+}
+#endif
+
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
 static void tinyCLI_PerfCtrs_(void)
 {
     HSS_PerfCtr_DumpAll();
 }
+#endif
 
 static void tinyCLI_Debug_(void)
 {
     bool usageError = false;
     enum DebugKey {
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+        DBG_BEU,
+#endif
         DBG_SM,
         DBG_IPI,
         DBG_CRC32,
@@ -402,10 +421,16 @@ static void tinyCLI_Debug_(void)
 #endif
         DBG_SEG,
         DBG_L2CACHE,
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
         DBG_PERFCTR,
+#endif
         DBG_WDOG,
     };
+
     const struct tinycli_key debugKeys[] = {
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+        { DBG_BEU,      "BEU",     "debug Bus Error Unit monitor" },
+#endif
         { DBG_SM,       "SM",      "debug state machines" },
         { DBG_IPI,      "IPI",     "debug HSS IPI Queues" },
         { DBG_CRC32,    "CRC32",   "calculate CRC32 over memory region" },
@@ -415,7 +440,9 @@ static void tinyCLI_Debug_(void)
 #endif
         { DBG_SEG,      "SEG",     "display seg registers" },
         { DBG_L2CACHE,  "L2CACHE", "display l2cache settings" },
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
         { DBG_PERFCTR , "PERFCTR", "display perf counters" },
+#endif
         { DBG_WDOG ,    "WDOG",    "display watchdog statistics" },
     };
 
@@ -423,6 +450,12 @@ static void tinyCLI_Debug_(void)
     if ((argc_tokenCount > 1u)
         && (tinyCLI_NameToKeyIndex_(debugKeys, ARRAY_SIZE(debugKeys), argv_tokenArray[1], &keyIndex))) {
         switch (keyIndex) {
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+        case DBG_BEU:
+            tinyCLI_BEU_();
+            break;
+#endif
+
         case DBG_SM:
             DumpStateMachineStats();
             break;
@@ -453,9 +486,11 @@ static void tinyCLI_Debug_(void)
             tinyCLI_L2Cache_();
             break;
 
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
         case DBG_PERFCTR:
             tinyCLI_PerfCtrs_();
             break;
+#endif
 
         case DBG_WDOG:
 #if IS_ENABLED(CONFIG_SERVICE_WDOG)
@@ -866,8 +901,7 @@ static void tinyCLI_CmdHandler_(int tokenId)
         {
             USBDMSC_Init();
             USBDMSC_Start();
-            void tinycli_wait_for_usbmscd_done(void);
-            tinycli_wait_for_usbmscd_done();
+            HSS_TinyCLI_WaitForUSBMSCDDone();
         }
         break;
 #endif
