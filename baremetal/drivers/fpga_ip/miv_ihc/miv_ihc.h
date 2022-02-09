@@ -665,7 +665,7 @@ extern uint32_t IHC_partner_context_hart_id(IHC_CHANNEL channel);
             // you can try again...
   @endcode
  */
-extern uint32_t IHC_tx_message_from_context(IHC_CHANNEL channel, uint64_t *message);
+extern uint32_t IHC_tx_message_from_context(IHC_CHANNEL channel, uint32_t *message);
 
 /*-------------------------------------------------------------------------*//**
   The IHC_tx_message_from_hart()
@@ -692,7 +692,7 @@ extern uint32_t IHC_tx_message_from_context(IHC_CHANNEL channel, uint64_t *messa
             // you can try again...
   @endcode
  */
-extern uint32_t IHC_tx_message_from_hart(IHC_CHANNEL channel, uint64_t *message);
+extern uint32_t IHC_tx_message_from_hart(IHC_CHANNEL channel, uint32_t *message);
 
 /*-------------------------------------------------------------------------*//**
   The IHC_message_present_poll()
@@ -769,7 +769,7 @@ void  IHC_message_present_poll(void);
         // see example application
   @endcode
  */
-void  IHC_context_indirect_isr(uint64_t * message_storage_ptr);
+void  IHC_context_indirect_isr(uint32_t * message_storage_ptr);
 
 
 #ifdef __cplusplus

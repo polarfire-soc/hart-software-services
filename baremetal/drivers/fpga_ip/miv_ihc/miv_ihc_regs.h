@@ -290,7 +290,7 @@ typedef struct IHCIA_IP_TypeDef_
   registered.
 
  */
-typedef uint32_t (*QUEUE_IHC_INCOMING)(uint32_t ,  uint32_t *, uint32_t, bool, uint64_t *);
+typedef uint32_t (*QUEUE_IHC_INCOMING)(uint32_t ,  uint32_t *, uint32_t, bool, uint32_t *);
 
 
 /***************************************************************************//**

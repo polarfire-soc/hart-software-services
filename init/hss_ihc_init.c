@@ -29,12 +29,12 @@
 #include "miv_ihc.h"
 
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
-static uint32_t hss_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in, uint32_t message_size, bool is_ack_required, uint64_t *p_message_storage)
+static uint32_t hss_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in, uint32_t message_size, bool is_ack_required, uint32_t *p_message_storage)
 {
     return 0u;
 }
 
-static uint32_t u54_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in, uint32_t message_size, bool is_ack_required, uint64_t *p_message_storage)
+static uint32_t u54_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in, uint32_t message_size, bool is_ack_required, uint32_t *p_message_storage)
 {
     (void)remote_hartid;
     (void)message_size;
