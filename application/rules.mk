@@ -45,6 +45,7 @@ CP=cp
 MAKEDEP=makedepend
 GENCONFIG:=thirdparty/Kconfiglib/genconfig.py
 MENUCONFIG:=thirdparty/Kconfiglib/menuconfig.py
+GUICONFIG:=thirdparty/Kconfiglib/guiconfig.py
 
 #
 #

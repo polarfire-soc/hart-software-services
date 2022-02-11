@@ -38,15 +38,20 @@ defconfig:
 	@$(ECHO) " CP       def_config";
 	cp boards/${BOARD}/def_config .config
 	@$(ECHO) " GENCONFIG"
-	$(GENCONFIG)
+	$(PYTHON) $(GENCONFIG)
 
 menuconfig:
 	@$(ECHO) " MENUCONFIG"
-	$(MENUCONFIG)
+	$(PYTHON) $(MENUCONFIG)
 
 config:
 	@$(ECHO) " MENUCONFIG"
-	$(MENUCONFIG)
+	$(PYTHON) $(MENUCONFIG)
+
+guiconfig:
+	@$(ECHO) " GUICONFIG"
+	$(PYTHON) $(GUICONFIG)
+
 
 # we can't run curses in SoftConsole, so just copy a pre-canned
 # config, and the user can tweak if necessary
@@ -56,15 +61,24 @@ ifeq ($(HOST_WINDOWS), true)
 	@$(ECHO) " CP       def_config";
 	cp boards/${BOARD}/def_config .config
 	@$(ECHO) " GENCONFIG"
-	$(GENCONFIG)
+	$(PYTHON) $(GENCONFIG)
 else
+  ifeq ($(HOST_LINUX_DESKTOP), true)
+	@$(ECHO) " CP       def_config";
+	cp boards/${BOARD}/def_config .config
+	@$(ECHO) " GUICONFIG"
+	$(PYTHON) $(GUICONFIG)
+  else
+	@$(ECHO) " CP       def_config";
+	cp boards/${BOARD}/def_config .config
 	@$(ECHO) " MENUCONFIG"
-	$(MENUCONFIG)
+	$(PYTHON) $(MENUCONFIG)
+  endif
 endif
 
 config.h: .config
 	@$(ECHO) " GENCONFIG"
-	$(GENCONFIG)
+	$(PYTHON) $(GENCONFIG)
 
 genconfig: config.h
 
