@@ -12,7 +12,11 @@ On PolarFire SoC, this is comprised of two portions:
 
 The HSS performs boot and system monitoring functions for PolarFire SoC.
 
-The HSS is compressed (DEFLATE) and stored in eNVM.  On power-up, a small decompressor decompressor wrapper inflates the HSS from eNVM flash to L2-LIM memory and starts the HSS.
+The HSS is compressed (DEFLATE) and stored in eNVM.  On power-up, a small decompressor decompressor wrapper inflates the HSS from eNVM flash to L2-Scratchpad memory and starts the HSS.
+
+## Contributions
+
+Pull requests to this repository must include a per-commit sign-off made by a contributor stating that they agree to the terms published at https://developercertificate.org/ for that particular contribution.
 
 ## Source
 
@@ -27,17 +31,21 @@ Source code is found under the `hart-software-services` folder.
     │   ├── mpfs-icicle-kit-es (Icicle Kit)
     │   ├── mpfs (Aloe Vera platform)
     │   └── lc-mpfs (Low-cost Aloe Vera platform)
-    ├── compression
-    ├── debug (helper routines for function profiling)
-    ├── envm-wrapper (helper routines to inflate the HSS to L2-LIM)
+    ├── envm-wrapper (helper routines to inflate the HSS to L2-Scratchpad)
     ├── include
     ├── init (system initialization)
-    ├── misc (miscellaneous routines)
+    ├── modules
+    │   ├── compression
+    │   ├── crypto
+    │   ├── debug (helper routines for function profiling)
+    │   ├── misc (miscellaneous routines)
+    │   └── ssmb (secure software message bus)
+    │        └── ipi
     ├── services (software service state machines)
+    │   ├── beu
     │   ├── boot
     │   ├── crypto
     │   ├── ddr
-    │   ├── flashfreeze
     │   ├── goto
     │   ├── ipi_poll
     │   ├── mmc
@@ -53,10 +61,9 @@ Source code is found under the `hart-software-services` folder.
     │   │    └── flash_drive
     │   ├── wdog
     │   └── ymodem
-    ├── ssmb (secure software message bus)
-    │   └── ipi
     └── thirdparty
         ├── Kconfiglib (a Kconfig implementation in Python)
+        ├── libecc (library for elliptic curves based cryptography (ECC))
         ├── miniz (fast lossless compression library)
         └── opensbi (RISC-V OpenSBI)
 
@@ -71,6 +78,10 @@ Both Linux and Windows are supported by Kconfiglib.
 The HSS currently support PolarFire SoC-based icicle kit (mpfs-icicle-kit-es) as a board build target.
 
 ### Building on Linux
+
+The HSS relies on SoftConsole v2021.3 or later to build on Linux. It also needs tkinter installed for the KConfiglib guiconfig tool. To install this on Ubuntu/Debian:
+
+    $ sudo apt install python3-tk
 
 For building on Linux from the command line you must configure the path appropriately, e.g.:
 
@@ -104,19 +115,17 @@ Verbose builds (which show each individual command) are possible by adding V=1 t
 
 ### Building on Windows
 
-The HSS relies only on SoftConsole v2021.1 or later to build on Windows. One workaround that is needed is to copy `python3\bin\python.exe` to `python3\bin\python3.exe` in the SoftConsole v2021.1 installation folder on Windows, e.g.:
-
-    C:\> copy C:\Microchip\SoftConsole-v2021.1\python3\python.exe C:\Microchip\SoftConsole-v2021.1\python3\python3.exe
+The HSS relies only on SoftConsole v2021.3 or later to build on Windows.
 
 For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/software-development/polarfire-soc-software-tool-flow.md#build-the-hss.
 
 For building on Windows from the command line one must configure the path appropriately, e.g.:
 
-    C:\> path %SystemRoot%;%SystemRoot%;C:\Microchip\SoftConsole-v2021.1\build_tools\bin;C:\Microchip\SoftConsole-v2021.1\python;C:\Microchip\SoftConsole-v2021.1\riscv-unknown-elf-gcc\bin
+    C:\> path %SystemRoot%;%SystemRoot%;C:\Microchip\SoftConsole-v2021.3\build_tools\bin;C:\Microchip\SoftConsole-v2021.3\python;C:\Microchip\SoftConsole-v2021.1\riscv-unknown-elf-gcc\bin
 
 ### Debug
 
-The `debug/` subdirectory contains code to enable a number of debug features, including:
+The `modules/debug/` subdirectory contains code to enable a number of debug features, including:
 
  * Logging all state machine transitions to the serial console (MMUART0);
  * Periodic logging of super loop timings to the serial console;
