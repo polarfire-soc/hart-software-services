@@ -85,7 +85,7 @@ The HSS relies on SoftConsole v2021.3 or later to build on Linux. It also needs 
 
 For building on Linux from the command line you must configure the path appropriately, e.g.:
 
-    $ export PATH=$PATH:$HOME/Microchip/SoftConsole-v2021.1/python/bin:$HOME/Microchip/SoftConsole-v2021.1/riscv-unknown-elf-gcc/bin
+    $ export PATH=$PATH:$HOME/Microchip/SoftConsole-v2021.3/python/bin:$HOME/Microchip/SoftConsole-v2021.3/riscv-unknown-elf-gcc/bin
 
 You can enter an interactive Kconfiglib configuration selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
 
@@ -121,7 +121,7 @@ For more detailed build instructions, particular with regards to using SoftConso
 
 For building on Windows from the command line one must configure the path appropriately, e.g.:
 
-    C:\> path %SystemRoot%;%SystemRoot%;C:\Microchip\SoftConsole-v2021.3\build_tools\bin;C:\Microchip\SoftConsole-v2021.3\python;C:\Microchip\SoftConsole-v2021.1\riscv-unknown-elf-gcc\bin
+    C:\> path %SystemRoot%;%SystemRoot%;C:\Microchip\SoftConsole-v2021.3\build_tools\bin;C:\Microchip\SoftConsole-v2021.3\python;C:\Microchip\SoftConsole-v2021.3\riscv-unknown-elf-gcc\bin
 
 ### Debug
 
