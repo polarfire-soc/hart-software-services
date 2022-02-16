@@ -45,7 +45,7 @@ OBJS-envm-wrapper = \
 
 EXTRA_OBJS-envm-wrapper =
 
-LINKER_SCRIPT-envm-wrapper=envm-wrapper/envm-wrapper.ld
+LINKER_SCRIPT-envm-wrapper = envm-wrapper/envm-wrapper.ld
 
 COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2scratch:.elf=.bin.deflate)
 
@@ -57,8 +57,16 @@ define common-boot-mode-programmer
 	-$(RM) -r $(BINDIR)/bootmode1
 	[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
 	[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
-	$(SC_INSTALL_DIR)/eclipse/jre/bin/java -jar $(SC_INSTALL_DIR)/extras/mpfs/mpfsBootmodeProgrammer.jar --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(1) # $(2)
+	$(MPFS_BOOTMODE_PROGRAMMER) --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(1) $(2)
 endef
+
+
+MPFS_BOOTMODE_PROGRAMMER_VERSION := $(findstring v3.6,$(shell $(MPFS_BOOTMODE_PROGRAMMER) --help))
+EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION := v3.6
+ifneq ($(MPFS_BOOTMODE_PROGRAMMER_VERSION),$(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION))
+  $(info INFO: Expected mpfsBootmodeProgrammer.jar version $(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION) but found $(MPFS_BOOTMODE_PROGRAMMER_VERSION))
+  $(info INFO: This version of the HSS relies on SoftConsole v2021.3 or later)
+endif
 
 $(TARGET-envm-wrapper): LIBS:=
 $(TARGET-envm-wrapper): $(COMPRESSED_TARGET) $(OBJS-envm-wrapper)
@@ -66,7 +74,7 @@ $(TARGET-envm-wrapper): $(COMPRESSED_TARGET) $(OBJS-envm-wrapper)
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
-	$(call common-boot-mode-programmer,--dryrun,`pwd`/Default/$@)
+	$(call common-boot-mode-programmer,--dryrun,`basename $@`)
 	@$(CP) $(BINDIR)/bootmode1/hss-envm-wrapper-bm1-p0.hex $(BINDIR)/`basename $@ .elf`.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm-wrapper) 2>/dev/null
 

@@ -42,7 +42,7 @@ import sys
 # PATH here directly with the environment variable
 if sys.platform.startswith('win'):
     path = os.path.join(os.getcwd(), 'thirdparty\\Kconfiglib')
-    print("INFO: SoftConsole on Windows detected, Adding ", path, "to Python sys.path")
+    print("INFO: SoftConsole on Windows detected, adding ", path, "to Python sys.path")
     sys.path.append(path)
 # End of SoftConsole modification
 
