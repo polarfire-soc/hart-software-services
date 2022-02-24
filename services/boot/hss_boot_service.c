@@ -529,7 +529,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
 #endif
                 );
 
-		if ((pBootImage->hart[target-1].flags & BOOT_FLAG_ANCILLIARY_DATA)
+                if ((pChunk->owner & BOOT_FLAG_ANCILLIARY_DATA)
                     && (!pInstanceData->ancilliaryData)) {
                     mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ancilliary data found at 0x%x" CRLF,
                         pMyMachine->pMachineName, pInstanceData->chunkCount, pChunk->execAddr);
