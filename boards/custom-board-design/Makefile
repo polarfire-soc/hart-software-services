@@ -53,8 +53,7 @@ EXTRA_SRCS-y += \
         $(BOARD_DIR)/hss_board_init.c \
 
 EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
-        init/hss_logo_init.c
-
+        $(BOARD_DIR)/hss_logo_init.c
 
 $(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
@@ -101,7 +100,7 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_segs.h \
 	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddrc.h \
 	$(BOARD_DIR)/fpga_design_config/general/hw_gen_peripherals.h \
-	$(BOARD_DIR)/fpga_design_config/hw_platform.h \
+	$(BOARD_DIR)/fpga_design_config/fpga_design_config.h \
 	$(BOARD_DIR)/fpga_design_config/io/hw_hsio_mux.h \
 	$(BOARD_DIR)/fpga_design_config/io/hw_mssio_mux.h \
 	$(BOARD_DIR)/fpga_design_config/memory_map/hw_apb_split.h \
@@ -125,7 +124,7 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(BOARD_DIR)/soc_fpga_design/xml/custom_design_cfg.xml
+$(SOC_CONFIG_FILES): $(subst $\",,$(CONFIG_SOC_FPGA_DESIGN_XML))
 	@$(ECHO) " CFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
