@@ -1,32 +1,8 @@
 config SERVICE_QSPI
-	bool "Boot from Microprocessor Subsystem (MSS) QSPI flash support"
+	bool "Boot from QSPI NAND flash support"
 	default y
 	help
-                This feature enables support for booting via QSPI.
+                This feature enables support for booting via QSPI NAND Flash.
+                Currently the Winbond W25N01GV is supported.
 
 		If you do not know what to do here, say Y.
-
-menu "QSPI"
-	visible if SERVICE_QSPI
-
-config SERVICE_QSPI_COPY_TO_DDR
-	bool "QSPI support"
-        depends on SERVICE_QSPI
-	default y
-	help
-                If CONFIG_SERVICE_QSPI is enabled, this feature copies the boot image from 
-                QSPI to DDR as a means of speeding up booting.
-
-		If you do not know what to do here, say Y.
-
-config SERVICE_QSPI_USE_XIP
-	bool "XIP Mode"
-	depends on SERVICE_QSPI
-	default n
-	help
-                If CONFIG_SERVICE_QSPI is enabled, this feature enables Execute in Place mode
-                as a means of speeding up booting.
-
-		If you do not know what to do here, say N for now.
-
-endmenu

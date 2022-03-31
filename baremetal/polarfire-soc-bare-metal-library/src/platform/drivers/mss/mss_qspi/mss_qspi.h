@@ -421,10 +421,7 @@ typedef struct
   @code
    @endcode
  */
-void MSS_QSPI_init
-(
-    void
-);
+void MSS_QSPI_init(void);
 
 /***************************************************************************//**
   The MSS_QSPI_enable() function enables the MSS QSPI hardware block.
@@ -478,10 +475,7 @@ static inline void MSS_QSPI_disable(void)
   @code
   @endcode
  */
-void MSS_QSPI_configure
-(
-    const mss_qspi_config_t* config
-);
+void MSS_QSPI_configure(const mss_qspi_config_t* config);
 
 /***************************************************************************//**
   The MSS_QSPI_get_config() function reads-back the current configurations of
@@ -502,10 +496,7 @@ void MSS_QSPI_configure
   @code
   @endcode
  */
-void MSS_QSPI_get_config
-(
-    mss_qspi_config_t* config
-);
+void MSS_QSPI_get_config(mss_qspi_config_t* config);
 
 /***************************************************************************//**
   The MSS_QSPI_polled_transfer_block() function is used to carry out a QSPI
@@ -522,10 +513,6 @@ void MSS_QSPI_get_config
 
     Note: Few command opcodes do not require specified addresses. For example
     READ_ID. For such commands the num_addr_bytes parameter must be set to 0x0.
-
-  @param target_mem_addr
-    The target_mem_addr parameter is the memory address in the target memory
-    device on which the read/write operation is to be carried out.
 
   @param tx_buffer
     The tx_buffer parameter is the pointer to the buffer from which the data
@@ -561,15 +548,8 @@ void MSS_QSPI_get_config
   @code
   @endcode
  */
-void MSS_QSPI_polled_transfer_block
-(
-    uint8_t num_addr_bytes,
-    const void * const tx_buffer,
-    uint32_t tx_byte_size,
-    const void * const rd_buffer,
-    uint32_t rd_byte_size,
-    uint8_t num_idle_cycles
-);
+void MSS_QSPI_polled_transfer_block(uint8_t num_addr_bytes, const void * const tx_buffer,
+    uint32_t tx_byte_size, const void * const rd_buffer, uint32_t rd_byte_size, uint8_t num_idle_cycles);
 
 /***************************************************************************//**
   The MSS_QSPI_irq_transfer_block() function is used to carry out a QSPI transfer
@@ -637,15 +617,8 @@ void MSS_QSPI_polled_transfer_block
   @code
   @endcode
  */
-uint8_t MSS_QSPI_irq_transfer_block
-(
-    uint8_t num_addr_bytes,
-    const void * const tx_buffer,
-    uint32_t tx_byte_size,
-    const void * const rd_buffer,
-    uint32_t rd_byte_size,
-    uint8_t num_idle_cycles
-);
+uint8_t MSS_QSPI_irq_transfer_block(uint8_t num_addr_bytes, const void * const tx_buffer,
+    uint32_t tx_byte_size, const void * const rd_buffer, uint32_t rd_byte_size, uint8_t num_idle_cycles);
 
 /***************************************************************************//**
   The MSS_QSPI_set_status_handler() function registers an interrupt handler
@@ -667,10 +640,7 @@ uint8_t MSS_QSPI_irq_transfer_block
   @code
   @endcode
  */
-void MSS_QSPI_set_status_handler
-(
-   mss_qspi_status_handler_t handler
-);
+void MSS_QSPI_set_status_handler(mss_qspi_status_handler_t handler);
 
 /***************************************************************************//**
   The MSS_QSPI_read_direct_access_reg() reads the current value of the direct

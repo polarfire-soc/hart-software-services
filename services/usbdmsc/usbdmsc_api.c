@@ -69,13 +69,16 @@ bool USBDMSC_Poll(void)
 #else
     {
 #endif
+
         //poll PLIC
         uint32_t source = PLIC_ClaimIRQ();
 
         switch (source) {
+#if defined(CONFIG_SERVICE_MMC)
         case MMC_main_PLIC: // MMC interrupt
             mmc_main_plic_IRQHandler(); // interrupt 88
             break;
+#endif
 
         case USB_MC_PLIC: // main USB interrupt
             usb_mc_plic_IRQHandler(); // interrupt 87
@@ -138,6 +141,10 @@ void USBDMSC_Start(void)
 
             done = done || USBDMSC_Poll();
         } while (!done);
+
+        void HSS_Storage_FlushWriteBuffer(void);
+        HSS_Storage_FlushWriteBuffer();
+
         mHSS_PUTS(CRLF "USB Host disconnected..." CRLF);
 #else
         USBDMSC_Activate();

@@ -42,8 +42,12 @@
 #include "hss_registry.h"
 #include "assert.h"
 
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
 #    include "usbdmsc_service.h"
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+#    include "qspi_service.h"
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
@@ -84,7 +88,7 @@ enum CmdId {
 #if IS_ENABLED(CONFIG_MEMTEST)
     CMD_MEMTEST,
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_QSPI) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
+#if IS_ENABLED(CONFIG_SERVICE_QSPI) //&& (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
     CMD_QSPI,
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_MMC) && (IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
@@ -97,7 +101,7 @@ enum CmdId {
 #if IS_ENABLED(CONFIG_SERVICE_SPI) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD))
     CMD_SPI,
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     CMD_USBDMSC,
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
@@ -126,7 +130,7 @@ const struct tinycli_key cmdKeys[] = {
 #if IS_ENABLED(CONFIG_MEMTEST)
     { CMD_MEMTEST, "MEMTEST", "Full DDR memory test." },
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_QSPI) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD))
+#if IS_ENABLED(CONFIG_SERVICE_QSPI) //&& (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD))
     { CMD_QSPI,    "QSPI",    "Select boot via QSPI." },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_MMC) && (IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD))
@@ -136,7 +140,7 @@ const struct tinycli_key cmdKeys[] = {
 #if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_PAYLOAD, "PAYLOAD", "Select boot via payload." },
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_USBDMSC, "USBDMSC", "Export eMMC as USBD Mass Storage Class." },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
@@ -158,6 +162,11 @@ static void tinyCLI_Boot_List_(void);
 static void tinyCLI_Boot_Select_(void);
 #endif
 static bool tinyCLI_Boot_(void);
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+static bool tinyCLI_QSPI_Scan_(void);
+static bool tinyCLI_QSPI_Erase_(void);
+static bool tinyCLI_QSPI_(void);
+#endif
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
 static void tinyCLI_Monitor_(void);
 #endif
@@ -187,7 +196,7 @@ static struct tinycli_command commands[] = {
 #if IS_ENABLED(CONFIG_MEMTEST)
     { CMD_MEMTEST, true,  tinyCLI_CmdHandler_ },
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_QSPI) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
+#if IS_ENABLED(CONFIG_SERVICE_QSPI) //&& (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
     { CMD_QSPI,    true,  tinyCLI_CmdHandler_ },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_MMC) && (IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
@@ -200,7 +209,7 @@ static struct tinycli_command commands[] = {
 #if IS_ENABLED(CONFIG_SERVICE_SPI) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD))
     { CMD_SPI,     true,  tinyCLI_CmdHandler_ },
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_USBDMSC, true,  tinyCLI_CmdHandler_ },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
@@ -516,14 +525,21 @@ static void tinyCLI_Debug_(void)
 }
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
+extern struct HSS_Storage *HSS_BootGetActiveStorage(void);
+
 static void tinyCLI_Boot_List_(void)
 {
     HSS_GPT_t gpt;
 
     if (IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT_MMC_USE_GPT)) {
-        GPT_RegisterReadBlockFunction(HSS_MMC_ReadBlock);
+        struct HSS_Storage *pStorage = HSS_BootGetActiveStorage();
+        assert(pStorage);
 
-        GPT_Init(&gpt);
+        uint32_t blockSize, eraseSize, blockCount;
+        pStorage->getInfo(&blockSize, &eraseSize, &blockCount);
+
+        gpt.lbaSize = blockSize;
+        GPT_Init(&gpt, pStorage);
         bool result = GPT_ReadHeader(&gpt);
 
         if (result) {
@@ -545,7 +561,7 @@ static void tinyCLI_Boot_List_(void)
                     if (!result) {
                         //mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_PartitionIdToLBAOffset() failed" CRLF);
                     } else {
-                        result = HSS_MMC_ReadBlock(&localBootImage, srcLBAOffset * GPT_LBA_SIZE,
+                        result = HSS_MMC_ReadBlock(&localBootImage, srcLBAOffset * gpt.lbaSize,
                             sizeof(struct HSS_BootImage));
                     }
                     if (!result) {
@@ -586,7 +602,7 @@ static bool tinyCLI_Boot_(void)
 {
     bool result = false;
     bool usageError = false;
-    enum BootgKey {
+    enum BootKey {
         BOOT_LIST,
         BOOT_SELECT
     };
@@ -630,6 +646,81 @@ static bool tinyCLI_Boot_(void)
 
     return result;
 }
+
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+extern uint32_t Flash_scan_for_bad_blocks(uint16_t* buf);
+extern void Flash_add_entry_to_bb_lut(uint16_t lba, uint16_t pba);
+
+static bool tinyCLI_QSPI_Erase_(void)
+{
+    bool result = false;
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Erasing QSPI Flash" CRLF);
+    HSS_QSPIInit();
+    HSS_QSPI_FlashChipErase();
+
+    return result;
+}
+
+static bool tinyCLI_QSPI_Scan_(void)
+{
+    bool result = false;
+    HSS_QSPIInit();
+    HSS_QSPI_BadBlocksInfo();
+
+    return result;
+}
+
+static bool tinyCLI_QSPI_(void)
+{
+    bool result = false;
+
+    bool usageError = false;
+    enum qspiKey {
+        QSPI_ERASE,
+        QSPI_SCAN,
+    };
+    const struct tinycli_key qspiKeys[] = {
+        { QSPI_ERASE,   "ERASE",     "ERASE QSPI Flash" },
+        { QSPI_SCAN,    "SCAN",      "Scan QSPI Flash for bad blocks" },
+    };
+
+    size_t keyIndex;
+    if (argc_tokenCount > 1u) {
+        if (tinyCLI_NameToKeyIndex_(qspiKeys, ARRAY_SIZE(qspiKeys), argv_tokenArray[1], &keyIndex)) {
+            switch (keyIndex) {
+            case QSPI_ERASE:
+                tinyCLI_QSPI_Erase_();
+                break;
+
+            case QSPI_SCAN:
+                tinyCLI_QSPI_Scan_();
+                break;
+
+            default:
+                usageError = true;
+                break;
+            }
+        } else {
+            usageError = true;
+        }
+    } else {
+        HSS_BootSelectQSPI();
+        result = true; // qspi on its own
+    }
+
+    if (usageError) {
+        mHSS_PUTS("Supported options:" CRLF);
+
+        for (size_t i = 0u; i < ARRAY_SIZE(qspiKeys); i++) {
+            mHSS_PRINTF("\t%s - %s" CRLF, qspiKeys[i].name, qspiKeys[i].helpString);
+        }
+    }
+
+    return result;
+}
+#endif
+
 
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
 static void tinyCLI_Monitor_(void)
@@ -872,9 +963,9 @@ static void tinyCLI_CmdHandler_(int tokenId)
         break;
 #endif
 
-#if IS_ENABLED(CONFIG_SERVICE_QSPI) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
+#if IS_ENABLED(CONFIG_SERVICE_QSPI) //&& (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_SPI))
     case CMD_QSPI:
-        HSS_BootSelectQSPI();
+        tinyCLI_QSPI_();
         break;
 #endif
 
@@ -896,7 +987,7 @@ static void tinyCLI_CmdHandler_(int tokenId)
         break;
 #endif
 
-#if defined(CONFIG_SERVICE_USBDMSC) && defined(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     case CMD_USBDMSC:
         {
             USBDMSC_Init();
@@ -1013,7 +1104,7 @@ bool HSS_TinyCLI_Parser(void)
             }
 #else
             RunStateMachine(&tinycli_service);
-#  if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && IS_ENABLED(CONFIG_SERVICE_MMC)
+#  if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
             RunStateMachine(&usbdmsc_service);
 #  endif
 #endif

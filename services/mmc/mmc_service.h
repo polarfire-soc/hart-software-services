@@ -44,6 +44,8 @@ extern "C" {
 bool HSS_MMCInit(void);
 bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
 bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
+bool HSS_MMC_WriteBlockSDMA(size_t dstOffset, void *pSrc, size_t byteCount);
+void HSS_MMC_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
 
 #ifdef __cplusplus
 }

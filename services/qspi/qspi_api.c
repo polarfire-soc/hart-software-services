@@ -15,15 +15,18 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_state_machine.h"
+#include "hss_progress.h"
 #include "hss_debug.h"
 
 #include <assert.h>
+#include <string.h>
 
 #include "qspi_service.h"
 #include "encoding.h"
 #include "mss_qspi.h"
 #include "mss_sys_services.h"
 
+#include "mss_peripherals.h"
 #include "winbond_w25n01gv.h"
 
 /*
@@ -31,77 +34,370 @@
  * initialized early...
  */
 
+struct FlashDescriptor
+{
+    uint32_t jedecId;
+    uint32_t pageSize;
+    uint32_t pagesPerBlock;
+    uint32_t blocksPerDie;
+    const char * const name;
+} qspiFlashes[] = {
+    { 0xEFAA21u, 2048u, 64u, 1024u, "Winbond W25N01GV" }, // EFh => Winbond, AA21h => W25N01GV
+};
+
+static uint32_t pageSize, blockSize, dieSize, eraseSize, pageCount, blockCount;
+static uint32_t numBadBlocks;
+
+static uint16_t *pLogicalToPhysicalMap = NULL;
+static uint16_t *pBadBlocksMap = NULL;
+static struct HSS_QSPI_Cache_Descriptor
+{
+    bool dirtyCache;
+    bool inCache;
+} *pLogicalBlockDesc = NULL;
+static uint8_t *pCacheDataBuffer = NULL;
+
+bool cacheDirtyFlag = false;
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+// Generic Local module functions
+//
+__attribute__((nonnull)) static bool flash_id_to_descriptor_(const uint32_t jedec_id, size_t *indexOut)
+{
+    bool result = false;
+    assert(indexOut);
+
+    for (size_t i = 0u; i < ARRAY_SIZE(qspiFlashes); i++) {
+        if (qspiFlashes[i].jedecId == jedec_id) {
+            *indexOut = i;
+            result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+static void build_bad_block_map_(void)
+{
+    numBadBlocks = Flash_scan_for_bad_blocks(pBadBlocksMap);
+
+    size_t badBlockIndex = 0u;
+    size_t logicalBlockIndex = 0u;
+
+    uint32_t badBlocksRemaining = numBadBlocks;
+
+    for (size_t physicalBlockIndex = 0u; physicalBlockIndex < blockCount; physicalBlockIndex++) {
+        if (badBlocksRemaining && (pBadBlocksMap[badBlockIndex] == physicalBlockIndex)) { // skip bad physical block
+            badBlockIndex++;
+            badBlocksRemaining--;
+        } else { // good physical block, so use
+            pLogicalToPhysicalMap[logicalBlockIndex] = physicalBlockIndex;
+            logicalBlockIndex++;
+        }
+    }
+}
+
+__attribute__((pure)) static inline uint32_t column_to_block_(const uint32_t column_addr)
+{
+    assert(blockSize); // avoid divide by zero
+
+    const uint32_t result = (column_addr / blockSize);
+    return result;
+}
+
+__attribute__((pure)) static inline uint32_t logical_to_physical_address_(const uint32_t logical_addr)
+{
+    assert(blockSize); // avoid divide by zero
+
+    const uint16_t logical_block_num = logical_addr / blockSize;
+    const uint32_t remainder = logical_addr % blockSize;
+    const uint16_t physical_block_number = pLogicalToPhysicalMap[logical_block_num];
+
+    const uint32_t result = (physical_block_number * blockSize) + remainder;
+
+    return result;
+}
+
+__attribute__((pure)) static inline uint32_t logical_to_physical_block_(const uint32_t logical_block)
+{
+    const uint32_t result = pLogicalToPhysicalMap[logical_block];
+
+    return result;
+}
+
+static void demandCopyFlashBlocksToCache_(size_t byteOffset, size_t byteCount, bool markDirty)
+{
+    for (size_t offset = byteOffset; offset < (byteOffset + byteCount); offset += blockSize) {
+        const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
+
+        if (!pLogicalBlockDesc[physicalBlockOffset].inCache) {
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Reading block %u into cache" CRLF, physicalBlockOffset);
+
+            const size_t physicalBlockByteOffset = physicalBlockOffset * blockSize;
+            Flash_read(pCacheDataBuffer + physicalBlockByteOffset, physicalBlockByteOffset, blockSize);
+            pLogicalBlockDesc[physicalBlockOffset].inCache = true;
+        }
+
+        if (markDirty) {
+            pLogicalBlockDesc[physicalBlockOffset].dirtyCache = true;
+        }
+    }
+}
+
+static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
+{
+    const size_t endOffset = byteOffset + byteCount;
+    size_t dirtyBlockCount = 0u;
+    mHSS_DEBUG_PRINTF_EX(CRLF);
+
+    for (size_t blockOffset = 0u; blockOffset < blockCount; blockOffset++) {
+        if (pLogicalBlockDesc[blockOffset].dirtyCache) {
+            dirtyBlockCount++;
+        }
+    }
+
+    const size_t initialDirtyBlockCount = dirtyBlockCount;
+    for (size_t offset = byteOffset; dirtyBlockCount && (offset < endOffset); offset += blockSize) {
+        HSS_ShowProgress(initialDirtyBlockCount, dirtyBlockCount);
+
+        const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
+
+        if (pLogicalBlockDesc[physicalBlockOffset].inCache) {
+            if (pLogicalBlockDesc[physicalBlockOffset].dirtyCache) {
+                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Writing block %u from cache" CRLF, physicalBlockOffset);
+
+                const size_t physicalBlockByteOffset = physicalBlockOffset * blockSize;
+                uint8_t status = Flash_erase_block(physicalBlockOffset);
+
+                if (status) {
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Error erasing block %u" CRLF, physicalBlockOffset);
+                    break;
+                }
+
+                status = Flash_program(pCacheDataBuffer + physicalBlockByteOffset, physicalBlockByteOffset, blockSize);
+                if (status) {
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Error programming block %u" CRLF, physicalBlockOffset);
+
+                }
+                pLogicalBlockDesc[physicalBlockOffset].dirtyCache = false;
+                dirtyBlockCount--;
+            }
+        }
+    }
+
+    HSS_ShowProgress(initialDirtyBlockCount, 0u);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+// QSPI Uncached Functions
+//
+//
+
+static bool qspiInitialized = false;
+static size_t qspiIndex = 0u;
 bool HSS_QSPIInit(void)
 {
-#if IS_ENABLED(CONFIG_SERVICE_QSPI_USE_XIP)
-    static mss_qspi_config_t qspiConfig =
-    {
-        .xip = 1,
-        .xip_addr = 4, //num_bytes_in_XIP_mode
-        .spi_mode = MSS_QSPI_MODE0,
-        .clk_div = MSS_QSPI_CLK_DIV_30,
-        .io_format = MSS_QSPI_QUAD_FULL,
-        .sample = 0
-    };
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing QSPI" CRLF);
-    MSS_QSPI_init();
+    if (!qspiInitialized) {
+        /* read and output Flash ID as a sanity test */
+        (void)mss_config_clk_rst(MSS_PERIPH_QSPIXIP, (uint8_t) 0u, PERIPHERAL_ON);
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Enabling QSPI" CRLF);
-    MSS_QSPI_enable();
+        uint8_t rd_buf[10] __attribute__ ((aligned(4)));
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Configuring" CRLF);
-    MSS_QSPI_configure(&qspiConfig);
-#else
-    /* temporary code for Icicle board bringup */
+        Flash_init(MSS_QSPI_DUAL_FULL);
+        Flash_readid(rd_buf);
 
-    MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
-    MSS_QSPI_init();
-    MSS_QSPI_enable();
+        uint32_t jedec_id = ((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2]));
 
-    /* read and output Flash ID as a sanity test */
-    uint8_t rd_buf[10] __attribute__ ((aligned(4)));
+        if (flash_id_to_descriptor_(jedec_id, &qspiIndex)) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s detected (JEDEC %06X)" CRLF, qspiFlashes[qspiIndex].name, jedec_id);
 
-    Flash_init(MSS_QSPI_NORMAL);
-    Flash_readid(rd_buf);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "JEDEC Flash ID: %02X%02X%02X" CRLF, rd_buf[0], rd_buf[1], rd_buf[2]);
+            pageSize = qspiFlashes[qspiIndex].pageSize;
+            blockSize = qspiFlashes[qspiIndex].pageSize * qspiFlashes[qspiIndex].pagesPerBlock;
+            eraseSize = blockSize;
+            blockCount = qspiFlashes[qspiIndex].blocksPerDie;
+            pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
+            dieSize = blockSize * blockCount;
 
-    if (((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2])) == 0xEFAA21) {
-        // EFh => Winbond, AA21h => W25N01GV
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Winbond W25N01GV detected" CRLF);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageSize: %u" CRLF, pageSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockSize: %u" CRLF, blockSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "eraseSize: %u" CRLF, eraseSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageCount: %u" CRLF, pageCount);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount: %u" CRLF, blockCount);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "dieSize: %u" CRLF, dieSize);
+
+            //
+            // we're going to place buffers in DDR for
+            //   * a set of logical to physical block qspiIndex mappings;
+            //   * a list of bad blocks;
+            //   * a set of logical block descriptors;
+            //   * a data cache the same size as the QSPI Flash device
+            //
+            extern const uint64_t __ddr_start;
+#define DDR_START              (&__ddr_start)
+            uint8_t *pU8Buffer = (uint8_t *)DDR_START; // start of cached DDR, as good a place as any
+            pLogicalToPhysicalMap = (uint16_t *)pU8Buffer;
+            memset(pLogicalToPhysicalMap, 0, (sizeof(*pLogicalToPhysicalMap) * blockCount));
+            pU8Buffer += (sizeof(*pLogicalToPhysicalMap) * blockCount);
+
+            pBadBlocksMap = (uint16_t *)pU8Buffer;
+            memset(pBadBlocksMap, 0, (sizeof(*pBadBlocksMap) * blockCount));
+            pU8Buffer += (sizeof(*pBadBlocksMap) * blockCount);
+
+            pLogicalBlockDesc = (struct HSS_QSPI_Cache_Descriptor*)pU8Buffer;
+            memset(pLogicalBlockDesc, 0, (sizeof(*pLogicalBlockDesc) * blockCount));
+            pU8Buffer += (sizeof(*pLogicalBlockDesc) * blockCount);
+
+            pCacheDataBuffer = (uint8_t *)pU8Buffer;
+
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalToPhysicalMap: %p" CRLF, pLogicalToPhysicalMap);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalBlockDesc: %p" CRLF, pLogicalBlockDesc);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pCacheDataBuffer: %p" CRLF, pCacheDataBuffer);
+
+            //
+            // check for bad blocks and reduce the number of blocks accordingly...
+            // our caches and logical block descriptors above may now be slightly too large, but this
+            // is of no consequence
+            build_bad_block_map_();
+            blockCount -= numBadBlocks; // adjust block count to take account of bad blocks
+            pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
+            dieSize = blockSize * blockCount;
+
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u" CRLF, blockCount);
+
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash" CRLF);
+            qspiInitialized = true;
+
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash (JEDEC %06X)" CRLF, jedec_id);
+        }
     }
-#endif
 
-    return true;
+    return qspiInitialized;
 }
 
-#define HSS_QSPI_PAGE_SIZE 512u
-bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
+__attribute__((nonnull)) bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
     bool result = true;
 
-    // Temporary code for ICICLE Bringup
-    if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
-
-#if IS_ENABLED(CONFIG_SERVICE_QSPI_USE_XIP)
-    memcpy_via_pdma(pDest, srcOffset + QSPI_BASE, byteCount);
-#else
-    /* temporary code to bring up Icicle board */
-    uint32_t read_addr = (uint32_t)srcOffset;
+    const uint32_t read_addr = logical_to_physical_address_((uint32_t)srcOffset);
     Flash_read((uint8_t *)pDest, read_addr, (uint32_t) byteCount);
-#endif
 
     return result;
 }
 
-bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
+__attribute__((nonnull)) bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 {
     bool result = true;
 
-    // Temporary code for ICICLE Bringup
-    if (byteCount < HSS_QSPI_PAGE_SIZE) { byteCount = HSS_QSPI_PAGE_SIZE; } // TODO
-
-    Flash_program((uint8_t *)pSrc, (uint32_t)dstOffset, (uint32_t)byteCount);
+    const uint32_t write_addr = logical_to_physical_address_((uint32_t)dstOffset);
+    Flash_program((uint8_t *)pSrc, write_addr, (uint32_t)byteCount);
     return result;
 }
 
+__attribute__((nonnull)) void HSS_QSPI_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount)
+{
+    *pBlockSize = pageSize;
+    *pEraseSize = eraseSize;
+    *pBlockCount = pageCount;
+}
+
+void HSS_QSPI_FlushWriteBuffer(void)
+{
+}
+
+void HSS_QSPI_FlashChipErase(void)
+{
+    for (uint32_t blockIndex = 0u; blockIndex < blockCount; blockIndex++) {
+        HSS_ShowProgress(blockCount, blockCount - blockIndex);
+        Flash_erase_block(blockIndex);
+    }
+    HSS_ShowProgress(blockCount, 0u);
+}
+
+void HSS_QSPI_BadBlocksInfo(void)
+{
+    if (qspiInitialized)
+    {
+        blockCount = qspiFlashes[qspiIndex].blocksPerDie;
+        pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
+        dieSize = blockSize * blockCount;
+
+        build_bad_block_map_(); // update bad blocks mapping and numBadBlocks
+
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "QSPI Flash: %u bad block%s found" CRLF, numBadBlocks,
+            numBadBlocks == 1 ? "":"s");
+        if (numBadBlocks) {
+            blockCount -= numBadBlocks; // adjust block count to take account of bad blocks
+            pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
+            dieSize = blockSize * blockCount;
+
+            mHSS_DEBUG_PRINTF_EX("Bad Block%s: %u", numBadBlocks == 1 ? "":"s", pBadBlocksMap[0]);
+            for (size_t i = 1u; i < numBadBlocks; i++) {
+                mHSS_DEBUG_PRINTF_EX(", %u", pBadBlocksMap[i]);
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+// QSPI Cached Functions
+//
+//  To make QSPI Flash available as a USB drive, we need to cache the contents
+//  in DDR. This allows us to reduce wear on the flash by minimizing the number of
+//  block erases performed, and it also makes operation quicker...
+//
+
+bool HSS_CachedQSPIInit(void)
+{
+    bool result = HSS_QSPIInit();
+    return result;
+}
+
+__attribute__((nonnull)) bool HSS_CachedQSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
+{
+    bool result = true;
+
+    assert(pDest);
+    assert((srcOffset + byteCount) <= dieSize);
+
+    demandCopyFlashBlocksToCache_(srcOffset, byteCount, false);
+
+    memcpy(pDest, pCacheDataBuffer + srcOffset, byteCount);
+
+    return result;
+}
+
+__attribute__((nonnull)) bool HSS_CachedQSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
+{
+    bool result = true;
+
+    assert(pSrc);
+    assert((dstOffset + byteCount) <= dieSize);
+
+    cacheDirtyFlag = true;
+    demandCopyFlashBlocksToCache_(dstOffset, byteCount, true);
+
+    memcpy(pCacheDataBuffer + dstOffset, pSrc, byteCount);
+    return result;
+}
+
+__attribute__((nonnull)) void HSS_CachedQSPI_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount)
+{
+    HSS_QSPI_GetInfo(pBlockSize, pEraseSize, pBlockCount);
+}
+
+void HSS_CachedQSPI_FlushWriteBuffer(void)
+{
+    if (cacheDirtyFlag) {
+        copyCacheToFlashBlocks_(0u, dieSize);
+        mHSS_DEBUG_PRINTF_EX(CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Synchronized Cache with Flash ..." CRLF);
+
+        cacheDirtyFlag = false;
+    }
+}

@@ -44,6 +44,17 @@ extern "C" {
 bool HSS_QSPIInit(void);
 bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
 bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
+void HSS_QSPI_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
+void HSS_QSPI_FlushWriteBuffer(void);
+
+void HSS_QSPI_FlashChipErase(void);
+void HSS_QSPI_BadBlocksInfo(void);
+
+bool HSS_CachedQSPIInit(void);
+bool HSS_CachedQSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
+bool HSS_CachedQSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
+void HSS_CachedQSPI_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
+void HSS_CachedQSPI_FlushWriteBuffer(void);
 
 #ifdef __cplusplus
 }

@@ -95,6 +95,8 @@
 
 #include "mss_sysreg.h"
 
+extern uint8_t mmc_main_plic_IRQHandler(void);
+
 static void mmc_reset_block(void)
 {
     SYSREG->SUBBLK_CLOCK_CR |=
@@ -113,7 +115,8 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
     if (retval != MSS_MMC_INIT_SUCCESS) {
         mmc_reset_block();
 
-        HSS_SpinDelay_Secs(1u); // delay for 1 second
+        //HSS_SpinDelay_Secs(1u); // delay for 1 second
+        HSS_SpinDelay_MilliSecs(50u); // delay for 50 second
         retval = MSS_MMC_init(p_mmcConfig);
     }
 
@@ -262,8 +265,6 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
     uint32_t sectorByteCount = byteCount - (byteCount % HSS_MMC_SECTOR_SIZE);
 
-    uint8_t mmc_main_plic_IRQHandler(void);
-
     do {
         result = mmc_main_plic_IRQHandler();
     } while (MSS_MMC_TRANSFER_IN_PROGRESS == result);
@@ -314,7 +315,7 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     // temporary code to bring up Icicle board
     char *pCSrc = (char *)pSrc;
 
-    // TODO: for now, if byte count is not a multiple of the sector size, round it up...
+    // if byte count is not a multiple of the sector size, round it up...
     if (byteCount & (HSS_MMC_SECTOR_SIZE-1)) {
         byteCount = byteCount + HSS_MMC_SECTOR_SIZE;
         byteCount &= ~(HSS_MMC_SECTOR_SIZE-1);
@@ -346,4 +347,56 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     }
 
     return (result == MSS_MMC_TRANSFER_SUCCESS);
+}
+
+//
+// HSS_MMC_WriteBlock will handle requested writes of less than a multiple of the sector
+// size by rounding up to the next full sector worth
+//
+bool HSS_MMC_WriteBlockSDMA(size_t dstOffset, void *pSrc, size_t byteCount)
+{
+    // temporary code to bring up Icicle board
+    char *pCSrc = (char *)pSrc;
+
+    // if byte count is not a multiple of the sector size, round it up...
+    if (byteCount & (HSS_MMC_SECTOR_SIZE-1)) {
+        byteCount = byteCount + HSS_MMC_SECTOR_SIZE;
+        byteCount &= ~(HSS_MMC_SECTOR_SIZE-1);
+    }
+
+    // source and byteCount must be multiples of the sector size
+    //
+    // The MSS MMC driver uses uint32_t* as its pointer type
+    // To ensure alignment, would rather tramp through void* and
+    // assert check here
+    assert(((size_t)dstOffset & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
+    assert(((size_t)pCSrc & (sizeof(uint32_t)-1)) == 0u);
+    assert((byteCount & (HSS_MMC_SECTOR_SIZE-1)) == 0u);
+
+    mss_mmc_status_t result = MSS_MMC_NO_ERROR;
+    uint32_t dst_sector_num = (uint32_t)(dstOffset / HSS_MMC_SECTOR_SIZE);
+
+    // wait for any in-flight transactions to complete
+    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
+        do {
+            result = mmc_main_plic_IRQHandler();
+        } while (result == MSS_MMC_TRANSFER_IN_PROGRESS);
+    }
+
+    // setup new transaction...
+    result = MSS_MMC_sdma_write((uint8_t *)pCSrc, dst_sector_num, byteCount);
+    if (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
+        do {
+            result = mmc_main_plic_IRQHandler();
+        } while (result == MSS_MMC_TRANSFER_IN_PROGRESS);
+    }
+
+    return (result == MSS_MMC_TRANSFER_SUCCESS);
+}
+
+void HSS_MMC_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount)
+{
+    uint16_t sectorSize;
+    MSS_MMC_get_info(&sectorSize, pBlockCount);
+    *pEraseSize = *pBlockSize = sectorSize;
 }

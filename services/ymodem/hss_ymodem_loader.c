@@ -83,8 +83,6 @@ static bool hss_loader_qspi_init(void)
 
     if (!initialized) {
         result = HSS_QSPIInit();
-
-        Flash_init(MSS_QSPI_NORMAL);
         initialized = true;
     }
     return result;
@@ -98,7 +96,7 @@ static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t rece
 
 static bool hss_loader_qspi_erase(void)
 {
-    Flash_erase();
+    HSS_QSPI_FlashChipErase();
     return true;
 }
 #endif

@@ -1,5 +1,5 @@
 /***************************************************************************//**
- * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2022 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -22,18 +22,12 @@
  * IN THE SOFTWARE.
  *
  *
- * Driver for MICRON_MT25Q QSPI flash memory.
+ * APIs for the Winbond w25n01gv flash driver.
  * This driver uses the MPFS MSS QSPI driver interface.
- *
- *
- * SVN $Revision:  $
- * SVN $Date:  $
- */
+ *=========================================================================*/
+#ifndef MSS_WINBOND_MT25Q_H_
+#define MSS_WINBOND_MT25Q_H_
 
-#ifndef MSS_MICRON_MT25Q_H_
-#define MSS_MICRON_MT25Q_H_
-
-#include <stddef.h>
 #include <stdint.h>
 #include "drivers/mss/mss_qspi/mss_qspi.h"
 
@@ -41,208 +35,310 @@
 extern "C" {
 #endif
 
-extern mss_qspi_config_t qspi_config;
+/*-------------------------------------------------------------------------*//**
+ * The w25_bb_lut_entry_t defines the lookup table intry in the Winbond NAD
+ * flash memory device.
+ */
+typedef struct w25_bb_lut_entry {
+    uint8_t enable;
+    uint8_t invalid;
+    uint16_t lba;
+    uint16_t pba;
+} w25_bb_lut_entry_t;
 
-void Flash_init
-(
-    mss_qspi_io_format io_format
-);
+/*-------------------------------------------------------------------------*//**
+  The Flash_init() function initializes the MSS QSPI and the flash memory to
+  normal SPI operations. The g_qspi_config.io_format is used for the read/write
+  operations to choose the Flash memory commands accordingly.
+  This function must be called before calling any other function provided by
+  this driver.
 
-void Flash_readid(uint8_t* rd_buf);
+  The Winbondw25n01gv device expects the command-address bytes on DQ0 always.
+  Hence the only MSS QSPI IO formats that can be used are MSS_QSPI_NORMAL,
+  MSS_QSPI_DUAL_EX_RO, MSS_QSPI_QUAD_EX_RO.
 
-void Flash_erase(void);
+  Furthermore, the DUAL operations are not supported by the flash program
+  commands (Flash read supports dual and quad IOs).
+  When dual operations are selected the programming operations will fall-back
+  to normal mode. Reads will happen on quad IO.
 
-void Flash_read
-(
-    uint8_t* buf,
-    uint32_t read_addr,
-    uint32_t read_len
-);
+  It is recommended that QUAD mode is selected for faster operations.
 
-void Flash_read_statusreg
-(
-    uint8_t* rd_buf
-);
+  @param io_format
+  The io_format parameter provides the SPI IO format that needs to be used for
+  read/write operations.
 
-void Flash_read_enh_v_confreg
-(
-    uint8_t* rd_buf
-);
+  @return
+    This function does not returns any value
 
-void Flash_write_enh_v_confreg
-(
-    uint8_t* enh_v_val
-);
+  @example
 
-uint8_t Flash_program
-(
-    uint8_t* buf,
-    uint32_t wr_addr,
-    uint32_t wr_len
-);
+  ##### Example1
 
-void Flash_sector_erase(uint32_t addr);
+  Example
 
-void Flash_read_flagstatusreg
-(
-    uint8_t* rd_buf
-);
+  @code
 
-void Flash_enter_xip
-(
-    void
-);
+  @endcode
 
-void Flash_exit_xip
-(
-    void
-);
+*/
+void Flash_init(mss_qspi_io_format io_format);
 
-void Flash_enter_normal_mode
-(
-    void
-);
+/*-------------------------------------------------------------------------*//**
+  The Flash_readid() function returns first 3 bytes of data of the device JEDEC ID.
 
-void Flash_read_nvcfgreg
-(
-    uint8_t* rd_buf
-);
+  @param buf
+  The rd_buf parameter provides a pointer to the buffer in which the driver will
+  copy the JEDEC ID data. The buffer must be at least 3 bytes long.
 
-void Flash_force_normal_mode
-(
-    void
-);
+  @return
+    This function does not returns any value
 
-mss_qspi_io_format Flash_probe_io_format
-(
-    void
-);
+  @example
 
-static inline void Flash_init_normal(void)
-{
-    qspi_config.clk_div =  MSS_QSPI_CLK_DIV_2;
-    qspi_config.sample = MSS_QSPI_SAMPLE_POSAGE_SPICLK;
-    qspi_config.spi_mode = MSS_QSPI_MODE3;
-    qspi_config.xip = MSS_QSPI_DISABLE;
-    qspi_config.io_format = MSS_QSPI_NORMAL;
-    MSS_QSPI_configure(&qspi_config);
-}
+  ##### Example1
 
-static inline void Flash_init_dual(void)
-{
-    qspi_config.clk_div =  MSS_QSPI_CLK_DIV_2;
-    qspi_config.sample = MSS_QSPI_SAMPLE_POSAGE_SPICLK;
-    qspi_config.spi_mode = MSS_QSPI_MODE3;
-    qspi_config.xip = MSS_QSPI_DISABLE;
-    qspi_config.io_format = MSS_QSPI_DUAL_FULL;
-    MSS_QSPI_configure(&qspi_config);
-}
+  Example
 
-static inline void Flash_init_quad(void)
-{
-    qspi_config.clk_div =  MSS_QSPI_CLK_DIV_2;
-    qspi_config.sample = MSS_QSPI_SAMPLE_POSAGE_SPICLK;
-    qspi_config.spi_mode = MSS_QSPI_MODE3;
-    qspi_config.xip = MSS_QSPI_DISABLE;
-    qspi_config.io_format = MSS_QSPI_QUAD_FULL;
-    MSS_QSPI_configure(&qspi_config);
-}
+  @code
 
-#define WINBOND_WRITE_STATUS_REG        0x01
-#define WINBOND_READ_DATA               0x03
-#define WINBOND_WRITE_ENABLE            0x06
-#define WINBOND_PROGRAM_EXECUTE         0x10
-#define WINBOND_PAGE_DATA_READ          0x13
-#define WINBOND_BLOCK_ERASE             0xD8
+  @endcode
+
+*/
+void Flash_readid(uint8_t* buf);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_read() function reads data from the flash memory.
+
+  @param buf
+  The buf parameter is a pointer to the buffer in which the driver will
+  copy the data read from the flash memory.
+
+  @param addr
+  The addr parameter is the address in the flash memory from which the driver
+  will read the data.
+
+  @param len
+  The len parameter is the number of 8-bit bytes that will be read from the flash
+  memory starting with the address indicated by the addr parameter.
+
+  @return
+    This function returns a non-zero value if there was an error during the read
+    operation. A zero return value indicates success.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+uint8_t Flash_read(uint8_t* buf, uint32_t addr, uint32_t len);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_erase() function erases the complete device.
+
+  @return
+    This function returns a non-zero value if there was an error during the erase
+    operation. A zero return value indicates success.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+uint8_t Flash_erase(void);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_erase_block() function erases the complete device.
+
+  @return
+    This function returns a non-zero value if there was an error during the erase
+    operation. A zero return value indicates success.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+uint8_t Flash_erase_block(uint16_t block_nb);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_program() function writes data into the flash memory.
+
+  @param buf
+  The rd_buf parameter provides a pointer to the buffer from which the data
+  needs to be written into the flash memory.
+
+  @param addr
+  The addr parameter is an address in the flash memory to which the data will be
+  written to.
+
+  @param len
+  The len parameter indicates the number of 8-bit bytes that will be written to
+  the flash memory starting from the address indicated by the addr parameter.
+
+  @return
+    This function returns a non-zero value if there was an error during program
+    operation. A zero return value indicates success.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+uint8_t Flash_program(uint8_t* buf, uint32_t addr, uint32_t len);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_scan_for_bad_blocks() function scans for bad blocks within the flash
+  memory. The NAND flash devices are allowed to be shipped with certain number of
+  bad blocks. In such cases, the flash device is shipped with bad blocks markers
+  written into the respective bad blocks. The markers will be permanently lost
+  if the block is written or erased. This function can be called on a unused
+  device to know the factory marked bad blocks before erasing or writing on those
+  block. The bad blocks can then be re-mapped to good blocks by adding a bad
+  block (lba) to good block (pba) mapping in the lookup table (LUT) within the
+  flash memory using the Flash_add_entry_to_bb_lut() function. Maximum 20 entries
+  are allowed in the lookup table in the W25N01 devices. Only the first block of
+  the shipped device is guaranteed to be a good block.
+
+  Bad blocks can also be developed during the regular usage of the flash memory
+  device. These should be handled as and when errors happen during program/erase
+  operations and the LUT should be updated accordingly.
+
+  @param buf
+  The buf parameter is a pointer to the buffer in which the driver will
+  write the block numbers of the blocks containing the bad-block marker. The
+  buffer must be larg enough to contain 20 block numbers.
+
+  @return
+    This function returns the total number of bad blocks found during the scan.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+uint32_t Flash_scan_for_bad_blocks(uint16_t* buf);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_read_status_regs() function reads all three status registers
+
+  @param buf
+  The buf parameter is a pointer to the buffer in which the driver will
+  copy the status register values. The buffer should be large enough to store 3
+  8-bit bytes.
+
+  @return
+    This function does not return any value.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+void Flash_read_status_regs(uint8_t * buf);
+
+/*-------------------------------------------------------------------------*//**
+  The Flash_read_bb_lut() function reads the look up table (LUT) in the flash
+  memory that contains the bad block (lba) to good block (pba) mapping.
+
+  @param lut_ptr
+  The lut_ptr parameter is a pointer to the buffer in which the driver will
+  copy the LUT data read from the flash memory. The buffer must be large enough
+  to hold 20 LUT entries of type w25_bb_lut_entry_t.
+
+  @return
+    This function returns the number of valid bad block mappings in the LUT.
+
+  @example
+
+  ##### Example1
+
+  Example
+
+  @code
+
+  @endcode
+
+*/
+uint8_t Flash_read_bb_lut(w25_bb_lut_entry_t* lut_ptr);
 
 
-#define MICRON_RESET_ENABLE                   0x66
-#define MICRON_RESET_MEMORY                   0x99
 
-#define MICRON_READ_ID_OPCODE                 0x9F
-#define MICRON_MIO_READ_ID_OPCODE             0xAF
+/*-------------------------------------------------------------------------*//**
+  The Flash_add_entry_to_bb_lut() function adds an entry to the look up table
+  (LUT) in the flash memory that contains the bad block (lba) to good block
+  (pba) mapping. When the bad blocks are found during the initial bad block scan
+  ( using Flash_scan_for_bad_blocks() function) or when a bad block is found
+  during regular operation (indicated by errors during programming or erase
+  operation), this function can be used to map these bad block to a good block
+  where no errors are seen so far.
 
-#define MICRON_READ_DISCOVERY                 0x5A
+  After the LUT entry is added, any access to the bad block will be directed to
+  the mapped good block. The bad block will not be accessed.
 
-#define MICRON_READ                           0x03
-#define MICRON_FAST_READ                      0x0B
-#define MICRON_DUALO_FAST_READ                0x3B
-#define MICRON_DUALIO_FAST_READ               0xBB
-#define MICRON_QUADO_FAST_READ                0x6B
-#define MICRON_QUADIO_FAST_READ               0xEB
-#define MICRON_DTR_FAST_READ                  0x0D
-#define MICRON_DTR_DUALO_FAST_READ            0x3D
-#define MICRON_DTR_DUALIO_FAST_READ           0xBD
-#define MICRON_DTR_QUADO_FAST_READ            0x6D
-#define MICRON_DTR_QUADIO_FAST_READ           0xED
-#define MICRON_QUADIO_WORD_READ               0xE7
+  @param lba
+  The lba parameter is the block number of the bad block.
 
-#define MICRON_4BYTE_READ                     0x13
-#define MICRON_4BYTE_FAST_READ                0x0C
-#define MICRON_4BYTE_DUALO_FAST_READ          0x3C
-#define MICRON_4BYTE_DUALIO_FAST_READ         0xBC
-#define MICRON_4BYTE_QUADO_FAST_READ          0x6C
-#define MICRON_4BYTE_QUADIO_FAST_READ         0xEC
-#define MICRON_4BYTE_DTR_FAST_READ            0x0E
-#define MICRON_4BYTE_DTR_DUALIO_FAST_READ     0xBE
-#define MICRON_4BYTE_DTR_QUADIO_FAST_READ     0xEE
+  @param pba
+  The pba parameter is the block number of a good block.
 
-#define MICRON_WRITE_ENABLE                   0x06
-#define MICRON_WRITE_DISABLE                  0x04
+  @return
+    This function returns 1 if successful, or 0 otherwise
 
-#define MICRON_READ_STATUS_REG                0x05
-#define MICRON_READ_FLAG_STATUS_REG           0x70
-#define MICRON_READ_NV_CONFIG_REG             0xB5
-#define MICRON_READ_V_CONFIG_REG              0x85
-#define MICRON_READ_ENH_V_CONFIG_REG          0x65
-#define MICRON_READ_EXT_ADDR_REG              0xC8
-#define MICRON_READ_GEN_PURPOSE_READ_REG      0x96
+  @example
 
-#define MICRON_WR_STATUS_REG                  0x01
-#define MICRON_WR_NV_CONFIG_REG               0xB1
-#define MICRON_WR_V_CONFIG_REG                0x81
-#define MICRON_WR_ENH_V_CONFIG_REG            0x61
-#define MICRON_WR_EXT_ADDR_REG                0xC5
-#define MICRON_CLR_FLAG_STATUS_REG            0x50
+  ##### Example1
 
-#define MICRON_PAGE_PROGRAM                   0x02
-#define MICRON_DUAL_INPUT_FAST_PROG           0xA2
-#define MICRON_EXT_DUAL_INPUT_FAST_PROG       0xD2
-#define MICRON_QUAD_INPUT_FAST_PROG           0x32
-#define MICRON_EXT_QUAD_INPUT_FAST_PROG       0x38
+  Example
 
-#define MICRON_4BYTE_PAGE_PROG                0x12
-#define MICRON_4BYTE_QUAD_INPUT_FAST_PROG     0x34
-#define MICRON_4BYTE_QUAD_INPUT_EXT_FAST_PROG 0x3E
+  @code
 
+  @endcode
 
-#define MICRON_32KB_SUBSECTOR_ERASE          0x52
-#define MICRON_4KB_SUBSECTOR_ERASE           0x20
-#define MICRON_SECTOR_ERASE                  0xD8
-#define MICRON_DIE_ERASE                     0xC4
+*/
+uint8_t Flash_add_entry_to_bb_lut(uint16_t lba, uint16_t pba);
 
-#define MICRON_4BYTE_SECTOR_ERASE            0xDC
-#define MICRON_4BYTE_4KB_SUBSECTOR_ERASE     0x21
-#define MICRON_4BYTE_32KB_SUBSECTOR_ERASE    0x5C
-
-#define MICRON_ENTER_4BYTE_ADDR_MODE         0xB7
-#define MICRON_EXIT_4BYTE_ADDR_MODE          0xE9
-
-#define MICRON_ENTER_QUAD_IO_MODE            0x35
-#define MICRON_RESET_QUAD_IO_MODE            0xF5
-
-#define MICRON_READ_SECTOR_PROTECTION        0x2D
-
-#define MICRON_READ_V_LOCK_BITS              0xE8
-#define MICRON_WRITE_V_LOCK_BITS             0xE5
-#define MICRON_READ_NV_LOCK_BITS             0xE2
-#define MICRON_READ_GLOBAL_FREEZE_BIT        0xA7
-#define MICRON_READ_PASSWORD                 0x27
-
-#define MICRON_RESET_PROTOCOL                0xFF
-
+/*
+*/
+void Flash_flush(void);
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MSS_MICRON_MT25Q_H_*/
+#endif /* MSS_WINBOND_MT25Q_H_*/

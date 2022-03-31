@@ -124,6 +124,10 @@ static void usbdmsc_active_handler(struct StateMachine * const pMyMachine)
 static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
+
+    void HSS_Storage_FlushWriteBuffer(void);
+    HSS_Storage_FlushWriteBuffer();
+
     mHSS_PUTS(CRLF "USB Host disconnected..." CRLF);
 }
 

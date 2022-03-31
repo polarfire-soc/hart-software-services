@@ -4,7 +4,7 @@
       <design_name>ICICLE_MSS</design_name>
       <mpfs_part_no>MPFS250T_ES</mpfs_part_no>
       <mpfs_package>FCVG484</mpfs_package>
-      <creation_date_time>02-03-2022_14:22:36</creation_date_time>
+      <creation_date_time>02-22-2022_08:35:28</creation_date_time>
       <xml_format_version>0.5.6</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -1239,7 +1239,7 @@
             <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x1</field>
             <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x1</field>
             <field Type="RW" name="CAN1_FABRIC" offset="5" width="1">0x0</field>
-            <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x0</field>
+            <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x1</field>
             <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x1</field>
             <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x1</field>
             <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x1</field>
@@ -1451,7 +1451,7 @@
             <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x1</field>
             <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x1</field>
             <field Type="RW" name="CAN1_FABRIC" offset="5" width="1">0x0</field>
-            <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x0</field>
+            <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x1</field>
             <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x1</field>
             <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x1</field>
             <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x1</field>

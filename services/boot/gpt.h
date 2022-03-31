@@ -32,7 +32,11 @@
 extern "C" {
 #endif
 
-#define GPT_LBA_SIZE 512u
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+#  define GPT_MAX_LBA_SIZE 2048u
+#else
+#  define GPT_MAX_LBA_SIZE 512u
+#endif
 
 typedef struct HSS_GPT_GUID_s {
     uint32_t data1;
@@ -65,11 +69,12 @@ typedef struct HSS_GPT_Header_s {
 typedef struct HSS_GPT_s {
     union {
         HSS_GPT_Header_t header;
-        uint8_t buffer[GPT_LBA_SIZE] __attribute__((aligned(8)));
+        uint8_t buffer[GPT_MAX_LBA_SIZE] __attribute__((aligned(8)));
     } h;
     // For now, GPT needs a 2-sector buffer (~1KB) - for partition entity
-    uint8_t lbaBuffer[2 * GPT_LBA_SIZE] __attribute__((aligned(8)));
+    uint8_t lbaBuffer[2 * GPT_MAX_LBA_SIZE] __attribute__((aligned(8)));
     size_t bootPartitionIndex;
+    size_t lbaSize;
 
     int headerValid:1;
     int partitionEntriesValid:1;
@@ -82,7 +87,7 @@ typedef struct HSS_GPT_s {
 
 void GPT_RegisterReadFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, size_t byteCount));
 
-void GPT_Init(HSS_GPT_t *pGpt);
+void GPT_Init(HSS_GPT_t *pGpt, struct HSS_Storage *pStorage);
 bool GPT_ReadHeader(HSS_GPT_t *pGpt);
 void GPT_DumpHeaderInfo(HSS_GPT_t *pGpt);
 bool GPT_ValidateHeader(HSS_GPT_t *pGpt);
@@ -115,8 +120,6 @@ bool GPT_FindPartitionByTypeId(HSS_GPT_t const * const pGpt,
 bool GPT_FindPartitionByUniqueId(HSS_GPT_t const * const pGpt,
     HSS_GPT_GUID_t const * const pGUID, size_t * const pPartitionIndex,
     HSS_GPT_PartitionEntry_t const ** ppGptPartitionEntryOut);
-
-void GPT_RegisterReadBlockFunction(bool (*fnPtr)(void *pDest, size_t srcOffset, size_t byteCount));
 
 bool GPT_FindBootSectorIndex(HSS_GPT_t *pGpt, size_t *srcIndex,
     HSS_GPT_PartitionEntry_t const ** ppGptPartitionEntryOut);

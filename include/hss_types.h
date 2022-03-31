@@ -221,6 +221,18 @@ struct HSS_CompressedImage {
 #endif
 };
 
+struct HSS_Storage;
+typedef bool (* HSS_GetBootImageFnPtr_t)(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
+struct HSS_Storage {
+    char const * const name;
+    HSS_GetBootImageFnPtr_t const getBootImage;
+    bool (* const init)(void);
+    bool (* const readBlock)(void *pDest, size_t srcOffset, size_t byteCount);
+    bool (* const writeBlock)(size_t dstOffset, void *pSrc, size_t byteCount);
+    void (* const getInfo)(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
+    void (* const flushWriteBuffer)(void);
+};
+
 #define mHSS_COMPRESSED_VERSION_DEFLATE  1u
 
 

@@ -81,7 +81,9 @@ static uint64_t seg_regOffset_to_addrOffset_(uint32_t offset, const int segment_
     if (offset & (1u << 14)) {
         offset = offset & 0x3FFFu;
         result = segment[segment_index].baseAddr - ((0x4000lu - offset) << 24);
-        }
+    } else {
+        result = segment[segment_index].baseAddr;
+    }
 
     return result;
 #endif

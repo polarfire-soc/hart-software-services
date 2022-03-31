@@ -33,8 +33,6 @@
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
-//#  include "encoding.h"
-//#  include <mss_qspi.h>
 #  include "qspi_service.h"
 #endif
 
@@ -69,7 +67,6 @@
 //
 // local module functions
 
-
 static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage);
 
 #if !IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
@@ -78,58 +75,146 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction);
 #endif
 
-#if defined(CONFIG_SERVICE_QSPI)
-static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage);
-#endif
-#if defined(CONFIG_SERVICE_MMC)
-static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage);
-#endif
-#if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
-static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage);
-#endif
-#if defined(CONFIG_SERVICE_SPI)
-static bool getBootImageFromSpiFlash_(struct HSS_BootImage **ppBootImage);
-#endif
+static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
+static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
+static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
+static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
 static bool validateCrc_(struct HSS_BootImage *pImage);
+static bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t getBootImageFunction);
 
 //
 //
 
-typedef bool (*HSS_GetBootImageFnPtr_t)(struct HSS_BootImage **ppBootImage);
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+static struct HSS_Storage qspiStorage_ = {
+    .name = "QSPI",
+    .getBootImage = getBootImageFromQSPI_,
+    .init = HSS_CachedQSPIInit,
+    .readBlock = HSS_CachedQSPI_ReadBlock,
+    .writeBlock = HSS_CachedQSPI_WriteBlock,
+    .getInfo = HSS_CachedQSPI_GetInfo,
+    .flushWriteBuffer = HSS_CachedQSPI_FlushWriteBuffer
+};
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+static struct HSS_Storage mmcStorage_ = {
+    .name = "MMC",
+    .getBootImage = getBootImageFromMMC_,
+    .init = HSS_MMCInit,
+    .readBlock = HSS_MMC_ReadBlock,
+    .writeBlock = HSS_MMC_WriteBlockSDMA,
+    .getInfo = HSS_MMC_GetInfo,
+    .flushWriteBuffer = NULL
+};
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_SPI)
+static struct HSS_Storage spiStorage_ = {
+    .name = "SPI",
+    .getBootImage = getBootImageFromSpiFlash_,
+    .init = NULL,
+    .readBlock = NULL,
+    .writeBlock = NULL,
+    .getInfo = NULL,
+    .flushWriteBuffer = NULL
+};
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+static struct HSS_Storage payloadStorage_ = {
+    .name = "Payload",
+    .getBootImage = getBootImageFromPayload_,
+    .init = NULL,
+    .readBlock = NULL,
+    .writeBlock = NULL,
+    .getInfo = NULL,
+    .flushWriteBuffer = NULL
+};
+#endif
 
-static HSS_GetBootImageFnPtr_t getBootImageFunction =
-#if IS_ENABLED(CONFIG_SERVICE_SPI) && (SPI_FLASH_BOOT_ENABLED)
-    getBootImageFromSpiFlash_;
-#elif IS_ENABLED(CONFIG_SERVICE_MMC)
-    getBootImageFromMMC_;
-#elif IS_ENABLED(CONFIG_SERVICE_QSPI)
-    getBootImageFromQSPI_;
+static struct HSS_Storage *pStorages[] =
+{
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+	&qspiStorage_,
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+	&mmcStorage_,
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_SPI)
+	&spiStorage_,
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+	&payloadStorage_,
+#endif
+};
+
+static struct HSS_Storage *pDefaultStorage = NULL;
+
+#if IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || (IS_ENABLED(CONFIG_SERVICE_SPI) && (SPI_FLASH_BOOT_ENABLED))
+struct HSS_BootImage bootImage __attribute__((aligned(8)));
 #elif IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
-    getBootImageFromPayload_;
-#  else
+//
+#else
 #    error Unable to determine boot mechanism
 #endif
 
+struct HSS_Storage *HSS_BootGetActiveStorage(void);
+struct HSS_Storage *HSS_BootGetActiveStorage(void)
+{
+    struct HSS_Storage *pResult = pDefaultStorage;
+
+    if (!pResult) {
+        pResult = pStorages[0];
+    }
+
+    return pResult;
+
+}
+
 bool HSS_BootInit(void)
+{
+    bool result = false;
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image ..." CRLF);
+
+    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
+    HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image Init");
+
+    if (pDefaultStorage) {
+        result = pDefaultStorage->init();
+        if (result) {
+            result = tryBootFunction_(pDefaultStorage, pDefaultStorage->getBootImage);
+        }
+    } else {
+        for (int i = 0; i < ARRAY_SIZE(pStorages); i++) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Trying to boot via %s ..." CRLF, pStorages[i]->name);
+            result = pStorages[i]->init();
+            if (result) {
+                result = tryBootFunction_(pStorages[i], pStorages[i]->getBootImage);
+                if (result) { break; }
+            }
+        }
+    }
+
+    HSS_PerfCtr_Lap(perf_ctr_index);
+    return result;
+}
+
+bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t const bootImageFunction)
 {
     bool result = false;
     bool decompressedFlag = false;
     struct HSS_BootImage *pBootImage = NULL;
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image.." CRLF);
-
-    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
-    HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image Init");
+    (void)pStorage;
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-    result = getBootImageFunction(&pBootImage);
+    result = bootImageFunction(pStorage, &pBootImage);
     //
     // check if this image is compressed...
     // if so, decompress it to DDR
     //
-    // for now, compression only works with a source already in DDR or XIP-QSPI
+    // for now, compression only works with a source already in DDR 
 #  if IS_ENABLED(CONFIG_COMPRESSION)
     if (result && pBootImage->magic == mHSS_COMPRESSED_MAGIC) {
         decompressedFlag = true;
@@ -139,12 +224,12 @@ bool HSS_BootInit(void)
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring" CRLF);
             result = false;
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to decompress to DDR..." CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to decompress to DDR ..." CRLF);
             void* const pInput = (void*)pBootImage;
             void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
             int outputSize = HSS_Decompress(pInput, pOutputInDDR);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "decompressed %d bytes..." CRLF, outputSize);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "decompressed %d bytes ..." CRLF, outputSize);
 
             if (outputSize) {
                 pBootImage = (struct HSS_BootImage *)pOutputInDDR;
@@ -165,24 +250,24 @@ bool HSS_BootInit(void)
         } else if (pBootImage->magic != mHSS_BOOT_MAGIC) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
             result = false;
-#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+#  if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
         } else if (!HSS_Boot_Secure_CheckCodeSigning(pBootImage)) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing" CRLF);
             result = false;
-#endif
+#  endif
         } else if (validateCrc_(pBootImage)) {
             mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC" CRLF,
                 decompressedFlag ? "decompressed":"");
 
-        // GCC 9.x appears to dislike the pBootImage cast, and sees dereferincing the
+        // GCC 9.x appears to dislike the pBootImage cast, and sees dereferencing the
         // set name as an out-of-bounds... So we'll disable that warning just for
         // this print...
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Warray-bounds"
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
             HSS_Register_Boot_Image(pBootImage);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered..." CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered ..." CRLF);
 
 #  if defined(CONFIG_SERVICE_BOOT_CUSTOM_FLOW)
             result = HSS_Boot_Custom();
@@ -196,7 +281,6 @@ bool HSS_BootInit(void)
     }
 #endif
 
-    HSS_PerfCtr_Lap(perf_ctr_index);
     return result;
 }
 
@@ -214,7 +298,7 @@ static bool validateCrc_(struct HSS_BootImage *pImageHdr)
 
     size_t crcLen;
     switch (pImageHdr->version) {
-    case 0:
+    case 0u:
         // pre crypto-signing, the BootImage format was slightly different, so to ensure
         // no CRC failures on older images, we use a legacy structure size...
         crcLen = sizeof(struct HSS_BootImage_v0);
@@ -229,7 +313,8 @@ static bool validateCrc_(struct HSS_BootImage *pImageHdr)
     if (headerCrc == pImageHdr->headerCrc) {
         result = true;
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF, pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, pImageHdr->headerCrc);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF,
+            pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, pImageHdr->headerCrc);
     }
 
     return result;
@@ -274,11 +359,7 @@ static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
     return result;
 }
 
-#if defined(CONFIG_SERVICE_MMC) || defined(CONFIG_SERVICE_QSPI) || defined(CONFIG_SERVICE_SPI)
-struct HSS_BootImage bootImage __attribute__((aligned(8)));
-#endif
-
-static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
+static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage)
 {
     bool result = false;
 
@@ -289,17 +370,20 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
     // boot header into our structure, for subsequent use
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from MMC to DDR ..." CRLF);
 
-    assert(HSS_MMCInit());
     size_t srcLBAOffset = 0u;
+    assert(pStorage);
+
+    uint32_t blockSize, eraseSize, blockCount;
+    pStorage->getInfo(&blockSize, &eraseSize, &blockCount);
 
 # if (IS_ENABLED(CONFIG_SERVICE_BOOT_MMC_USE_GPT))
     {
         HSS_GPT_t gpt;
 
-        GPT_RegisterReadBlockFunction(HSS_MMC_ReadBlock);
-        GPT_Init(&gpt);
-
+        gpt.lbaSize = blockSize;
+        GPT_Init(&gpt, pStorage);
         result = GPT_ReadHeader(&gpt);
+
         if (result) {
             size_t srcIndex = 0u;
 
@@ -321,21 +405,21 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
             }
         }
     }
-#endif
 
     if (!result) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_PartitionIdToLBAOffset() failed - using offset %lu" CRLF, srcLBAOffset);
+        mHSS_DEBUG_PRINTF(LOG_WARN, "GPT_PartitionIdToLBAOffset() failed - using offset %lu" CRLF, srcLBAOffset);
     } else {
         //mHSS_DEBUG_PRINTF(LOG_WARN, "GPT_PartitionIdToLBAOffset() returned %lu" CRLF, srcLBAOffset);
     }
+#endif
 
     //
     // Even if we have GPT enabled and it fails to find a GPT parttion, we'll still
     // try to boot
-    /*if (result)*/ {
+    {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
             sizeof(struct HSS_BootImage));
-        result = HSS_MMC_ReadBlock(&bootImage, srcLBAOffset * GPT_LBA_SIZE,
+        result = HSS_MMC_ReadBlock(&bootImage, srcLBAOffset * blockSize,
             sizeof(struct HSS_BootImage));
 
         if (!result) {
@@ -348,15 +432,17 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
             } else {
                 int perf_ctr_index = PERF_CTR_UNINITIALIZED;
                 HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image MMC Copy");
+
                 result = copyBootImageToDDR_(&bootImage,
-                    (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), srcLBAOffset * GPT_LBA_SIZE,
+                    (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), srcLBAOffset * blockSize,
                     HSS_MMC_ReadBlock);
                 *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+
                 HSS_PerfCtr_Lap(perf_ctr_index);
 
-               if (!result) {
-                   mHSS_DEBUG_PRINTF(LOG_ERROR, "copyBootImageToDDR_() failed" CRLF);
-               }
+                if (!result) {
+                     mHSS_DEBUG_PRINTF(LOG_ERROR, "copyBootImageToDDR_() failed" CRLF);
+                }
             }
         }
     }
@@ -367,40 +453,58 @@ static bool getBootImageFromMMC_(struct HSS_BootImage **ppBootImage)
 
 void HSS_BootSelectMMC(void)
 {
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting MMC as boot source ..." CRLF);
-    getBootImageFunction = getBootImageFromMMC_;
+    pDefaultStorage = &mmcStorage_;
+#else
+    (void)getBootImageFromMMC_;
+#endif
 }
 
-static bool getBootImageFromQSPI_(struct HSS_BootImage **ppBootImage)
+static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage)
 {
     bool result = false;
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
     assert(ppBootImage);
 
-#  if !IS_ENABLED(CONFIG_SERVICE_QSPI_USE_XIP)
-    // if we are not using XIP, then we need to do an initial copy of the
-    // boot header into our structure, for subsequent use
+    // need to do an initial copy of the boot header into our structure, for subsequent use
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI to DDR ..." CRLF);
+
+    size_t srcLBAOffset = 0u;
+    assert(pStorage);
+
+    uint32_t blockSize, eraseSize, blockCount;
+    pStorage->getInfo(&blockSize, &eraseSize, &blockCount);
+
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ..." CRLF,
         sizeof(struct HSS_BootImage));
+    result = HSS_QSPI_ReadBlock(&bootImage, srcLBAOffset * blockSize,
+        sizeof(struct HSS_BootImage));
 
-    size_t srcOffset = 0u; // assuming zero as sector/block offset for now
-    HSS_QSPI_ReadBlock(&bootImage, srcOffset, sizeof(struct HSS_BootImage));
+    if (!result) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_QSPI_ReadBlock() failed" CRLF);
+    } else {
+        result = verifyMagic_(&bootImage);
 
-    result = verifyMagic_(&bootImage);
+        if (!result) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "verifyMagic_() failed" CRLF);
+        } else {
+            int perf_ctr_index = PERF_CTR_UNINITIALIZED;
+            HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image QSPI Copy");
 
-    if (result) {
-        result = copyBootImageToDDR_(&bootImage,
-            (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR),
-            srcOffset, HSS_QSPI_ReadBlock);
-        *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+            result = copyBootImageToDDR_(&bootImage,
+                (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR), srcLBAOffset * blockSize,
+                HSS_QSPI_ReadBlock);
+            *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+
+            HSS_PerfCtr_Lap(perf_ctr_index);
+
+            if (!result) {
+                 mHSS_DEBUG_PRINTF(LOG_ERROR, "copyBootImageToDDR_() failed" CRLF);
+            }
+        }
     }
-
-#  else
-    *ppBootImage = (struct HSS_BootImage *)QSPI_BASE;
-    result = verifyMagic_(**ppBootImage);
-#  endif
 #endif
 
     return result;
@@ -410,15 +514,16 @@ void HSS_BootSelectQSPI(void)
 {
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting QSPI as boot source ..." CRLF);
-    getBootImageFunction = getBootImageFromQSPI_;
+    pDefaultStorage = &qspiStorage_;
 #else
     (void)getBootImageFromQSPI_;
 #endif
 }
 
-static bool getBootImageFromPayload_(struct HSS_BootImage **ppBootImage)
+static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage)
 {
     bool result = false;
+    (void)pStorage;
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     assert(ppBootImage);
@@ -437,7 +542,7 @@ void HSS_BootSelectPayload(void)
 {
 #if IS_ENABLED(CONFIG_SERVICE_USE_PAYLOAD)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting Payload as boot source ..." CRLF);
-    getBootImageFunction = getBootImageFromPayload_;
+    pDefaultStorage = &payloadStorage_;
 #else
     (void)getBootImageFromPayload_;
 #endif
@@ -453,9 +558,13 @@ static bool spiFlashReadBlock_(void *dst, size_t offs, size_t count) {
 
    return (retval == 0);
 }
+#endif
 
-static bool getBootImageFromSpiFlash_(struct HSS_BootImage **ppBootImage) {
+static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage) {
     bool result = false;
+    (void)pStorage;
+
+#if IS_ENABLED(CONFIG_SERVICE_SPI)
 
     assert(ppBootImage);
 
@@ -480,13 +589,80 @@ static bool getBootImageFromSpiFlash_(struct HSS_BootImage **ppBootImage) {
     result = copyBootImageToDDR_(&bootImage, (char *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR),
         srcOffset, spiFlashReadBlock_);
     *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
+#endif
 
     return result;
 }
 
 void HSS_BootSelectSPI(void)
 {
+#if IS_ENABLED(CONFIG_SERVICE_SPI)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SPI Flash as boot source ..." CRLF);
-    getBootImageFunction = getBootImageFromSpiFlash_;
-}
+    pDefaultStorage = &spiStorage_;
+#else
+    (void)getBootImageFromSpiFlash_;
 #endif
+}
+
+bool HSS_Storage_Init(void);
+bool HSS_Storage_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount);
+bool HSS_Storage_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount);
+void HSS_Storage_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
+void HSS_Storage_FlushWriteBuffer(void);
+
+bool HSS_Storage_Init(void)
+{
+    bool result = true;
+
+    struct HSS_Storage *pStorage = pDefaultStorage ? pDefaultStorage : pStorages[0];
+    assert(pStorage);
+
+    if (pStorage->init) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "initialize %s" CRLF, pStorage->name);
+        result = pStorage->init();
+    }
+
+    return result;
+}
+
+bool HSS_Storage_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
+{
+    bool result = true;
+
+    struct HSS_Storage *pStorage = pDefaultStorage ? pDefaultStorage : pStorages[0];
+    assert(pStorage);
+
+    if (pStorage->readBlock) {
+        result = pStorage->readBlock(pDest, srcOffset, byteCount);
+    }
+    return result;
+}
+
+bool HSS_Storage_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
+{
+    struct HSS_Storage *pStorage = pDefaultStorage ? pDefaultStorage : pStorages[0];
+    assert(pStorage);
+
+    return pStorage->writeBlock(dstOffset, pSrc, byteCount);
+}
+
+void HSS_Storage_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount)
+{
+    struct HSS_Storage *pStorage = pDefaultStorage ? pDefaultStorage : pStorages[0];
+    assert(pStorage);
+
+    if (pStorage->getInfo) {
+        pStorage->getInfo(pBlockSize, pEraseSize, pBlockCount);
+    }
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s - %u byte pages, %u byte blocks, %u pages" CRLF, pStorage->name, *pBlockSize, *pEraseSize, *pBlockCount);
+}
+
+void HSS_Storage_FlushWriteBuffer(void)
+{
+    struct HSS_Storage *pStorage = pDefaultStorage ? pDefaultStorage : pStorages[0];
+    assert(pStorage);
+
+    if (pStorage->flushWriteBuffer) {
+        pStorage->flushWriteBuffer();
+    }
+}

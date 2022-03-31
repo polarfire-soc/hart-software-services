@@ -18,9 +18,8 @@
 #include "mss_clint.h"
 #include <stdbool.h>
 #include "flash_drive_app.h"
-
-#include "./drivers/mss/mss_usb/mss_usb_device.h"
-#include "./drivers/mss/mss_usb/mss_usb_device_msd.h"
+#include "drivers/mss/mss_usb/mss_usb_device.h"
+#include "drivers/mss/mss_usb/mss_usb_device_msd.h"
 #include "hal/hal.h"
 #include "mss_hal.h"
 #include "mss_mpu.h"
@@ -31,7 +30,6 @@ extern "C" {
 #endif
 
 int sbi_printf(const char *format, ...);
-bool HSS_MMCInit(void);
 
 #define USE_SDMA_OPERATIONS
 
@@ -45,11 +43,10 @@ bool HSS_MMCInit(void);
 #define NUMBER_OF_LUNS_ON_DRIVE   1u
 
 /* Single block buffer size */
-#define LBA_BLOCK_SIZE            512u
-#define NUM_LBA_BLOCKS            0xE90E80   // 15273600 => ~7.28GiB
-#define ERROR_INTERRUPT           0x8000u
-#define TRANSFER_COMPLETE         0x1u
-#define SD_RD_WR_SIZE             32768u
+#define MMC_LBA_BLOCK_SIZE            512u
+#define MMC_NUM_LBA_BLOCKS            0xE90E80u   // 15273600 => ~7.28GiB
+#define MMC_ERASE_SIZE                4096u
+#define SD_RD_WR_SIZE                 32768u
 
 uint32_t g_host_connection_detected = 0u;
 
@@ -63,17 +60,17 @@ typedef struct flash_lun_data {
 /******************************************************************************
   Private function declarations
 */
-uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len);
-uint8_t usb_flash_media_init (uint8_t lun);
-uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32_t *block_size);
-uint8_t usb_flash_media_is_ready(uint8_t lun);
-uint8_t usb_flash_media_is_write_protected(uint8_t lun);
-uint32_t usb_flash_media_read(uint8_t lun, uint8_t **buf, uint64_t lba_addr, uint32_t len);
-uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr, uint32_t *len);
-uint32_t usb_flash_media_write_ready(uint8_t lun, uint64_t blk_addr, uint32_t len);
-uint8_t usb_flash_media_release(uint8_t cfgidx);
+static uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len);
+static uint8_t usb_flash_media_init (uint8_t lun);
+static uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32_t *block_size);
+static uint8_t usb_flash_media_is_ready(uint8_t lun);
+static uint8_t usb_flash_media_is_write_protected(uint8_t lun);
+static uint32_t usb_flash_media_read(uint8_t lun, uint8_t **buf, uint64_t lba_addr, uint32_t len);
+static uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr, uint32_t *len);
+static uint32_t usb_flash_media_write_ready(uint8_t lun, uint64_t blk_addr, uint32_t len);
+static uint8_t usb_flash_media_release(uint8_t cfgidx);
 
-uint8_t usb_flash_media_get_max_lun(void);
+static uint8_t usb_flash_media_get_max_lun(void);
 
 /* Implementation of mss_usbd_msc_media_t needed by USB MSD Class Driver*/
 static mss_usbd_msc_media_t usb_flash_media = {
@@ -97,7 +94,7 @@ Transfer will fail.*/
 
 uint8_t  lun0_data_buffer[SD_RD_WR_SIZE] __attribute__((aligned(8))) = { 0u };
 
-flash_lun_data_t lun_data[NUMBER_OF_LUNS_ON_DRIVE] = {{NUM_LBA_BLOCKS, 4096u, LBA_BLOCK_SIZE}};
+flash_lun_data_t lun_data[NUMBER_OF_LUNS_ON_DRIVE] = {{MMC_NUM_LBA_BLOCKS, MMC_ERASE_SIZE, MMC_LBA_BLOCK_SIZE}};
 
 static mss_usbd_msc_scsi_inq_resp_t usb_flash_media_inquiry_data[NUMBER_OF_LUNS_ON_DRIVE] =
 {
@@ -121,30 +118,28 @@ static mss_usbd_msc_scsi_inq_resp_t usb_flash_media_inquiry_data[NUMBER_OF_LUNS_
 */
 bool FLASH_DRIVE_init(void)
 {
-    bool result = true;
+    bool result = false;
 
-    result = HSS_MMCInit();
+    bool HSS_Storage_Init(void);
+    void HSS_Storage_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
+
+    result = HSS_Storage_Init();
+
     if (result) {
-	uint16_t sector_size;
-	uint32_t sector_count;
+        HSS_Storage_GetInfo(&(lun_data[0].lba_block_size),
+            &(lun_data[0].erase_block_size),
+	    &(lun_data[0].number_of_blocks));
 
-	/*Read the sector size and count from the eMMC/SDcard*/
-	MSS_MMC_get_info(&sector_size, &sector_count);
-	if (sector_size)
-	    lun_data[0].lba_block_size = sector_size;
-	if (sector_count)
-	    lun_data[0].number_of_blocks = sector_count;
+        g_host_connection_detected = 0u;
+        // Assign call-back function Interface needed by USBD driver
+        MSS_USBD_set_descr_cb_handler(&flash_drive_descriptors_cb);
+
+        // Assign call-back function handler structure needed by MSD class driver
+        MSS_USBD_MSC_init(&usb_flash_media, MSS_USB_DEVICE_HS);
+
+        // Initialize USB driver
+        MSS_USBD_init(MSS_USB_DEVICE_HS);
     }
-
-    g_host_connection_detected = 0u;
-    /*Assign call-back function Interface needed by USBD driver*/
-    MSS_USBD_set_descr_cb_handler(&flash_drive_descriptors_cb);
-
-    /*Assign call-back function handler structure needed by MSD class driver*/
-    MSS_USBD_MSC_init(&usb_flash_media, MSS_USB_DEVICE_HS);
-
-    /*Initialize USB driver*/
-    MSS_USBD_init(MSS_USB_DEVICE_HS);
 
     return result;
 }
@@ -172,6 +167,9 @@ void FLASH_DRIVE_dump_xfer_status(void)
     if (HSS_Timer_IsElapsed(last_sec_time, 5*TICKS_PER_SEC) ||
         ((lastWriteCount == writeCount) && (lastReadCount == readCount))) {
         activeThrobber = '.';
+
+        //void HSS_Storage_FlushWriteBuffer(void);
+        //HSS_Storage_FlushWriteBuffer();
     } else if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
         activeThrobber = throbber[throbber_iterator];
         throbber_iterator++;
@@ -196,7 +194,7 @@ static void update_read_count(size_t bytes)
     FLASH_DRIVE_dump_xfer_status();
 }
 
-uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len)
+static uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len)
 {
     if (lun != 0u) {
         return 0u;
@@ -206,25 +204,28 @@ uint8_t* usb_flash_media_inquiry(uint8_t lun, uint32_t *len)
     return ((uint8_t*)&usb_flash_media_inquiry_data[lun]);
 }
 
-uint8_t usb_flash_media_release(uint8_t cfgidx)
+static uint8_t usb_flash_media_release(uint8_t cfgidx)
 {
     (void)cfgidx;
+
+    void HSS_Storage_FlushWriteBuffer(void);
+    HSS_Storage_FlushWriteBuffer();
 
     g_host_connection_detected = 0u;
     return 1u;
 }
 
-uint8_t usb_flash_media_init(uint8_t lun)
+static uint8_t usb_flash_media_init(uint8_t lun)
 {
     return 1u;
 }
 
-uint8_t usb_flash_media_get_max_lun(void)
+static uint8_t usb_flash_media_get_max_lun(void)
 {
     return NUMBER_OF_LUNS_ON_DRIVE;
 }
 
-uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32_t *block_size)
+static uint8_t usb_flash_media_get_capacity(uint8_t lun, uint32_t *no_of_blocks, uint32_t *block_size)
 {
     uint8_t result;
 
@@ -263,13 +264,13 @@ static void physical_device_read(uint64_t byte_address, uint8_t *p_rx_buffer,
             ret_status = mmc_main_plic_IRQHandler();
         } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
-#else
-    bool HSS_MMC_ReadBlock(void * pDest, size_t srcOffset, size_t byteCount);
-    (void) HSS_MMC_ReadBlock((void *)p_rx_buffer, (size_t)byte_address, size_in_bytes);
 #endif
+
+    bool HSS_Storage_ReadBlock(void * p_rx_buffer, size_t byte_address, size_t size_in_bytes);
+    (void)HSS_Storage_ReadBlock((void *)p_rx_buffer, (size_t)byte_address, size_in_bytes);
 }
 
-uint32_t usb_flash_media_read(uint8_t lun, uint8_t **buf, uint64_t lba_addr, uint32_t len)
+static uint32_t usb_flash_media_read(uint8_t lun, uint8_t **buf, uint64_t lba_addr, uint32_t len)
 {
     if (lun == 0) {
         if (len > SD_RD_WR_SIZE) {
@@ -284,12 +285,13 @@ uint32_t usb_flash_media_read(uint8_t lun, uint8_t **buf, uint64_t lba_addr, uin
     return len;
 }
 
-uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr, uint32_t *len)
+static uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr, uint32_t *len)
 {
     uint8_t *result = NULL;
     *len = 0u;
 
-    if ((blk_addr <= ((uint64_t)NUM_LBA_BLOCKS * LBA_BLOCK_SIZE)) && (lun == 0u)) {
+    //if ((blk_addr <= ((uint64_t)NUM_LBA_BLOCKS * LBA_BLOCK_SIZE)) && (lun == 0u)) {
+    if ((blk_addr <= ((uint64_t)lun_data[0].number_of_blocks * lun_data[0].lba_block_size)) && (lun == 0u)) {
         *len = SD_RD_WR_SIZE;
         result = lun0_data_buffer;
     }
@@ -302,32 +304,12 @@ static void physical_device_program(uint64_t byte_address, uint8_t * p_write_buf
 {
     update_write_count(size_in_bytes);
 
-#ifdef USE_SDMA_OPERATIONS
-    mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
-    uint64_t lba_address = byte_address / LBA_BLOCK_SIZE;
-
-    // wait for any in-flight transactions to complete
-    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
-        do {
-            ret_status = mmc_main_plic_IRQHandler();
-        } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
-    }
-
-    // setup new transaction...
-    ret_status = MSS_MMC_sdma_write(p_write_buffer, (uint32_t)lba_address, size_in_bytes);
-    if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
-        do {
-            ret_status = mmc_main_plic_IRQHandler();
-        } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
-    }
-#else
-    bool HSS_MMC_WriteBlock(size_t dstOffset, void * pSrc, size_t byteCount);
-    (void)HSS_MMC_WriteBlock((size_t)byte_address, (void *)p_write_buffer,
-        (size_t) size_in_bytes);
-#endif
+    bool HSS_Storage_WriteBlock(size_t dstOffset, void * pSrc, size_t byteCount);
+    (void)HSS_Storage_WriteBlock((size_t)byte_address, (void *)p_write_buffer,
+        (size_t)size_in_bytes);
 }
 
-uint32_t usb_flash_media_write_ready(uint8_t lun, uint64_t blk_addr, uint32_t len)
+static uint32_t usb_flash_media_write_ready(uint8_t lun, uint64_t blk_addr, uint32_t len)
 {
     uint32_t result = 0u;
     if (lun == 0u) {
@@ -343,13 +325,13 @@ uint32_t usb_flash_media_write_ready(uint8_t lun, uint64_t blk_addr, uint32_t le
 
 }
 
-uint8_t usb_flash_media_is_ready(uint8_t lun)
+static uint8_t usb_flash_media_is_ready(uint8_t lun)
 {
     (void)lun;
     return 1u;
 }
 
-uint8_t usb_flash_media_is_write_protected(uint8_t lun)
+static uint8_t usb_flash_media_is_write_protected(uint8_t lun)
 {
     (void)lun;
     return 1u;
@@ -357,7 +339,7 @@ uint8_t usb_flash_media_is_write_protected(uint8_t lun)
 
 uint32_t FLASH_DRIVE_is_host_connected(void)
 {
-    return(g_host_connection_detected);
+    return (g_host_connection_detected);
 }
 
 #ifdef __cplusplus
