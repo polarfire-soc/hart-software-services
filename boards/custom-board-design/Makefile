@@ -71,12 +71,7 @@ INCLUDES += \
 	-Ibaremetal/ \
 	-Ibaremetal/drivers/winbond_w25n01gv \
 
-EXTRA_SRCS-$(CONFIG_SERVICE_YMODEM) += \
-	baremetal/drivers/mss_envm/mss_envm.c
-
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 ################################################################################################
 #
