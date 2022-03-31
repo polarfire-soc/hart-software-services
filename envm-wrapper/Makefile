@@ -97,4 +97,7 @@ FPGENPROG?=/opt/microsemi/Libero_SoC_v2021.2/Libero/bin64/fpgenprog
 FPGENPROG:=$(FPGENPROG:_bin=)
 
 program: $(BIN_FILE-envm-wrapper)
+	$(call common-boot-mode-programmer,,$(TARGET-envm-wrapper))
+
+verify: $(BIN_FILE-envm-wrapper)
 	$(call common-boot-mode-programmer,--verify,$(TARGET-envm-wrapper))
