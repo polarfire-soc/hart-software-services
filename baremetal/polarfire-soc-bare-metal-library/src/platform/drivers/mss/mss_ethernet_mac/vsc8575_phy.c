@@ -13,13 +13,13 @@
 
 #include "mss_plic.h"
 
-#include "drivers/mss_mac/mss_ethernet_registers.h"
-#include "drivers/mss_mac/mss_ethernet_mac_regs.h"
-#include "drivers/mss_mac/mss_ethernet_mac_user_config.h"
-#include "drivers/mss_mac/mss_ethernet_mac.h"
-#include "drivers/mss_mac/phy.h"
+#include "drivers/mss/mss_mac/mss_ethernet_registers.h"
+#include "drivers/mss/mss_mac/mss_ethernet_mac_regs.h"
+#include "drivers/mss/mss_mac/mss_ethernet_mac_user_config.h"
+#include "drivers/mss/mss_mac/mss_ethernet_mac.h"
+#include "drivers/mss/mss_mac/phy.h"
 
-#include "drivers/mss_mac/mss_ethernet_mac_types.h"
+#include "drivers/mss/mss_mac/mss_ethernet_mac_types.h"
 
 #include "mss_plic.h"
 #include "fpga_design_config/fpga_design_config.h"

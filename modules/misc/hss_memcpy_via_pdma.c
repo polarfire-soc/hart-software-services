@@ -22,7 +22,7 @@
 #include <string.h>
 
 #if IS_ENABLED(CONFIG_USE_PDMA)
-#include "drivers/mss_pdma/mss_pdma.h"
+#include "drivers/mss/mss_pdma/mss_pdma.h"
 
 static char const * const pdmaErrorTable[] = {
   [ MSS_PDMA_ERROR_INVALID_SRC_ADDR ]        = "Invalid source address",

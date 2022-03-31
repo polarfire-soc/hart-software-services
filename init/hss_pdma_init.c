@@ -22,7 +22,7 @@
 #include "hss_debug.h"
 
 #if IS_ENABLED(CONFIG_USE_PDMA)
-#  include "drivers/mss_pdma/mss_pdma.h"
+#  include "drivers/mss/mss_pdma/mss_pdma.h"
 #endif
 
 bool HSS_PDMAInit(void)

@@ -10,7 +10,7 @@
 
 #include "drivers/winbond_w25n01gv/winbond_w25n01gv.h"
 #include "mss_plic.h"
-#include "drivers/mss_uart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 
 #include "hss_debug.h"
 

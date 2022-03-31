@@ -27,7 +27,7 @@
 #include "hss_boot_service.h"
 #include "usbdmsc_service.h"
 
-#include "drivers/mss_uart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
 #  include "usbdmsc_service.h"

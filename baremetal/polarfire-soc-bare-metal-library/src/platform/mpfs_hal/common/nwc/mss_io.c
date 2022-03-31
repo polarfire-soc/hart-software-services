@@ -578,7 +578,7 @@ __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
 
 
 #ifdef EXAMPLE_MSSIO_APP_CODE
-#include "drivers/mss_gpio/mss_gpio.h"
+#include "drivers/mss/mss_gpio/mss_gpio.h"
 /**
  *
  * @return 0 => OK

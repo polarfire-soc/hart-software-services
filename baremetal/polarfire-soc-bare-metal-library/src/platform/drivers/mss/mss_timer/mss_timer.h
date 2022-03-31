@@ -116,7 +116,7 @@
 
 #include "mss_plic.h"
 
-#include "drivers/mss_timer/mss_timer_regs.h"
+#include "drivers/mss/mss_timer/mss_timer_regs.h"
 
 
 #ifdef __cplusplus

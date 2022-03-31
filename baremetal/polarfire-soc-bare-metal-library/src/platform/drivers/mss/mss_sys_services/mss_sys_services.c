@@ -9,8 +9,8 @@
  * SVN $Revision$
  * SVN $Date$
  */
-#include "drivers/mss_sys_services/mss_sys_services.h"
-#include "drivers/mss_sys_services/mss_sys_services_regs.h"
+#include "drivers/mss/mss_sys_services/mss_sys_services.h"
+#include "drivers/mss/mss_sys_services/mss_sys_services_regs.h"
 #include "mss_hal.h"
 #include "mss_assert.h"
 

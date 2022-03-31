@@ -20,7 +20,7 @@
 #include "mss_ddr_debug.h"
 #include "simulation.h"
 #ifdef FABRIC_NOISE_TEST
-#include "drivers/mss_gpio/mss_gpio.h"
+#include "drivers/mss/mss_gpio/mss_gpio.h"
 #endif
 
 #define MANUAL_ADDCMD_TRAINIG

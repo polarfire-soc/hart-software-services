@@ -35,7 +35,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "drivers/mss_qspi/mss_qspi.h"
+#include "drivers/mss/mss_qspi/mss_qspi.h"
 
 #ifdef __cplusplus
 extern "C" {

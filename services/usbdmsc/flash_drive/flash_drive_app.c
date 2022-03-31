@@ -19,12 +19,12 @@
 #include <stdbool.h>
 #include "flash_drive_app.h"
 
-#include "./drivers/mss_usb/mss_usb_device.h"
-#include "./drivers/mss_usb/mss_usb_device_msd.h"
+#include "./drivers/mss/mss_usb/mss_usb_device.h"
+#include "./drivers/mss/mss_usb/mss_usb_device_msd.h"
 #include "hal/hal.h"
 #include "mss_hal.h"
 #include "mss_mpu.h"
-#include "drivers/mss_mmc/mss_mmc.h"
+#include "drivers/mss/mss_mmc/mss_mmc.h"
 
 #ifdef __cplusplus
 extern "C" {

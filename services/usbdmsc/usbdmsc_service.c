@@ -25,7 +25,7 @@
 #include "mpfs_reg_map.h"
 #include "hss_boot_service.h"
 
-#include "drivers/mss_uart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 
 static void usbdmsc_init_handler(struct StateMachine * const pMyMachine);
 static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine);

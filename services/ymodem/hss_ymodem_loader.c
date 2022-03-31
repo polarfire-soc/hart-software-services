@@ -43,10 +43,10 @@
 #undef ROUNDUP
 #undef ROUNDDOWN
 #include "mss_util.h"
-#include "drivers/mss_uart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 #include "uart_helper.h"
 #include "ymodem.h"
-#include "drivers/mss_sys_services/mss_sys_services.h"
+#include "drivers/mss/mss_sys_services/mss_sys_services.h"
 #include "mss_sysreg.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)

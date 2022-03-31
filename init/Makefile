@@ -47,7 +47,7 @@ EXTRA_SRCS-$(CONFIG_OPENSBI) += \
         init/hss_opensbi_init.c
 
 INCLUDES +=\
-	-Ibaremetal/drivers/mss_usb \
+	-Ibaremetal/drivers/mss/mss_usb \
 
 init/hss_ddr_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_pdma_init.o: CFLAGS=$(CFLAGS_GCCEXT)

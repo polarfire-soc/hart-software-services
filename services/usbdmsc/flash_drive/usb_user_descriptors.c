@@ -16,8 +16,8 @@
 #include "hss_types.h"
 #include "hss_debug.h"
 
-#include "./drivers/mss_usb/mss_usb_device.h"
-#include "drivers/mss_usb/mss_usb_std_def.h"
+#include "drivers/mss/mss_usb/mss_usb_device.h"
+#include "drivers/mss/mss_usb/mss_usb_std_def.h"
 
 #include "device_serial_number.h"
 

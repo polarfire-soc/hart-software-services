@@ -20,7 +20,7 @@
 
 #include "hss_debug.h"
 
-#include "drivers/mss_uart/mss_uart.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
 
 bool HSS_UARTInit(void)
 {

@@ -177,7 +177,7 @@
 #define MSS_QSPI_H_             1
 
 #include "mss_plic.h"
-#include "drivers/mss_qspi/mss_qspi_regs.h"
+#include "drivers/mss/mss_qspi/mss_qspi_regs.h"
 
 #ifdef __cplusplus
 extern "C" {
