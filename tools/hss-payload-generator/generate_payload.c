@@ -75,10 +75,6 @@ static_assert(sizeof(void *)==8, "Fatal: this program requires a 64bit compiler"
 #include "hss_types.h"
 #include "generate_payload.h"
 
-#ifdef __riscv
-#	error 1
-#endif
-
 #if defined(__LP64__) || defined(_LP64)
 #	ifndef PRIx64
 #		define PRIx64 "lx"
