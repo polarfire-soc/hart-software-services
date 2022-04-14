@@ -27,6 +27,7 @@
  */
 
 #define _FILE_OFFSET_BITS 64
+#define OPENSSL_API_COMPAT 0x10101000L
 
 #include <stdio.h>
 #include <stdlib.h>
