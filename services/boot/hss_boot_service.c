@@ -809,31 +809,45 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 
     if (source != HSS_HART_ALL) {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, source);
+
+        union HSSHartBitmask restartHartBitmask = { .uint = 0u };
+
+        // in interrupts-always-enabled world of the HSS, it would appear less
+        // racey to boot secondary cores first and have them all wait...
+        for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+            enum HSSHartId peer = bootMachine[i].hartId;
+
+            if (peer == source) { continue; } // skip myself
+
+            if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[source-1].entryPoint) {
+                // found another hart in same boot set as me...
+                restartHartBitmask.uint |= (1u << peer);
+            }
+        }
+
+        restartHartBitmask.uint |= (1u << source);
+
+        if (pBootImage->hart[source-1].numChunks) {
+            if (HSS_Boot_Harts(restartHartBitmask)) {
+                result = IPI_SUCCESS;
+            }
+        }
     } else {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts" CRLF);
-    }
 
-    union HSSHartBitmask restartHartBitmask = { .uint = 0u };
+        const union HSSHartBitmask restartHartBitmask = {
+            .s = {
+                .u54_1 = 1,
+                .u54_2 = 1,
+                .u54_3 = 1,
+                .u54_4 = 1,
+            }
+        };
 
-    // in interrupts-always-enabled world of the HSS, it would appear less
-    // racey to boot secondary cores first and have them all wait...
-    for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-        enum HSSHartId peer = bootMachine[i].hartId;
-
-        if (peer == source) { continue; } // skip myself
-
-        if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[source-1].entryPoint) {
-            // found another hart in same boot set as me...
-            restartHartBitmask.uint |= (1u << peer);
-        }
-    }
-
-    restartHartBitmask.uint |= (1u << source);
-
-    if (pBootImage->hart[source-1].numChunks) {
         if (HSS_Boot_Harts(restartHartBitmask)) {
             result = IPI_SUCCESS;
         }
+
     }
 
     return result;
