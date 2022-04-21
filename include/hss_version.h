@@ -40,9 +40,11 @@ extern "C" {
 
 #define HSS_VERSION_MAJOR 0
 #define HSS_VERSION_MINOR 99
-#define HSS_VERSION_PATCH 30
+#define HSS_VERSION_PATCH 31
 
-#define VENDOR_STRING "-dev-build"
+#ifndef VENDOR_STRING
+#  define VENDOR_STRING "-dev-build"
+#endif
 
 #ifdef __cplusplus
 }
