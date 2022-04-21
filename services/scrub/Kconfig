@@ -5,3 +5,23 @@ config SERVICE_SCRUB
                 This feature enables support for E51-delegated RAM Scrubbing.
 
 		If you do not know what to do here, say Y.
+
+menu "RAM Scrubbing Service"
+	visible if SERVICE_SCRUB
+
+config SERVICE_SCRUB_MAX_SIZE_PER_LOOP_ITER
+        int "Number of bytes per superloop iteration to scrub"
+        default  4096
+        depends on SERVICE_SCRUB
+        help
+                This parameter determines how many bytes will be scrubbed per superloop.
+
+config SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS
+        int "Throttle to run every X superloops"
+        default  256
+        depends on SERVICE_SCRUB
+        help
+                This parameter throttles the scrubbing service to only run once every
+                specified number of superloop iterations.
+
+endmenu

@@ -73,7 +73,6 @@ static void scrub_init_handler(struct StateMachine * const pMyMachine)
 }
 
 /////////////////
-#define MAX_SCRUB_SIZE_PER_LOOP_ITER (4096u)
 extern const uint64_t __l2lim_start,         __l2lim_end;
 extern const uint64_t __l2_start, __l2_end;
 extern const uint64_t __ddr_start,           __ddr_end;
@@ -90,7 +89,7 @@ const struct {
 	uintptr_t endAddr;
 } rams[] = {
     { (uintptr_t)&__l2lim_start,         (uintptr_t)&__l2lim_end },
-    { (uintptr_t)&__l2_start, (uintptr_t)&__l2_end },
+    { (uintptr_t)&__l2_start,            (uintptr_t)&__l2_end },
     { (uintptr_t)&__ddr_start,           (uintptr_t)&__ddr_end },
     { (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end },
     //{ (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
@@ -119,7 +118,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
             const uintptr_t length = rams[index].endAddr - rams[index].baseAddr;
 
             if (length) {
-                const size_t chunkSize = MIN(MAX_SCRUB_SIZE_PER_LOOP_ITER, length-offset);
+                const size_t chunkSize = MIN(CONFIG_SERVICE_SCRUB_MAX_SIZE_PER_LOOP_ITER, length-offset);
 
                 const uint64_t *pStart = (uint64_t *)(rams[index].baseAddr + offset);
                 const uint64_t *pEnd = (uint64_t *)(pStart + chunkSize);
@@ -132,8 +131,11 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
         }
     }
 
-    //entryCount = (entryCount + 1u) % 0x1000;
-    entryCount = 0;
+#if defined(CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS) && (CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS)
+    entryCount = (entryCount + 1u) % CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS;
+#else
+    entryCount = 0u;
+#endif
 }
 
 void scrub_dump_stats(void)
