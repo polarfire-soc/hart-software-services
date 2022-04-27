@@ -24,6 +24,7 @@
 #include "hss_debug.h"
 #include "hss_perfctr.h"
 #include "common/mss_peripherals.h"
+#include "hss_crc32.h"
 
 #include <assert.h>
 #include <string.h>
@@ -54,6 +55,10 @@
 #include "hss_memcpy_via_pdma.h"
 #include "system_startup.h"
 #include "fpga_design_config/fpga_design_config.h"
+
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+#  include "hss_boot_secure.h"
+#endif
 
 
 /* Timeouts */
@@ -87,6 +92,8 @@ static void boot_idle_handler(struct StateMachine * const pMyMachine);
 static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk,
     ptrdiff_t subChunkOffset, size_t subChunkSize);
 static void boot_do_zero_init_chunk(struct HSS_BootZIChunkDesc const *pZiChunk);
+
+static bool validateCrc_(struct HSS_BootImage *pImage);
 
 /*!
  * \brief Boot Driver States
@@ -808,7 +815,9 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 {
     enum IPIStatusCode result = IPI_FAIL;
 
-    if (source != HSS_HART_ALL) {
+    if (!HSS_Boot_ValidateImage(pBootImage)) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for hart %u" CRLF, source);
+    } else if (source != HSS_HART_ALL) {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, source);
 
         union HSSHartBitmask restartHartBitmask = { .uint = 0u };
@@ -868,6 +877,102 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
     return HSS_Boot_RestartCore(source);
     return IPI_SUCCESS;
+}
+
+
+static bool validateCrc_(struct HSS_BootImage *pImageHdr)
+{
+    bool result = false;
+    uint32_t headerCrc;
+
+    struct HSS_BootImage shadowHdr = *pImageHdr;
+
+    shadowHdr.headerCrc = 0u;
+    memset(&(shadowHdr.signature), 0, sizeof(shadowHdr.signature));
+
+    size_t crcLen;
+    switch (pImageHdr->version) {
+    case 0u:
+        // pre crypto-signing, the BootImage format was slightly different, so to ensure
+        // no CRC failures on older images, we use a legacy structure size...
+        crcLen = sizeof(struct HSS_BootImage_v0);
+        break;
+
+    default:
+        crcLen = sizeof(struct HSS_BootImage);
+        break;
+    }
+
+    headerCrc = CRC32_calculate((const uint8_t *)&shadowHdr, crcLen);
+    if (headerCrc == pImageHdr->headerCrc) {
+        result = true;
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF,
+            pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, pImageHdr->headerCrc);
+    }
+
+    return result;
+}
+
+bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
+{
+    bool result = false;
+
+    assert(pImage);
+
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+    //
+    // now have a Full Boot Image, let's check it is a valid one...
+    //
+    {
+        if (!pImage) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring" CRLF);
+            result = false;
+        } else if (pImage->magic != mHSS_BOOT_MAGIC) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
+            result = false;
+#  if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+        } else if (!HSS_Boot_Secure_CheckCodeSigning(pImage)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing" CRLF);
+            result = false;
+#  endif
+        } else if (validateCrc_(pImage)) {
+            mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC" CRLF);
+
+        // GCC 9.x appears to dislike the pImage cast, and sees dereferencing the
+        // set name as an out-of-bounds... So we'll disable that warning just for
+        // this print...
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Warray-bounds"
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image set name: \"%s\"" CRLF, pImage->set_name);
+#  pragma GCC diagnostic pop
+
+#  if defined(CONFIG_SERVICE_BOOT_CUSTOM_FLOW)
+            result = HSS_Boot_Custom();
+#  else
+            result = true;
+#  endif
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot image failed CRC" CRLF);
+        }
+    }
+#endif
+
+    return result;
+}
+
+bool HSS_Boot_VerifyMagic(struct HSS_BootImage const * const pImage)
+{
+    bool result = false;
+
+    if ((pImage->magic == mHSS_BOOT_MAGIC) || (pImage->magic == mHSS_COMPRESSED_MAGIC)) {
+        result = true;
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "magic is %08x vs expected %08x or %08x" CRLF,
+            pImage->magic, mHSS_BOOT_MAGIC, mHSS_COMPRESSED_MAGIC);
+    }
+
+    return result;
 }
 
 void HSS_Register_Boot_Image(struct HSS_BootImage *pImage)

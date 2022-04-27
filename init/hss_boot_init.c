@@ -47,7 +47,6 @@
 
 #include "hss_state_machine.h"
 #include "hss_debug.h"
-#include "hss_crc32.h"
 #include "hss_perfctr.h"
 
 #include <string.h>
@@ -67,8 +66,6 @@
 //
 // local module functions
 
-static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage);
-
 #if !IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 typedef bool (*HSS_BootImageCopyFnPtr_t)(void *pDest, size_t srcOffset, size_t byteCount);
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
@@ -81,7 +78,6 @@ static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_B
 static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
-static bool validateCrc_(struct HSS_BootImage *pImage);
 static bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t getBootImageFunction);
 
 //
@@ -207,6 +203,7 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
     struct HSS_BootImage *pBootImage = NULL;
 
     (void)pStorage;
+    (void)decompressedFlag;
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     result = bootImageFunction(pStorage, &pBootImage);
@@ -240,85 +237,16 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
     }
 #  endif
 
-    //
-    // now have a Full Boot Image, let's check it is a valid one...
-    //
-    {
-        if (!pBootImage) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring" CRLF);
-            result = false;
-        } else if (pBootImage->magic != mHSS_BOOT_MAGIC) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
-            result = false;
-#  if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
-        } else if (!HSS_Boot_Secure_CheckCodeSigning(pBootImage)) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing" CRLF);
-            result = false;
-#  endif
-        } else if (validateCrc_(pBootImage)) {
-            mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC" CRLF,
-                decompressedFlag ? "decompressed":"");
+    //result = HSS_Boot_ValidateImage(pBootImage);
+    HSS_Register_Boot_Image(pBootImage);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered ..." CRLF);
 
-        // GCC 9.x appears to dislike the pBootImage cast, and sees dereferencing the
-        // set name as an out-of-bounds... So we'll disable that warning just for
-        // this print...
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Warray-bounds"
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image set name: \"%s\"" CRLF, pBootImage->set_name);
-#  pragma GCC diagnostic pop
-            HSS_Register_Boot_Image(pBootImage);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered ..." CRLF);
-
-#  if defined(CONFIG_SERVICE_BOOT_CUSTOM_FLOW)
-            result = HSS_Boot_Custom();
-#  else
-            result = true;
-#  endif
-        } else {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot image failed CRC" CRLF,
-                decompressedFlag ? "decompressed":"");
-        }
-    }
 #endif
 
     return result;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-
-static bool validateCrc_(struct HSS_BootImage *pImageHdr)
-{
-    bool result = false;
-    uint32_t headerCrc;
-
-    struct HSS_BootImage shadowHdr = *pImageHdr;
-
-    shadowHdr.headerCrc = 0u;
-    memset(&(shadowHdr.signature), 0, sizeof(shadowHdr.signature));
-
-    size_t crcLen;
-    switch (pImageHdr->version) {
-    case 0u:
-        // pre crypto-signing, the BootImage format was slightly different, so to ensure
-        // no CRC failures on older images, we use a legacy structure size...
-        crcLen = sizeof(struct HSS_BootImage_v0);
-        break;
-
-    default:
-        crcLen = sizeof(struct HSS_BootImage);
-        break;
-    }
-
-    headerCrc = CRC32_calculate((const uint8_t *)&shadowHdr, crcLen);
-    if (headerCrc == pImageHdr->headerCrc) {
-        result = true;
-    } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF,
-            pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, pImageHdr->headerCrc);
-    }
-
-    return result;
-}
 
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage)
 {
@@ -344,20 +272,6 @@ static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     return result;
 }
 #endif
-
-static inline bool verifyMagic_(struct HSS_BootImage const * const pBootImage)
-{
-    bool result = false;
-
-    if ((pBootImage->magic == mHSS_BOOT_MAGIC) || (pBootImage->magic == mHSS_COMPRESSED_MAGIC)) {
-        result = true;
-    } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "magic is %08x vs expected %08x or %08x" CRLF,
-            pBootImage->magic, mHSS_BOOT_MAGIC, mHSS_COMPRESSED_MAGIC);
-    }
-
-    return result;
-}
 
 static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage)
 {
@@ -425,10 +339,10 @@ static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootIm
         if (!result) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_MMC_ReadBlock() failed" CRLF);
         } else {
-            result = verifyMagic_(&bootImage);
+            result = HSS_Boot_VerifyMagic(&bootImage);
 
             if (!result) {
-                mHSS_DEBUG_PRINTF(LOG_ERROR, "verifyMagic_() failed" CRLF);
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_Boot_VerifyMagic() failed" CRLF);
             } else {
                 int perf_ctr_index = PERF_CTR_UNINITIALIZED;
                 HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image MMC Copy");
@@ -485,10 +399,10 @@ static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootI
     if (!result) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_QSPI_ReadBlock() failed" CRLF);
     } else {
-        result = verifyMagic_(&bootImage);
+        result = HSS_Boot_VerifyMagic(&bootImage);
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "verifyMagic_() failed" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_Boot_VerifyMagic() failed" CRLF);
         } else {
             int perf_ctr_index = PERF_CTR_UNINITIALIZED;
             HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image QSPI Copy");
@@ -531,7 +445,7 @@ static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_Bo
     extern struct HSS_BootImage _payload_start;
     *ppBootImage = (struct HSS_BootImage *)&_payload_start;
 
-    result = verifyMagic_(*ppBootImage);
+    result = HSS_Boot_VerifyMagic(*ppBootImage);
     printBootImageDetails_(*ppBootImage);
 #endif
 
@@ -581,7 +495,7 @@ static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_B
         return false;
     }
 
-    result = verifyMagic_(&bootImage);
+    result = HSS_Boot_VerifyMagic(&bootImage);
     if (!result) {
         return false;
     }
