@@ -55,7 +55,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
         pMachineName = (const char *)pCurrentMachine->pMachineName;
     }
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "running machine %s" CRLF, pMachineName);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "running machine %s\n", pMachineName);
     {
         stateType_t prevState = pCurrentMachine->prevState;
         stateType_t currentState = pCurrentMachine->state;
@@ -124,7 +124,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
                         (pCurrentMachine->pStateDescs[currentState]).pStateName;
 
                     if (prevState != currentState) {
-                        mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s :: %s -> %s" CRLF, pMachineName,
+                        mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s :: %s -> %s\n", pMachineName,
                             pLastStateName, pCurrentStateName);
                     }
                 }
@@ -206,13 +206,13 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
                 if (dump_flag) {
                     mHSS_DEBUG_PRINTF(LOG_STATUS, " loop %" PRIu64
                         " took %" PRIu64 " tick%s"
-                        " (max %" PRIu64 " tick%s)" CRLF, loopCount,
+                        " (max %" PRIu64 " tick%s)\n", loopCount,
                         delta, delta == 1u ? "" : "s",
                         maxLoopTime, maxLoopTime == 1u ? "" : "s");
                 } else /* if (max_exceeded_flag) */ {
                     mHSS_DEBUG_PRINTF(LOG_WARN, " loop %" PRIu64
                         " took %" PRIu64 " tick%s"
-                        " (max %" PRIu64 " tick%s)" CRLF, loopCount,
+                        " (max %" PRIu64 " tick%s)\n", loopCount,
                         delta, delta == 1u ? "" : "s",
                         maxLoopTime, maxLoopTime == 1u ? "" : "s");
                 }
@@ -244,20 +244,20 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
     for (i = 0u; i < spanOfInitFunctions; ++i) {
         assert(initFunctions[i].handler);
 
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Running %d of %d: %s()" CRLF, i, spanOfInitFunctions,
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Running %d of %d: %s()\n", i, spanOfInitFunctions,
         //    initFunctions[i].pName);
 
         bool result = (initFunctions[i].handler)();
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s() returned %d" CRLF, initFunctions[i].pName, result);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s() returned %d\n", initFunctions[i].pName, result);
 
             if (initFunctions[i].haltOnFailure) {
                 while (true) { ; } // HALT on failure
             } else if (initFunctions[i].restartOnFailure) {
                 uint8_t rcvBuf;
 
-                bool keyPressedFlag = HSS_ShowTimeout("Init failed, press a key to prevent restart" CRLF, 5u, &rcvBuf);
+                bool keyPressedFlag = HSS_ShowTimeout("Init failed, press a key to prevent restart\n", 5u, &rcvBuf);
 
                 if (IS_ENABLED(CONFIG_SERVICE_TINYCLI) && keyPressedFlag) {
                     bool HSS_TinyCLI_Parser(void);
@@ -274,10 +274,10 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
 
 void DumpStateMachineStats(void)
 {
-    mHSS_DEBUG_PRINTF(LOG_STATUS, " State Machine Name: Max Exec Time / State : Last Delta Time / Current State" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, " State Machine Name: Max Exec Time / State : Last Delta Time / Current State\n");
 
     for (size_t i = 0u; i < spanOfPGlobalStateMachines; i++) {
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "%19s: % 13" PRIu64 " /    % 2" PRIu64 " : % 15" PRIu64 " /    % 2" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "%19s: % 13" PRIu64 " /    % 2" PRIu64 " : % 15" PRIu64 " /    % 2" PRIu64 "\n",
             pGlobalStateMachines[i]->pMachineName,
             pGlobalStateMachines[i]->maxExecutionTime,
             pGlobalStateMachines[i]->maxState,

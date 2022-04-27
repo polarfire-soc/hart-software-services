@@ -36,14 +36,14 @@ bool Device_Serial_Number_Init(void)
     MSS_SYS_select_service_mode( MSS_SYS_SERVICE_POLLING_MODE, NULL);
     memset(serial_num_buffer, 0, ARRAY_SIZE(serial_num_buffer));
     if (MSS_SYS_SUCCESS == MSS_SYS_get_serial_number(serial_num_buffer, 0u /*mb_offset??*/)) {
-        mHSS_FANCY_PRINTF(LOG_STATUS, "Serial Number: " CRLF); // move to boards...
+        mHSS_FANCY_PRINTF(LOG_STATUS, "Serial Number: \n"); // move to boards...
         for (int i = 0; i < ARRAY_SIZE(serial_num_buffer); i++) {
             mHSS_PRINTF("%02x", serial_num_buffer[i]);
         }
-        mHSS_PRINTF(CRLF);
+        mHSS_PRINTF("\n");
         result = true;
     } else {
-        mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number" CRLF);
+        mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number\n");
     }
 
     return result;

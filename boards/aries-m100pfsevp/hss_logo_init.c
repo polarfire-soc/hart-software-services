@@ -79,7 +79,7 @@ const char* tokenStringTable[] = {
     g9_str,
     gA_str,
     RST_str,
-    CRLF,
+    "\n",
 };
 
 static const struct __attribute__((packed)) {
@@ -218,15 +218,15 @@ bool HSS_LogoInit(void)
 
 #endif
 
-    mHSS_PUTS(CRLF
-        "-------------------------" CRLF
-        "--      M100PFS        --" CRLF
-        "-- PolarFire SoC FPGA  --" CRLF
-        "--                     --" CRLF
-        "-- Copyright (c) 2021  --" CRLF
-        "-- ARIES Embedded GmbH --" CRLF
-        "-------------------------" CRLF
-        CRLF);
+    mHSS_PUTS("\n"
+        "-------------------------\n"
+        "--      M100PFS        --\n"
+        "-- PolarFire SoC FPGA  --\n"
+        "--                     --\n"
+        "-- Copyright (c) 2021  --\n"
+        "-- ARIES Embedded GmbH --\n"
+        "-------------------------\n"
+        "\n");
 
     return true;
 }

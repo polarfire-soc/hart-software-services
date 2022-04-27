@@ -54,7 +54,7 @@ struct StateMachine uart_service = {
 //
 static void uart_init_handler(struct StateMachine * const pMyMachine)
 {
-    //mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    //mHSS_DEBUG_PRINTF("\tcalled\n");
     pMyMachine->state++;
 }
 
@@ -62,7 +62,7 @@ static void uart_init_handler(struct StateMachine * const pMyMachine)
 static uint32_t i = HSS_HART_U54_1;
 static void uart_state1_handler(struct StateMachine * const pMyMachine)
 {
-    //mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    //mHSS_DEBUG_PRINTF("\tcalled\n");
 
     // check each core to see if it wants to transmit
     if (IPI_GetQueuePendingCount(i)) {
@@ -77,7 +77,7 @@ static void uart_state1_handler(struct StateMachine * const pMyMachine)
 
 static void uart_lastState_handler(struct StateMachine * const pMyMachine)
 {
-    //mHSS_DEBUG_PRINTF("\tcalled" CRLF);
+    //mHSS_DEBUG_PRINTF("\tcalled\n");
     pMyMachine->state = UART_INITIALIZATION;
 }
 

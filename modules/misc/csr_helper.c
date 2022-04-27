@@ -64,7 +64,7 @@ void CSR_ClearMSIP(void)
         break;
 
     default:
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown hart ID %u" CRLF, hartid);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown hart ID %u\n", hartid);
         assert(0 == 1);
         break;
     }

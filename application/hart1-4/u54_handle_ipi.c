@@ -155,5 +155,5 @@ bool HSS_U54_HandleIPI(void)
 void HSS_U54_Banner(void)
 {
     // wait for E51 to setup BSS...
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%d: Waiting for E51 instruction" CRLF, current_hartid());
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%d: Waiting for E51 instruction\n", current_hartid());
 }

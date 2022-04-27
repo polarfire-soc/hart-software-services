@@ -67,7 +67,7 @@ static void *do_memcpy_via_pdma_(void * restrict dest, void const * restrict src
 
         if (pdma_error_code != 0) {
             if (pdma_error_code < ARRAY_SIZE(pdmaErrorTable)) {
-                mHSS_DEBUG_PRINTF(LOG_ERROR, "PDMA Error: %s" CRLF, pdmaErrorTable[pdma_error_code]);
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "PDMA Error: %s\n", pdmaErrorTable[pdma_error_code]);
             }
         } else {
             result = dest;
@@ -97,6 +97,6 @@ void *memcpy_via_pdma(void *dest, void const *src, size_t num_bytes)
         }
     }
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copy from %p to %p (%x bytes)" CRLF, src, dest, num_bytes);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Copy from %p to %p (%x bytes)\n", src, dest, num_bytes);
     return do_memcpy_via_pdma_(dest, src, num_bytes);
 }

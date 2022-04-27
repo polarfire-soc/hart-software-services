@@ -27,7 +27,7 @@
 void HSS_Crypto_Init(void)
 {
     // placeholder function incase any Athena or G5C specific initialisation is required...
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called\n");
 }
 
 //static uint32_t dummy = 0u;

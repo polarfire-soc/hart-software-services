@@ -111,7 +111,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
         if (!entryCount) {
             if ((rams[index].baseAddr + offset)  >= rams[index].endAddr) {
                 index = (index + 1u) % ARRAY_SIZE(rams);
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Scrubbing %p to %p" CRLF, rams[index].baseAddr, rams[index].endAddr);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Scrubbing %p to %p\n", rams[index].baseAddr, rams[index].endAddr);
 		offset = 0u;
             }
 
@@ -140,8 +140,8 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
 
 void scrub_dump_stats(void)
 {
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index:      0x%" PRIx64 CRLF, index);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Mem base:   0x%" PRIx64 CRLF, rams[index].baseAddr);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "offset:     0x%" PRIx64 CRLF, offset);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "entryCount: 0x%" PRIx64 CRLF, entryCount);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index:      0x%" PRIx64 "\n", index);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Mem base:   0x%" PRIx64 "\n", rams[index].baseAddr);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "offset:     0x%" PRIx64 "\n", offset);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "entryCount: 0x%" PRIx64 "\n", entryCount);
 }

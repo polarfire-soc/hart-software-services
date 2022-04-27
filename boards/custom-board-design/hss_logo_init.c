@@ -88,7 +88,7 @@ const char* tokenStringTable[] = {
     b3_str,
     b4_str,
     RST_str,
-    CRLF,
+    "\n",
 };
 
 
@@ -183,7 +183,7 @@ const struct __attribute__((packed))  {
 
 bool HSS_LogoInit(void)
 {
-    mHSS_PUTS(CRLF);
+    mHSS_PUTS("\n");
     int i;
 
     // decode and output our RLE Logo
@@ -195,12 +195,12 @@ bool HSS_LogoInit(void)
         }
     }
 
-    mHSS_PUTS(CRLF
-        "-------------------------" CRLF
-        "-- Custom Board Design --" CRLF
-        "-- PolarFire SoC FPGA  --" CRLF
-        "-------------------------" CRLF
-        CRLF);
+    mHSS_PUTS("\n"
+        "-------------------------\n"
+        "-- Custom Board Design --\n"
+        "-- PolarFire SoC FPGA  --\n"
+        "-------------------------\n"
+        "\n");
 
     return true;
 }

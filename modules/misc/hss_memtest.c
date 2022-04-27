@@ -61,7 +61,7 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
     const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to pattern" CRLF);
+    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to pattern\n");
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         baseAddr[offset] = pattern;
 
@@ -73,10 +73,10 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     testOffset = 0u;
     baseAddr[0] = antiPattern;
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, verifying set cells" CRLF);
+    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, verifying set cells\n");
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         if (baseAddr[offset] != pattern) {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "1: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF,
+            mHSS_FANCY_PRINTF(LOG_ERROR, "1: 0x%016p==0x%016llx vs expected 0x%016llx\n",
                 baseAddr + offset, baseAddr[offset], pattern);
             result = ((uint64_t *)&baseAddr[offset]);
             break;
@@ -89,14 +89,14 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
 
     baseAddr[0] = pattern;
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to antipattern" CRLF);
+    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to antipattern\n");
     if (result == NULL) {
         for (testOffset = 1u; (testOffset & addrMask) != 0u; testOffset <<= 1) {
             baseAddr[testOffset] = antiPattern;
 
             // ensure that the base isn't affected
             if (baseAddr[0] != pattern) {
-                mHSS_FANCY_PRINTF(LOG_ERROR, "2: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF,
+                mHSS_FANCY_PRINTF(LOG_ERROR, "2: 0x%016p==0x%016llx vs expected 0x%016llx\n",
                     baseAddr + offset, baseAddr[offset], pattern);
                 result = ((uint64_t *)&baseAddr[testOffset]);
                 break;
@@ -106,7 +106,7 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
                 // walk up the address bus, ensuring that no other address is affected
                 for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
                     if ((baseAddr[offset] != pattern) && (offset != testOffset)) {
-                        mHSS_FANCY_PRINTF(LOG_ERROR, "3: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF,
+                        mHSS_FANCY_PRINTF(LOG_ERROR, "3: 0x%016p==0x%016llx vs expected 0x%016llx\n",
                             baseAddr + offset, baseAddr[offset], pattern);
                         result = ((uint64_t *)&baseAddr[testOffset]);
                         offset = 0u; testOffset = 0u; // terminate loops
@@ -141,7 +141,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
     uint8_t rx_char;
 
     // write pattern to every cell
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "Write Seed Pattern to all cells" CRLF);
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "Write Seed Pattern to all cells\n");
 
     for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
         baseAddr[offset] = pattern;
@@ -154,11 +154,11 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
     HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
     // check each location for pass, and ...
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "First Pass: Check each location" CRLF);
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "First Pass: Check each location\n");
 
     for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
         if (baseAddr[offset] != pattern) {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "4: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF,
+            mHSS_FANCY_PRINTF(LOG_ERROR, "4: 0x%016p==0x%016llx vs expected 0x%016llx\n",
                 baseAddr + offset, baseAddr[offset], pattern);
 
             result = ((uint64_t *)&baseAddr[offset]);
@@ -181,12 +181,12 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
     HSS_ShowProgress(numWords, 0u); // clear progress indicator
 
     // check each location for the inverted pattern
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "Second Pass: Check each location" CRLF);
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "Second Pass: Check each location\n");
     if (result == NULL) {
         for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
             antiPattern = ~pattern;
             if (baseAddr[offset] != antiPattern) {
-                mHSS_FANCY_PRINTF(LOG_ERROR, "5: 0x%016p==0x%016llx vs expected 0x%016llx" CRLF,
+                mHSS_FANCY_PRINTF(LOG_ERROR, "5: 0x%016p==0x%016llx vs expected 0x%016llx\n",
                     baseAddr + offset, baseAddr[offset], antiPattern);
                 result = ((uint64_t *)&baseAddr[offset]);
                 break;
@@ -217,7 +217,7 @@ bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is %lu MiB" CRLF,
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is %lu MiB\n",
         (uint32_t)(HSS_DDR_GetSize()/mMiB_IN_BYTES));
 
     static int perf_ctr_index_mem32 = PERF_CTR_UNINITIALIZED;
@@ -229,7 +229,7 @@ bool HSS_MemTestDDRFast(void)
     }
     HSS_PerfCtr_Lap(perf_ctr_index_mem32);
 
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is %lu MiB" CRLF,
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is %lu MiB\n",
         (uint32_t)(HSS_DDRHi_GetSize()/mMiB_IN_BYTES));
 
     HSS_PerfCtr_Allocate(&perf_ctr_index_mem64, "MemTest(DDR64)");
@@ -248,7 +248,7 @@ bool HSS_MemTestDDRFull(void)
 
     if (result) {
         if (HSS_MemTestDevice((uint64_t *)HSS_DDR_GetStart(), HSS_DDR_GetSize()) != NULL) {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "FAILED!" CRLF);
+            mHSS_FANCY_PRINTF(LOG_ERROR, "FAILED!\n");
             result = false;
         }
     }
@@ -263,7 +263,7 @@ bool HSS_MemTestDDR_Ex(volatile uint64_t *baseAddr, size_t numBytes)
     if ((HSS_MemTestDataBus(baseAddr) != 0u)
             || (HSS_MemTestAddressBus(baseAddr, numBytes) != NULL)
             || (HSS_MemTestDevice(baseAddr, numBytes) != NULL)) {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "FAILED!" CRLF);
+            mHSS_FANCY_PRINTF(LOG_ERROR, "FAILED!\n");
         result = false;
     }
 

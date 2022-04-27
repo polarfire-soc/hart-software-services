@@ -47,10 +47,10 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
     struct HSS_CompressedImage compressedImageHdr = *(struct HSS_CompressedImage *)pInputBuffer;
 
     if (compressedImageHdr.magic != mHSS_COMPRESSED_MAGIC) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image is missing magic value (%08x vs %08x)" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image is missing magic value (%08x vs %08x)\n",
             compressedImageHdr.magic, mHSS_COMPRESSED_MAGIC);
     } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image Length is %lu" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image Length is %lu\n",
             compressedImageHdr.compressedImageLen);
 
         uint32_t originalCrc = compressedImageHdr.headerCrc;
@@ -60,12 +60,12 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
             sizeof(struct HSS_CompressedImage));
 
         if (originalCrc != compressedCrc) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image failed CRC check" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Compressed Image failed CRC check\n");
         } else {
             const uint8_t *pByteOffset = pInputBuffer;
             pByteOffset += sizeof(struct HSS_CompressedImage);
 
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Decompressing from %p to %p" CRLF, pByteOffset, pOutputBuffer);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Decompressing from %p to %p\n", pByteOffset, pOutputBuffer);
 
             size_t decompressedOutputSize = (size_t)compressedImageHdr.originalImageLen;
             result = mz_uncompress(
@@ -81,7 +81,7 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
 
 void *malloc(size_t size)
 {
-    mHSS_DEBUG_PRINTF(LOG_ERROR, "malloc() stub invoked..." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "malloc() stub invoked...\n");
     (void)size;
 
     return NULL;
@@ -89,6 +89,6 @@ void *malloc(size_t size)
 
 void free(void *ptr)
 {
-    mHSS_DEBUG_PRINTF(LOG_ERROR, "free() stub invoked..." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "free() stub invoked...\n");
     (void)ptr;
 }

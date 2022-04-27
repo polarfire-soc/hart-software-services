@@ -98,7 +98,7 @@ static void sgdma_idle_handler(struct StateMachine * const pMyMachine)
 static size_t remaining_in_current_block = 0u;
 static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
 {
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called\n");
 
     assert(pBlockDesc != NULL);
 
@@ -147,7 +147,7 @@ enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId so
     (void)p_ancilliary_buffer_in_ddr;
 
     // scatter gather DMA IPI received from one of the U54s...
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (sgdma_service.state is %u)" CRLF, sgdma_service.state);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (sgdma_service.state is %u)\n", sgdma_service.state);
 
 
     // the following should always be true if we have consumed intents for SGDMA...

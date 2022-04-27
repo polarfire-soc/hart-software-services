@@ -124,16 +124,16 @@ void IPI_DebugDumpStats(void)
 #if IS_ENABLED(CONFIG_DEBUG_IPI_STATS) || IS_ENABLED(CONFIG_SERVICE_TINYCLI)
     enum HSSHartId myHartId = current_hartid();
     for (myHartId = HSS_HART_E51; myHartId < HSS_HART_NUM_PEERS; myHartId++) {
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "hartId:           %u" CRLF, myHartId);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "hartId:           %u\n", myHartId);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 "\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 "\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 "\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 "\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 CRLF CRLF,
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 "\n\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].ipi_sends);
     }
 #endif
@@ -174,7 +174,7 @@ inline uint32_t IPI_CalculateQueueIndex(enum HSSHartId source, enum HSSHartId ta
 //
 uint32_t IPI_GetQueuePendingCount(uint32_t queueIndex)
 {
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called - queueIndex is %u, count is %u" CRLF, queueIndex,
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called - queueIndex is %u, count is %u\n", queueIndex,
     //    IPI_DATA.ipi_queues[queueIndex].count);
     return (IPI_DATA.ipi_queues[queueIndex].count);
 }
@@ -219,7 +219,7 @@ static bool clint_set_MSIP(enum HSSHartId const target, uint32_t value)
 
 bool CLINT_Raise_MSIP(enum HSSHartId const target)
 {
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "sending IPI to %u" CRLF, target);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "sending IPI to %u\n", target);
     bool result = clint_set_MSIP(target, 1u);
 
     if (result) {
@@ -234,7 +234,7 @@ bool CLINT_Raise_MSIP(enum HSSHartId const target)
 //
 void CLINT_Clear_MSIP(enum HSSHartId const target)
 {
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "clearing IPI on %u" CRLF, target);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "clearing IPI on %u\n", target);
     (void)clint_set_MSIP(target, 0u);
 }
 
@@ -250,8 +250,8 @@ inline struct IPI_Outbox_Msg *IPI_DirectionToFirstMsgInQueue(enum HSSHartId sour
     assert(target < HSS_HART_NUM_PEERS);
     assert(target != source);
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Resolved (%d, %d) to index %u" CRLF, source, target, index);
-    //mHSS_DEBUG_PRINTF(WARN, "WARNING: queue %u is %u" CRLF, index,
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Resolved (%d, %d) to index %u\n", source, target, index);
+    //mHSS_DEBUG_PRINTF(WARN, "WARNING: queue %u is %u\n", index,
     //    IPI_DATA.ipi_queues[index].count);
 
     uint32_t index = IPI_CalculateQueueIndex(source, target);
@@ -277,7 +277,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
     bool result = false;
     uint32_t i = 0u;
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called with message type of %u to %d" CRLF, message, target);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called with message type of %u to %d\n", message, target);
 
     // find where to put the message
     uint32_t index = IPI_CalculateQueueIndex(current_hartid(), target);
@@ -291,7 +291,7 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
             space_available = true;
             break;
         } else {
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "pMsg: %p, index: %u, msg_type: %u" CRLF, pMsg, i, pMsg->msg_type);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "pMsg: %p, index: %u, msg_type: %u\n", pMsg, i, pMsg->msg_type);
         }
         pMsg++;
     }
@@ -315,12 +315,12 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
         result = CLINT_Raise_MSIP(target);
 #endif
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "No space in queue!!!!!!" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "No space in queue!!!!!!\n");
     }
 
 #if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
     {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "::mscgen: %s->%s %s %u %u %p %p" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "::mscgen: %s->%s %s %u %u %p %p\n",
             hartName[current_hartid()], hartName[target],
             ipiName[message], transaction_id, immediate_arg,
             p_extended_buffer_in_ddr, p_ancilliary_buffer_in_ddr);
@@ -373,7 +373,7 @@ bool IPI_PollReceive(union HSSHartBitmask hartMask)
                     countPerQueue++;
 
                     //if (result) { mHSS_DEBUG_PRINTF(NLOG_ORMAL, "q(%u)/msg(%u): received IPI (type %d)"
-                    //     CRLF, index, j, IPI_DATA.ipi_queues[index].msgQ[j].msg_type); }
+                    //     "\n", index, j, IPI_DATA.ipi_queues[index].msgQ[j].msg_type); }
                 }
             }
 
@@ -420,13 +420,13 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
         for (j = 0u; j < IPI_MAX_NUM_QUEUE_MESSAGES; j++) {
             if (pMsg->msg_type == msg_type) {
 #if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "::mscgen: %s->%s %s %u %u %p %p" CRLF,
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "::mscgen: %s->%s %s %u %u %p %p\n",
                     hartName[source], hartName[current_hartid()],
                     ipiName[msg_type], pMsg->transaction_id, pMsg->immediate_arg,
                         pMsg->p_extended_buffer_in_ddr, pMsg->p_ancilliary_buffer_in_ddr);
 #endif
                 if (!pHandler) { // ensure we don't fill up queue with unhandlable messages
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "no handler found for IPI of type %u, force clearing" CRLF,
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "no handler found for IPI of type %u, force clearing\n",
                         msg_type);
                     pMsg->msg_type = IPI_MSG_NO_MESSAGE;
                 } else {
@@ -456,7 +456,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
             default:
                 switch (result) {
                 case IPI_SUCCESS:
-                    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "sending ACK_COMPLETE on txId %u" CRLF,
+                    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "sending ACK_COMPLETE on txId %u\n",
                     //    pMsg->transaction_id);
                     IPI_Send(source, IPI_MSG_ACK_COMPLETE, pMsg->transaction_id, IPI_SUCCESS, NULL, NULL);
                     break;
@@ -482,7 +482,7 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
     }
 
     if (!intentFound) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "did not find IPI of type %u" CRLF, msg_type);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "did not find IPI of type %u\n", msg_type);
     }
 
     return intentFound;
@@ -505,12 +505,12 @@ bool IPI_QueuesInit(void)
 #endif
 
 #if IS_ENABLED(CONFIG_IPI_FIXED_BASE_ADDR)
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "IPI Queues: %p to %p" CRLF, (char *)CONFIG_IPI_FIXED_BASE_ADDR,
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "IPI Queues: %p to %p\n", (char *)CONFIG_IPI_FIXED_BASE_ADDR,
         (char*)CONFIG_IPI_FIXED_BASE_ADDR + IPI_SIZE);
     assert(check_if_ipi_queues_overlap_hss() == false);
 #endif
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing IPI Queues (%lu bytes @ %p)..." CRLF,
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing IPI Queues (%lu bytes @ %p)...\n",
         sizeof(struct IPI_Data), (void *)&IPI_DATA);
 
     memset((void *)ipi_data, 0, sizeof(struct IPI_Data));
@@ -609,7 +609,7 @@ bool IPI_MessageUpdateStatus(TxId_t transaction_id, enum IPIStatusCode status)
 
     for (index = 0u; index < IPI_MAX_NUM_OUTSTANDING_COMPLETES; index++) {
         if (IPI_DATA.ipi_completes[index].transaction_id == transaction_id) {
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u, status is %d" CRLF,
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u, status is %d\n",
             //    index, transaction_id, status);
             IPI_DATA.ipi_completes[index].status = status;
 
@@ -628,7 +628,7 @@ void IPI_MessageFree(uint32_t index)
 
     IPI_DATA.mpfs_ipi_privateData[current_hartid()].message_frees++;
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u" CRLF, index,
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index is %u, TxId is %u\n", index,
     //    IPI_DATA.ipi_completes[index].transaction_id);
 }
 
@@ -645,7 +645,7 @@ enum IPIStatusCode IPI_ACK_IPIHandler(TxId_t transaction_id, enum HSSHartId sour
     (void)p_extended_buffer_in_ddr;
     (void)p_ancilliary_buffer_in_ddr;
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "freeing IPI" CRLF);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "freeing IPI\n");
 
     IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 

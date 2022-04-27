@@ -118,18 +118,18 @@ void USBDMSC_Start(void)
     bool done = !FLASH_DRIVE_init();
 
     if (done) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false..." CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false...\n");
     } else {
 #if !defined(CONFIG_SERVICE_USBDMSC_REGISTER) || !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
         bool isHostConnected = false;
-        mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)" CRLF);
+        mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
 
         do {
             if (!isHostConnected) {
                 // if we are not connected, wait until we are
                 isHostConnected = FLASH_DRIVE_is_host_connected();
                 if (isHostConnected) {
-                    mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)" CRLF);
+                    mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
                 }
             } else {
                 // else quit once we've disconnected again...
@@ -145,7 +145,7 @@ void USBDMSC_Start(void)
         void HSS_Storage_FlushWriteBuffer(void);
         HSS_Storage_FlushWriteBuffer();
 
-        mHSS_PUTS(CRLF "USB Host disconnected..." CRLF);
+        mHSS_PUTS("\nUSB Host disconnected...\n");
 #else
         USBDMSC_Activate();
 #endif

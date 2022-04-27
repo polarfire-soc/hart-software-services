@@ -79,7 +79,7 @@ struct StateMachine goto_service = {
 //
 static void goto_init_handler(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called\n");
     pMyMachine->state++;
 }
 
@@ -87,7 +87,7 @@ static void goto_init_handler(struct StateMachine * const pMyMachine)
 static void goto_idle_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine; // unused
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called\n");
 }
 
 
@@ -101,9 +101,9 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     int hartid = current_hartid();
 
     if (source != HSS_HART_E51) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from hart %d" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from hart %d\n", source);
     } else if (hartid == HSS_HART_E51) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy" CRLF, HSS_HART_E51);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy\n", HSS_HART_E51);
     } else {
         // the following should always be true if we have consumed intents for GOTO...
         assert(p_extended_buffer != NULL);
@@ -124,7 +124,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         if (pMsg->transaction_id == transaction_id) {
             pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p" CRLF, (void *)p_extended_buffer);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p\n", (void *)p_extended_buffer);
             CSR_ClearMSIP();
 
             uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);
@@ -151,11 +151,11 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
             // next_mode stores the desired privilege mode to return to..
             // typically PRV_S
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Setting priv mode to %d" CRLF, next_mode);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Setting priv mode to %d\n", next_mode);
             mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPP, next_mode);
 
             if (next_mode == PRV_M) {
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Booting into M-Mode so clearing MSTATUS:MIE" CRLF);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Booting into M-Mode so clearing MSTATUS:MIE\n");
                 mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MPIE, 0);
                 mstatus_val = INSERT_FIELD(mstatus_val, MSTATUS_MIE, 0);
             } else {

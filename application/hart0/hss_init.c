@@ -138,7 +138,7 @@ bool HSS_ZeroTIMs(void)
 bool HSS_Init_RWDATA_BSS(void)
 {
     //UART not setup at this point
-    //mHSS_DEBUG_PRINTF("Setting up RW Data and BSS sections" CRLF);
+    //mHSS_DEBUG_PRINTF("Setting up RW Data and BSS sections\n");
 
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     init_memory();
@@ -169,7 +169,7 @@ void HSS_PrintBuildId(void)
         mHSS_PRINTF("%02x", pBuildId[i]);
     }
 
-    mHSS_PRINTF(CRLF);
+    mHSS_PRINTF("\n");
 }
 #endif
 
@@ -178,10 +178,10 @@ void HSS_PrintBuildId(void)
 void HSS_PrintToolVersions(void);
 void HSS_PrintToolVersions(void)
 {
-    mHSS_FANCY_PUTS(LOG_STATUS, "Built with the following tools:" CRLF);
+    mHSS_FANCY_PUTS(LOG_STATUS, "Built with the following tools:\n");
 
-    mHSS_PUTS(" - " CC_VERSION_STRING CRLF);
-    mHSS_PUTS(" - " LD_VERSION_STRING CRLF CRLF);
+    mHSS_PUTS(" - " CC_VERSION_STRING "\n");
+    mHSS_PUTS(" - " LD_VERSION_STRING "\n\n");
 }
 #endif
 
@@ -191,13 +191,13 @@ bool HSS_E51_Banner(void)
 #    define VENDOR_STRING ""
 #endif
     mHSS_FANCY_PRINTF(LOG_STATUS,
-        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" VENDOR_STRING CRLF
+        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" VENDOR_STRING "\n"
         "MPFS HAL version %d.%d.%d"
 #if IS_ENABLED(CONFIG_USE_IHC)
 	" / Mi-V IHC version %d.%d.%d"
 #endif
-        CRLF
-        "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions." CRLF CRLF,
+        "\n"
+        "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions.\n\n",
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
         MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH
 #if IS_ENABLED(CONFIG_USE_IHC)
@@ -207,8 +207,8 @@ bool HSS_E51_Banner(void)
 #endif
     )
 
-    mHSS_FANCY_PRINTF(LOG_STATUS, "incorporating OpenSBI - version %d.%d" CRLF
-        "(c) Copyright 2019-2022 Western Digital Corporation." CRLF CRLF,
+    mHSS_FANCY_PRINTF(LOG_STATUS, "incorporating OpenSBI - version %d.%d\n"
+        "(c) Copyright 2019-2022 Western Digital Corporation.\n\n",
         OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
 
 #if IS_ENABLED(CONFIG_CC_USE_GNU_BUILD_ID)
@@ -220,7 +220,7 @@ bool HSS_E51_Banner(void)
 #endif
 
     if (&_hss_start == &__l2_start) {
-        mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2 Scratchpad" CRLF CRLF);
+        mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2 Scratchpad\n\n");
     }
 
     return true;

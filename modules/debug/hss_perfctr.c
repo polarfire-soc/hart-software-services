@@ -38,7 +38,7 @@ bool HSS_PerfCtr_Allocate(int *pIdx, char const * pName)
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
     if ((*pIdx >= 0) && (*pIdx < ARRAY_SIZE(perfCtrs))) {
         if ((perfCtrs[*pIdx].isAllocated) && (perfCtrs[*pIdx].pName == pName)) {
-            mHSS_DEBUG_PRINTF(LOG_WARN, "found already allocated perf ctr for >>%s<<" CRLF, pName);
+            mHSS_DEBUG_PRINTF(LOG_WARN, "found already allocated perf ctr for >>%s<<\n", pName);
             result = true;
         }
     } else {
@@ -58,7 +58,7 @@ bool HSS_PerfCtr_Allocate(int *pIdx, char const * pName)
         }
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "failed to allocate perf ctr for >>%s<<" CRLF, pName);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "failed to allocate perf ctr for >>%s<<\n", pName);
         }
     }
 #endif
@@ -129,7 +129,7 @@ void HSS_PerfCtr_DumpAll(void)
             size_t ticks = HSS_PerfCtr_GetTime(i);
             size_t millisecs = (ticks + (TICKS_PER_MILLISEC/2)) / TICKS_PER_MILLISEC;
 
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 8lu ms (% 8lu ticks) - %s" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 8lu ms (% 8lu ticks) - %s\n",
                 millisecs, ticks, perfCtrs[i].pName ? perfCtrs[i].pName : "(null)");
         }
     }

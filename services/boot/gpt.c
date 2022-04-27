@@ -69,26 +69,26 @@ void GPT_DumpHeaderInfo(HSS_GPT_t *pGpt)
     HSS_GPT_Header_t const * const pGptHeader = &(pGpt->h.header);
     assert(pGptHeader != NULL);
 
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Signature:             %c%c%c%c%c%c%c%c (%016lx)" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Signature:             %c%c%c%c%c%c%c%c (%016lx)\n",
         pGptHeader->s.c[0], pGptHeader->s.c[1], pGptHeader->s.c[2], pGptHeader->s.c[3],
         pGptHeader->s.c[4], pGptHeader->s.c[5], pGptHeader->s.c[6], pGptHeader->s.c[7],
         pGptHeader->s.signature);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Revision:              0x%08x" CRLF, pGptHeader->revision);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Header Size:           0x%08x" CRLF, pGptHeader->headerSize);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Header CRC:            0x%08x" CRLF, pGptHeader->headerCrc32);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Current LBA:           0x%016lx" CRLF, pGptHeader->currentLBA);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Backup LBA:            0x%016lx" CRLF, pGptHeader->backupLBA);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "First Usable LBA:      0x%016lx" CRLF, pGptHeader->firstUsableLBA);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Last Usable LBA:       0x%016lx" CRLF, pGptHeader->lastUsableLBA);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Disk GUID:             %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Revision:              0x%08x\n", pGptHeader->revision);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Header Size:           0x%08x\n", pGptHeader->headerSize);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Header CRC:            0x%08x\n", pGptHeader->headerCrc32);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Current LBA:           0x%016lx\n", pGptHeader->currentLBA);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Backup LBA:            0x%016lx\n", pGptHeader->backupLBA);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "First Usable LBA:      0x%016lx\n", pGptHeader->firstUsableLBA);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Last Usable LBA:       0x%016lx\n", pGptHeader->lastUsableLBA);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Disk GUID:             %08x-%04x-%04x-%016lx\n",
         pGptHeader->diskGUID.data1, pGptHeader->diskGUID.data2,
         pGptHeader->diskGUID.data3, __builtin_bswap64(pGptHeader->diskGUID.data4));
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Starting LBA:          0x%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Starting LBA:          0x%016lx\n",
         pGptHeader->partitionEntriesStartingLBA);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Num. Partitions:       0x%08x" CRLF, pGptHeader->numPartitions);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Size of Partition:     0x%08x" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Num. Partitions:       0x%08x\n", pGptHeader->numPartitions);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Size of Partition:     0x%08x\n",
         pGptHeader->sizeOfPartitionEntry);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Partition Entries CRC: 0x%08x" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Partition Entries CRC: 0x%08x\n",
         pGptHeader->partitionEntriesArrayCrc32);
 #else
     (void)pGpt;
@@ -105,16 +105,16 @@ void GPT_DumpPartitionInfo(HSS_GPT_t const * const pGpt,
     assert(pGpt != NULL);
     assert(pGptPartitionEntry != NULL);
 
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Type GUID:   %08x-%04x-%04x-%016lx\n",
         pGptPartitionEntry->partitionTypeGUID.data1, pGptPartitionEntry->partitionTypeGUID.data2,
         pGptPartitionEntry->partitionTypeGUID.data3, pGptPartitionEntry->partitionTypeGUID.data4);
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Unique GUID: %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Unique GUID: %08x-%04x-%04x-%016lx\n",
         pGptPartitionEntry->uniquePartitionGUID.data1, pGptPartitionEntry->uniquePartitionGUID.data2,
         pGptPartitionEntry->uniquePartitionGUID.data3, pGptPartitionEntry->uniquePartitionGUID.data4);
 
-   mHSS_DEBUG_PRINTF(LOG_STATUS, "First LBA:    %016lx" CRLF, pGptPartitionEntry->firstLBA);
-   mHSS_DEBUG_PRINTF(LOG_STATUS, "Last LBA:     %016lx" CRLF, pGptPartitionEntry->lastLBA);
-   mHSS_DEBUG_PRINTF(LOG_STATUS, "Attributes:   %016lx" CRLF, pGptPartitionEntry->attributes);
+   mHSS_DEBUG_PRINTF(LOG_STATUS, "First LBA:    %016lx\n", pGptPartitionEntry->firstLBA);
+   mHSS_DEBUG_PRINTF(LOG_STATUS, "Last LBA:     %016lx\n", pGptPartitionEntry->lastLBA);
+   mHSS_DEBUG_PRINTF(LOG_STATUS, "Attributes:   %016lx\n", pGptPartitionEntry->attributes);
 #endif
 }
 
@@ -161,12 +161,12 @@ bool GPT_ValidateHeader(HSS_GPT_t *pGpt)
 
     result = (!strncmp(pGptHeader->s.c, (char *)GPT_EXPECTED_SIGNATURE, 8));
     if (!result) {
-        //mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT signature not as expected" CRLF);
+        //mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT signature not as expected\n");
     } else {
         result = (pGptHeader->revision == GPT_EXPECTED_REVISION);
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x\n",
                 pGptHeader->revision, GPT_EXPECTED_REVISION);
         } else {
             uint32_t origChecksum = pGptHeader->headerCrc32;
@@ -177,20 +177,20 @@ bool GPT_ValidateHeader(HSS_GPT_t *pGpt)
             result = (checksum == origChecksum);
 
             if (!result) {
-                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header CRC32 is %08x vs expected %08x" CRLF,
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header CRC32 is %08x vs expected %08x\n",
                     checksum, origChecksum);
             } else {
                 result = (pGptHeader->currentLBA == 1u);
 
                 if (!result) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT current LBA is %lu vs expected %u" CRLF,
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT current LBA is %lu vs expected %u\n",
                         pGptHeader->currentLBA, 1u);
                 } else {
                     result = (pGptHeader->partitionEntriesStartingLBA == 2u);
 
                     if (!result) {
                         mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT starting LBA of array of partition entries is %lu"
-                            " vs expected %u" CRLF, pGptHeader->currentLBA, 2u);
+                            " vs expected %u\n", pGptHeader->currentLBA, 2u);
                     }
                 }
             }
@@ -198,7 +198,7 @@ bool GPT_ValidateHeader(HSS_GPT_t *pGpt)
     }
 
     if (result) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Validated GPT Header ..." CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Validated GPT Header ...\n");
         pGpt->headerValid = true;
     }
     return result;
@@ -217,7 +217,7 @@ bool GPT_ReadHeader(HSS_GPT_t *pGpt)
     //result = readBlockFnPtr(pGpt->h.buffer, 1u * GPT_LBA_SIZE, GPT_LBA_SIZE);
     result = readBlockFnPtr(pGpt->h.buffer, 1u * pGpt->lbaSize, pGpt->lbaSize);
     if (!result) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to read block for LBA 1" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to read block for LBA 1\n");
     } else {
             result = GPT_ValidateHeader(pGpt);
     }
@@ -249,7 +249,7 @@ static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(HSS_GPT_t 
     retVal = readBlockFnPtr((void *)pLBABuffer, lbaIndex * pGpt->lbaSize, pGpt->lbaSize);
     if (!retVal) {
         mHSS_DEBUG_PRINTF(LOG_ERROR,
-            "Unable to read block for LBA %lu (partition entry %lu)" CRLF,
+            "Unable to read block for LBA %lu (partition entry %lu)\n",
             lbaIndex, partitionIndex);
     } else {
         //if (offset >= GPT_LBA_SIZE) {
@@ -260,7 +260,7 @@ static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(HSS_GPT_t 
                 (lbaIndex + 1u) * pGpt->lbaSize, pGpt->lbaSize);
             if (!retVal) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR,
-                    "Unable to read block for LBA %lu (partition entry %lu)" CRLF,
+                    "Unable to read block for LBA %lu (partition entry %lu)\n",
                     lbaIndex, partitionIndex);
             }
         }
@@ -298,11 +298,11 @@ static bool CheckIfTypeIdMatch_(HSS_GPT_PartitionEntry_t const * const pGptParti
     bool result = false;
 
 #ifdef GPT_DEBUG
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique GUID: %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique GUID: %08x-%04x-%04x-%016lx\n",
         pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
 
     HSS_GPT_GUID_t const * pDbgGUID = &(pGptPartitionEntry->partitionTypeGUID);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Type GUID:   %08x-%04x-%04x-%016lx\n",
         pDbgGUID->data1, pDbgGUID->data2, pDbgGUID->data3, __builtin_bswap64(pDbgGUID->data4));
 #endif
     result = CheckIfGUIDMatch_(&(pGptPartitionEntry->partitionTypeGUID), pGUID);
@@ -402,7 +402,7 @@ static bool FindPartitionById_(HSS_GPT_t const * const pGpt,
         // about it so look for another...
         if (partitionIndex < *pPartitionIndex) {
 #ifdef GPT_DEBUG
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Skipping partition %lu" CRLF, partitionIndex);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Skipping partition %lu\n", partitionIndex);
 #endif
             continue;
 	}
@@ -411,7 +411,7 @@ static bool FindPartitionById_(HSS_GPT_t const * const pGpt,
 
         if (result) {
 #ifdef GPT_DEBUG
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Located partition for GUID %08x-%04x-%04x-%016lx" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Located partition for GUID %08x-%04x-%04x-%016lx\n",
                 pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
 #endif
 
@@ -425,7 +425,7 @@ static bool FindPartitionById_(HSS_GPT_t const * const pGpt,
     }
 
     if (!result && (!*pPartitionIndex)) { // didn't find a partition and we were searching for the second or subsequent
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to find partition for GUID %08x-%04x-%04x-%016lx" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to find partition for GUID %08x-%04x-%04x-%016lx\n",
             pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
     }
 
@@ -484,13 +484,13 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_t *pGpt)
             || (CheckIfGUIDMatch_(&nullGUID, &(pGptPartitionEntry->uniquePartitionGUID)))) {
             // skip debug output if null
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found partition:" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Found partition:\n");
             HSS_GPT_GUID_t const * pGUID = &(pGptPartitionEntry->uniquePartitionGUID);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique GUID: %08x-%04x-%04x-%016lx" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Unique GUID: %08x-%04x-%04x-%016lx\n",
                 pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
 
             pGUID = &(pGptPartitionEntry->partitionTypeGUID);
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Type GUID:   %08x-%04x-%04x-%016lx" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, " - Type GUID:   %08x-%04x-%04x-%016lx\n",
                 pGUID->data1, pGUID->data2, pGUID->data3, __builtin_bswap64(pGUID->data4));
         }
 #endif
@@ -502,10 +502,10 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_t *pGpt)
         result = (rollingCrc == pGptHeader->partitionEntriesArrayCrc32);
 
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "CRC32 of partition entries is %08x, vs expected %08x" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "CRC32 of partition entries is %08x, vs expected %08x\n",
                 rollingCrc, pGptHeader->partitionEntriesArrayCrc32);
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Validated GPT Partition Entries ..." CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Validated GPT Partition Entries ...\n");
             pGpt->partitionEntriesValid = true;
         }
     }
@@ -536,7 +536,7 @@ bool GPT_FindBootSectorIndex(HSS_GPT_t *pGpt, size_t *srcIndex,
     }
 
     if (!result) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_ValidatePartitionEntries() failed" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_ValidatePartitionEntries() failed\n");
     }
 
     if (result) {

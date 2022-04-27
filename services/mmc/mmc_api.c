@@ -121,7 +121,7 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
     }
 
     if (retval != MSS_MMC_INIT_SUCCESS) {
-        //mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d" CRLF, retval);
+        //mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_init() returned unexpected %d\n", retval);
     } else {
         result = true;
     }
@@ -229,14 +229,14 @@ bool HSS_MMCInit(void)
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
         mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select SDCARD ... ");
         mmc_initialized = mmc_init_sdcard();
-        mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
+        mHSS_DEBUG_PRINTF_EX("%s\n", mmc_initialized ? "Passed" : "Failed");
 
 #endif
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
         if (!mmc_initialized) {
             mHSS_DEBUG_PRINTF(LOG_STATUS, "Attempting to select eMMC ... ");
             mmc_initialized = mmc_init_emmc();
-            mHSS_DEBUG_PRINTF_EX("%s" CRLF, mmc_initialized ? "Passed" : "Failed");
+            mHSS_DEBUG_PRINTF_EX("%s\n", mmc_initialized ? "Passed" : "Failed");
         }
 #endif
         HSS_PerfCtr_Lap(perf_ctr_index);
@@ -270,7 +270,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     } while (MSS_MMC_TRANSFER_IN_PROGRESS == result);
 
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_sdma_read(%lu, %p) "
-    //    "(%lu bytes remaining)" CRLF, src_sector_num, pCDest, sectorByteCount);
+    //    "(%lu bytes remaining)\n", src_sector_num, pCDest, sectorByteCount);
     result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)pCDest, sectorByteCount);
 
     while (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
@@ -284,9 +284,9 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 
         src_sector_num += (uint32_t)(sectorByteCount / HSS_MMC_SECTOR_SIZE);
 
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)" CRLF);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Dealing with remainder (less that full sector)\n");
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_single_block_read(%lu, %p) "
-        //    "(%lu bytes remaining)" CRLF, src_sector_num, runtBuffer, byteCount);
+        //    "(%lu bytes remaining)\n", src_sector_num, runtBuffer, byteCount);
         result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)runtBuffer, HSS_MMC_SECTOR_SIZE);
 
         while (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
@@ -294,7 +294,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         }
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_read() unexpectedly returned %d" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_read() unexpectedly returned %d\n",
                 result);
         }
 
@@ -337,7 +337,7 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
         result = MSS_MMC_single_block_write((uint32_t *)pCSrc, dst_sector_num);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_write() unexpectedly returned %d" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "MSS_MMC_single_block_write() unexpectedly returned %d\n",
                 result);
         }
 

@@ -28,7 +28,7 @@ void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
         (uint32_t)(((totalNumTasks - numTasksRemaining) * 100u) / totalNumTasks);
 
     if (progressPercent == 100u) {
-        mHSS_PUTS("                                                                " CR);
+        mHSS_PUTS("                                                                \r");
     } else if (oldProgressPercent != progressPercent) {
         mHSS_PRINTF("  % 3u%%", progressPercent);
 
@@ -45,7 +45,7 @@ void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
             mHSS_PUTC('.');
         }
 
-        mHSS_PUTS("]" CR);
+        mHSS_PUTS("]\r");
 
         oldProgressPercent = progressPercent;
     }
@@ -56,18 +56,18 @@ bool HSS_ShowTimeout(char const * const msg, uint32_t timeout_sec, uint8_t *pRcv
     bool keyPressedFlag = false;
 
     mHSS_PUTS(msg);
-    mHSS_PRINTF("Timeout in %u second%s" CRLF, timeout_sec, timeout_sec == 1 ? "" : "s");
+    mHSS_PRINTF("Timeout in %u second%s\n", timeout_sec, timeout_sec == 1 ? "" : "s");
     mHSS_PUTC('.');
 
     if (uart_getchar(pRcvBuf, timeout_sec, true)) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Character %u pressed" CRLF, *pRcvBuf);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Character %u pressed\n", *pRcvBuf);
 
         if (*pRcvBuf != 27) { // ESC => done
             keyPressedFlag = true;
         }
     }
 
-    mHSS_PUTS(CRLF);
+    mHSS_PUTS("\n");
 
     return keyPressedFlag;
 }

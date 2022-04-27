@@ -135,7 +135,7 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
     };
 
     if (strncmp(x509_asn1_ec_der_p384_root, SECP384R1_ECDSA_public_key, ARRAY_SIZE(x509_asn1_ec_der_p384_root))) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid signing certificate type" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid signing certificate type\n");
         result = false;
     } else {
 #define SHA384_DIGEST_SIZE  48

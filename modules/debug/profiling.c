@@ -100,6 +100,6 @@ void __attribute__((no_instrument_function)) dump_profile(void)
 {
     size_t i;
     for (i = 0u; i < allocationCount; i++) {
-        mHSS_DEBUG_PRINTF_EX("PROFILE: %p, %lu" CRLF, functionNode[i].pFunc, functionNode[i].timeCount);
+        mHSS_DEBUG_PRINTF_EX("PROFILE: %p, %lu\n", functionNode[i].pFunc, functionNode[i].timeCount);
     }
 }

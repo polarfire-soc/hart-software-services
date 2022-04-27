@@ -320,13 +320,13 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
 static void boot_init_handler(struct StateMachine * const pMyMachine)
 {
     if (pBootImage) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot" CRLF, pMyMachine->pMachineName);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot\n", pMyMachine->pMachineName);
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
         enum HSSHartId const target = pInstanceData->target;
 
         if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
-	   mHSS_DEBUG_PRINTF(LOG_STATUS, "%s:: BOOT_FLAG_SKIP_OPENSBI found" CRLF, pMyMachine->pMachineName);
+	   mHSS_DEBUG_PRINTF(LOG_STATUS, "%s:: BOOT_FLAG_SKIP_OPENSBI found\n", pMyMachine->pMachineName);
         }
 
         HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
@@ -335,7 +335,7 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
     } else {
         // unexpected error state
         if (!pBootImage) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::\tNo Boot Image registered" CRLF, pMyMachine->pMachineName);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::\tNo Boot Image registered\n", pMyMachine->pMachineName);
         }
         pMyMachine->state = BOOT_ERROR;
     }
@@ -363,7 +363,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
             } else if ((peer == target) ||
                 (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint)) {
                 pInstanceData->hartMask |= (1u << peer);
-                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering hart %d to domain \"%s\"" CRLF,
+                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering hart %d to domain \"%s\"\n",
                 //    pMyMachine->pMachineName, peer, pBootImage->hart[target-1].name);
                 mpfs_domains_register_hart(peer, target);
             }
@@ -374,7 +374,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
         if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
             // skipping OpenSBI => don't register as a domain
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering domain \"%s\" (hart mask 0x%x)" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering domain \"%s\" (hart mask 0x%x)\n",
                 pMyMachine->pMachineName, pBootImage->hart[target-1].name, pInstanceData->hartMask);
 
             mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
@@ -406,13 +406,13 @@ static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine)
 
 static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachine)
 {
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -\n", pMyMachine->pMachineName);
 }
 
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
 {
     if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_SETUP_PMP_COMPLETE_TIMEOUT)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations\n",
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
@@ -428,8 +428,8 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
         // need to free as received, not all at once...
 
         if (check_for_ipi_acks(pMyMachine)) {
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF, pMyMachine->pMachineName);
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed" CRLF, pMyMachine->pMachineName);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK\n", pMyMachine->pMachineName);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed\n", pMyMachine->pMachineName);
 
             pMyMachine->state = BOOT_ZERO_INIT_CHUNKS;
         }
@@ -459,7 +459,7 @@ static void boot_zero_init_chunks_handler(struct StateMachine * const pMyMachine
     if (pZiChunk->size != 0u) {
         if (target == pZiChunk->owner) {
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ziChunk->0x%x, %u bytes" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ziChunk->0x%x, %u bytes\n",
                 pMyMachine->pMachineName, pInstanceData->ziChunkCount,
                 (uintptr_t)pZiChunk->execAddr, pZiChunk->size);
 #endif
@@ -481,17 +481,17 @@ static void boot_download_chunks_onEntry(struct StateMachine * const pMyMachine)
     assert(pBootImage != NULL);
 
     if (pBootImage->hart[target-1].numChunks) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image: \"%s\"" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Processing boot image: \"%s\"\n",
             pMyMachine->pMachineName, pBootImage->hart[target-1].name);
         pInstanceData->pChunk =
             (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
 
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::firstChunk is %u" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::firstChunk is %u\n",
             pMyMachine->pMachineName, pBootImage->hart[target-1].firstChunk);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::lastChunk is %u" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::lastChunk is %u\n",
             pMyMachine->pMachineName, pBootImage->hart[target-1].lastChunk);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::numChunks is %u" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::numChunks is %u\n",
             pMyMachine->pMachineName, pBootImage->hart[target-1].numChunks);
 #endif
 
@@ -522,7 +522,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
                 && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
                 if (!pInstanceData->subChunkOffset) {
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:chunk@0x%x->0x%x, %u bytes" CRLF,
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:chunk@0x%x->0x%x, %u bytes\n",
                         pMyMachine->pMachineName, pInstanceData->chunkCount,
                         (uintptr_t)pChunk->loadAddr,
                         (uintptr_t)pChunk->execAddr, pChunk->size);
@@ -539,7 +539,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
 
                 if ((pChunk->owner & BOOT_FLAG_ANCILLIARY_DATA)
                     && (!pInstanceData->ancilliaryData)) {
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ancilliary data found at 0x%x" CRLF,
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ancilliary data found at 0x%x\n",
                         pMyMachine->pMachineName, pInstanceData->chunkCount, pChunk->execAddr);
                     pInstanceData->ancilliaryData = pChunk->execAddr;
                 }
@@ -548,7 +548,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
                 pInstanceData->subChunkOffset += BOOT_SUB_CHUNK_SIZE;
                 if (pInstanceData->subChunkOffset > pChunk->size) {
 #  if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:sub-chunk finished at 0x%x" CRLF,
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:sub-chunk finished at 0x%x\n",
                         pMyMachine->pMachineName, pInstanceData->chunkCount, pInstanceData->subChunkOffset);
 #  endif
                     pInstanceData->subChunkOffset = 0u;
@@ -562,10 +562,10 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
             } else {
                 if (pChunk->owner == target) {
                     mHSS_DEBUG_PRINTF(LOG_ERROR,
-                        "%s::Skipping chunk %p due to invalid permissions" CRLF, pMyMachine->pMachineName, pChunk);
+                        "%s::Skipping chunk %p due to invalid permissions\n", pMyMachine->pMachineName, pChunk);
                 } else {
                     mHSS_DEBUG_PRINTF(LOG_WARN,
-                        "%s::Skipping chunk %p due to ownership %d" CRLF, pMyMachine->pMachineName, pChunk, pChunk->owner);
+                        "%s::Skipping chunk %p due to ownership %d\n", pMyMachine->pMachineName, pChunk, pChunk->owner);
                 }
 
                 pInstanceData->pChunk++;
@@ -627,7 +627,7 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
                 assert(result);
 
                 if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p" CRLF, pMyMachine->pMachineName,
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p\n", pMyMachine->pMachineName,
                         peer, pBootImage->hart[peer-1].entryPoint);
 
                     result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
@@ -637,7 +637,7 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
                         (void *)pInstanceData->ancilliaryData);
                     assert(result);
                 } else {
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p\n", pMyMachine->pMachineName,
                         peer, pBootImage->hart[peer-1].entryPoint);
 
                     result = IPI_MessageDeliver(pInstanceData->msgIndexAux[peer-1], peer,
@@ -647,7 +647,7 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
                         (void *)pInstanceData->ancilliaryData);
 
                     if (!result) {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::u54_%u:sbi_init failed" CRLF,
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::u54_%u:sbi_init failed\n",
                             pMyMachine->pMachineName, peer);
 
                         pMyMachine->state = BOOT_ERROR;
@@ -678,7 +678,7 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
         mb_i();
 
         if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p" CRLF, pMyMachine->pMachineName,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:goto %p\n", pMyMachine->pMachineName,
                 target, pBootImage->hart[target-1].entryPoint);
 
             result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
@@ -689,7 +689,7 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
 
             assert(result);
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p" CRLF, pMyMachine->pMachineName,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::u54_%u:sbi_init %p\n", pMyMachine->pMachineName,
                 target, pBootImage->hart[target-1].entryPoint);
 
             result = IPI_MessageDeliver(pInstanceData->msgIndex, target,
@@ -701,7 +701,7 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
             assert(result);
         }
     } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::target is %u, pBootImage is %p, skipping goto/sbi_init %p" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::target is %u, pBootImage is %p, skipping goto/sbi_init %p\n",
             pMyMachine->pMachineName, target, pBootImage, pBootImage->hart[target-1].entryPoint);
     }
 }
@@ -711,7 +711,7 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine)
 static void boot_wait_onEntry(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -" CRLF, pMyMachine->pMachineName);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -\n", pMyMachine->pMachineName);
 }
 
 static void boot_wait_handler(struct StateMachine * const pMyMachine)
@@ -723,7 +723,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
         // nothing for me to do, not expecting GOTO ack...
         pMyMachine->state = BOOT_IDLE;
     } else if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_WAIT_TIMEOUT)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations\n",
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
         for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
@@ -743,7 +743,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
             mHSS_ReadModWriteRegU32(SYSREGSCB, MSS_STATUS, 0xFFFFu, 1u << (target-1));
 #endif
 
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK\n",
                 pMyMachine->pMachineName);
             pMyMachine->state = BOOT_IDLE;
         }
@@ -754,10 +754,10 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
 
 static void boot_error_handler(struct StateMachine * const pMyMachine)
 {
-    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::" CRLF
-        "*******************************************************************" CRLF
-        "* WARNING: Boot Error - transitioning to IDLE                     *" CRLF
-        "*******************************************************************" CRLF,
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::\n"
+        "*******************************************************************\n"
+        "* WARNING: Boot Error - transitioning to IDLE                     *\n"
+        "*******************************************************************\n",
         pMyMachine->pMachineName);
 
     pMyMachine->state = BOOT_IDLE;
@@ -803,7 +803,7 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
                result = true;
             } else {
                result = false;
-               mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for hart %u" CRLF, pMachine->state, i+1u);
+               mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for hart %u\n", pMachine->state, i+1u);
             }
         }
     }
@@ -816,9 +816,9 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
     enum IPIStatusCode result = IPI_FAIL;
 
     if (!HSS_Boot_ValidateImage(pBootImage)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for hart %u" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for hart %u\n", source);
     } else if (source != HSS_HART_ALL) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u\n", source);
 
         union HSSHartBitmask restartHartBitmask = { .uint = 0u };
 
@@ -843,7 +843,7 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
             }
         }
     } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts\n");
 
         const union HSSHartBitmask restartHartBitmask = {
             .s = {
@@ -873,7 +873,7 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     (void)p_ancilliary_buffer_in_ddr;
 
     // boot strap IPI received from one of the U54s...
-    //mHSS_DEBUG_PRINTF(LOG_ERROR, "called for %d" CRLF, source);
+    //mHSS_DEBUG_PRINTF(LOG_ERROR, "called for %d\n", source);
 
     return HSS_Boot_RestartCore(source);
     return IPI_SUCCESS;
@@ -907,7 +907,7 @@ static bool validateCrc_(struct HSS_BootImage *pImageHdr)
     if (headerCrc == pImageHdr->headerCrc) {
         result = true;
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Checked HSS_BootImage header CRC (%p->%p): calculated %08x vs expected %08x\n",
             pImageHdr, (char *)pImageHdr + sizeof(struct HSS_BootImage), headerCrc, pImageHdr->headerCrc);
     }
 
@@ -926,25 +926,25 @@ bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
     //
     {
         if (!pImage) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring\n");
             result = false;
         } else if (pImage->magic != mHSS_BOOT_MAGIC) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring\n");
             result = false;
 #  if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
         } else if (!HSS_Boot_Secure_CheckCodeSigning(pImage)) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing\n");
             result = false;
 #  endif
         } else if (validateCrc_(pImage)) {
-            mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC\n");
 
         // GCC 9.x appears to dislike the pImage cast, and sees dereferencing the
         // set name as an out-of-bounds... So we'll disable that warning just for
         // this print...
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Warray-bounds"
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image set name: \"%s\"" CRLF, pImage->set_name);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot image set name: \"%s\"\n", pImage->set_name);
 #  pragma GCC diagnostic pop
 
 #  if defined(CONFIG_SERVICE_BOOT_CUSTOM_FLOW)
@@ -953,7 +953,7 @@ bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
             result = true;
 #  endif
         } else {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot image failed CRC" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot image failed CRC\n");
         }
     }
 #endif
@@ -968,7 +968,7 @@ bool HSS_Boot_VerifyMagic(struct HSS_BootImage const * const pImage)
     if ((pImage->magic == mHSS_BOOT_MAGIC) || (pImage->magic == mHSS_COMPRESSED_MAGIC)) {
         result = true;
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "magic is %08x vs expected %08x or %08x" CRLF,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "magic is %08x vs expected %08x or %08x\n",
             pImage->magic, mHSS_BOOT_MAGIC, mHSS_COMPRESSED_MAGIC);
     }
 
@@ -1003,16 +1003,16 @@ bool HSS_Boot_Custom(void)
     }
 
     if (!numChunks || !target) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to find target HART" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Failed to find target HART\n");
         return false;
     }
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Zeroing chunks for HART%d" CRLF, target);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Zeroing chunks for HART%d\n", target);
     pZiChunk = (struct HSS_BootZIChunkDesc const *)((char *)pBootImage + pBootImage->ziChunkTableOffset);
     while (pZiChunk->size != 0u) {
         if (target == pZiChunk->owner) {
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:ziChunk->0x%x, %u bytes" CRLF,
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:ziChunk->0x%x, %u bytes\n",
                 chunkNum, (uintptr_t)pZiChunk->execAddr, pZiChunk->size);
 #endif
             boot_do_zero_init_chunk(pZiChunk);
@@ -1024,12 +1024,12 @@ bool HSS_Boot_Custom(void)
     pChunk = (struct HSS_BootChunkDesc *)((char *)pBootImage + pBootImage->chunkTableOffset);
     chunkNum = 0u;
     pChunk += firstChunk;
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Downloading chunks for HART%d at 0x%x" CRLF, target, (uintptr_t)pChunk->execAddr);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Downloading chunks for HART%d at 0x%x\n", target, (uintptr_t)pChunk->execAddr);
     while (pChunk->size != 0u) {
         if ((pChunk->owner == target) && (HSS_PMP_CheckWrite(target, pChunk->execAddr, pChunk->size))) {
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
            if (!subChunkOffset) {
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:chunk@0x%x->0x%x, %u bytes" CRLF,
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "%d:chunk@0x%x->0x%x, %u bytes\n",
                         chunkNum, (uintptr_t)pChunk->loadAddr,
                         (uintptr_t)pChunk->execAddr, pChunk->size);
             }
@@ -1061,7 +1061,7 @@ bool HSS_Boot_Custom(void)
     uintptr_t custom_entryPoint = pBootImage->hart[target - 1].entryPoint;
     uint8_t custom_privMode = PRV_M;
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "All HARTs jumping to entry address 0x%lx in M-mode" CRLF, custom_entryPoint);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "All HARTs jumping to entry address 0x%lx in M-mode\n", custom_entryPoint);
     for (i = 1; i < MAX_NUM_HARTS; i++) {
         IPI_Send(i, IPI_MSG_OPENSBI_INIT, 0, custom_privMode, (void * const)custom_entryPoint, NULL);
     }
@@ -1113,10 +1113,10 @@ enum IPIStatusCode HSS_Boot_PMPSetupHandler(TxId_t transaction_id, enum HSSHartI
 	(void)mss_set_apb_bus_cr((uint32_t)LIBERO_SETTING_APBBUS_CR);
         //
 
-        mHSS_DEBUG_PRINTF_EX("setup complete" CRLF);
+        mHSS_DEBUG_PRINTF_EX("setup complete\n");
         result =  IPI_SUCCESS;
     } else {
-        mHSS_DEBUG_PRINTF_EX("PMPs already configured" CRLF);
+        mHSS_DEBUG_PRINTF_EX("PMPs already configured\n");
         result =  IPI_SUCCESS;
     }
 
@@ -1136,7 +1136,7 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
     assert(target != HSS_HART_ALL); // need to setup PMPs on each Hart individually
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, target);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u\n", target);
 
     result = IPI_MessageAlloc(indexOut);
     assert(result);
@@ -1146,7 +1146,7 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing" CRLF, target);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing\n", target);
             IPI_MessageFree(*indexOut);
         }
     }
@@ -1167,7 +1167,7 @@ bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
     assert(target != HSS_HART_ALL); // need to setup SBIs on each Hart individually
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u" CRLF, target);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u\n", target);
 
     result = IPI_MessageAlloc(indexOut);
     assert(result);
@@ -1177,7 +1177,7 @@ bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing" CRLF, target); //TODO
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing\n", target); //TODO
             IPI_MessageFree(*indexOut);
         }
     }

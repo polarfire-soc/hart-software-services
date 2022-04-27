@@ -44,7 +44,7 @@ int get_random(unsigned char *buf, unsigned short len)
 	    offset += 32u;
             len -= 32u;
         } else {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number (%u)" CRLF, retVal);
+            mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number (%u)\n", retVal);
 	    result = 1;
             break;
         }
@@ -56,7 +56,7 @@ int get_random(unsigned char *buf, unsigned short len)
             memcpy(&(buf[offset]), nonce_buffer, len);
             len = 0u;
         } else {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number (%u)" CRLF, retVal);
+            mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number (%u)\n", retVal);
 	    result = 1;
         }
     }

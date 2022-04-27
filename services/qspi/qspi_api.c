@@ -133,7 +133,7 @@ static void demandCopyFlashBlocksToCache_(size_t byteOffset, size_t byteCount, b
         const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
 
         if (!pLogicalBlockDesc[physicalBlockOffset].inCache) {
-            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Reading block %u into cache" CRLF, physicalBlockOffset);
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Reading block %u into cache\n", physicalBlockOffset);
 
             const size_t physicalBlockByteOffset = physicalBlockOffset * blockSize;
             Flash_read(pCacheDataBuffer + physicalBlockByteOffset, physicalBlockByteOffset, blockSize);
@@ -150,7 +150,7 @@ static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
 {
     const size_t endOffset = byteOffset + byteCount;
     size_t dirtyBlockCount = 0u;
-    mHSS_DEBUG_PRINTF_EX(CRLF);
+    mHSS_DEBUG_PRINTF_EX("\n");
 
     for (size_t blockOffset = 0u; blockOffset < blockCount; blockOffset++) {
         if (pLogicalBlockDesc[blockOffset].dirtyCache) {
@@ -166,19 +166,19 @@ static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
 
         if (pLogicalBlockDesc[physicalBlockOffset].inCache) {
             if (pLogicalBlockDesc[physicalBlockOffset].dirtyCache) {
-                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Writing block %u from cache" CRLF, physicalBlockOffset);
+                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Writing block %u from cache\n", physicalBlockOffset);
 
                 const size_t physicalBlockByteOffset = physicalBlockOffset * blockSize;
                 uint8_t status = Flash_erase_block(physicalBlockOffset);
 
                 if (status) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Error erasing block %u" CRLF, physicalBlockOffset);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Error erasing block %u\n", physicalBlockOffset);
                     break;
                 }
 
                 status = Flash_program(pCacheDataBuffer + physicalBlockByteOffset, physicalBlockByteOffset, blockSize);
                 if (status) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Error programming block %u" CRLF, physicalBlockOffset);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Error programming block %u\n", physicalBlockOffset);
 
                 }
                 pLogicalBlockDesc[physicalBlockOffset].dirtyCache = false;
@@ -213,7 +213,7 @@ bool HSS_QSPIInit(void)
         uint32_t jedec_id = ((rd_buf[0] << 16) | (rd_buf[1] <<8) | (rd_buf[2]));
 
         if (flash_id_to_descriptor_(jedec_id, &qspiIndex)) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s detected (JEDEC %06X)" CRLF, qspiFlashes[qspiIndex].name, jedec_id);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s detected (JEDEC %06X)\n", qspiFlashes[qspiIndex].name, jedec_id);
 
             pageSize = qspiFlashes[qspiIndex].pageSize;
             blockSize = qspiFlashes[qspiIndex].pageSize * qspiFlashes[qspiIndex].pagesPerBlock;
@@ -222,12 +222,12 @@ bool HSS_QSPIInit(void)
             pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
             dieSize = blockSize * blockCount;
 
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageSize: %u" CRLF, pageSize);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockSize: %u" CRLF, blockSize);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "eraseSize: %u" CRLF, eraseSize);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageCount: %u" CRLF, pageCount);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount: %u" CRLF, blockCount);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "dieSize: %u" CRLF, dieSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageSize: %u\n", pageSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockSize: %u\n", blockSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "eraseSize: %u\n", eraseSize);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageCount: %u\n", pageCount);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount: %u\n", blockCount);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "dieSize: %u\n", dieSize);
 
             //
             // we're going to place buffers in DDR for
@@ -253,9 +253,9 @@ bool HSS_QSPIInit(void)
 
             pCacheDataBuffer = (uint8_t *)pU8Buffer;
 
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalToPhysicalMap: %p" CRLF, pLogicalToPhysicalMap);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalBlockDesc: %p" CRLF, pLogicalBlockDesc);
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pCacheDataBuffer: %p" CRLF, pCacheDataBuffer);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalToPhysicalMap: %p\n", pLogicalToPhysicalMap);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalBlockDesc: %p\n", pLogicalBlockDesc);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pCacheDataBuffer: %p\n", pCacheDataBuffer);
 
             //
             // check for bad blocks and reduce the number of blocks accordingly...
@@ -266,13 +266,13 @@ bool HSS_QSPIInit(void)
             pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
             dieSize = blockSize * blockCount;
 
-            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u" CRLF, blockCount);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u\n", blockCount);
 
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash" CRLF);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash\n");
             qspiInitialized = true;
 
         } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash (JEDEC %06X)" CRLF, jedec_id);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash (JEDEC %06X)\n", jedec_id);
         }
     }
 
@@ -328,7 +328,7 @@ void HSS_QSPI_BadBlocksInfo(void)
 
         build_bad_block_map_(); // update bad blocks mapping and numBadBlocks
 
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "QSPI Flash: %u bad block%s found" CRLF, numBadBlocks,
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "QSPI Flash: %u bad block%s found\n", numBadBlocks,
             numBadBlocks == 1 ? "":"s");
         if (numBadBlocks) {
             blockCount -= numBadBlocks; // adjust block count to take account of bad blocks
@@ -395,8 +395,8 @@ void HSS_CachedQSPI_FlushWriteBuffer(void)
 {
     if (cacheDirtyFlag) {
         copyCacheToFlashBlocks_(0u, dieSize);
-        mHSS_DEBUG_PRINTF_EX(CRLF);
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Synchronized Cache with Flash ..." CRLF);
+        mHSS_DEBUG_PRINTF_EX("\n");
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Synchronized Cache with Flash ...\n");
 
         cacheDirtyFlag = false;
     }

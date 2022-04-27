@@ -88,7 +88,7 @@ const char* tokenStringTable[] = {
     b3_str,
     b4_str,
     RST_str,
-    CRLF,
+    "\n",
 };
 
 
@@ -183,7 +183,7 @@ const struct __attribute__((packed))  {
 
 bool HSS_LogoInit(void)
 {
-    mHSS_PUTS(CRLF);
+    mHSS_PUTS("\n");
     int i;
 
     // decode and output our RLE Logo

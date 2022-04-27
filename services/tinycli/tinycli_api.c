@@ -341,9 +341,9 @@ static void tinyCLI_MemTest_(void)
     }
 
     if (!status) {
-        mHSS_FANCY_PRINTF(LOG_ERROR, "Failed!" CRLF);
+        mHSS_FANCY_PRINTF(LOG_ERROR, "Failed!\n");
     } else {
-        mHSS_FANCY_PRINTF(LOG_STATUS, "Passed!" CRLF);
+        mHSS_FANCY_PRINTF(LOG_STATUS, "Passed!\n");
     }
 }
 #endif
@@ -355,11 +355,11 @@ static void tinyCLI_PrintHelp_(void)
             size_t index;
 
             if (tinyCLI_NameToKeyIndex_(cmdKeys, ARRAY_SIZE(cmdKeys), argv_tokenArray[i], &index)) {
-                mHSS_FANCY_PRINTF(LOG_NORMAL, "%s: %s" CRLF, cmdKeys[index].name, cmdKeys[index].helpString);
+                mHSS_FANCY_PRINTF(LOG_NORMAL, "%s: %s\n", cmdKeys[index].name, cmdKeys[index].helpString);
             }
         }
     } else {
-        mHSS_PUTS("Supported Commands:" CRLF "\t");
+        mHSS_PUTS("Supported Commands:\n\t");
 
         for (size_t i = 0u; i < ARRAY_SIZE(cmdKeys); i++) {
             size_t index = CMD_INVALID;
@@ -374,7 +374,7 @@ static void tinyCLI_PrintHelp_(void)
             }
             mHSS_PUTC(' ');
         }
-        mHSS_PUTS("" CRLF);
+        mHSS_PUTS("\n");
     }
 }
 
@@ -516,10 +516,10 @@ static void tinyCLI_Debug_(void)
     }
 
     if (usageError) {
-        mHSS_PUTS("Supported options:" CRLF);
+        mHSS_PUTS("Supported options:\n");
 
         for (size_t i = 0u; i < ARRAY_SIZE(debugKeys); i++) {
-            mHSS_PRINTF("\t%s - %s" CRLF, debugKeys[i].name, debugKeys[i].helpString);
+            mHSS_PRINTF("\t%s - %s\n", debugKeys[i].name, debugKeys[i].helpString);
         }
     }
 }
@@ -549,29 +549,29 @@ static void tinyCLI_Boot_List_(void)
             result = GPT_FindBootSectorIndex(&gpt, &srcIndex, &pGptPartitionEntry);
 
             do {
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Partition found at index %lu" CRLF, srcIndex);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Partition found at index %lu\n", srcIndex);
 
                 if (!result) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_FindBootSectorIndex() failed" CRLF);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_FindBootSectorIndex() failed\n");
                 } else {
                     struct HSS_BootImage localBootImage;
                     size_t srcLBAOffset;
 
                     result = GPT_PartitionIdToLBAOffset(&gpt, srcIndex, &srcLBAOffset);
                     if (!result) {
-                        //mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_PartitionIdToLBAOffset() failed" CRLF);
+                        //mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT_PartitionIdToLBAOffset() failed\n");
                     } else {
                         result = HSS_MMC_ReadBlock(&localBootImage, srcLBAOffset * gpt.lbaSize,
                             sizeof(struct HSS_BootImage));
                     }
                     if (!result) {
-                        //mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_MMC_ReadBlock() failed" CRLF);
+                        //mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_MMC_ReadBlock() failed\n");
                     } else {
                         if ((localBootImage.magic == mHSS_BOOT_MAGIC)
                             || (localBootImage.magic == mHSS_COMPRESSED_MAGIC)) {
-                            mHSS_DEBUG_PRINTF(LOG_NORMAL, ">>%s<<" CRLF, localBootImage.set_name);
+                            mHSS_DEBUG_PRINTF(LOG_NORMAL, ">>%s<<\n", localBootImage.set_name);
                         } else {
-                            //mHSS_DEBUG_PRINTF(LOG_ERROR, "magic failed" CRLF);
+                            //mHSS_DEBUG_PRINTF(LOG_ERROR, "magic failed\n");
                         }
                     }
                 }
@@ -591,9 +591,9 @@ static void tinyCLI_Boot_Select_(void)
         size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[2]);
         GPT_SetBootPartitionIndex(&gpt, index);
     } else {
-        mHSS_PUTS("Usage:" CRLF
-            "\tboot select <partition_index>" CRLF
-            CRLF);
+        mHSS_PUTS("Usage:\n"
+            "\tboot select <partition_index>\n"
+            "\n");
     }
 }
 #endif
@@ -637,10 +637,10 @@ static bool tinyCLI_Boot_(void)
     }
 
     if (usageError) {
-        mHSS_PUTS("Supported options:" CRLF);
+        mHSS_PUTS("Supported options:\n");
 
         for (size_t i = 0u; i < ARRAY_SIZE(bootKeys); i++) {
-            mHSS_PRINTF("\t%s - %s" CRLF, bootKeys[i].name, bootKeys[i].helpString);
+            mHSS_PRINTF("\t%s - %s\n", bootKeys[i].name, bootKeys[i].helpString);
         }
     }
 
@@ -655,7 +655,7 @@ static bool tinyCLI_QSPI_Erase_(void)
 {
     bool result = false;
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Erasing QSPI Flash" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Erasing QSPI Flash\n");
     HSS_QSPIInit();
     HSS_QSPI_FlashChipErase();
 
@@ -710,10 +710,10 @@ static bool tinyCLI_QSPI_(void)
     }
 
     if (usageError) {
-        mHSS_PUTS("Supported options:" CRLF);
+        mHSS_PUTS("Supported options:\n");
 
         for (size_t i = 0u; i < ARRAY_SIZE(qspiKeys); i++) {
-            mHSS_PRINTF("\t%s - %s" CRLF, qspiKeys[i].name, qspiKeys[i].helpString);
+            mHSS_PRINTF("\t%s - %s\n", qspiKeys[i].name, qspiKeys[i].helpString);
         }
     }
 
@@ -760,9 +760,9 @@ static void tinyCLI_Monitor_(void)
                     monitors[index].interval_sec = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
                     monitors[index].startAddr = tinyCLI_strtoul_wrapper_(argv_tokenArray[4]);
                     monitors[index].count = tinyCLI_strtoul_wrapper_(argv_tokenArray[5]);
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Allocated monitor index %lu" CRLF, index);
+                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Allocated monitor index %lu\n", index);
                 } else {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "All monitors are allocated" CRLF);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "All monitors are allocated\n");
                 }
             } else {
                 usageError = true;
@@ -780,9 +780,9 @@ static void tinyCLI_Monitor_(void)
                         monitors[index].interval_sec = 0u;
                         monitors[index].startAddr = 0u;
                         monitors[index].count = 0u;
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Destroyed monitor index %lu" CRLF, index);
+                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Destroyed monitor index %lu\n", index);
                     } else {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated" CRLF, index);
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
                     }
                 } else {
                     usageError = true;
@@ -800,9 +800,9 @@ static void tinyCLI_Monitor_(void)
                     if (monitors[index].allocated) {
                         monitors[index].active = monitors[index].allocated;
                         monitors[index].time = HSS_GetTime();
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Enabled monitor index %lu" CRLF, index);
+                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Enabled monitor index %lu\n", index);
                     } else {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated" CRLF, index);
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
                     }
                 } else {
                     usageError = true;
@@ -819,9 +819,9 @@ static void tinyCLI_Monitor_(void)
                 if (index < ARRAY_SIZE(monitors)) {
                     if (monitors[index].allocated) {
                         monitors[index].active = false;
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Disabled monitor index %lu" CRLF, index);
+                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Disabled monitor index %lu\n", index);
                     } else {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated" CRLF, index);
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
                     }
                 } else {
                     usageError = true;
@@ -832,11 +832,11 @@ static void tinyCLI_Monitor_(void)
             break;
 
         case MONITOR_LIST:
-            mHSS_PUTS(" Index Active Allocated Interval       Start_Addr    Count" CRLF
-                      "===========================================================" CRLF);
+            mHSS_PUTS(" Index Active Allocated Interval       Start_Addr    Count\n"
+                      "===========================================================\n");
 
             for (size_t index = 0; index < ARRAY_SIZE(monitors);  ++index) {
-                mHSS_PRINTF(" % 5lu % 6d % 9d % 8lu %16x %8x" CRLF,
+                mHSS_PRINTF(" % 5lu % 6d % 9d % 8lu %16x %8x\n",
                     index,
                     monitors[index].active,
                     monitors[index].allocated,
@@ -855,10 +855,10 @@ static void tinyCLI_Monitor_(void)
     }
 
     if (usageError) {
-        mHSS_PUTS("Usage:" CRLF);
+        mHSS_PUTS("Usage:\n");
 
         for (size_t i = 0u; i < ARRAY_SIZE(monitorKeys); i++) {
-            mHSS_PRINTF("\tDEBUG MONITOR %s - %s" CRLF,
+            mHSS_PRINTF("\tDEBUG MONITOR %s - %s\n",
                 monitorKeys[i].name, monitorKeys[i].helpString);
         }
     }
@@ -876,11 +876,11 @@ static void tinyCLI_CRC32_(void)
         }
 
         uint32_t result = CRC32_calculate((const uint8_t *)startAddr, count);
-        mHSS_PRINTF("CRC32: 0x%x" CRLF, result);
+        mHSS_PRINTF("CRC32: 0x%x\n", result);
     } else {
-        mHSS_PUTS("Usage:" CRLF
-            "\tcrc32 0x<start_addr> 0x<length>" CRLF
-            CRLF);
+        mHSS_PUTS("Usage:\n"
+            "\tcrc32 0x<start_addr> 0x<length>\n"
+            "\n");
     }
 }
 
@@ -908,9 +908,9 @@ static void tinyCLI_HexDump_(void)
 
         HSS_TinyCLI_HexDump((uint8_t *)hexdump_startAddr, hexdump_count);
     } else {
-        mHSS_PUTS("Usage:" CRLF
-            "\thexdump 0x<start_addr> 0x<length>" CRLF
-            CRLF);
+        mHSS_PUTS("Usage:\n"
+            "\thexdump 0x<start_addr> 0x<length>\n"
+            "\n");
     }
 }
 
@@ -1004,14 +1004,14 @@ static void tinyCLI_CmdHandler_(int tokenId)
 #endif
 
     default:
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command %d (%lu tokens)" CRLF, tokenId, argc_tokenCount);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command %d (%lu tokens)\n", tokenId, argc_tokenCount);
         for (index = 1u; index < argc_tokenCount; index++) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s" CRLF, argv_tokenArray[index]);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s\n", argv_tokenArray[index]);
         }
         break;
     }
 
-    mHSS_PUTS("" CRLF);
+    mHSS_PUTS("\n");
 }
 
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
@@ -1024,7 +1024,7 @@ static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen)
     status = uart_getline(pBuffer, pBufLen);
 
     if (status < 0) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Problem reading input" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Problem reading input\n");
     } else {
         result = true;
     }
@@ -1059,15 +1059,15 @@ void HSS_TinyCLI_Execute(void)
     if (matchFoundFlag) {
         if (commands[cmdIndex].warnIfPostInit && postInit) {
             mHSS_DEBUG_PRINTF(LOG_WARN,
-                "Command %s may cause problems post boot." CRLF
+                "Command %s may cause problems post boot.\n"
                 "Please type it again if you definitely want to execute it"
-                CRLF CRLF, cmdKeys[keyIndex].name);
+                "\n\n", cmdKeys[keyIndex].name);
             commands[cmdIndex].warnIfPostInit = false;
         } else {
             commands[cmdIndex].handler(commands[cmdIndex].tokenId);
         }
     } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command >>%s<<." CRLF CRLF, argv_tokenArray[0]);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command >>%s<<.\n\n", argv_tokenArray[0]);
     }
 }
 
@@ -1082,13 +1082,13 @@ bool HSS_TinyCLI_Parser(void)
     bool keyPressedFlag = false;
     uint8_t rcv_buf;
 
-    keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip" CRLF,
+    keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip\n",
         CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
 
     if (!keyPressedFlag) {
-        mHSS_FANCY_PUTS(LOG_NORMAL, "CLI boot interrupt timeout" CRLF);
+        mHSS_FANCY_PUTS(LOG_NORMAL, "CLI boot interrupt timeout\n");
     } else {
-        mHSS_FANCY_PUTS(LOG_NORMAL, "Type HELP for list of commands" CRLF);
+        mHSS_FANCY_PUTS(LOG_NORMAL, "Type HELP for list of commands\n");
         while (!quitFlag) {
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
             static char *pBuffer = NULL;

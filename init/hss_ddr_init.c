@@ -92,12 +92,12 @@ static uint64_t seg_regOffset_to_addrOffset_(uint32_t offset, const int segment_
 bool HSS_DDRPrintSegConfig(void)
 {
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "Segment Configuration:" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "Segment Configuration:\n");
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 8; j++) {
             if (seg_regs[i][j] & 0xFFFFu) {
                 mHSS_DEBUG_PRINTF_EX(
-                    "%14s: SEG%d_%d: offset 0x%010lx, physical DDR 0x%08lx" CRLF,
+                    "%14s: SEG%d_%d: offset 0x%010lx, physical DDR 0x%08lx\n",
                     segment[j].description, i, j,
                     segment[j].baseAddr,
                     seg_regOffset_to_addrOffset_(seg_regs[i][j], j));
@@ -129,7 +129,7 @@ __attribute__((weak)) int64_t __popcountdi2(int64_t n)
 
 bool HSS_DDRPrintL2CacheWaysConfig(void)
 {
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "L2 Cache Configuration:" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "L2 Cache Configuration:\n");
 
     const unsigned int way_enable = CACHE_CTRL->WAY_ENABLE + 1u;
     const unsigned int way_mask = (1u << way_enable) - 1u;
@@ -140,9 +140,9 @@ bool HSS_DDRPrintL2CacheWaysConfig(void)
     assert(way_enable <= 16u);
     assert(cache_ways <= 16u);
 
-    mHSS_DEBUG_PRINTF_EX("    L2-Scratchpad: % 2u way%c (%u KiB)" CRLF, scratch_ways, scratch_ways==1u ? ' ':'s', scratch_ways * 128u);
-    mHSS_DEBUG_PRINTF_EX("         L2-Cache: % 2u way%c (%u KiB)" CRLF, cache_ways, cache_ways==1u ? ' ':'s', cache_ways * 128u);
-    mHSS_DEBUG_PRINTF_EX("           L2-LIM: % 2u way%c (%u KiB)" CRLF, lim_ways, lim_ways==1 ? ' ':'s', lim_ways * 128);
+    mHSS_DEBUG_PRINTF_EX("    L2-Scratchpad: % 2u way%c (%u KiB)\n", scratch_ways, scratch_ways==1u ? ' ':'s', scratch_ways * 128u);
+    mHSS_DEBUG_PRINTF_EX("         L2-Cache: % 2u way%c (%u KiB)\n", cache_ways, cache_ways==1u ? ' ':'s', cache_ways * 128u);
+    mHSS_DEBUG_PRINTF_EX("           L2-LIM: % 2u way%c (%u KiB)\n", lim_ways, lim_ways==1 ? ' ':'s', lim_ways * 128);
 
     // sanity check on L2 Size and LIM size...
     // to ensure Libero and the HSS linker script match
@@ -180,11 +180,11 @@ bool HSS_DDRPrintL2CacheWayMasks(void)
         { .name = "E51_DCACHE",        .pWayMask = &(CACHE_CTRL->WAY_MASK_E51_DCACHE) }
     };
 
-    mHSS_DEBUG_PRINTF(LOG_STATUS, "L2 Cache Way Masks:" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_STATUS, "L2 Cache Way Masks:\n");
     for (int i = 0; i < ARRAY_SIZE(wayMaskTable); i++) {
         assert(wayMaskTable[i].name);
         assert(wayMaskTable[i].pWayMask);
-	mHSS_DEBUG_PRINTF_EX("% 17s: 0x%x" CRLF, wayMaskTable[i].name, *(wayMaskTable[i].pWayMask));
+	mHSS_DEBUG_PRINTF_EX("% 17s: 0x%x\n", wayMaskTable[i].name, *(wayMaskTable[i].pWayMask));
     }
 
     return true;

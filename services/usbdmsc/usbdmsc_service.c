@@ -96,14 +96,14 @@ static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine)
 static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachine)
 {
     USBDMSC_Init();
-    mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)" CRLF);
+    mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
 }
 
 uint32_t FLASH_DRIVE_is_host_connected(void); //TODO: tidy
 static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachine)
 {
     if (FLASH_DRIVE_is_host_connected()) {
-        mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)" CRLF);
+        mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
         pMyMachine->state = USBDMSC_ACTIVE;
     }
 
@@ -128,7 +128,7 @@ static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine)
     void HSS_Storage_FlushWriteBuffer(void);
     HSS_Storage_FlushWriteBuffer();
 
-    mHSS_PUTS(CRLF "USB Host disconnected..." CRLF);
+    mHSS_PUTS("\nUSB Host disconnected...\n");
 }
 
 /////////////////

@@ -186,7 +186,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
                 memcpy(myPrevBuffer, myBuffer, readStringLen+1);
             } else {
                 // if just hit enter, as a convenience, reuse last command (a la GDB)
-		//mHSS_DEBUG_PRINTF(LOG_WARN, "Convenience: copying >>%s<< into myBuffer" CRLF, myPrevBuffer);
+		//mHSS_DEBUG_PRINTF(LOG_WARN, "Convenience: copying >>%s<< into myBuffer\n", myPrevBuffer);
 		readStringLen = strlen(myPrevBuffer);
                 memcpy(myBuffer, myPrevBuffer, readStringLen+1);
             }
@@ -252,7 +252,7 @@ static void tinycli_readline_onExit(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
 
-    const char crlf[] = CRLF;
+    const char crlf[] = "\n";
     MSS_UART_polled_tx_string(&g_mss_uart0_lo, (const uint8_t *)crlf);
 
     if (readStringLen > 0) {

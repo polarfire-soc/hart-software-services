@@ -52,7 +52,7 @@ static uint32_t u54_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in
 
 bool HSS_IHCInit(void)
 {
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Mi-V IHC" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Mi-V IHC\n");
 
     IHC_global_init();
 
@@ -80,7 +80,7 @@ void HSS_IHCInit_U54(void)
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
     const enum HSSHartId local_hartid = current_hartid();
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing PLIC (Mi-V IHC) for hart %d" CRLF, local_hartid);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing PLIC (Mi-V IHC) for hart %d\n", local_hartid);
 
     // enable PLIC interrupt for IHC
     // the E51 will be calling PLIC_init_on_reset(), so we'll delay here to allow that to complete...

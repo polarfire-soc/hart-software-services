@@ -28,7 +28,7 @@ static void __attribute__((__noreturn__)) boot_secure_failure_(void)
 {
     // TODO: assert tamper flag?
 
-    mHSS_DEBUG_PRINTF(LOG_ERROR, "failure during signature verification..." CRLF);
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "failure during signature verification...\n");
 
     while (1) {
         // spin forever
@@ -58,7 +58,7 @@ bool HSS_Boot_Secure_CheckCodeSigning(struct HSS_BootImage *pBootImage)
     if (!result) {
         boot_secure_failure_();
     } else {
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "ECDSA verification passed" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "ECDSA verification passed\n");
     }
 
     HSS_PerfCtr_Lap(perf_ctr_index);

@@ -53,9 +53,6 @@ extern "C" {
 
 #include "hss_clock.h"
 
-#define CRLF "\n"
-#define CR   "\r"
-
 typedef enum {
     HSS_DEBUG_LOG_NORMAL,
     HSS_DEBUG_LOG_FUNCTION,

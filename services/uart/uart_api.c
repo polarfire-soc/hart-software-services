@@ -30,7 +30,7 @@ enum IPIStatusCode HSS_UartTx_IPIHandler(TxId_t transaction_id, enum HSSHartId s
     (void)p_ancilliary_buffer_in_ddr;
 
     // IPI received from one of the U54s...
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called\n");
 
     return IPI_SUCCESS;
 }
@@ -44,7 +44,7 @@ enum IPIStatusCode HSS_UartPollRx_IPIHandler(TxId_t transaction_id, enum HSSHart
     (void)p_ancilliary_buffer_in_ddr;
 
     // IPI received from one of the U54s...
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called" CRLF);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called\n");
 
     return IPI_SUCCESS;
 }

@@ -74,5 +74,5 @@ uintptr_t HSS_DDRHi_GetStart(void)
 
 void HSS_DDR_Train(void)
 {
-    //mHSS_DEBUG_PRINTF("running DDR training on hart %u..." CRLF, current_hartid());
+    //mHSS_DEBUG_PRINTF("running DDR training on hart %u...\n", current_hartid());
 }

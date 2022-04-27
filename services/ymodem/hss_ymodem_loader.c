@@ -136,7 +136,7 @@ void hss_loader_ymodem_loop(void)
 #if IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_MMC)
         bool result = false;
 #endif
-        static const char menuText[] = CRLF
+        static const char menuText[] = "\n"
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
             "QSPI"
 #endif
@@ -146,22 +146,22 @@ void hss_loader_ymodem_loop(void)
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
            "MMC"
 #endif
-           " Utility" CRLF
+           " Utility\n"
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
-            " 1. QSPI Erase Bulk -- erase all sectors" CRLF
+            " 1. QSPI Erase Bulk -- erase all sectors\n"
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
-            " 2. MMC Init -- initialize MMC driver" CRLF
+            " 2. MMC Init -- initialize MMC driver\n"
 #endif
-            " 3. YMODEM Receive -- receive application file" CRLF
+            " 3. YMODEM Receive -- receive application file\n"
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
-            " 4. QSPI Write -- write application file to the Device" CRLF
+            " 4. QSPI Write -- write application file to the Device\n"
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
-            " 5. MMC Write -- write application file to the Device" CRLF
+            " 5. MMC Write -- write application file to the Device\n"
 #endif
-            " 6. Quit -- quit QSPI Utility" CRLF CRLF
-            " Select a number:" CRLF;
+            " 6. Quit -- quit QSPI Utility\n\n"
+            " Select a number:\n";
 
         mHSS_PUTS(menuText);
 
@@ -169,23 +169,23 @@ void hss_loader_ymodem_loop(void)
             switch (rx_byte) {
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
             case '1':
-                mHSS_PUTS(CRLF "Initializing QSPI ... ");
+                mHSS_PUTS("\nInitializing QSPI ... ");
                 result = hss_loader_qspi_init();
 
                 if (result) {
-                    mHSS_PUTS(" Success" CRLF);
+                    mHSS_PUTS(" Success\n");
 
-                    mHSS_PUTS(CRLF "Erasing all of QSPI ... ");
+                    mHSS_PUTS("\nErasing all of QSPI ... ");
                     result = hss_loader_qspi_erase();
 
                     if (result) {
-                        mHSS_PUTS(" Success" CRLF);
+                        mHSS_PUTS(" Success\n");
                     }
                 }
 
                 if (!result) {
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
-                    mHSS_PUTS(" FAILED" CRLF);
+                    mHSS_PUTS(" FAILED\n");
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
                 }
                 break;
@@ -193,51 +193,51 @@ void hss_loader_ymodem_loop(void)
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
             case '2':
-                mHSS_PUTS(CRLF "Initializing MMC ... ");
+                mHSS_PUTS("\nInitializing MMC ... ");
                 result = hss_loader_mmc_init();
 
                 if (result) {
-                    mHSS_PUTS(" Success" CRLF);
+                    mHSS_PUTS(" Success\n");
                 }
 
                 if (!result) {
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
-                    mHSS_PUTS(" FAILED" CRLF);
+                    mHSS_PUTS(" FAILED\n");
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
                 }
                 break;
 #endif
             case '3':
-                mHSS_PUTS(CRLF "Attempting to receive .bin file using YMODEM (CTRL-C to cancel)"
-                    CRLF);
+                mHSS_PUTS("\nAttempting to receive .bin file using YMODEM (CTRL-C to cancel)"
+                    "\n");
                 receivedCount = ymodem_receive(pBuffer, g_rx_size);
                 if (receivedCount == 0) {
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
-                    mHSS_PUTS(CRLF "YMODEM failed to receive file successfully" CRLF CRLF);
+                    mHSS_PUTS("\nYMODEM failed to receive file successfully\n\n");
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
                 }
                 break;
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
             case '4':
-                mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
-                mHSS_PUTS(CRLF "Initializing QSPI ... ");
+                mHSS_PRINTF("\nAttempting to flash received data (%u bytes)\n", receivedCount);
+                mHSS_PUTS("\nInitializing QSPI ... ");
                 result = hss_loader_qspi_init();
 
                 if (result) {
-                    mHSS_PUTS(" Success" CRLF);
+                    mHSS_PUTS(" Success\n");
 
-                    mHSS_PUTS(CRLF "Programming QSPI ... ");
+                    mHSS_PUTS("\nProgramming QSPI ... ");
                     result = hss_loader_qspi_program((uint8_t *)pBuffer, 0u, receivedCount);
 
                     if (result) {
-                        mHSS_PUTS(" Success" CRLF);
+                        mHSS_PUTS(" Success\n");
                     }
                 }
 
                 if (!result) {
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
-                    mHSS_PUTS(" FAILED" CRLF);
+                    mHSS_PUTS(" FAILED\n");
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
                 }
                 break;
@@ -245,24 +245,24 @@ void hss_loader_ymodem_loop(void)
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
             case '5':
-                mHSS_PRINTF(CRLF "Attempting to flash received data (%u bytes)" CRLF, receivedCount);
-                mHSS_PUTS(CRLF "Initializing MMC ... ");
+                mHSS_PRINTF("\nAttempting to flash received data (%u bytes)\n", receivedCount);
+                mHSS_PUTS("\nInitializing MMC ... ");
                 result = hss_loader_mmc_init();
 
                 if (result) {
-                    mHSS_PUTS(" Success" CRLF);
+                    mHSS_PUTS(" Success\n");
 
-                    mHSS_PUTS(CRLF "Programming MMC ... ");
+                    mHSS_PUTS("\nProgramming MMC ... ");
                     result = hss_loader_mmc_program((uint8_t *)pBuffer, 0u, receivedCount);
 
                     if (result) {
-                        mHSS_PUTS(" Success" CRLF);
+                        mHSS_PUTS(" Success\n");
                     }
                 }
 
                 if (!result) {
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
-                    mHSS_PUTS(" FAILED" CRLF);
+                    mHSS_PUTS(" FAILED\n");
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
                 }
                 break;

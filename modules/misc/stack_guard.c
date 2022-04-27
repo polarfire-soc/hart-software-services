@@ -33,7 +33,7 @@ __attribute__((weak)) void __stack_chk_fail(void)
     //
     // to help debug this, it might help to disable the print statement
     // once stack corruption is detected...
-    mHSS_DEBUG_PUTS("__stack_chk_fail(): stack corruption detected!!" CRLF);
+    mHSS_DEBUG_PUTS("__stack_chk_fail(): stack corruption detected!!\n");
     asm("ebreak");
 }
 
@@ -46,7 +46,7 @@ __attribute__((weak)) void* __memset_chk(void *dst, int c, size_t len, size_t ds
     void * result = NULL;
 
     if (dstlen < len) {
-        mHSS_DEBUG_PUTS("__memset_chk(): dstlen < len!!" CRLF);
+        mHSS_DEBUG_PUTS("__memset_chk(): dstlen < len!!\n");
         asm("ebreak");
     } else {
         result = memset(dst, c, len);

@@ -139,7 +139,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
         }
     }
 
-    const char crlf[] = CRLF;
+    const char crlf[] = "\n";
     MSS_UART_polled_tx_string(&g_mss_uart0_lo, (const uint8_t *)crlf);
 
     if (result > 0) {
@@ -177,7 +177,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
                 result = true;
                 break;
             } else {
-                mHSS_DEBUG_PRINTF(LOG_ERROR, "UART error" CRLF);
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "UART error\n");
             }
         }
 

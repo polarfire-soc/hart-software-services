@@ -91,7 +91,7 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
     };
 
     if (strncmp(x509_asn1_ec_der_p384_root, SECP384R1_ECDSA_public_key, ARRAY_SIZE(x509_asn1_ec_der_p384_root))) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid signing certificate type" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid signing certificate type\n");
         result = false;
     } else {
         uint8_t const * const aDataBuf = 0u;
@@ -108,7 +108,7 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
         int retval = ec_get_sig_len(&params, ECDSA, SHA384, (uint8_t*)&u8siglen);
 
         if (retval) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "ec_get_sig_len returned %d" CRLF, retval);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "ec_get_sig_len returned %d\n", retval);
             result = false;
         } else {
             uint8_t crv_name_len = ARRAY_SIZE(curve_name);
@@ -116,7 +116,7 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
             retval = ec_check_curve_type_and_name(SECP384R1, params.curve_name, crv_name_len);
 
             if (retval) {
-                mHSS_DEBUG_PRINTF(LOG_ERROR, "ec_check_curve_type_and_name returned %d" CRLF, retval);
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "ec_check_curve_type_and_name returned %d\n", retval);
                 result = false;
             } else {
                 retval = ec_pub_key_import_from_aff_buf(&pub_key, &params,
@@ -124,7 +124,7 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
                     ARRAY_SIZE(SECP384R1_ECDSA_public_key) - X509_ASN1_DER_KEY_OFFSET, ECDSA);
 
                 if (retval) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "ec_pub_key_import_from_aff_buf returned %d" CRLF, retval);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "ec_pub_key_import_from_aff_buf returned %d\n", retval);
                     result = false;
                 } else {
                     int libecc_result = ec_verify(sigBuffer, u8siglen, &pub_key, dataBuf, dataBufSize,

@@ -55,6 +55,6 @@ void HSS_TinyCLI_HexDump(uint8_t *pStart, ptrdiff_t count)
                 mHSS_PRINTF("%c", (char)octet);
             }
         }
-        mHSS_PRINTF(CRLF);
+        mHSS_PRINTF("\n");
     }
 }

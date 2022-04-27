@@ -251,7 +251,7 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
             case XYMODEM_GETCHAR_TIMEOUT:
                 __attribute__((fallthrough)); // deliberate fallthrough
             default:
-                //mHSS_DEBUG_PRINTF("%s(): %d: char is %0x" CRLF, __func__, syncAttempt,
+                //mHSS_DEBUG_PRINTF("%s(): %d: char is %0x\n", __func__, syncAttempt,
                 //    pPacket->startByte);
                 can_rx_count = 0u;
                 ++syncAttempt;
@@ -304,7 +304,7 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
         }
     }
 
-    //mHSS_DEBUG_PRINTF("%s(): returning %d" CRLF, __func__, result);
+    //mHSS_DEBUG_PRINTF("%s(): returning %d\n", __func__, result);
     return result;
 }
 
@@ -441,10 +441,10 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
     XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
 
     if (retries >= HSS_XYMODEM_BAD_PACKET_RETRIES) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "maximum retries exceeded" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "maximum retries exceeded\n");
     }
     if (pState->status.s.abort) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Transfer aborted" CRLF);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Transfer aborted\n");
     }
     return result;
 }
@@ -459,9 +459,9 @@ size_t ymodem_receive(uint8_t *buffer, size_t bufferSize)
 
     if (result != 0) {
         uint32_t crc32 = CRC32_calculate((const unsigned char *)buffer, result);
-        mHSS_PRINTF(CRLF CRLF "Received %lu bytes from %s (CRC32 is 0x%08X)" CRLF, result,
+        mHSS_PRINTF("\n\nReceived %lu bytes from %s (CRC32 is 0x%08X)\n", result,
             state.filename, crc32);
-        //mHSS_PRINTF(CRLF CRLF "Expected %lu bytes in %lu packets (%lu NAKs)" CRLF, state.expectedSize,
+        //mHSS_PRINTF("\n\nExpected %lu bytes in %lu packets (%lu NAKs)\n", state.expectedSize,
         //    state.numReceivedPackets, state.numNAKs);
     }
 
