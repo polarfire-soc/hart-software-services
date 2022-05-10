@@ -42,6 +42,10 @@
 #include <openssl/pem.h>
 #include <openssl/obj_mac.h>
 #include <openssl/sha.h>
+#include <openssl/bn.h>
+
+#include <openssl/opensslv.h>
+#include <openssl/err.h>
 
 static_assert(sizeof(void *)==8, "Fatal: this program requires a 64bit compiler");
 
@@ -331,7 +335,6 @@ static void sign_payload(FILE *pFileOut, char const * const private_key_filename
 		// first compute the SHA384 hash digest of the entire boot image
 		//
 		assert(ARRAY_SIZE(bootImage.signature.digest) == SHA384_DIGEST_LENGTH);
-		uint8_t digest[SHA384_DIGEST_LENGTH];
 
 		// read in entire payload to calculate signature...
 		uint8_t *pEntirePayloadBuffer = malloc(bootImage.bootImageLength);
@@ -345,71 +348,98 @@ static void sign_payload(FILE *pFileOut, char const * const private_key_filename
 		size_t fileSize = fread((void *)pEntirePayloadBuffer, 1u, bootImage.bootImageLength, pFileOut);
 		assert(fileSize == bootImage.bootImageLength);
 
-		SHA384(pEntirePayloadBuffer, bootImage.bootImageLength, (uint8_t *)&digest[0]);
-                memcpy(bootImage.signature.digest, digest, SHA384_DIGEST_LENGTH);
-		free(pEntirePayloadBuffer);
-
-		{
-			char *hexString = OPENSSL_buf2hexstr(&digest[0], SHA384_DIGEST_LENGTH);
-			debug_printf(5, "SHA384: %s\n", hexString);
-			OPENSSL_free(hexString);
-		}
-
 		//
 		// now compute the ECDSA P-384 signature
 		//
-		EC_KEY *pEcKey = NULL;
-		EVP_PKEY *pPrivKey = NULL;
-
 		// read in the private key, and convert to an EC key
 		FILE *privKeyFileIn = fopen(private_key_filename, "r");
 		assert(privKeyFileIn != NULL);
 
-		EVP_PKEY *pkey_result = PEM_read_PrivateKey(privKeyFileIn, &pPrivKey, NULL /* pasword callback*/, NULL /* parameter to callback or password if callback is NULL */);
-		assert(pkey_result != NULL);
+		EVP_PKEY *pPrivKey = PEM_read_PrivateKey(privKeyFileIn, NULL, NULL, NULL);
+		assert(pPrivKey != NULL);
+                fclose(privKeyFileIn);
 
-		pEcKey = EVP_PKEY_get1_EC_KEY(pPrivKey);
-		EC_KEY_check_key(pEcKey);
+		// create the signature by using SHA384 digest and signing with our SECP384r1 private key
+		//
+		EVP_MD_CTX *pCtx = EVP_MD_CTX_new();
+		assert(pCtx != NULL);
 
-		// validate that the key is indeed SECP384r1
-		const EC_GROUP *pTestGroup = EC_KEY_get0_group(pEcKey);
-		int flags = EC_GROUP_get_asn1_flag(pTestGroup);
-		assert(flags & OPENSSL_EC_NAMED_CURVE);
-		assert(NID_secp384r1 == EC_GROUP_get_curve_name(pTestGroup));
+		assert(EVP_DigestSignInit(pCtx, NULL, EVP_sha384(), NULL, pPrivKey) == 1);
+		size_t sigLen = 0u;
+		assert(EVP_DigestSign(pCtx, NULL, &sigLen, pEntirePayloadBuffer, bootImage.bootImageLength) == 1);
+		unsigned char *pSignatureBuffer = OPENSSL_malloc(sigLen);
+		assert(pSignatureBuffer);
+		assert(EVP_DigestSign(pCtx, pSignatureBuffer, &sigLen, pEntirePayloadBuffer, bootImage.bootImageLength) == 1);
 
-		// create the signature
-		ECDSA_SIG *pSignature = ECDSA_do_sign(digest, ARRAY_SIZE(digest), pEcKey);
-		assert(pSignature != NULL);
-
-		// the signature is in an opaque ECDSA_SIG structure, which contains two
-		// BIGNUMs, r and s.  These are max half the curve size in bytes
-		// => 384 / (8*2) = 48 bytes each... but they may be less, and need to be
-		// zero padded, so extract separately...
-		const BIGNUM *pR = NULL;
-		const BIGNUM *pS = NULL;
-		ECDSA_SIG_get0(pSignature, &pR, &pS);
-
-		const int rBytes = BN_num_bytes(pR);
-		const int sBytes = BN_num_bytes(pS);
-		uint8_t signatureBuffer[96] = { 0u, };
-		BN_bn2bin(pR, signatureBuffer + 48 - rBytes);
-		BN_bn2bin(pS, signatureBuffer + 96 - sBytes);
-
-		// new clean-up...
-		EC_KEY_free(pEcKey);
-		EVP_PKEY_free(pPrivKey);
-		ECDSA_SIG_free(pSignature);
+		free(pEntirePayloadBuffer);
 
 		// copy the signature to the boot image header...
-		memcpy(bootImage.signature.ecdsaSig, signatureBuffer, 96);
+		// OpenSSL will output the signature is in ASN.1 format, as described in
+		// https://datatracker.ietf.org/doc/html/rfc5480
+		// and in one of the following forms
+		//
+		// Total length is 102 bytes:
+		// -----------------------------------
+		// 0x30 0x64 Ecdsa-Sig-Vale ::= SEQUENCE { (100 bytes)
+		// 0x02 0x30	r	INTEGER (48 bytes),
+		// 0x02 0x30	s	INTEGER (48 bytes) }
+		//
+		// Total length is 103 bytes:
+		// -----------------------------------
+		// 0x30 0x65 Ecdsa-Sig-Vale ::= SEQUENCE { (101 bytes)
+		// 0x02 0x30	r	INTEGER (48 bytes),
+		// 0x02 0x31	s	INTEGER (0x0 followed by 48 bytes) }
+		//
+		// 0x30 0x65 Ecdsa-Sig-Vale ::= SEQUENCE { (101 bytes)
+		// 0x02 0x31	r	INTEGER (0x0 followed by 48 bytes),
+		// 0x02 0x30	s	INTEGER (48 bytes) }
+		//
+		// Total length is 104 bytes:
+		// -----------------------------------
+		// 0x30 0x66 Ecdsa-Sig-Vale ::= SEQUENCE { (102 bytes)
+		// 0x02 0x31	r	INTEGER (0x0 followed by 48 bytes),
+		// 0x02 0x31	s	INTEGER (0x0 followed by 48 bytes) }
+		//
+		// we just want raw 48-byte r and s values for the boot image header
+		//
+		assert((sigLen == 102u) || (sigLen == 103u) || (sigLen == 104u));
+
+		const unsigned char *sig_ptr = pSignatureBuffer;
+		ECDSA_SIG *pSig = d2i_ECDSA_SIG(NULL, &sig_ptr, (long)sigLen);
+		assert(pSig != NULL);
+
+                // the signature is in an opaque ECDSA_SIG structure, which contains two
+                // BIGNUMs, r and s.  These are max half the curve size in bytes
+                // => 384 / (8*2) = 48 bytes each... but they may be less, and need to be
+                // zero padded, so extract separately...
+                const BIGNUM *pR = NULL;
+                const BIGNUM *pS = NULL;
+                ECDSA_SIG_get0(pSig, &pR, &pS);
+
+                const int rBytes = BN_num_bytes(pR);
+                const int sBytes = BN_num_bytes(pS);
+
+		assert(rBytes == sBytes);
+		assert(rBytes == 48);
+
+                memset(pSignatureBuffer, 0, 96);
+                BN_bn2bin(pR, pSignatureBuffer + 48 - rBytes);
+                BN_bn2bin(pS, pSignatureBuffer + 96 - sBytes);
+
+		memcpy(bootImage.signature.ecdsaSig, pSignatureBuffer, 48u);
+		memcpy(bootImage.signature.ecdsaSig + 48u, pSignatureBuffer + 48u, 48u);
 
 		{
-			char *hexString = OPENSSL_buf2hexstr(&signatureBuffer[0], ARRAY_SIZE(signatureBuffer));
+			char *hexString = OPENSSL_buf2hexstr(pSignatureBuffer, (long)sigLen);
 			debug_printf(5, "P-384 Signature: %s\n", hexString);
 			OPENSSL_free(hexString);
 		}
 
 		generate_header(pFileOut, &bootImage); // rewrite header for signing...
+
+		EVP_MD_CTX_free(pCtx);
+		EVP_PKEY_free(pPrivKey);
+		OPENSSL_free(pSignatureBuffer);
 	}
 }
 
