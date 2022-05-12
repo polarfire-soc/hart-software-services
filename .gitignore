@@ -11,3 +11,4 @@
 .config.old
 config.h
 include/tool_versions.h
+Default/run-hss.cfg

@@ -86,6 +86,7 @@ DEPENDENCIES+=include/tool_versions.h
 endif
 
 include envm-wrapper/Makefile
+include jtag_trampoline/Makefile
 
 ################################################################################################
 #
