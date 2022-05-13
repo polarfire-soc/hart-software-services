@@ -53,9 +53,13 @@ int uart_putstring(int hartid, char *p)
     const uint32_t len = (uint32_t)strlen(p);
 
     mss_uart_instance_t *pUart = get_uart_instance(hartid);
+
+    while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
+
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)p);
     // TODO: if hartId is zero (i.e., E51), replace this with non-blocking
     // queue implementation, with HSS_UART state machine consuming from queues...
+
     return len;
 }
 
@@ -66,6 +70,9 @@ void uart_putc(int hartid, const char ch)
     string[1] = 0u;
 
     mss_uart_instance_t *pUart = get_uart_instance(hartid);
+
+    while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
+
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)string);
 }
 
@@ -161,12 +168,9 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
     HSSTicks_t start_time = 0u;
     HSSTicks_t last_sec_time = 0u;
 
-    //if (timeout_sec > 0) {
-        start_time = last_sec_time = HSS_GetTime();
-    //}
+    start_time = last_sec_time = HSS_GetTime();
 
     const HSSTicks_t timeout_ticks = timeout_sec * TICKS_PER_SEC;
-    //(void)MSS_UART_get_rx_status(&g_mss_uart0_lo); // clear sticky status
 
     while (!done) {
         size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);
