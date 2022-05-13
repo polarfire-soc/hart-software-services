@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2022.03
+
+### Added
+
+ * HSS: QSPI: Add support for booting from Winbond W25N01GV flash
+
+### Changed
+
+ * HSS: resets: bringing all peripherals out of reset
+
+ * HSS: scrub: add throttling support to memory scrubber
+
+### Fixed
+
+ * HSS: board/custom-board-design: update to build with latest HSS code base
+
+ * HSS: boot: Resolve out-of-bounds issue
+
 ## 2022.02
 
 ### Added
