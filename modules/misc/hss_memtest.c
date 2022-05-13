@@ -49,6 +49,12 @@ static uint64_t HSS_MemTestDataBus(volatile uint64_t *address)
 }
 
 // Walking Ones test of the Address Bus wiring
+static void log_error_(const int count, volatile void *ptr, const uint64_t value, const uint64_t expected)
+{
+    mHSS_FANCY_PRINTF(LOG_ERROR, "%d: 0x%016p==0x%016llx vs expected 0x%016llx\n",
+        count, ptr, value, expected);
+}
+
 static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t numBytes)
 {
     const size_t numWords = numBytes / sizeof(uint64_t);
@@ -61,7 +67,7 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     const uint64_t pattern = (uint64_t)0xAAAAAAAAAAAAAAAAu;
     const uint64_t antiPattern = (uint64_t)0x5555555555555555u;
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to pattern\n");
+    // Walking up address bus, setting cells to pattern
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         baseAddr[offset] = pattern;
 
@@ -73,11 +79,10 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
     testOffset = 0u;
     baseAddr[0] = antiPattern;
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, verifying set cells\n");
+    // Walking up address bus, verifying set cells
     for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
         if (baseAddr[offset] != pattern) {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "1: 0x%016p==0x%016llx vs expected 0x%016llx\n",
-                baseAddr + offset, baseAddr[offset], pattern);
+            log_error_(1, baseAddr + offset, baseAddr[offset], pattern);
             result = ((uint64_t *)&baseAddr[offset]);
             break;
         }
@@ -89,15 +94,14 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
 
     baseAddr[0] = pattern;
 
-    //mHSS_FANCY_PRINTF(LOG_NORMAL, "Walking up address bus, setting cells to antipattern\n");
+    // Walking up address bus, setting cells to antipattern
     if (result == NULL) {
         for (testOffset = 1u; (testOffset & addrMask) != 0u; testOffset <<= 1) {
             baseAddr[testOffset] = antiPattern;
 
             // ensure that the base isn't affected
             if (baseAddr[0] != pattern) {
-                mHSS_FANCY_PRINTF(LOG_ERROR, "2: 0x%016p==0x%016llx vs expected 0x%016llx\n",
-                    baseAddr + offset, baseAddr[offset], pattern);
+                log_error_(2, baseAddr + offset, baseAddr[offset], pattern);
                 result = ((uint64_t *)&baseAddr[testOffset]);
                 break;
             }
@@ -106,8 +110,7 @@ static uint64_t* HSS_MemTestAddressBus(volatile uint64_t *baseAddr, const size_t
                 // walk up the address bus, ensuring that no other address is affected
                 for (offset = 1u; (offset & addrMask) != 0u; offset <<= 1) {
                     if ((baseAddr[offset] != pattern) && (offset != testOffset)) {
-                        mHSS_FANCY_PRINTF(LOG_ERROR, "3: 0x%016p==0x%016llx vs expected 0x%016llx\n",
-                            baseAddr + offset, baseAddr[offset], pattern);
+                        log_error_(3, baseAddr + offset, baseAddr[offset], pattern);
                         result = ((uint64_t *)&baseAddr[testOffset]);
                         offset = 0u; testOffset = 0u; // terminate loops
                         break;
@@ -158,8 +161,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
 
     for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
         if (baseAddr[offset] != pattern) {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "4: 0x%016p==0x%016llx vs expected 0x%016llx\n",
-                baseAddr + offset, baseAddr[offset], pattern);
+            log_error_(4, baseAddr + offset, baseAddr[offset], pattern);
 
             result = ((uint64_t *)&baseAddr[offset]);
             offset = numWords;
@@ -186,8 +188,7 @@ static uint64_t *HSS_MemTestDevice(volatile uint64_t *baseAddr, size_t numBytes)
         for (pattern = 1u, offset = 0u; offset < numWords; pattern++, offset++) {
             antiPattern = ~pattern;
             if (baseAddr[offset] != antiPattern) {
-                mHSS_FANCY_PRINTF(LOG_ERROR, "5: 0x%016p==0x%016llx vs expected 0x%016llx\n",
-                    baseAddr + offset, baseAddr[offset], antiPattern);
+                log_error_(5, baseAddr + offset, baseAddr[offset], pattern);
                 result = ((uint64_t *)&baseAddr[offset]);
                 break;
             }
