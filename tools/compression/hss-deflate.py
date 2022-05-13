@@ -38,7 +38,7 @@ import sys
 
 import base64
 
-def deflate(data, compressionLevel=4):
+def deflate(data, compressionLevel=9):
 	compressor = zlib.compressobj(level=compressionLevel, method=zlib.DEFLATED,
                                      wbits=zlib.MAX_WBITS, memLevel=zlib.DEF_MEM_LEVEL,
                                      strategy=0)
