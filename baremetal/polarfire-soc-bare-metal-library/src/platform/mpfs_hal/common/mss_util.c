@@ -74,9 +74,36 @@ void __enable_irq(void)
  */
 void __enable_local_irq(uint8_t local_interrupt)
 {
+    ASSERT(local_interrupt > (int8_t)0);
+    ASSERT( (local_interrupt <= LOCAL_INT_MAX));
+
+    uint8_t mhart_id = read_csr(mhartid);
+
     if((local_interrupt > (int8_t)0) && (local_interrupt <= LOCAL_INT_MAX))
     {
-        set_csr(mie, (0x1LLU << (int8_t)(local_interrupt + 16U)));  /* mie Register- Machine Interrupt Enable Register */
+
+        set_csr(mie, (0x1LLU << (int8_t)(local_interrupt + LOCAL_INT_OFFSET_IN_MIE)));  /* mie Register- Machine Interrupt Enable Register */
+
+        /* Enable F2M interrupts as local instead of PLIC interrupts */
+        if (local_interrupt >= LOCAL_INT_F2M_OFFSET)
+        {
+            if (mhart_id == 1)
+            {
+                SYSREG->FAB_INTEN_U54_1 |= (1u << (local_interrupt - LOCAL_INT_F2M_OFFSET));
+            }
+            else if (mhart_id == 2)
+            {
+                SYSREG->FAB_INTEN_U54_2 |= (1u << (local_interrupt - LOCAL_INT_F2M_OFFSET));
+            }
+            else if (mhart_id == 3)
+            {
+                SYSREG->FAB_INTEN_U54_3 |= (1u << (local_interrupt - LOCAL_INT_F2M_OFFSET));
+            }
+            else if (mhart_id == 4)
+            {
+                SYSREG->FAB_INTEN_U54_4 |= (1u << (local_interrupt - LOCAL_INT_F2M_OFFSET));
+            }
+        }
     }
 }
 
@@ -85,9 +112,12 @@ void __enable_local_irq(uint8_t local_interrupt)
  */
 void __disable_local_irq(uint8_t local_interrupt)
 {
+    ASSERT(local_interrupt > (int8_t)0);
+    ASSERT( (local_interrupt <= LOCAL_INT_MAX));
+
     if((local_interrupt > (int8_t)0) && (local_interrupt <= LOCAL_INT_MAX))
     {
-        clear_csr(mie, (0x1LLU << (int8_t)(local_interrupt + 16U)));  /* mie Register- Machine Interrupt Enable Register */
+        clear_csr(mie, (0x1LLU << (int8_t)(local_interrupt + LOCAL_INT_OFFSET_IN_MIE)));  /* mie Register- Machine Interrupt Enable Register */
     }
 }
 
@@ -177,3 +207,4 @@ void display_address_of_interest(uint64_t * address_of_interest, int nb_location
 #ifdef __cplusplus
 }
 #endif
+

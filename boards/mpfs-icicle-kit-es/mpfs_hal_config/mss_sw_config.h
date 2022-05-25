@@ -174,44 +174,6 @@
 #define DDR_SUPPORT
 #define MSSIO_SUPPORT
 
-/*
-* We need to redefine the following AXI address range if set incorrectly
-* This is the case for Libero 12.5 and Libero 12.6
-* If using MSS Configurator 2021.1 or later the following four lines can be
-* removed.
-* LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0
-* is the definition for cached axi addrress
-* LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0
-* is the address for non-cached Libero address
-* 0x7FFFFFFFUL => 2 GB address range
-*
-*/
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0    0x7FFFFFFFUL
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_1    0x00000000UL
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0    0x7FFFFFFFUL
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_1    0x00000000UL
-
-/*
-  * Changes are fixes to data mismatches seen when applying the new
-  * DDR workload identified by the Linux boot failures on the icicle kit.
-  * CFG_MIN_READ_IDLE helped it pass in DDR3/DDR4, and CFG_READ_TO_WRITE fixed
-  * a different issue where 0's were being read back with the same workload on
-  * LPDDR3.
-  */
-#define LIBERO_SETTING_CFG_MIN_READ_IDLE             0x00000007UL
-
-/* For LPDDR3 only: */
-//#define LIBERO_SETTING_CFG_READ_TO_WRITE             0x00000006UL
-//#define LIBERO_SETTING_CFG_READ_TO_WRITE_ODT         0x00000006UL
-
-/*
-* The following three setting disable Data Mask and enable Read Write Modify
-* This is required if accessing LPDDR4 with non-cached writes and using
-* MSS Configurator 2021.1 or earlier.
-*/
-#define LIBERO_SETTING_CFG_DM_EN 0x00000000UL
-#define LIBERO_SETTING_CFG_RMW_EN 0x00000001UL
-#define LIBERO_SETTING_DDRPHY_MODE 0x00014A24UL
 
 
 /*
@@ -222,22 +184,58 @@
 #define LIBERO_SETTING_CONTEXT_B_HART_EN    0x00000010UL    /* hart 4 */
 
 /*
- * DDR software options
- */
-
-/*
  * Debug DDR startup through a UART
- * Comment out in normal operation. May be useful for debug purposes in bring-up
- * of a new board design.
- * See the weakly linked function setup_ddr_debug_port(mss_uart_instance_t * uart)
- * If you need to edit this function, make another copy of the function in your
- * application without the weak linking attribute. This copy will then get linked.
+ * Comment out in normal operation. Useful for debug purposes in bring-up of DDR
+ * in a new board design.
+ * See the weak function setup_ddr_debug_port(mss_uart_instance_t * uart)
+ * If you need to edit this function, make a copy of the function without the
+ * weak declaration in your application code.
  * */
 //#define DEBUG_DDR_INIT
 //#define DEBUG_DDR_RD_RW_FAIL
 //#define DEBUG_DDR_RD_RW_PASS
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG
+
+#define LIBERO_SETTING_CFG_VREFDQ_TRN_ENABLE        0x00000001UL
+#define LIBERO_SETTING_CFG_VREFDQ_TRN_RANGE         0x00000001UL
+#define LIBERO_SETTING_CFG_VREFDQ_TRN_VALUE         0x00000017UL
+
+/*
+  * Changes are fixes to data mismatches seen when applying the new
+  * DDR workload identified by the Linux boot failures on the icicle kit.
+  * CFG_MIN_READ_IDLE helped it pass in DDR3/DDR4, and CFG_READ_TO_WRITE fixed
+  * a different issue where 0's were being read back with the same workload on
+  * LPDDR3.
+  */
+#define LIBERO_SETTING_CFG_MIN_READ_IDLE            0x00000007UL
+#define LIBERO_SETTING_CFG_DM_EN                    0x00000000UL
+#define LIBERO_SETTING_CFG_RMW_EN                   0x00000001UL
+#define LIBERO_SETTING_DDRPHY_MODE                  0x00014A24UL
+
+/*
+ * To match DCT version Feb 2022
+ */
+#define LIBERO_SETTING_DPC_BITS                     0x00050422UL
+#define LIBERO_SETTING_RPC_ODT_DQ                   0x00000003UL
+#define LIBERO_SETTING_TIP_CFG_PARAMS               0x07CFE02FUL
+#define LIBERO_SETTING_CFG_READ_TO_WRITE_ODT        0x0000000FUL
+
+#define LIBERO_SETTING_CFG_PU_CAL                   0x00000000UL
+
+/*
+ * skip extra error checking on startup
+ * Set to 0xF to skip extra checking at end of training
+ * */
+// #define LIBERO_FAST_START                           0x0FU
+
+/*
+ * To lower training time adjust LIBERO_SETTING_CFG_DFI_T_PHY_WRLAT value so
+ * wr calib result is 00001111
+ *
+ * */
+// #define LIBERO_SETTING_CFG_DFI_T_PHY_WRLAT          0x00000007UL
+
 
 /*
  * The hardware configuration settings imported from Libero project get generated

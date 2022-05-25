@@ -59,7 +59,7 @@ extern "C" {
 #define CONTEXT_EN_MASK_GPIO1          (1U<<20)
 #define CONTEXT_EN_MASK_GPIO2          (1U<<21)
 #define CONTEXT_EN_MASK_RTC            (1U<<22)
-#define CONTEXT_EN_MASK_H2FINT         (1U<<23)
+#define CONTEXT_EN_MASK_M2FINT         (1U<<23)
 #define CONTEXT_EN_MASK_CRYPTO         (1U<<24)
 #define CONTEXT_EN_MASK_USB            (1U<<25)
 #define CONTEXT_EN_MASK_QSPIXIP        (1U<<26)

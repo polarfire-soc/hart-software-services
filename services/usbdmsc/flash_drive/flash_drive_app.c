@@ -253,7 +253,7 @@ static void physical_device_read(uint64_t byte_address, uint8_t *p_rx_buffer,
     // wait for any in-flight transactions to complete
     while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
-            ret_status = mmc_main_plic_IRQHandler();
+            ret_status = PLIC_mmc_main_IRQHandler();
         } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 
@@ -261,7 +261,7 @@ static void physical_device_read(uint64_t byte_address, uint8_t *p_rx_buffer,
     ret_status = MSS_MMC_sdma_read((uint32_t)lba_address, p_rx_buffer, size_in_bytes);
     if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
-            ret_status = mmc_main_plic_IRQHandler();
+            ret_status = PLIC_mmc_main_IRQHandler();
         } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 #endif

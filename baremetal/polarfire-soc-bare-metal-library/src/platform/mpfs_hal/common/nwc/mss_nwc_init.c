@@ -23,7 +23,6 @@
 #ifdef DEBUG_DDR_INIT
 #include "drivers/mss/mss_mmuart/mss_uart.h"
 extern mss_uart_instance_t *g_debug_uart ;
-uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
 #endif
 
 /*******************************************************************************
@@ -37,46 +36,30 @@ g5_mss_top_scb_regs_TypeDef     * const SCB_REGS            = (g5_mss_top_scb_re
 /*******************************************************************************
  * Local functions
  */
-void delay(uint32_t n);
+static uint64_t report_status_functions(MSS_REPORT_STATUS report_status, uint64_t next_time);
 
 /*******************************************************************************
  * extern defined functions
  */
-#ifdef DEBUG_DDR_INIT
-uint32_t setup_ddr_debug_port(mss_uart_instance_t * uart);
-#endif
 
 /******************************************************************************
  * Public Functions - API
  ******************************************************************************/
 
 /**
- * MSS_DDR_init_simulation(void)
- * Flow when running through full chip simulation
- *
+ * mss_nwc_init(void)
+ * Init of MSS called after hard and soft boot
+ * Settings informed by MSS Configurator config.
+ *   - some registers set to required values
+ *   - PLL
+ *   - SGMII
+ *   - MSS IO
  * @return
  */
 uint8_t mss_nwc_init(void)
 {
     uint8_t error = 0U;
 
-#ifndef SIFIVE_HIFIVE_UNLEASHED
-
-#ifdef SIMULATION_TEST_FEEDBACK
-    /*
-     * set the test version- this is read in Simulation environment
-     * x.y.z
-     * byte[0] = z
-     * byte[1] = y
-     * byte[2] = x
-     */
-    SIM_FEEDBACK0(0x33333333);
-    SYSREG->TEMP0 = (0U << 16U) | (3U << 8U) | 3U;
-    SYSREG->TEMP0 = 0x44444444U;
-    SIM_FEEDBACK0(1);
-    SIM_FEEDBACK0(0x55555555);
-    SIM_FEEDBACK0(1);
-#endif
     /*
      * Assumptions:
      *  1. We enter here shortly after start-up of E51 code by  the system
@@ -107,10 +90,6 @@ uint8_t mss_nwc_init(void)
 
     /*
      * SCB access settings
-     * Bits 15:8 Sets how long SCB request is held active after SCB bus granted.
-     * Allows SCB bus master-ship to maintained across multiple SCB access
-     * cycles
-     * Bits 7:0 Set the timeout for an SCB access in CPU cycles.
      */
     SCBCFG_REGS->TIMER.TIMER = MSS_SCB_ACCESS_CONFIG;
 
@@ -303,15 +282,15 @@ uint8_t mss_nwc_init(void)
      /* DCE:111, CORE_UP:1, FLASH_VALID:0, mss_io_en:0 */
     SCB_REGS->MSSIO_CONTROL_CR.MSSIO_CONTROL_CR =\
             (0x07U<<8U)|(0x01U<<11U)|(0x00U<<12U)|(0x00U<<13U);
-    delay((uint32_t) 10U);
+    delay(DELAY_CYCLES_500_NS);
     /* DCE:000, CORE_UP:1, FLASH_VALID:0, mss_io_en:0 */
     SCB_REGS->MSSIO_CONTROL_CR.MSSIO_CONTROL_CR =\
             (0x00U<<8U)|(0x01U<<11U)|(0x00U<<12U)|(0x00U<<13U);
-    delay((uint32_t) 10U);
+    delay(DELAY_CYCLES_500_NS);
     /* DCE:000, CORE_UP:1, FLASH_VALID:1, mss_io_en:0 */
     SCB_REGS->MSSIO_CONTROL_CR.MSSIO_CONTROL_CR =\
             (0x00U<<8U)|(0x01U<<11U)|(0x01U<<12U)|(0x00U<<13U);
-    delay((uint32_t) 10U);
+    delay(DELAY_CYCLES_500_NS);
     /* DCE:000, CORE_UP:1, FLASH_VALID:1, mss_io_en:1  */
     SCB_REGS->MSSIO_CONTROL_CR.MSSIO_CONTROL_CR =\
             (0x00U<<8U)|(0x01U<<11U)|(0x01U<<12U)|(0x01U<<13U);
@@ -330,49 +309,76 @@ uint8_t mss_nwc_init(void)
     SIM_FEEDBACK0(3);
     mss_pll_config();
 
-    {
-#ifdef DDR_SUPPORT
-#ifdef DEBUG_DDR_INIT
-        {
-            (void)setup_ddr_debug_port(g_debug_uart);
-        }
-#endif
-
-        uint32_t  ddr_status;
-        ddr_status = ddr_state_machine(DDR_SS__INIT);
-
-        while((ddr_status & DDR_SETUP_DONE) != DDR_SETUP_DONE)
-        {
-            ddr_status = ddr_state_machine(DDR_SS_MONITOR);
-        }
-        if ((ddr_status & DDR_SETUP_FAIL) == DDR_SETUP_FAIL)
-        {
-            error |= (0x1U << 2U);
-        }
-        //todo: remove, just for sim test ddr_recalib_io_test();
-#endif
-    }
-
-#endif /* end of !define SIFIVE_HIFIVE_UNLEASHED */
-    SIM_FEEDBACK0(0x12345678U);
-    SIM_FEEDBACK0(error);
-    SIM_FEEDBACK0(0x87654321U);
     return error;
 }
 
-
-/*-------------------------------------------------------------------------*//**
- * delay()
- * Not absolute. Dependency on current clk rate
- * @param n Number of iterations to wait.
+/**
+ *  mss_nwc_init_ddr(void)
+ *      Init the DDR
+ *
+ * @return error status, 0U => OK
  */
-void delay(uint32_t n)
+uint8_t mss_nwc_init_ddr(void)
 {
-    volatile uint32_t count = n;
-    while(count!=0U)
+    uint8_t error = 0U;
+#ifdef DDR_SUPPORT
+    uint64_t next_time;
+#ifdef DEBUG_DDR_INIT
+    if (g_debug_uart == NULL)
     {
-        count--;
+        /*
+         * Defaults to UART0 if none selected by user boot code
+         */
+        g_debug_uart = &g_mss_uart0_lo;
     }
+    (void)setup_ddr_debug_port(g_debug_uart);
+#endif
+
+    uint32_t  ddr_status;
+    ddr_status = ddr_state_machine(DDR_SS__INIT);
+    next_time = 0U;
+    while((ddr_status & DDR_SETUP_DONE) != DDR_SETUP_DONE)
+    {
+        ddr_status = ddr_state_machine(DDR_SS_MONITOR);
+        next_time = report_status_functions(DDR_BOOT_PROGRESS, next_time);
+    }
+    if ((ddr_status & DDR_SETUP_FAIL) == DDR_SETUP_FAIL)
+    {
+        error |= (0x1U << 2U);
+    }
+#endif
+
+    return error;
+}
+
+/**
+ * report_status_functions()
+ * Used to call user boot functions for feedback during boot
+ * @param report_status
+ */
+static uint64_t report_status_functions(MSS_REPORT_STATUS report_status, uint64_t next_time)
+{
+    if (next_time >= rdcycle())
+    {
+        switch(report_status)
+        {
+            case    DDR_BOOT_PROGRESS:
+                ddr_report_progress();
+                break;
+            default:
+                break;
+        }
+        next_time = rdcycle() + DELAY_CYCLES_100MS;
+    }
+    return next_time;
+}
+
+/**
+ *  Application can create own function to show progress
+ */
+__attribute__((weak))  void ddr_report_progress(void)
+{
+    return;
 }
 
 /*-------------------------------------------------------------------------*//**

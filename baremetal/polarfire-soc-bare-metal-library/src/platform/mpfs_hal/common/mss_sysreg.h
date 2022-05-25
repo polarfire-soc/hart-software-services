@@ -200,25 +200,25 @@ extern "C" {
 
 /*U54-1 Fabric interrupt enable*/
 #define FAB_INTEN_U54_1_OFFSET                                   0x40
-    /* Enables the F2H_interrupts[31:0] to interrupt U54_1 directly*/
+    /* Enables the F2M_interrupts[31:0] to interrupt U54_1 directly*/
     #define FAB_INTEN_U54_1_ENABLE_OFFSET                        0x0
     #define FAB_INTEN_U54_1_ENABLE_MASK                          (0xFFFFFFFF << 0x0)
 
 /*U54-2 Fabric interrupt enable*/
 #define FAB_INTEN_U54_2_OFFSET                                   0x44
-    /* Enables the F2H_interrupts[31:0] to interrupt U54_1 directly*/
+    /* Enables the F2M_interrupts[31:0] to interrupt U54_1 directly*/
     #define FAB_INTEN_U54_2_ENABLE_OFFSET                        0x0
     #define FAB_INTEN_U54_2_ENABLE_MASK                          (0xFFFFFFFF << 0x0)
 
 /*U54-3 Fabric interrupt enable*/
 #define FAB_INTEN_U54_3_OFFSET                                   0x48
-    /* Enables the F2H_interrupts[31:0] to interrupt U54_1 directly*/
+    /* Enables the F2M_interrupts[31:0] to interrupt U54_1 directly*/
     #define FAB_INTEN_U54_3_ENABLE_OFFSET                        0x0
     #define FAB_INTEN_U54_3_ENABLE_MASK                          (0xFFFFFFFF << 0x0)
 
 /*U54-4 Fabric interrupt enable*/
 #define FAB_INTEN_U54_4_OFFSET                                   0x4C
-    /* Enables the F2H_interrupts[31:0] to interrupt U54_1 directly*/
+    /* Enables the F2M_interrupts[31:0] to interrupt U54_1 directly*/
     #define FAB_INTEN_U54_4_ENABLE_OFFSET                        0x0
     #define FAB_INTEN_U54_4_ENABLE_MASK                          (0xFFFFFFFF << 0x0)
 
@@ -323,8 +323,8 @@ extern "C" {
     #define APBBUS_CR_RTC_OFFSET                                 0x16
     #define APBBUS_CR_RTC_MASK                                   (0x01 << 0x16)
     /* */
-    #define APBBUS_CR_H2FINT_OFFSET                              0x17
-    #define APBBUS_CR_H2FINT_MASK                                (0x01 << 0x17)
+    #define APBBUS_CR_M2FINT_OFFSET                              0x17
+    #define APBBUS_CR_M2FINT_MASK                                (0x01 << 0x17)
 
 /*"Enables the clock to the MSS peripheral. By turning clocks off dynamic power
     can be saved. When the clock is off the peripheral  should not be accessed
@@ -3506,49 +3506,49 @@ extern "C" {
     #define MSSIO_BANK2_IO_CFG_22_23_CR_RPC_IO_CFG_23_LP_BYPASS_EN_OFFSET       0x1E
     #define MSSIO_BANK2_IO_CFG_22_23_CR_RPC_IO_CFG_23_LP_BYPASS_EN_MASK         (0x01 << 0x1E)
 
-/*Sets H2F [31:0] Spares out signals*/
+/*Sets M2F [31:0] Spares out signals*/
 #define MSS_SPARE0_CR_OFFSET                                     0x2A8
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE0_CR_DATA_OFFSET                            0x0
     #define MSS_SPARE0_CR_DATA_MASK                              (0xFFFFFFFF << 0x0)
 
-/*Sets H2F [37:32] Spares out signals*/
+/*Sets M2F [37:32] Spares out signals*/
 #define MSS_SPARE1_CR_OFFSET                                     0x2AC
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE1_CR_DATA_OFFSET                            0x0
     #define MSS_SPARE1_CR_DATA_MASK                              (0x3F << 0x0)
 
-/*Read H2F [31:0] Spares out signals*/
+/*Read M2F [31:0] Spares out signals*/
 #define MSS_SPARE0_SR_OFFSET                                     0x2B0
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE0_SR_DATA_OFFSET                            0x0
     #define MSS_SPARE0_SR_DATA_MASK                              (0xFFFFFFFF << 0x0)
 
-/*Read H2F [37:32] Spares out signals*/
+/*Read M2F [37:32] Spares out signals*/
 #define MSS_SPARE1_SR_OFFSET                                     0x2B4
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE1_SR_DATA_OFFSET                            0x0
     #define MSS_SPARE1_SR_DATA_MASK                              (0x3F << 0x0)
 
-/*Read F2H [31:0] Spares in1 signals*/
+/*Read F2M [31:0] Spares in1 signals*/
 #define MSS_SPARE2_SR_OFFSET                                     0x2B8
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE2_SR_DATA_OFFSET                            0x0
     #define MSS_SPARE2_SR_DATA_MASK                              (0xFFFFFFFF << 0x0)
 
-/*Read F2H [37:32] Spares in1 signals*/
+/*Read F2M [37:32] Spares in1 signals*/
 #define MSS_SPARE3_SR_OFFSET                                     0x2BC
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE3_SR_DATA_OFFSET                            0x0
     #define MSS_SPARE3_SR_DATA_MASK                              (0x3F << 0x0)
 
-/*Read F2H [31:0] Spares in2 signals*/
+/*Read F2M [31:0] Spares in2 signals*/
 #define MSS_SPARE4_SR_OFFSET                                     0x2C0
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE4_SR_DATA_OFFSET                            0x0
     #define MSS_SPARE4_SR_DATA_MASK                              (0xFFFFFFFF << 0x0)
 
-/*Read F2H [37:32] Spares in2 signals*/
+/*Read F2M [37:32] Spares in2 signals*/
 #define MSS_SPARE5_SR_OFFSET                                     0x2C4
     /* See MSS MAS specification for full description*/
     #define MSS_SPARE5_SR_DATA_OFFSET                            0x0
@@ -4002,28 +4002,28 @@ typedef struct _mss_sysreg
      __I uint32_t RESERVEDREG32B_81;
      __I uint32_t RESERVEDREG32B_82;
 
-    /*Sets H2F [31:0] Spares out signals*/
+    /*Sets M2F [31:0] Spares out signals*/
      __IO uint32_t MSS_SPARE0_CR;
 
-    /*Sets H2F [37:32] Spares out signals*/
+    /*Sets M2F [37:32] Spares out signals*/
      __IO uint32_t MSS_SPARE1_CR;
 
-    /*Read H2F [31:0] Spares out signals*/
+    /*Read M2F [31:0] Spares out signals*/
      __IO uint32_t MSS_SPARE0_SR;
 
-    /*Read H2F [37:32] Spares out signals*/
+    /*Read M2F [37:32] Spares out signals*/
      __IO uint32_t MSS_SPARE1_SR;
 
-    /*Read F2H [31:0] Spares in1 signals*/
+    /*Read F2M [31:0] Spares in1 signals*/
      __IO uint32_t MSS_SPARE2_SR;
 
-    /*Read F2H [37:32] Spares in1 signals*/
+    /*Read F2M [37:32] Spares in1 signals*/
      __IO uint32_t MSS_SPARE3_SR;
 
-    /*Read F2H [31:0] Spares in2 signals*/
+    /*Read F2M [31:0] Spares in2 signals*/
      __IO uint32_t MSS_SPARE4_SR;
 
-    /*Read F2H [37:32] Spares in2 signals*/
+    /*Read F2M [37:32] Spares in2 signals*/
      __IO uint32_t MSS_SPARE5_SR;
 
     /* Padding reserved 32-bit registers.*/

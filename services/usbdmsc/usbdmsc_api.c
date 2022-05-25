@@ -76,7 +76,7 @@ bool USBDMSC_Poll(void)
         switch (source) {
 #if defined(CONFIG_SERVICE_MMC)
         case MMC_main_PLIC: // MMC interrupt
-            mmc_main_plic_IRQHandler(); // interrupt 88
+            PLIC_mmc_main_IRQHandler(); // interrupt 88
             break;
 #endif
 

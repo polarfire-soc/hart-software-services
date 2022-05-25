@@ -17,6 +17,11 @@
 #include <stdio.h>
 
 #include "mpfs_hal/mss_hal.h"
+#ifdef LIBERO_SETTING_ALT_IOMUX1_CR
+#if ((LIBERO_SETTING_MSSIO_CONFIGURATION_OPTIONS & (EMMC_CONFIGURED_MASK | SD_CONFIGURED_MASK)) == (EMMC_CONFIGURED_MASK | SD_CONFIGURED_MASK))
+static uint8_t io_mux_and_bank_config_alt(void);
+#endif
+#endif
 
 /*******************************************************************************
  * external functions
@@ -578,7 +583,7 @@ __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
 
 
 #ifdef EXAMPLE_MSSIO_APP_CODE
-#include "drivers/mss/mss_gpio/mss_gpio.h"
+#include "drivers/mss_gpio/mss_gpio.h"
 /**
  *
  * @return 0 => OK

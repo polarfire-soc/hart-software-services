@@ -95,7 +95,7 @@
 
 #include "mss_sysreg.h"
 
-extern uint8_t mmc_main_plic_IRQHandler(void);
+extern uint8_t PLIC_mmc_main_IRQHandler(void);
 
 static void mmc_reset_block(void)
 {
@@ -266,7 +266,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     uint32_t sectorByteCount = byteCount - (byteCount % HSS_MMC_SECTOR_SIZE);
 
     do {
-        result = mmc_main_plic_IRQHandler();
+        result = PLIC_mmc_main_IRQHandler();
     } while (MSS_MMC_TRANSFER_IN_PROGRESS == result);
 
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Calling MSS_MMC_sdma_read(%lu, %p) "
@@ -274,7 +274,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
     result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)pCDest, sectorByteCount);
 
     while (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
-        result = mmc_main_plic_IRQHandler();
+        result = PLIC_mmc_main_IRQHandler();
     }
 
     byteCount = byteCount - sectorByteCount;
@@ -290,7 +290,7 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
         result = MSS_MMC_sdma_read(src_sector_num, (uint8_t *)runtBuffer, HSS_MMC_SECTOR_SIZE);
 
         while (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
-            result = mmc_main_plic_IRQHandler();
+            result = PLIC_mmc_main_IRQHandler();
         }
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {
@@ -379,7 +379,7 @@ bool HSS_MMC_WriteBlockSDMA(size_t dstOffset, void *pSrc, size_t byteCount)
     // wait for any in-flight transactions to complete
     while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
-            result = mmc_main_plic_IRQHandler();
+            result = PLIC_mmc_main_IRQHandler();
         } while (result == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 
@@ -387,7 +387,7 @@ bool HSS_MMC_WriteBlockSDMA(size_t dstOffset, void *pSrc, size_t byteCount)
     result = MSS_MMC_sdma_write((uint8_t *)pCSrc, dst_sector_num, byteCount);
     if (result == MSS_MMC_TRANSFER_IN_PROGRESS) {
         do {
-            result = mmc_main_plic_IRQHandler();
+            result = PLIC_mmc_main_IRQHandler();
         } while (result == MSS_MMC_TRANSFER_IN_PROGRESS);
     }
 

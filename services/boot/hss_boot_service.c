@@ -23,6 +23,7 @@
 #include "hss_clock.h"
 #include "hss_debug.h"
 #include "hss_perfctr.h"
+#include "common/mss_peripherals.h"
 
 #include <assert.h>
 #include <string.h>

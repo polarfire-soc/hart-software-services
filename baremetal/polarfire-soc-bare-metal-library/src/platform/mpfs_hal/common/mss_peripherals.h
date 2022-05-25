@@ -76,7 +76,7 @@ typedef enum mss_peripherals_ {
     MSS_PERIPH_GPIO1        = 20U,
     MSS_PERIPH_GPIO2        = 21U,
     MSS_PERIPH_RTC          = 22U,
-    MSS_PERIPH_H2FINT       = 23U,
+    MSS_PERIPH_M2FINT       = 23U,
     MSS_PERIPH_CRYPTO       = 24U,
     MSS_PERIPH_USB          = 25U,
     MSS_PERIPH_QSPIXIP      = 26U,
@@ -119,6 +119,54 @@ typedef enum mss_peripherals_ {
   @endcode
  */
 uint8_t mss_config_clk_rst(mss_peripherals peripheral, uint8_t hart, PERIPH_RESET_STATE req_state);
+
+/***************************************************************************//**
+  This function is used to turn on the fabric enable
+
+  Example:
+  @code
+    (void)mss_config_clk_rst(MSS_PERIPH_FIC3, (uint8_t)MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+    mss_enable_fabric();
+  @endcode
+ */
+void mss_enable_fabric(void);
+
+/***************************************************************************//**
+  This function is used to turn on the fabric enable
+
+  Example:
+  @code
+    mss_disable_fabric();
+  @endcode
+ */
+void mss_disable_fabric(void);
+
+/***************************************************************************//**
+  This function is used to set the apb_bus_cr register value
+
+  @param reg_value value of the register you want to set.
+  This value is available from the MSS configurator
+  LIBERO_SETTING_APBBUS_CR
+
+  Example:
+  @code
+    mss_set_apb_bus_cr(LIBERO_SETTING_APBBUS_CR);
+  @endcode
+ */
+void mss_set_apb_bus_cr(uint32_t reg_value);
+
+/***************************************************************************//**
+  This function is used to get the apb_bus_cr register value
+
+  @return Return the apb_bus_cr reg value
+
+  Example:
+  @code
+    uint32_t cr_reg;
+    cr_reg = mss_get_apb_bus_cr();
+  @endcode
+ */
+uint32_t mss_get_apb_bus_cr(void);
 
 
 #ifdef __cplusplus

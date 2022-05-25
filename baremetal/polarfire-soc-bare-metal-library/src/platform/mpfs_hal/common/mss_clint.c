@@ -99,19 +99,19 @@ void handle_m_timer_interrupt(void)
     switch(hart_id)
     {
         case 0U:
-            SysTick_Handler_h0_IRQHandler();
+            E51_sysTick_IRQHandler();
             break;
         case 1U:
-            SysTick_Handler_h1_IRQHandler();
+            U54_1_sysTick_IRQHandler();
             break;
         case 2U:
-            SysTick_Handler_h2_IRQHandler();
+            U54_2_sysTick_IRQHandler();
             break;
         case 3U:
-            SysTick_Handler_h3_IRQHandler();
+            U54_3_sysTick_IRQHandler();
             break;
         case 4U:
-            SysTick_Handler_h4_IRQHandler();
+            U54_4_sysTick_IRQHandler();
             break;
         default:
             while (hart_id != 0U)
@@ -139,19 +139,19 @@ void handle_m_soft_interrupt(void)
     switch(hart_id)
     {
         case 0U:
-            Software_h0_IRQHandler();
+            E51_software_IRQHandler();
             break;
         case 1U:
-            Software_h1_IRQHandler();
+            U54_1_software_IRQHandler();
             break;
         case 2U:
-            Software_h2_IRQHandler();
+            U54_2_software_IRQHandler();
             break;
         case 3U:
-            Software_h3_IRQHandler();
+            U54_3_software_IRQHandler();
             break;
         case 4U:
-            Software_h4_IRQHandler();
+            U54_4_software_IRQHandler();
             break;
         default:
             while (hart_id != 0U)
