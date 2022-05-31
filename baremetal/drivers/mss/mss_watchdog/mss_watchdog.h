@@ -218,8 +218,8 @@ Time calculation example:
    mvrp_val = 0x989680u
    timeout_val = 0x3e8u
 
-   A presaclar = 256 is used on the MSS AXI clock.
-   Considering AXI clock = 25Mhz
+   A prescaler = 256 is used on the MSS AHB/APB clock.
+   Considering AHB/APB clock = 25Mhz
 
    The MVRP interrupt will happen after
    (0xFFFFF0 - 0x989680) * ( 1/25MHz/256)
