@@ -52,9 +52,9 @@
 
 #include <string.h>
 
-#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
-#  include "hss_crypto.h"
-#endif
+//#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+//#  include "hss_crypto.h"
+//#endif
 
 /******************************************************************************************/
 
@@ -63,9 +63,9 @@ void hss_main(void);
 
 void hss_main(void)
 {
-    if (IS_ENABLED(CONFIG_SERVICE_WDOG)) {
-        HSS_Wdog_MonitorHart(HSS_HART_ALL);
-    }
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+    HSS_Wdog_MonitorHart(HSS_HART_ALL);
+#endif
 
     while (true) {
         RunStateMachines(spanOfPGlobalStateMachines, pGlobalStateMachines);

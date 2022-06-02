@@ -66,10 +66,15 @@
 //
 // local module functions
 
-#if !IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+#  if !IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 typedef bool (*HSS_BootImageCopyFnPtr_t)(void *pDest, size_t srcOffset, size_t byteCount);
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction);
+#  endif
+
+static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
+static bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t getBootImageFunction);
 #endif
 
 static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
@@ -77,8 +82,6 @@ static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootIm
 static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 
-static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
-static bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t getBootImageFunction);
 
 //
 //
@@ -169,7 +172,8 @@ struct HSS_Storage *HSS_BootGetActiveStorage(void)
 
 bool HSS_BootInit(void)
 {
-    bool result = false;
+    bool result = true;
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Boot Image ...\n");
 
@@ -195,25 +199,29 @@ bool HSS_BootInit(void)
     }
 
     HSS_PerfCtr_Lap(perf_ctr_index);
+#endif
+
     return result;
 }
 
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t const bootImageFunction)
 {
     bool result = false;
-    bool decompressedFlag = false;
-    struct HSS_BootImage *pBootImage = NULL;
-
     (void)pStorage;
+
+    struct HSS_BootImage *pBootImage = NULL;
+    bool decompressedFlag = false;
+
     (void)decompressedFlag;
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+
     result = bootImageFunction(pStorage, &pBootImage);
     //
     // check if this image is compressed...
     // if so, decompress it to DDR
     //
-    // for now, compression only works with a source already in DDR 
+    // for now, compression only works with a source already in DDR
 #  if IS_ENABLED(CONFIG_COMPRESSION)
     if (result && pBootImage->magic == mHSS_COMPRESSED_MAGIC) {
         decompressedFlag = true;
@@ -243,7 +251,6 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
     HSS_Register_Boot_Image(pBootImage);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered ...\n");
 
-#endif
 
     return result;
 }
@@ -252,14 +259,15 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
 
 static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage)
 {
-#ifdef BOOT_DEBUG
+#  ifdef BOOT_DEBUG
     mHSS_DEBUG_PRINTF(LOG_NORMAL, " - set name is >>%s<<\n", pBootImage->set_name);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, " - magic is    %08x\n", pBootImage->magic);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, " - length is   %08x\n", pBootImage->bootImageLength);
-#endif
+#  endif
 }
+#endif
 
-#if !IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && !IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction)
 {
@@ -279,7 +287,7 @@ static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootIm
 {
     bool result = false;
 
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && IS_ENABLED(CONFIG_SERVICE_MMC)
     assert(ppBootImage);
 
     // if we are using MMC, then we need to do an initial copy of the
@@ -381,7 +389,7 @@ static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootI
 {
     bool result = false;
 
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && IS_ENABLED(CONFIG_SERVICE_QSPI)
     assert(ppBootImage);
 
     // need to do an initial copy of the boot header into our structure, for subsequent use
@@ -441,7 +449,7 @@ static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_Bo
     bool result = false;
     (void)pStorage;
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     assert(ppBootImage);
 
     extern struct HSS_BootImage _payload_start;
@@ -464,7 +472,7 @@ void HSS_BootSelectPayload(void)
 #endif
 }
 
-#if IS_ENABLED(CONFIG_SERVICE_SPI)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && IS_ENABLED(CONFIG_SERVICE_SPI)
 static bool spiFlashReadBlock_(void *dst, size_t offs, size_t count) {
    int retval = MSS_SYS_spi_copy((uintptr_t)dst, offs, count, /* options */ 3, /* mb_offset */ 0);
 
@@ -480,7 +488,7 @@ static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_B
     bool result = false;
     (void)pStorage;
 
-#if IS_ENABLED(CONFIG_SERVICE_SPI)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && IS_ENABLED(CONFIG_SERVICE_SPI)
 
     assert(ppBootImage);
 
