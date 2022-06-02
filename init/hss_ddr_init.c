@@ -17,6 +17,7 @@
 
 #include "hss_debug.h"
 #include "hss_perfctr.h"
+#include "hss_clock.h"
 
 #include <assert.h>
 #include <string.h>
@@ -195,13 +196,24 @@ bool HSS_DDRPrintL2CacheWayMasks(void)
  */
 bool HSS_DDRInit(void)
 {
+    bool result = true;
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
-    HSS_PerfCtr_Allocate(&perf_ctr_index, "NWC Init");
-    assert(mss_nwc_init() == 0);
-    assert(mss_nwc_init_ddr() == 0);
-    HSS_PerfCtr_Lap(perf_ctr_index);
-#endif
+    if (!IS_ENABLED(CONFIG_SKIP_DDR)) {
+        sbi_printf("DDR training ... ");
+        int perf_ctr_index = PERF_CTR_UNINITIALIZED;
+        HSS_PerfCtr_Allocate(&perf_ctr_index, "DDR Init");
 
-    return true;
+#    define CURSOR_UP "\033[A"
+        if (mss_nwc_init_ddr() != 0) {
+            sbi_printf(CURSOR_UP "DDR training ... Failed\n");
+            result = false;
+        } else {
+            HSS_PerfCtr_Lap(perf_ctr_index);
+            sbi_printf(CURSOR_UP "DDR training ... Passed (%d ms)\n", HSS_PerfCtr_GetTime(perf_ctr_index)/TICKS_PER_MILLISEC);
+        }
+        HSS_PerfCtr_Lap(perf_ctr_index);
+#  endif
+    }
+
+    return result;
 }

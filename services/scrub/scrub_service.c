@@ -90,8 +90,10 @@ const struct {
 } rams[] = {
     { (uintptr_t)&__l2lim_start,         (uintptr_t)&__l2lim_end },
     { (uintptr_t)&__l2_start,            (uintptr_t)&__l2_end },
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
     { (uintptr_t)&__ddr_start,           (uintptr_t)&__ddr_end },
     { (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end },
+#endif
     //{ (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
     //{ (uintptr_t)&__e51itim_start,       (uintptr_t)&__e51itim_end },
     //{ (uintptr_t)&__u54_1_itim_start,    (uintptr_t)&__u54_1_itim_end },
@@ -111,7 +113,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
         if (!entryCount) {
             if ((rams[index].baseAddr + offset)  >= rams[index].endAddr) {
                 index = (index + 1u) % ARRAY_SIZE(rams);
-                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Scrubbing %p to %p\n", rams[index].baseAddr, rams[index].endAddr);
+                // mHSS_DEBUG_PRINTF(LOG_NORMAL, "Scrubbing %p to %p\n", rams[index].baseAddr, rams[index].endAddr);
 		offset = 0u;
             }
 

@@ -59,8 +59,17 @@ config DEFAULT_DEVICE_TREE
 endmenu
 
 menu "Memory Options"
+config SKIP_DDR
+	bool "Skip DDR Training"
+	default n
+	help
+		This feature enables skipping DDR training for systems without DDR.
+
+		If you don't know what to do here, say N.
+
 config MEMTEST
 	bool "DDR Memory Tester"
+	depends on !SKIP_DDR
 	default n
 	help
 		This feature enables a simple walking 1's style memory tester for the DDR.
