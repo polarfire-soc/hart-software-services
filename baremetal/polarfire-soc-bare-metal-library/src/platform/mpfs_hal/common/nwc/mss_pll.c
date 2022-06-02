@@ -480,6 +480,7 @@ void mss_pll_config(void)
         else
         {
             //todo: add failure mode
+            break;
         }
     }
 

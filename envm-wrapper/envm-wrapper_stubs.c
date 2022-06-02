@@ -29,11 +29,6 @@ void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
     ;
 }
 
-int uart_putstring(int hartid, char *p)
-{
-    return 0;
-}
-
 int sbi_printf(const char *fmt, ...) {
     (void)fmt;
     return 0;
@@ -67,6 +62,20 @@ void sbi_puts(const char *buf)
 {
     (void)buf;
 }
+
+size_t sbi_strlen(const char *str);
+size_t sbi_strlen(const char *s)
+{
+    size_t result = 0;
+
+    while (*s) {
+        ++s;
+        ++result;
+    }
+
+    return result;
+}
+
 
 extern uint64_t __l2lim_heap_base;
 uintptr_t malloc_base = (uintptr_t)&__l2lim_heap_base;

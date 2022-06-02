@@ -120,6 +120,22 @@ _start:
 	call	init_memory
 	call	HSS_Setup_Clocks
 
+	call	mss_nwc_init
+
+#ifndef CONFIG_CRYPTO_SIGNING
+.e51_print_message:
+	la	a0, g_mss_uart0_lo
+	li	a1, 115200
+#define MSS_UART_DATA_8_BITS     (0x03)
+#define MSS_UART_NO_PARITY       (0x00)
+#define MSS_UART_ONE_STOP_BIT    (0x00)
+	li	a2, MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT
+	call	MSS_UART_init
+
+	la	a1, decomp_msg
+	call	MSS_UART_polled_tx_string
+#endif
+
 	la	a0, hss_l2scratch_lz				# compressed image header
 	lw	a1, OFFSET_OF(HSS_CompressedImage, version)(a0)	# version
 	li	a2, mHSS_COMPRESSED_VERSION_DEFLATE
@@ -147,6 +163,37 @@ _start:
 
 .clear_progress:
 	call	validate_crc
+	li	a1, 1
+	beq	a0, a1, .crc_good
+
+#ifndef CONFIG_CRYPTO_SIGNING
+	la	a0, g_mss_uart0_lo
+	la	a1, failed_msg
+	call	MSS_UART_polled_tx_string
+1:
+	la	a0, g_mss_uart0_lo
+	call	MSS_UART_get_tx_status
+
+	andi	a0, a0, 64
+	beq	a0, zero, 1b # loop until transmitter empty (TEMT)
+#endif
+
+.spin_bad_crc:
+	j	.spin_bad_crc
+
+.crc_good:
+#ifndef CONFIG_CRYPTO_SIGNING
+	la	a0, g_mss_uart0_lo
+	la	a1, passed_msg
+	call	MSS_UART_polled_tx_string
+1:
+	la	a0, g_mss_uart0_lo
+	call	MSS_UART_get_tx_status
+
+	andi	a0, a0, 64
+	beq	a0, zero, 1b # loop until transmitter empty (TEMT)
+#endif
+
 
 	li	a0, 1
 	la	a1, decompress_done_flag
@@ -236,13 +283,6 @@ init_memory:
         la	a2, __data_end
 	call	copy_section
 
-/*
-        la	a0, __l2_scratchpad_load
-        la	a1, __l2_scratchpad_start
-        la	a2, __l2_scratchpad_end
-	call	copy_section
-*/
-
         //
         // Clear zero-init memory
         //  (SBSS and BSS sections)
@@ -268,6 +308,7 @@ init_memory:
         //	a1 = src
         //	a2 = length
         .globl  config_copy
+        .weak  config_copy
         .type   config_copy, @function
 config_copy:
         li      a5,0                     # initialize offset
@@ -282,8 +323,6 @@ config_copy:
         j       .check_if_config_copy_done
 .config_copy_done:
         ret
-
-
 
 /***********************************************************************************
  *
@@ -327,6 +366,25 @@ config_copy:
 .done_clear:
 	ret
 
+/***********************************************************************************
+ *
+ */
+
+       .section .data
+       .align 8
+decomp_msg:
+       .ascii "\033[2J\033[H"
+       .asciz "\r\nHSS: decompressing from eNVM to L2 Scratch ... \0"
+passed_msg:
+       .asciz "Passed\r\n"
+failed_msg:
+       .asciz "Failed\r\n\0"
+
+       .globl __sc_start, __sc_load, __sc_end
+__sc_start:
+__sc_load:
+__sc_end:
+       .int    0
 /***********************************************************************************
  *
  */

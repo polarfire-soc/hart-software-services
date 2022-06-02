@@ -20,15 +20,17 @@
 #include "hss_sys_setup.h"
 #include "hss_crc32.h"
 
-void validate_crc(void);
-void validate_crc(void)
+bool validate_crc(void);
+bool validate_crc(void)
 {
     extern const struct HSS_CompressedImage hss_l2scratch_lz;
     extern const unsigned char __l2_start;
     uint32_t crc32 = CRC32_calculate(&__l2_start, hss_l2scratch_lz.originalImageLen);
+    bool result = 0;
 
     if (hss_l2scratch_lz.originalCrc == crc32) {
-    } else {
-        while (1) { ; } // spin forever
+       result = 1;
     }
+
+    return result;
 }

@@ -43,6 +43,19 @@ OBJS-envm-wrapper = \
 	modules/misc/stack_guard.o \
 	thirdparty/miniz/miniz.o
 
+#ifndef CONFIG_CODE_SIGNING
+OBJS-envm-wrapper += \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.o \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_pll.o \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_io.o \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_sgmii.o \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_peripherals.o \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_utils.o \
+       baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss/mss_mmuart/mss_uart.o \
+
+#endif
+
+
 EXTRA_OBJS-envm-wrapper =
 
 LINKER_SCRIPT-envm-wrapper = envm-wrapper/envm-wrapper.ld
