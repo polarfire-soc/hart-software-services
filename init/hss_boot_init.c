@@ -184,7 +184,9 @@ bool HSS_BootInit(void)
     } else {
         for (int i = 0; i < ARRAY_SIZE(pStorages); i++) {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Trying to boot via %s ...\n", pStorages[i]->name);
-            result = pStorages[i]->init();
+
+            if (pStorages[i]->init) { result = pStorages[i]->init(); }
+
             if (result) {
                 result = tryBootFunction_(pStorages[i], pStorages[i]->getBootImage);
                 if (result) { break; }
