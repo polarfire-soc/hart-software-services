@@ -830,7 +830,7 @@ static uint32_t ddr_setup(void)
             /*
              * We have chosen to use software bclk sclk sweep instead of IP
              */
-             
+
             {
                 uint32_t bclk_phase, bclk90_phase,refclk_phase;
                 bclk_answer = 0U;
@@ -1129,7 +1129,7 @@ static uint32_t ddr_setup(void)
                         MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | bclk_phase | bclk90_phase | refclk_phase);
                         delay(DELAY_CYCLES_500_NS);
                     }
-                                            
+
 #ifdef DEBUG_DDR_INIT
                     (void)uprint32(g_debug_uart,  "\n\r Returning FPGA CA VREF & CA drive to user setting.\n\r ", 0x0);
 #endif
@@ -1161,7 +1161,7 @@ static uint32_t ddr_setup(void)
                     /* RX_MD_CLKN */
                     CFG_DDR_SGMII_PHY->rpc168.rpc168 = 0x0U;
                 }
-                
+
 #ifdef DDR_TRAINING_IP_SM_START_DELAY
                 delay(DELAY_CYCLES_5_MICRO);
 #endif
@@ -1294,7 +1294,7 @@ static uint32_t ddr_setup(void)
             }
             break;
         case DDR_TRAINING_IP_SM_RDGATE:
-             /* vrgen, revert temp change during write leveling for lpddr4,  
+             /* vrgen, revert temp change during write leveling for lpddr4,
                 turn back on ODT */
             CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS = dpc_bits ;
             CFG_DDR_SGMII_PHY->rpc3_ODT.rpc3_ODT = LIBERO_SETTING_RPC_ODT_DQ;
@@ -1429,7 +1429,7 @@ static uint32_t ddr_setup(void)
                      }
 
 #define DCT_EXTRA_CHECKS
-#ifdef DCT_EXTRA_CHECKS  
+#ifdef DCT_EXTRA_CHECKS
                      uint32_t temp = 0U, gt_clk_sel = (CFG_DDR_SGMII_PHY->gt_clk_sel.gt_clk_sel & 3U);
                      if(((CFG_DDR_SGMII_PHY->gt_txdly.gt_txdly)&0xFFU) == 0U) // Gate training tx_dly check: AL
                      {
@@ -1896,7 +1896,7 @@ static uint32_t ddr_setup(void)
                     ddr_training_state = DDR_TRAINING_FAIL;
                 }
                 CFG_DDR_SGMII_PHY->rpc166.rpc166 = rpc_166_fifo_offset;
-   
+
                 /* PAUSE to reset fifo (loads new RXPTR value).*/
                 //CFG_DDR_SGMII_PHY->expert_dfi_status_override_to_shim.expert_dfi_status_override_to_shim = 0x07U;
                 CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x1U;
@@ -2360,7 +2360,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
                      */
                     CFG_DDR_SGMII_PHY->rpc226.rpc226 = 0x14U;
                     CFG_DDR_SGMII_PHY->UNUSED_SPACE0[0] =  0xA000U;
-                    /* for Skew debug at 125C MIN TTHH18->Changing the common mode of the Receiver 
+                    /* for Skew debug at 125C MIN TTHH18->Changing the common mode of the Receiver
                        to low common mode to improve IO Performance of LPDDR4 */
                     CFG_DDR_SGMII_PHY->SPARE0.SPARE0 = 0xA000U;
 
@@ -5346,7 +5346,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                 uint32_t min_refclk=0x8U;
                 uint32_t min_refclkp1=0x8U;
                 uint32_t min_refclkp2=0x8U;
-                              
+
                 if(transition_a5_max < 18U)  //it was 5 Jan21
                 {
                     a5_offset_fail = a5_offset_fail | 1U;
@@ -5358,7 +5358,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                     else
                         difference[k]=0xff;
                 }
-                
+
                 for (uint32_t k = 0U;k<8U;k++)
                 {
 
