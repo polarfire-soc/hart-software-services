@@ -38,6 +38,12 @@ extern "C" {
 #define READ_REG64(x)     (*((volatile uint64_t *)(x)))
 
 /*
+ * Local defines
+ */
+#define    LOCAL_INT_OFFSET_IN_MIE          16U  /* Offset from start of MIE for local irq enables */
+#define    LOCAL_INT_F2M_OFFSET             16U  /* Offset from 0 for fabric to MSS local interrupts */
+
+/*
  * return mcycle
  */
 uint64_t readmcycle(void);

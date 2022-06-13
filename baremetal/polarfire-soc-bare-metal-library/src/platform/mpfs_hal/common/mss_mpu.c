@@ -20,8 +20,6 @@
 #include <string.h>
 #include "mpfs_hal/mss_hal.h"
 
-#ifndef SIFIVE_HIFIVE_UNLEASHED
-
 static uint64_t pmp_get_napot_base_and_range(uint64_t reg, uint64_t *range);
 
 uint8_t num_pmp_lut[10U] = {16U,16U,8U,4U,8U,8U,4U,4U,8U,2U};
@@ -324,4 +322,3 @@ static uint64_t pmp_get_napot_base_and_range(uint64_t reg, uint64_t *range)
     return (base << 2U);
 }
 
-#endif

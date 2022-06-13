@@ -199,6 +199,7 @@ bool HSS_DDRInit(void)
     int perf_ctr_index = PERF_CTR_UNINITIALIZED;
     HSS_PerfCtr_Allocate(&perf_ctr_index, "NWC Init");
     assert(mss_nwc_init() == 0);
+    assert(mss_nwc_init_ddr() == 0);
     HSS_PerfCtr_Lap(perf_ctr_index);
 #endif
 

@@ -1216,7 +1216,7 @@ void MSS_MMC_set_handler( mss_mmc_handler_t handler)
 /******************************************************************************
   MMC ISR
 *******************************************************************************/
-uint8_t  mmc_main_plic_IRQHandler(void)
+uint8_t  PLIC_mmc_main_IRQHandler(void)
 {
     uint32_t trans_status_isr;
     uint32_t response_reg, inttoclear;

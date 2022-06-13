@@ -21,50 +21,45 @@
 #include "../mss_hal.h"
 
 /*==============================================================================
- * Redirection of standard output to a SmartFusion2 MSS UART.
+ * Redirection of standard output to an MSS UART.
  *------------------------------------------------------------------------------
  * A default implementation for the redirection of the output of printf() to a
  * UART is provided at the bottom of this file. This redirection is enabled by
- * adding the symbol/define MICROCHIP_STDIO_THRU_MMUART0 or
- * MICROCHIP_STDIO_THRU_MMUART0 to your project settings and specifying the baud
- * rate using the MICROCHIP_STDIO_BAUD_RATE define.
- */
-#ifdef MICROCHIP_STDIO_THRU_MMUART0
-#ifndef MICROCHIP_STDIO_THRU_UART
-#define MICROCHIP_STDIO_THRU_UART
-#endif
-#endif  /* MICROCHIP_STDIO_THRU_MMUART0 */
-
-#ifdef MICROCHIP_STDIO_THRU_MMUART1
-#ifndef MICROCHIP_STDIO_THRU_UART
-#define MICROCHIP_STDIO_THRU_UART
-#endif
-#endif  /* MICROCHIP_STDIO_THRU_MMUART1 */
-
-/*
- * Select which MMUART will be used for stdio and what baud rate will be used.
- * Default to 57600 baud if no baud rate is specified using the
+ * adding one of the following defines to your project in the project file
+ * boards/your-board/mpfs_hal_config/mss_sw_config.h
+ *
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart0_lo
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart1_lo
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart2_lo
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart3_lo
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart4_lo
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart0_hi
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart1_hi
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart2_hi
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart3_hi
+ * #define MICROCHIP_STDIO_THRU_MMUARTX &g_mss_uart4_hi
+ * The baud rate using the MICROCHIP_STDIO_BAUD_RATE define.
+ *
+ * Note: you must have mss_mmuart driver source code included in the project.
+ *
+ * Also note defaults to 115200 baud if no baud rate is specified using the
  * MICROCHIP_STDIO_BAUD_RATE #define.
  */
-#ifdef MICROCHIP_STDIO_THRU_UART
+#ifdef MICROCHIP_STDIO_THRU_MMUARTX
 #include "drivers/mss/mss_mmuart/mss_uart.h"
 
 #ifndef MICROCHIP_STDIO_BAUD_RATE
 #define MICROCHIP_STDIO_BAUD_RATE  MSS_UART_115200_BAUD
 #endif
 
-#ifdef MICROCHIP_STDIO_THRU_MMUART0
-static mss_uart_instance_t * const gp_my_uart = &g_mss_uart0;
-#else
-static mss_uart_instance_t * const gp_my_uart = &g_mss_uart1;
-#endif
+static mss_uart_instance_t * const gp_my_uart = MICROCHIP_STDIO_THRU_MMUARTX;
 
 /*------------------------------------------------------------------------------
  * Global flag used to indicate if the UART driver needs to be initialized.
  */
 static int g_stdio_uart_init_done = 0;
 
-#endif /* MICROCHIP_STDIO_THRU_UART */
+#endif /* MICROCHIP_STDIO_THRU_MMUARTX */
 
 /*==============================================================================
  * Environment variables.
@@ -224,7 +219,7 @@ int _write_r( void * reent, int file, char * ptr, int len )
     (void)file;
     (void)ptr;
     (void)len;
-#ifdef MICROCHIP_STDIO_THRU_UART
+#ifdef MICROCHIP_STDIO_THRU_MMUARTX
     /*--------------------------------------------------------------------------
      * Initialize the UART driver if it is the first time this function is
      * called.
@@ -244,9 +239,9 @@ int _write_r( void * reent, int file, char * ptr, int len )
     MSS_UART_polled_tx(gp_my_uart, (uint8_t *)ptr, len);
 
     return len;
-#else   /* MICROCHIP_STDIO_THRU_UART */
+#else   /* MICROCHIP_STDIO_THRU_MMUARTX */
     return (0);
-#endif  /* MICROCHIP_STDIO_THRU_UART */
+#endif  /* MICROCHIP_STDIO_THRU_MMUARTX */
 }
 
 /*==============================================================================

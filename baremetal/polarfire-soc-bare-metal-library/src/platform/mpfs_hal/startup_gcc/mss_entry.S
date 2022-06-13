@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -322,6 +322,9 @@ _start_non_bootloader_image:
     # mhartid is in a0
     beqz a0, 1f
 #ifdef __riscv_flen
+    # enable FPU and accelerator
+    li t0, MSTATUS_FS | MSTATUS_XS
+    csrs mstatus, t0
     fscsr x0
 #endif
 1:  # no float

@@ -16,7 +16,6 @@
 
 #include "mpfs_hal/mss_hal.h"
 #include "mss_pll.h"
-#ifndef SIFIVE_HIFIVE_UNLEASHED
 
 /**
  * We do it this way to avoid multiple LDRA warnings
@@ -719,6 +718,6 @@ __attribute__((weak)) void copy_switch_code(void)
 }
 
 #endif /* MPFS_HAL_HW_CONFIG */
-#endif
+
 
 

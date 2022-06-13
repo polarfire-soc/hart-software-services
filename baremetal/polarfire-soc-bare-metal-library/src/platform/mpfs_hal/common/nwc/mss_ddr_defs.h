@@ -42,4 +42,11 @@
                                        RDGATE_BIT|\
                                        DQ_DQS_BIT)
 
+/* supported clk speeds, these values come from the MSS Configurator
+   in the follwoing define - LIBERO_SETTING_DDR_CLK                           */
+#define DDR_1067_MHZ                            1067000000UL
+#define DDR_1333_MHZ                            1332000000UL
+#define DDR_1600_MHZ                            1600000000UL
+#define DDR_FREQ_MARGIN                         10UL
+
 #endif /* SRC_PLATFORM_MPFS_HAL_NWC_MSS_DDR_DEFS_H_ */

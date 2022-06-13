@@ -244,6 +244,14 @@ uint32_t no_of_iterations,
 uint32_t size
 );
 
+/***************************************************************************//**
+ *
+ */
+void
+execute_ddr_pattern
+(
+uint64_t start_addr
+);
 
 
 

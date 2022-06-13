@@ -21,9 +21,7 @@
 
 #ifdef  MPFS_HAL_HW_CONFIG
 
-#ifdef SGMII_SUPPORT
 static PART_TYPE silicon_variant = PART_NOT_DETERMINED;
-#endif
 
 /*
  * local functions
@@ -36,16 +34,12 @@ static uint32_t sgmii_channel_setup(void);
 /*
  * local variable
  */
-#ifdef SGMII_SUPPORT
 static uint32_t sro_dll_90_code;
-#endif
 
 /*
  * local functions
  */
-#ifdef SGMII_SUPPORT
 static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_threshold);
-#endif
 
 /*
  * extern functions
@@ -637,7 +631,6 @@ void ddr_pvt_recalibration(void)
  * @param n_late_threshold
  * @param p_early_threshold
  */
-#ifdef SGMII_SUPPORT
 static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_threshold)
 {
     uint32_t n_eye_values;
@@ -647,19 +640,18 @@ static void set_early_late_thresholds(uint8_t n_late_threshold, uint8_t p_early_
      * Set the N eye width value
      * bits 31:29 for CH1, bits 28:26  for CH0 in spare control (N eye width value)
      */
-    n_eye_values = (n_late_threshold << SHIFT_TO_CH0_N_EYE_VALUE);
-    n_eye_values |= (n_late_threshold << SHIFT_TO_CH1_N_EYE_VALUE);
+    n_eye_values = (uint32_t)(n_late_threshold << SHIFT_TO_CH0_N_EYE_VALUE);
+    n_eye_values |= (uint32_t)(n_late_threshold << SHIFT_TO_CH1_N_EYE_VALUE);
 
     CFG_DDR_SGMII_PHY->SPARE_CNTL.SPARE_CNTL    = (LIBERO_SETTING_SPARE_CNTL & N_EYE_MASK) | n_eye_values;
 
     /*
      * Set P values
      */
-    p_eye_value = (p_early_threshold << SHIFT_TO_REG_RX0_EYEWIDTH);
+    p_eye_value = (uint32_t)(p_early_threshold << SHIFT_TO_REG_RX0_EYEWIDTH);
     CFG_DDR_SGMII_PHY->CH0_CNTL.CH0_CNTL        = ((LIBERO_SETTING_CH0_CNTL & REG_RX0_EYEWIDTH_P_MASK) | p_eye_value) | REG_RX0_EN_FLAG_N;
     CFG_DDR_SGMII_PHY->CH1_CNTL.CH1_CNTL        = ((LIBERO_SETTING_CH1_CNTL & REG_RX0_EYEWIDTH_P_MASK) | p_eye_value) | REG_RX1_EN_FLAG_N;
 
 }
-#endif
 
 #endif
