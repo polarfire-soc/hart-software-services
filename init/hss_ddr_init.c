@@ -18,6 +18,7 @@
 #include "hss_debug.h"
 #include "hss_perfctr.h"
 #include "hss_clock.h"
+#include "hss_progress.h"
 
 #include <assert.h>
 #include <string.h>
@@ -194,26 +195,50 @@ bool HSS_DDRPrintL2CacheWayMasks(void)
 /*!
  * \brief Hook for DDR Setup
  */
+
+static size_t ddr_training_progress = 0;
+#define TYPICAL_DDR_TRAINING_ITERATIONS 150u
+
 bool HSS_DDRInit(void)
 {
     bool result = true;
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     if (!IS_ENABLED(CONFIG_SKIP_DDR)) {
-        sbi_printf("DDR training ... ");
+	const char ddr_training_prefix[] = "DDR training ...";
+
+        sbi_printf("%s", ddr_training_prefix);
+        sbi_printf("\n");
         int perf_ctr_index = PERF_CTR_UNINITIALIZED;
         HSS_PerfCtr_Allocate(&perf_ctr_index, "DDR Init");
 
 #    define CURSOR_UP "\033[A"
-        if (mss_nwc_init_ddr() != 0) {
-            sbi_printf(CURSOR_UP "DDR training ... Failed\n");
+        HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, TYPICAL_DDR_TRAINING_ITERATIONS);
+        uint8_t retval = mss_nwc_init_ddr();
+        HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, 0u);
+
+        if (retval != 0) {
+            sbi_printf(CURSOR_UP "%s Failed\n", ddr_training_prefix);
             result = false;
         } else {
             HSS_PerfCtr_Lap(perf_ctr_index);
-            sbi_printf(CURSOR_UP "DDR training ... Passed (%d ms)\n", HSS_PerfCtr_GetTime(perf_ctr_index)/TICKS_PER_MILLISEC);
+            sbi_printf(CURSOR_UP "%s Passed (%d ms)\n", ddr_training_prefix,
+                HSS_PerfCtr_GetTime(perf_ctr_index)/TICKS_PER_MILLISEC);
         }
         HSS_PerfCtr_Lap(perf_ctr_index);
 #  endif
     }
 
     return result;
+}
+
+
+void ddr_report_progress(void) // override weak symbol to report training progress...
+{
+    HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS,
+        (ddr_training_progress < TYPICAL_DDR_TRAINING_ITERATIONS) ?
+            TYPICAL_DDR_TRAINING_ITERATIONS - ddr_training_progress : 1);
+
+    ++ddr_training_progress;
+
+    return;
 }
