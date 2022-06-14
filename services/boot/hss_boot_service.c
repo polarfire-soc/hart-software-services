@@ -918,8 +918,6 @@ bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
 {
     bool result = false;
 
-    assert(pImage);
-
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     //
     // now have a Full Boot Image, let's check it is a valid one...
@@ -927,14 +925,11 @@ bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
     {
         if (!pImage) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image NULL, ignoring\n");
-            result = false;
         } else if (pImage->magic != mHSS_BOOT_MAGIC) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image magic invalid, ignoring\n");
-            result = false;
 #  if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
         } else if (!HSS_Boot_Secure_CheckCodeSigning(pImage)) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing\n");
-            result = false;
 #  endif
         } else if (validateCrc_(pImage)) {
             mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC\n");
@@ -968,7 +963,7 @@ bool HSS_Boot_VerifyMagic(struct HSS_BootImage const * const pImage)
     if ((pImage->magic == mHSS_BOOT_MAGIC) || (pImage->magic == mHSS_COMPRESSED_MAGIC)) {
         result = true;
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "magic is %08x vs expected %08x or %08x\n",
+        mHSS_DEBUG_PRINTF(LOG_WARN, "magic is %08x vs expected %08x or %08x\n",
             pImage->magic, mHSS_BOOT_MAGIC, mHSS_COMPRESSED_MAGIC);
     }
 

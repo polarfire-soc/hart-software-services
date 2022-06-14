@@ -189,7 +189,11 @@ bool HSS_BootInit(void)
         for (int i = 0; i < ARRAY_SIZE(pStorages); i++) {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Trying to boot via %s ...\n", pStorages[i]->name);
 
-            if (pStorages[i]->init) { result = pStorages[i]->init(); }
+            if (pStorages[i]->init) {
+                result = pStorages[i]->init();
+            } else {
+                result = true;
+            }
 
             if (result) {
                 result = tryBootFunction_(pStorages[i], pStorages[i]->getBootImage);
@@ -247,10 +251,10 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
     }
 #  endif
 
-    //result = HSS_Boot_ValidateImage(pBootImage);
-    HSS_Register_Boot_Image(pBootImage);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Boot Image registered ...\n");
-
+    if (result) {
+        HSS_Register_Boot_Image(pBootImage);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s: Boot Image registered ...\n", pStorage->name);
+    }
 
     return result;
 }
