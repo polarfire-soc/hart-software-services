@@ -136,11 +136,11 @@ static struct HSS_Storage *pStorages[] =
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 	&qspiStorage_,
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-	&mmcStorage_,
-#endif
 #if IS_ENABLED(CONFIG_SERVICE_SPI)
 	&spiStorage_,
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+	&mmcStorage_,
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
 	&payloadStorage_,
