@@ -83,7 +83,7 @@ The HSS relies on SoftConsole v2021.3 or later to build on Linux. It also needs 
 
     $ sudo apt install python3-tk
 
-For building on Linux from the command line you must configure the path appropriately, e.g.:
+For building on Linux from the command line you must configure the path appropriately. For example:
 
     $ export PATH=$PATH:$HOME/Microchip/SoftConsole-v2021.3/python/bin:$HOME/Microchip/SoftConsole-v2021.3/riscv-unknown-elf-gcc/bin
 
@@ -91,7 +91,7 @@ You can enter an interactive Kconfiglib configuration selection by running `make
 
     $ make BOARD=mpfs-icicle-kit-es config
 
-Alternatively, copy the default config for your board - e.g.,
+Alternatively, copy the default config for your board. For example:
 
     $ cp boards/mpfs-icicle-kit-es/def_config .config
 
@@ -109,7 +109,7 @@ A variety of alternative build options can be seen by running `make help`:
 
     $ make help
 
-Verbose builds (which show each individual command) are possible by adding V=1 to the end of the make command, e.g.:
+Verbose builds (which show each individual command) are possible by adding V=1 to the end of the make command. For example:
 
     $ make V=1
 
@@ -119,7 +119,7 @@ The HSS relies only on SoftConsole v2021.3 or later to build on Windows.
 
 For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/software-development/polarfire-soc-software-tool-flow.md#build-the-hss.
 
-For building on Windows from the command line one must configure the path appropriately, e.g.:
+For building on Windows from the command line one must configure the path appropriately. For example:
 
     C:\> path %SystemRoot%;%SystemRoot%;C:\Microchip\SoftConsole-v2021.3\build_tools\bin;C:\Microchip\SoftConsole-v2021.3\python;C:\Microchip\SoftConsole-v2021.3\riscv-unknown-elf-gcc\bin
 
