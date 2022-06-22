@@ -54,6 +54,7 @@ else
   endif
 endif
 
+CORE_CFLAGS+=-DBOARD=${BOARD}
 
 MCMODEL=-mcmodel=medany
 

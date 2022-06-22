@@ -196,6 +196,7 @@ bool HSS_E51_Banner(void)
 #if IS_ENABLED(CONFIG_USE_IHC)
 	" / Mi-V IHC version %d.%d.%d"
 #endif
+        " / BOARD=" STR(BOARD)
         "\n"
         "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions.\n\n",
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
