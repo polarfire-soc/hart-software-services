@@ -77,6 +77,8 @@ bool HSS_USBInit(void);
 
 bool HSS_PDMAInit(void);
 
+bool HSS_ResetReasonInit(void);
+
 #ifdef __cplusplus
 }
 #endif

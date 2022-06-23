@@ -87,4 +87,13 @@ config DEBUG_PERF_CTRS_NUM
 	help
 		This feature configures how many performance counters are enabled.
 
+config DEBUG_RESET_REASON
+        bool "Enable parsing of RESET_SR reset reason register"
+        default N
+	help
+		This feature enables parsing and output of the reset reason
+		on the HSS console. This may be useful to debug unexpected
+		system reboots.
+
+		If you do not know what to do here, say N.
 endmenu

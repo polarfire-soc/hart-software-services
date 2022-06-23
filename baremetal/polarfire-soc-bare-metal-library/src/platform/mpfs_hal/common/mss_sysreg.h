@@ -138,29 +138,31 @@ extern "C" {
 #define RESET_SR_OFFSET                                          0x20
     /* Reset was caused by the SCB periphery reset signal*/
     #define RESET_SR_SCB_PERIPH_RESET_OFFSET                     0x0
-    #define RESET_SR_SCB_PERIPH_RESET_MASK                       (0x01 << 0x0)
+    #define RESET_SR_SCB_PERIPH_RESET_MASK                       (0x01 << RESET_SR_SCB_PERIPH_RESET_OFFSET)
     /* Reset was caused by the SCB MSS reset register*/
     #define RESET_SR_SCB_MSS_RESET_OFFSET                        0x1
-    #define RESET_SR_SCB_MSS_RESET_MASK                          (0x01 << 0x1)
+    #define RESET_SR_SCB_MSS_RESET_MASK                          (0x01 << RESET_SR_SCB_MSS_RESET_OFFSET)
     /* Reset was caused by the SCB CPU reset register*/
     #define RESET_SR_SCB_CPU_RESET_OFFSET                        0x2
-    #define RESET_SR_SCB_CPU_RESET_MASK                          (0x01 << 0x2)
+    #define RESET_SR_SCB_CPU_RESET_MASK                          (0x01 << RESET_SR_SCB_CPU_RESET_OFFSET)
     /* Reset was caused by the Risc-V Debugger*/
     #define RESET_SR_DEBUGER_RESET_OFFSET                        0x3
-    #define RESET_SR_DEBUGER_RESET_MASK                          (0x01 << 0x3)
+    #define RESET_SR_DEBUGER_RESET_MASK                          (0x01 << RESET_SR_DEBUGER_RESET_OFFSET)
     /* Reset was caused by the fabric*/
     #define RESET_SR_FABRIC_RESET_OFFSET                         0x4
-    #define RESET_SR_FABRIC_RESET_MASK                           (0x01 << 0x4)
+    #define RESET_SR_FABRIC_RESET_MASK                           (0x01 << RESET_SR_FABRIC_RESET_OFFSET)
     /* Reset was caused by the watchdog*/
     #define RESET_SR_WDOG_RESET_OFFSET                           0x5
-    #define RESET_SR_WDOG_RESET_MASK                             (0x01 << 0x5)
+    #define RESET_SR_WDOG_RESET_MASK                             (0x01 << RESET_SR_WDOG_RESET_OFFSET)
     /* Indicates that fabric asserted the GPIO reset inputs*/
     #define RESET_SR_GPIO_RESET_OFFSET                           0x6
-    #define RESET_SR_GPIO_RESET_MASK                             (0x01 << 0x6)
+    #define RESET_SR_GPIO_RESET_MASK                             (0x01 << RESET_SR_GPIO_RESET_OFFSET)
     /* Indicates that SCB bus reset occurred (which causes warm reset of MS
     S)*/
     #define RESET_SR_SCB_BUS_RESET_OFFSET                        0x7
-    #define RESET_SR_SCB_BUS_RESET_MASK                          (0x01 << 0x7)
+    #define RESET_SR_SCB_BUS_RESET_MASK                          (0x01 << RESET_SR_SCB_BUS_RESET_OFFSET)
+    #define RESET_SR_CPU_SOFT_RESET_OFFSET                       0x8
+    #define RESET_SR_CPU_SOFTCB_BUS_RESET_MASK                   (0x01 << RESET_SR_CPU_SOFT_RESET_OFFSET)
 
 /*Indicates the device status in particular the state of the FPGA fabric an
     d the MSS IO banks*/

@@ -271,6 +271,9 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #if IS_ENABLED(CONFIG_MEMTEST)
     { "HSS_MemTestDDRFast",            HSS_MemTestDDRFast,            false, false },
 #endif
+#if IS_ENABLED(CONFIG_DEBUG_RESET_REASON)
+    { "HSS_ResetReasonInit",           HSS_ResetReasonInit,           false, false },
+#endif
     { "HSS_BoardLateInit",             HSS_BoardLateInit,             false, false },
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
     { "HSS_MMCInit",                   HSS_MMCInit,                   false, false },
