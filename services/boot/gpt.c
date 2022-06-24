@@ -214,7 +214,6 @@ bool GPT_ReadHeader(HSS_GPT_t *pGpt)
 
     bool result = false;
 
-    //result = readBlockFnPtr(pGpt->h.buffer, 1u * GPT_LBA_SIZE, GPT_LBA_SIZE);
     result = readBlockFnPtr(pGpt->h.buffer, 1u * pGpt->lbaSize, pGpt->lbaSize);
     if (!result) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Unable to read block for LBA 1\n");
@@ -243,18 +242,13 @@ static HSS_GPT_PartitionEntry_t const * ReadPartitionEntryIntoBuffer_(HSS_GPT_t 
     const size_t offset =
         (pGptHeader->sizeOfPartitionEntry * partitionIndex) -
             ((lbaIndex - pGptHeader->partitionEntriesStartingLBA) * pGpt->lbaSize);
-            //((lbaIndex - pGptHeader->partitionEntriesStartingLBA) * GPT_LBA_SIZE);
 
-    //retVal = readBlockFnPtr((void *)pLBABuffer, lbaIndex * GPT_LBA_SIZE, GPT_LBA_SIZE);
     retVal = readBlockFnPtr((void *)pLBABuffer, lbaIndex * pGpt->lbaSize, pGpt->lbaSize);
     if (!retVal) {
         mHSS_DEBUG_PRINTF(LOG_ERROR,
             "Unable to read block for LBA %lu (partition entry %lu)\n",
             lbaIndex, partitionIndex);
     } else {
-        //if (offset >= GPT_LBA_SIZE) {
-        //    retVal = readBlockFnPtr((void *)(pLBABuffer + GPT_LBA_SIZE),
-        //        (lbaIndex + 1u) * GPT_LBA_SIZE, GPT_LBA_SIZE);
         if (offset >= pGpt->lbaSize) {
             retVal = readBlockFnPtr((void *)(pLBABuffer + pGpt->lbaSize),
                 (lbaIndex + 1u) * pGpt->lbaSize, pGpt->lbaSize);
@@ -335,7 +329,6 @@ bool GPT_PartitionIdToLBAOffset(HSS_GPT_t const * const pGpt, size_t partitionIn
 
     const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA +
         ((partitionIndex * pGptHeader->sizeOfPartitionEntry) / pGpt->lbaSize);
-        //((partitionIndex * pGptHeader->sizeOfPartitionEntry) / GPT_LBA_SIZE);
 
     HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry =
         ReadPartitionEntryIntoBuffer_(pGpt, lbaIndex, partitionIndex);
@@ -364,7 +357,6 @@ bool GPT_ReadPartitionEntryByIndex(HSS_GPT_t const * const pGpt,
     HSS_GPT_Header_t const * const pGptHeader = &(pGpt->h.header);
     const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA +
         ((partitionIndex * pGptHeader->sizeOfPartitionEntry) / pGpt->lbaSize);
-        //((partitionIndex * pGptHeader->sizeOfPartitionEntry) / GPT_LBA_SIZE);
 
     *ppGptPartitionEntryOut =
         ReadPartitionEntryIntoBuffer_(pGpt, lbaIndex, partitionIndex);
@@ -470,7 +462,6 @@ bool GPT_ValidatePartitionEntries(HSS_GPT_t *pGpt)
         partitionIndex++) {
         const size_t lbaIndex = pGptHeader->partitionEntriesStartingLBA +
             ((partitionIndex * pGptHeader->sizeOfPartitionEntry) / pGpt->lbaSize);
-            //((partitionIndex * pGptHeader->sizeOfPartitionEntry) / GPT_LBA_SIZE);
 
         HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry =
             ReadPartitionEntryIntoBuffer_(pGpt, lbaIndex, partitionIndex);

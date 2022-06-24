@@ -617,10 +617,14 @@ static bool tinyCLI_Boot_(void)
             switch (keyIndex) {
 #if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
             case BOOT_LIST:
+		// if looking for GPT partitions, force eMMC as storage provider
+                HSS_BootSelectMMC();
                 tinyCLI_Boot_List_();
                 break;
 
             case BOOT_SELECT:
+		// if looking for GPT partitions, force eMMC as storage provider
+                HSS_BootSelectMMC();
                 tinyCLI_Boot_Select_();
                 break;
 #endif
