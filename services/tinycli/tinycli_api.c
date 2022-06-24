@@ -157,7 +157,7 @@ static void tinyCLI_PrintUptime_(void);
 static void tinyCLI_PrintHelp_(void);
 static void tinyCLI_Debug_(void);
 static void tinyCLI_Reset_(void);
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
 static void tinyCLI_Boot_List_(void);
 static void tinyCLI_Boot_Select_(void);
 #endif
@@ -524,7 +524,7 @@ static void tinyCLI_Debug_(void)
     }
 }
 
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
 extern struct HSS_Storage *HSS_BootGetActiveStorage(void);
 
 static void tinyCLI_Boot_List_(void)
@@ -615,7 +615,7 @@ static bool tinyCLI_Boot_(void)
     if (argc_tokenCount > 1u) {
         if (tinyCLI_NameToKeyIndex_(bootKeys, ARRAY_SIZE(bootKeys), argv_tokenArray[1], &keyIndex)) {
             switch (keyIndex) {
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
+#if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
             case BOOT_LIST:
                 tinyCLI_Boot_List_();
                 break;

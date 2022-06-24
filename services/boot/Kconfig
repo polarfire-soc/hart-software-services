@@ -1,5 +1,6 @@
 config SERVICE_BOOT
-	def_bool y
+	bool "Enable booting"
+	default y
 	select SERVICE_OPENSBI
         select SERVICE_DDR
 	help

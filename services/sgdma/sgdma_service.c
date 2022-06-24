@@ -121,10 +121,12 @@ static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
        }
 
        // check PMPs - todo - check MPRs also
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
        if (HSS_PMP_CheckWrite(activeHart, (ptrdiff_t)pBlockDesc->dest_phys_addr, chunk_size)
            && HSS_PMP_CheckRead(activeHart, (ptrdiff_t)pBlockDesc->src_phys_addr, chunk_size)) {
            memcpy_via_pdma(pBlockDesc->dest_phys_addr, pBlockDesc->src_phys_addr, chunk_size);
        }
+#endif
 
        assert(remaining_in_current_block >= chunk_size);
        remaining_in_current_block -= chunk_size;
