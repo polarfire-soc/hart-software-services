@@ -3093,6 +3093,7 @@ static mss_mmc_status_t execute_tunning_mmc(uint8_t data_width)
     Pos = calc_longest_valid_delay_chain_val(PatternOk);
     /* Delay value set to Pos */
     host_mmc_tune(Pos);
+    mmc_delay(0xFFFu);
     ret_status = read_tune_block(ReadPattern, BufferSize, MMC_CMD_21_SEND_TUNE_BLK);
     return (ret_status);
 }
