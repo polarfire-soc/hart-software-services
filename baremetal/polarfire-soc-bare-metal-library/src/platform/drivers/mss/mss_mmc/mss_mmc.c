@@ -966,8 +966,8 @@ MSS_MMC_single_block_write
     cif_response_t response_status;
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
     uint16_t word_cnt = MMC_CLEAR;
-    uint8_t blk_tran_err;
-    uint8_t blk_write;
+    uint32_t blk_tran_err;
+    uint32_t blk_write;
     uint32_t srs03_data, srs9;
 
     if (g_mmc_init_complete == MMC_SET)
@@ -1583,14 +1583,13 @@ static mss_mmc_status_t mmccard_oper_config(const mss_mmc_cfg_t * cfg)
                 response_status = cif_send_cmd( MMC_DW_CSD |(MSS_MMC_DATA_WIDTH_1BIT << SHIFT_8BIT),
                                                 MMC_CMD_6_SWITCH,
                                                 MSS_MMC_RESPONSE_R1B);
-                if (TRANSFER_IF_FAIL == response_status)
-                {
-                    ret_status = MSS_MMC_DWIDTH_ERR;
-                }
-                else
+                if (TRANSFER_IF_FAIL != response_status)
                 {
                     response_status = check_device_status(response_status);
+                }
 
+                if (TRANSFER_IF_SUCCESS == response_status)
+                {
                     /* Set Phy delay for select MMC mode */
                     ret_status = phy_training_mmc(MSS_MMC_PHY_DELAY_INPUT_MMC_LEGACY, MSS_MMC_CLOCK_400KHZ);
                     if (ret_status == MSS_MMC_TRANSFER_SUCCESS)
@@ -2486,6 +2485,8 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
             set_host_sdclk(cfg->clk_rate);
             /* HS200 tuning */
             ret_status = execute_tunning_mmc(MSS_MMC_DATA_WIDTH_8BIT);
+            if (MSS_MMC_TRANSFER_SUCCESS != ret_status)
+                return ret_status;
 
             ret_status = MSS_MMC_single_block_read(READ_SEND_EXT_CSD, csd_reg);
             if (MSS_MMC_TRANSFER_SUCCESS == ret_status)
@@ -2519,7 +2520,21 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
 
     if (TRANSFER_IF_FAIL != response_status)
     {
-        response_status = check_device_status(response_status);
+        if (MSS_MMC_MODE_HS400_ES == cfg->bus_speed_mode)
+        {
+            response_status = check_device_status(response_status);
+        }
+        else
+        {
+            uint32_t srs9;
+
+            do
+            {
+                srs9 = MMC->SRS09;
+            }while ((srs9 & SRS9_DAT0_SIGNAL_LEVEL) == MMC_CLEAR);
+
+            response_status = TRANSFER_IF_SUCCESS;
+        }
     }
 
     if (TRANSFER_IF_SUCCESS == response_status)
@@ -2559,17 +2574,6 @@ static mss_mmc_status_t set_device_hs400_mode(const mss_mmc_cfg_t *cfg)
             MMC->HRS06 = hrs6;
 
             set_host_sdclk(MSS_MMC_CLOCK_50MHZ);
-
-            ret_status = MSS_MMC_single_block_read(READ_SEND_EXT_CSD, csd_reg);
-            if (MSS_MMC_TRANSFER_SUCCESS == ret_status)
-            {
-                pcsd_reg = (uint8_t *)csd_reg;
-                /* offsets defined in JESD84-B51 extended CSD */
-                hw_device_type   =  pcsd_reg[EXT_CSD_CARD_TYPE_OFFSET];
-                g_hw_sec_count   = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
-                hw_ext_csd_rev = pcsd_reg[EXT_CSD_REVISION_OFFSET] & BYTE_MASK;
-                hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
-            }
 
             /* Set HS400 mode */
             hs_timing = MMC_HS400_MODE;
