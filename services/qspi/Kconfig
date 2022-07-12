@@ -6,3 +6,30 @@ config SERVICE_QSPI
                 Currently the Winbond W25N01GV is supported.
 
 		If you do not know what to do here, say Y.
+
+menu "QSPI"
+	visible if SERVICE_QSPI
+
+choice
+	prompt "QSPI Driver"
+	default SERVICE_QSPI_WINBOND_W25N01GV
+
+config SERVICE_QSPI_WINBOND_W25N01GV
+	bool "Winbond W25N01GV"
+	depends on SERVICE_QSPI
+	help
+		This feature enables support for Winbond W25N01GV SPI NAND flash.
+
+		If you don't know what to do here, say Y.
+
+config SERVICE_QSPI_MICRON_MQ25T
+	bool "Micron MQ25T"
+	depends on SERVICE_QSPI
+	help
+		This feature enables support for Micron MQ25T SPI NOR flash.
+
+		If you don't know what to do here, say N.
+
+endchoice
+
+endmenu

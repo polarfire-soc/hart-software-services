@@ -27,7 +27,12 @@
 #include "mss_sys_services.h"
 
 #include "mss_peripherals.h"
-#include "winbond_w25n01gv.h"
+#if IS_ENABLED(CONFIG_SERVICE_QSPI_WINBOND_W25N01GV)
+#  include "winbond_w25n01gv.h"
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_QSPI_MICRON_MQ25T)
+#  include "micron_mq25t.h"
+#endif
 
 /*
  * QSPI doesn't need a "service" to run every super-loop, but it does need to be
