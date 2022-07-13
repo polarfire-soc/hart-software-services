@@ -83,9 +83,11 @@ The HSS relies on SoftConsole v2021.3 or later to build on Linux. It also needs 
 
     $ sudo apt install python3-tk
 
-For building on Linux from the command line you must configure the path appropriately. For example:
+For building on Linux from the command line you must configure the path appropriately. For example, if using SoftConsole v2021.3, use the following:
 
     $ export PATH=$PATH:$HOME/Microchip/SoftConsole-v2021.3/python/bin:$HOME/Microchip/SoftConsole-v2021.3/riscv-unknown-elf-gcc/bin
+
+If using a different version of SoftConsole, change the `v2021.3` substring in the line above to correctly match your system.
 
 You can enter an interactive Kconfiglib configuration selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
 
@@ -122,6 +124,8 @@ For more detailed build instructions, particular with regards to using SoftConso
 For building on Windows from the command line one must configure the path appropriately. For example:
 
     C:\> path %SystemRoot%;%SystemRoot%;C:\Microchip\SoftConsole-v2021.3\build_tools\bin;C:\Microchip\SoftConsole-v2021.3\python;C:\Microchip\SoftConsole-v2021.3\riscv-unknown-elf-gcc\bin
+
+Again, if using a different version of SoftConsole, change the `v2021.3` substring in the line above to correctly match your system.
 
 ### Debug
 
