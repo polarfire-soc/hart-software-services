@@ -66,7 +66,7 @@ static void print_usage(char **argv)
 	printf("\nMultiple '-v' arguments increases verbosity of output.\n\n");
 
 	printf(" -c		Run generator and specify path to configuration YAML\n");
-	printf(" -d		Run analyzer and specifiy path to payload binary\n");
+	printf(" -d		Run analyzer and specify path to payload binary\n");
 	printf(" -h		print this help\n");
 	printf(" -p		enabled secure boot and specify private key\n");
 	printf(" -v		Increase verbosity of output\n");
