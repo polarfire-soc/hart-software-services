@@ -31,7 +31,7 @@
 #include "mss_mmc.h"
 #include "hal/hw_macros.h"
 #ifndef __IO
-#define __IO volatile
+#  define __IO volatile
 #endif
 #include "mss_io_config.h"
 #include "hss_memcpy_via_pdma.h"
@@ -49,47 +49,6 @@
 #if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8) && defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3)
 #  error Both MMC Bus Voltages defined! These are mutually exclusive.
 #endif
-
-// ---------------------------------------------------------------------------------------------
-
-/*
- * We need MSSIO settings for eMMC...
- */
-#define LIBERO_SETTING_IOMUX1_CR_eMMC			0x11111111UL
-#ifdef CONFIG_MODULE_M100PFS
-#define LIBERO_SETTING_IOMUX2_CR_eMMC			0x00BB1111UL
-#else
-#define LIBERO_SETTING_IOMUX2_CR_eMMC			0x00FF1111UL
-#endif
-#define LIBERO_SETTING_IOMUX6_CR_eMMC			0x00000000UL
-#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR_eMMC		0x00040A0DUL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_eMMC	0x09280928UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_eMMC	0x09280928UL
-
-/*
- * ... and for SDCard
- */
-#define LIBERO_SETTING_IOMUX1_CR_SD			0x00000000UL
-#ifdef CONFIG_MODULE_M100PFS
-#define LIBERO_SETTING_IOMUX2_CR_SD			0x00BB0000UL
-#define LIBERO_SETTING_IOMUX6_CR_SD			0x0000001DUL
-#else
-#define LIBERO_SETTING_IOMUX2_CR_SD			0x00000000UL
-#define LIBERO_SETTING_IOMUX6_CR_SD			0x0000001DUL
-#endif
-#define LIBERO_SETTING_MSSIO_BANK4_CFG_CR_SD		0x00080907UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_SD	0x08290829UL
-#define LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_SD	0x08290829UL
 
 // ---------------------------------------------------------------------------------------------
 
@@ -115,8 +74,7 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
     if (retval != MSS_MMC_INIT_SUCCESS) {
         mmc_reset_block();
 
-        //HSS_SpinDelay_Secs(1u); // delay for 1 second
-        HSS_SpinDelay_MilliSecs(50u); // delay for 50 second
+        HSS_SpinDelay_MilliSecs(50u); // delay for 50 milliseconds
         retval = MSS_MMC_init(p_mmcConfig);
     }
 
@@ -132,25 +90,6 @@ static bool mmc_init_common(mss_mmc_cfg_t *p_mmcConfig)
 #if defined(CONFIG_SERVICE_MMC_MODE_EMMC)
 static bool mmc_init_emmc(void)
 {
-    SYSREG->IOMUX1_CR = LIBERO_SETTING_IOMUX1_CR_eMMC;
-    SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_eMMC;
-    SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_eMMC;
-    SYSREG->MSSIO_BANK4_CFG_CR = LIBERO_SETTING_MSSIO_BANK4_CFG_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_0_1_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_2_3_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_4_5_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_6_7_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_8_9_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_10_11_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_eMMC;
-    SYSREG->MSSIO_BANK4_IO_CFG_12_13_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_eMMC;
-
-#if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
-    HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  0);
-#endif
-#ifdef CONFIG_MODULE_M100PFS
-    MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 0);
-#endif
-
     static mss_mmc_cfg_t emmcConfig =
     {
         .card_type = MSS_MMC_CARD_TYPE_MMC,
@@ -171,32 +110,26 @@ static bool mmc_init_emmc(void)
 #endif
     };
 
-    return mmc_init_common(&emmcConfig);
+    bool result = mss_does_xml_ver_support_switch();
+
+    if (result) {
+        result = switch_mssio_config(EMMC_MSSIO_CONFIGURATION);
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "switch_mssio_config returned false %d\n", result);
+    }
+
+    /* we will attempt to switch anyway as default may be eMMC */
+    switch_external_mux(EMMC_MSSIO_CONFIGURATION);
+    /* Initialize eMMC/SD */
+    result = mmc_init_common(&emmcConfig);
+
+    return result;
 }
 #endif
 
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD)
 static bool mmc_init_sdcard(void)
 {
-    SYSREG->IOMUX1_CR = LIBERO_SETTING_IOMUX1_CR_SD;
-    SYSREG->IOMUX2_CR = LIBERO_SETTING_IOMUX2_CR_SD;
-    SYSREG->IOMUX6_CR = LIBERO_SETTING_IOMUX6_CR_SD;
-    SYSREG->MSSIO_BANK4_CFG_CR = LIBERO_SETTING_MSSIO_BANK4_CFG_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_0_1_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_0_1_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_2_3_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_2_3_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_4_5_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_4_5_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_6_7_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_6_7_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_8_9_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_8_9_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_10_11_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_10_11_CR_SD;
-    SYSREG->MSSIO_BANK4_IO_CFG_12_13_CR = LIBERO_SETTING_MSSIO_BANK4_IO_CFG_12_13_CR_SD;
-
-#if defined(CONFIG_SERVICE_SDIO_REGISTER_PRESENT)
-    HW_set_uint32(CONFIG_SERVICE_SDIO_REGISTER_ADDRESS,  1);
-#endif
-#ifdef CONFIG_MODULE_M100PFS
-    MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 1);
-#endif
-
     static mss_mmc_cfg_t sdcardConfig =
     {
         .card_type = MSS_MMC_CARD_TYPE_SD,
@@ -205,7 +138,22 @@ static bool mmc_init_sdcard(void)
         .clk_rate = MSS_MMC_CLOCK_50MHZ,
     };
 
-    return mmc_init_common(&sdcardConfig);
+
+    bool result = mss_does_xml_ver_support_switch();
+
+    if (result) {
+        result = switch_mssio_config(SD_MSSIO_CONFIGURATION);
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "switch_mssio_config returned false %d\n", result);
+    }
+
+    /* we will attempt to switch anyway as default may be SD */
+    switch_external_mux(SD_MSSIO_CONFIGURATION);
+
+    /* Initialize eMMC/SD */
+    result = mmc_init_common(&sdcardConfig);
+
+    return result;
 }
 #endif
 

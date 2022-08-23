@@ -355,7 +355,10 @@ static uint8_t io_mux_and_bank_config_alt(void)
  */
 void set_bank2_and_bank4_volts(MSSIO_CONFIG_OPTION config)
 {
-
+    SCB_REGS->MSSIO_BANK2_CFG_CR.MSSIO_BANK2_CFG_CR =\
+                 (uint32_t)LIBERO_SETTING_MSSIO_BANK2_CFG_CR;
+     SCB_REGS->MSSIO_BANK4_CFG_CR.MSSIO_BANK4_CFG_CR =\
+                 (uint32_t)LIBERO_SETTING_MSSIO_BANK4_CFG_CR;
     switch(config)
     {
         default:
@@ -506,10 +509,9 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
     switch(option)
     {
         case SD_MSSIO_CONFIGURATION:
-            if (mss_is_alternate_io_setting_sd() == true)
+            if (mss_is_alternate_io_setting_sd())
             {
                 io_mux_and_bank_config_alt();
-
             }
             else
             {
@@ -518,7 +520,7 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
             break;
 
         case EMMC_MSSIO_CONFIGURATION:
-            if (mss_is_alternate_io_setting_emmc() == true)
+            if (mss_is_alternate_io_setting_emmc())
             {
                 io_mux_and_bank_config_alt();
             }
@@ -549,16 +551,14 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
  * You will need to create your own or copy when creating your own fpga design
  * along with an external mux in your board design if you wish to use SD/eMMC
  * muxing in your hardware design.
- * Please note this function will cause a hang if you do not have support
- * for switching in your fpga design, nlu use if you have this support if your
- * fabric design.
  * @param option SD_MSSIO_CONFIGURATION/EMMC_MSSIO_CONFIGURATION
  * @return
  */
 __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
 {
     uint8_t result = false;
-
+#ifdef LIBERO_SETTING_MSSIO_CONFIGURATION_OPTIONS
+#if ((LIBERO_SETTING_MSSIO_CONFIGURATION_OPTIONS & (EMMC_CONFIGURED_MASK | SD_CONFIGURED_MASK)) == (EMMC_CONFIGURED_MASK | SD_CONFIGURED_MASK))
     volatile uint32_t *reg_pt = (uint32_t *)ICICLE_KIT_REF_DESIGN_FPGS_SWITCH_ADDRESS;
     switch(option)
     {
@@ -577,7 +577,11 @@ __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
             break;
     }
     result = true;
-
+#else
+    (void)option;
+    result = false;
+#endif
+#endif
     return result;
 }
 

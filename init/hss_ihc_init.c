@@ -56,10 +56,10 @@ bool HSS_IHCInit(void)
 
     IHC_global_init();
 
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
     const uint32_t local_hartid = (uint32_t)HSS_HART_E51;
     IHC_local_context_init(local_hartid);
 
-#if IS_ENABLED(CONFIG_HSS_USE_IHC)
     const bool e51_mp_enable = false;
     const bool u54_mp_enable = true;
     const bool ack_disable   = false;
