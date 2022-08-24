@@ -29,7 +29,6 @@
 extern "C" {
 #endif
 
-int sbi_printf(const char *format, ...);
 
 #define USE_SDMA_OPERATIONS
 
@@ -153,6 +152,7 @@ bool FLASH_DRIVE_init(void)
 #include "hss_types.h"
 
 #include "hss_clock.h"
+#include "hss_debug.h"
 static size_t writeCount = 0u, readCount = 0u;
 static size_t lastWriteCount = 0u, lastReadCount = 0u;
 HSSTicks_t last_sec_time = 0u;
@@ -177,7 +177,7 @@ void FLASH_DRIVE_dump_xfer_status(void)
     }
 
     if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
-        sbi_printf("\r %c %lu bytes written, %lu bytes read", activeThrobber, writeCount, readCount);
+        mHSS_DEBUG_PRINTF_EX("\r %c %lu bytes written, %lu bytes read", activeThrobber, writeCount, readCount);
         last_sec_time = HSS_GetTime();
     }
 }
@@ -246,25 +246,6 @@ static void physical_device_read(uint64_t byte_address, uint8_t *p_rx_buffer,
     size_t size_in_bytes)
 {
     update_read_count(size_in_bytes);
-#if 0 // #ifdef USE_SDMA_OPERATIONS
-    uint64_t lba_address = (byte_address / 512);
-    mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
-
-    // wait for any in-flight transactions to complete
-    while (MSS_MMC_get_transfer_status() == MSS_MMC_TRANSFER_IN_PROGRESS) {
-        do {
-            ret_status = PLIC_mmc_main_IRQHandler();
-        } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
-    }
-
-    // now setup next read transaction
-    ret_status = MSS_MMC_sdma_read((uint32_t)lba_address, p_rx_buffer, size_in_bytes);
-    if (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS) {
-        do {
-            ret_status = PLIC_mmc_main_IRQHandler();
-        } while (ret_status == MSS_MMC_TRANSFER_IN_PROGRESS);
-    }
-#endif
 
     bool HSS_Storage_ReadBlock(void * p_rx_buffer, size_t byte_address, size_t size_in_bytes);
     (void)HSS_Storage_ReadBlock((void *)p_rx_buffer, (size_t)byte_address, size_in_bytes);
@@ -290,7 +271,6 @@ static uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr
     uint8_t *result = NULL;
     *len = 0u;
 
-    //if ((blk_addr <= ((uint64_t)NUM_LBA_BLOCKS * LBA_BLOCK_SIZE)) && (lun == 0u)) {
     if ((blk_addr <= ((uint64_t)lun_data[0].number_of_blocks * lun_data[0].lba_block_size)) && (lun == 0u)) {
         *len = SD_RD_WR_SIZE;
         result = lun0_data_buffer;
