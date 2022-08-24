@@ -40,12 +40,7 @@ static cif_response_t cq_execute_task(uint8_t task_id);
  * cif_send_cmd()
  * See ".h" for details of how to use this function.
  */
-cif_response_t cif_send_cmd
-(
-    uint32_t cmd_arg,
-    uint32_t cmd_type,
-    uint8_t resp_type
-)
+cif_response_t cif_send_cmd(uint32_t cmd_arg, uint32_t cmd_type, uint8_t resp_type)
 {
     uint32_t trans_status_isr;
     cif_response_t ret_status = TRANSFER_IF_FAIL;
@@ -127,20 +122,14 @@ cif_response_t cif_send_cmd
  * eMMC/SD device and waits until the core indicates that the command has been
  * transferred successfully.
  */
-void send_mmc_cmd
-(
-    uint32_t cmd_arg,
-    uint32_t cmd_type,
-    uint8_t resp_type,
-    cmd_response_check_options cmd_option
-)
+void send_mmc_cmd(uint32_t cmd_arg, uint32_t cmd_type, uint8_t resp_type, cmd_response_check_options cmd_option)
 {
     uint32_t cmd_index, command_information;
     uint32_t trans_status_isr;
 
     command_information = process_request_checkresptype(resp_type);
-	cmd_index = cmd_type & CMD_INDEX_MASK;
-	cmd_type = (cmd_type & CMD_TYPE_MASK) << SHIFT_16BIT;
+    cmd_index = cmd_type & CMD_INDEX_MASK;
+    cmd_type = (cmd_type & CMD_TYPE_MASK) << SHIFT_16BIT;
 
     MMC->SRS02 = cmd_arg;
     MMC->SRS03 = (uint32_t)((cmd_index << CMD_SHIFT) | cmd_type | command_information);
@@ -149,10 +138,12 @@ void send_mmc_cmd
     {
         /* only need to wait around if expecting no response */
         case CHECK_IF_CMD_SENT_POLL:
+            mMMC_ARM_TIMEOUT(mmc_spin_timeout);
             do
             {
                 trans_status_isr = MMC->SRS12;
-            }while (((SRS12_COMMAND_COMPLETE | SRS12_ERROR_INTERRUPT) & trans_status_isr) == MMC_CLEAR);
+                mMMC_CHECK_TIMEOUT(mmc_spin_timeout);
+            } while (((SRS12_COMMAND_COMPLETE | SRS12_ERROR_INTERRUPT) & trans_status_isr) == MMC_CLEAR);
             break;
         case CHECK_IF_CMD_SENT_INT:
             break;
@@ -230,14 +221,8 @@ static uint32_t process_request_checkresptype(uint8_t responsetype)
 }
 
 /******************************************************************************/
-cif_response_t cif_send_cq_direct_command
-(
-    uint8_t *desc_base_addr,
-    uint32_t cmd_arg,
-    uint32_t cmd_type,
-    uint8_t resp_type,
-    uint8_t task_id
-)
+cif_response_t cif_send_cq_direct_command(uint8_t *desc_base_addr, uint32_t cmd_arg,
+    uint32_t cmd_type, uint8_t resp_type, uint8_t task_id)
 {
 
     uint32_t *dcmdTaskDesc;
@@ -320,7 +305,6 @@ cif_response_t cif_send_cq_direct_command
 /******************************************************************************/
 static cif_response_t cq_execute_task(uint8_t task_id)
 {
-
     cif_response_t ret_status = TRANSFER_IF_FAIL;
     uint32_t reg;
     uint32_t trans_status_isr;
@@ -333,10 +317,13 @@ static cif_response_t cq_execute_task(uint8_t task_id)
 
     while (value--);
 
+    mMMC_DECLARE_TIMEOUT(mmc_spin_timeout);
+    mMMC_ARM_TIMEOUT(mmc_spin_timeout);
     do
     {
         trans_status_isr = MMC->SRS12;
-    }while (((SRS12_ERROR_INTERRUPT | SRS12_CMD_QUEUING_INT) & trans_status_isr) == MMC_CLEAR);
+        mMMC_CHECK_TIMEOUT(mmc_spin_timeout, TRANSFER_IF_FAIL);
+    } while (((SRS12_ERROR_INTERRUPT | SRS12_CMD_QUEUING_INT) & trans_status_isr) == MMC_CLEAR);
 
     if ((trans_status_isr & (SRS12_ERROR_INTERRUPT | SRS12_CMD_QUEUING_INT)) != MMC_CLEAR)
     {

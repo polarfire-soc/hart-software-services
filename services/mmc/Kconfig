@@ -77,4 +77,30 @@ config SERVICE_SDIO_REGISTER_ADDRESS
                 
 endmenu
 
+config SERVICE_MMC_SPIN_TIMEOUT
+	bool "Apply timeout to spins in MMC driver"
+	default y
+        depends on SERVICE_MMC_MODE_SDCARD || SERVICE_MMC_MODE_EMMC
+	help
+                This feature will enable maximum loop checks on spins in the MMC driver.
+
+		If you do not know what to do here, say Y.
+
+config SERVICE_MMC_SPIN_TIMEOUT_ASSERT
+	bool "Assert if spin in MMC driver times out"
+	default n
+        depends on SERVICE_MMC_SPIN_TIMEOUT
+	help
+                This feature will enable an assert if maximum loop checks on spins in the MMC driver trigger.
+
+		If you do not know what to do here, say N.
+
+config SERVICE_MMC_SPIN_TIMEOUT_MAX_SPINS
+	int "Configure maximum permissible number of spins in MMC driver"
+        default 1000000
+        depends on SERVICE_MMC_SPIN_TIMEOUT
+        range 0 10000000
+	help
+                This value controls the max number of loop spins before trigger a timeout in the MMC driver.
+
 endmenu

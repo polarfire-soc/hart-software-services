@@ -19,7 +19,43 @@
 extern "C"
 #endif
 
+#include "config.h"
 #include "hal/cpu_types.h"
+#include <assert.h>
+
+//
+// We're going to use a trick to allow us have a macro with 1 or 2 arguments
+// This allows us to turn on and off a timeout easily...
+//
+// The expect flow is:
+//     mHSS_DECLARE_TIMEOUT(my_timeout);
+//     mMMC_ARM_TIMEOUT(my_timeout);
+//     mMMC_CHECK_TIMEOUT(my_timeout);
+//
+#ifdef CONFIG_SERVICE_MMC_SPIN_TIMEOUT
+#  ifdef CONFIG_SERVICE_MMC_SPIN_TIMEOUT_ASSERT
+#    define mMMC_CHECK_TIMEOUT_1(VAR) { VAR--; assert(VAR != 0u); }
+#    define mMMC_CHECK_TIMEOUT_2(VAR, VALUE) { mMMC_CHECK_TIMEOUT_1(VAR); }
+#  else
+#    define mMMC_CHECK_TIMEOUT_1(VAR) { VAR--; if (VAR == 0u) { return; } }
+#    define mMMC_CHECK_TIMEOUT_2(VAR, VALUE) { VAR--; if (VAR == 0u) { return VALUE; } }
+#  endif
+#  define mMMC_CHECK_TIMEOUT_0() { ASSERT(0==1); }
+#  define mMMC_CHECK_TIMEOUT_X(x, VAR, VALUE, FUNC, ...) FUNC
+#  define mMMC_CHECK_TIMEOUT(...) \
+          mMMC_CHECK_TIMEOUT_X(,##__VA_ARGS__,\
+                               mMMC_CHECK_TIMEOUT_2(__VA_ARGS__),\
+                               mMMC_CHECK_TIMEOUT_1(__VA_ARGS__),\
+                               mMMC_CHECK_TIMEOUT_0(__VA_ARGS__))
+#  define mMMC_DECLARE_TIMEOUT(VAR) uint64_t VAR
+#  define mMMC_ARM_TIMEOUT(VAR) VAR = (uint64_t)CONFIG_SERVICE_MMC_SPIN_TIMEOUT_MAX_SPINS
+#else
+#  define mMMC_CHECK_TIMEOUT(...) { ; }
+#  define mMMC_DECLARE_TIMEOUT(...) { ; }
+#  define mMMC_ARM_TIMEOUT(...) { ; }
+#endif
+
+
 
 /***************************************************************************//**
  * Macro Definitions
