@@ -30,8 +30,6 @@
 
 
 #include <stdint.h>
-#include <yaml.h>
-
 #include "hss_types.h"
 
 /*

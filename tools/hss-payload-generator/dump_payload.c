@@ -225,7 +225,7 @@ void dump_payload(const char *filename_input)
 	printf("ZI Chunks: total of %lu chunk%s found\n", (unsigned long)totalChunkCount,
 		(totalChunkCount != 1u) ? "s":"");
 
-	// skipping binary fie array
+	// skipping binary file array
 
 	munmap(pBootImage, fileSize);
 	close(fdIn);

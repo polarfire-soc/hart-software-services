@@ -1,7 +1,7 @@
 #
 # MPFS HSS Embedded Software
 #
-# Copyright 2019-2021 Microchip Corporation.
+# Copyright 2019-2022 Microchip Corporation.
 #
 # SPDX-License-Identifier: MIT
 #
@@ -79,7 +79,7 @@ OBJS := $(patsubst %.c,$(build_dir)/%.o,$(SRCS))
 # Build Rules
 #
 
-$(build_dir)/%.o: %.c
+$(build_dir)/%.o: %.c blob_handler.h crc32.h debug_printf.h dump_payload.h elf_parser.h elf_strings.h generate_payload.h yaml_parser.h
 	@$(ECHO) " CC        $@";
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 

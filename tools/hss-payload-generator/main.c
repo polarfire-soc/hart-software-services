@@ -41,7 +41,7 @@
 #include "dump_payload.h"
 #include "debug_printf.h"
 
-#define GEN_VERSION_STRING "0.99.28"
+#define GEN_VERSION_STRING "0.99.32"
 
 struct HSS_BootImage bootImage;
 struct HSS_BootChunkDesc *pChunkDescs;
@@ -57,7 +57,7 @@ static void print_usage(char **argv) __attribute__((nonnull));
 static void intro_banner(void)
 {
 	puts("Hart Software Service formatted boot image generator v" GEN_VERSION_STRING);
-	puts("Copyright (c) 2021 Microchip FPGA Embedded Systems Solutions.\n");
+	puts("Copyright (c) 2021-2022 Microchip FPGA Embedded Systems Solutions.\n");
 }
 
 static void print_usage(char **argv)
