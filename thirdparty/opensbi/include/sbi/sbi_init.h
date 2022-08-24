@@ -14,7 +14,7 @@
 
 struct sbi_scratch;
 
-void /*__noreturn*/ sbi_init(struct sbi_scratch *scratch);
+void __noreturn sbi_init(struct sbi_scratch *scratch);
 
 unsigned long sbi_init_count(u32 hartid);
 

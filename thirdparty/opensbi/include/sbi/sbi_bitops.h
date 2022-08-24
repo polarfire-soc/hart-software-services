@@ -44,7 +44,7 @@
  * the libc and compiler builtin ffs routines, therefore
  * differs in spirit from the above ffz (man ffs).
  */
-static inline int sbi_ffs(int x)
+static inline int ffs(int x)
 {
 	int r = 1;
 
@@ -124,7 +124,7 @@ static inline int __ffs(unsigned long word)
  * Note fls(0) = 0, fls(1) = 1, fls(0x80000000) = 32.
  */
 
-static inline int sbi_fls(int x)
+static inline int fls(int x)
 {
 	int r = 32;
 

@@ -20,8 +20,6 @@ READLINK ?= readlink
 endif
 
 # Find out source, build, and install directories
-# fix CURDIR to use relative paths, especially if building under Cygwin
-CURDIR=.
 src_dir=$(CURDIR)
 ifdef O
  build_dir=$(shell $(READLINK) -f $(O))
@@ -55,6 +53,13 @@ else
  platform_parent_dir=$(src_dir)/platform
 endif
 
+# Check if verbosity is ON for build process
+CMD_PREFIX_DEFAULT := @
+ifeq ($(V), 1)
+	CMD_PREFIX :=
+else
+	CMD_PREFIX := $(CMD_PREFIX_DEFAULT)
+endif
 
 # Setup path of directories
 export platform_subdir=$(PLATFORM)
@@ -71,26 +76,54 @@ OPENSBI_VERSION_MINOR=`grep "define OPENSBI_VERSION_MINOR" $(include_dir)/sbi/sb
 OPENSBI_VERSION_GIT=$(shell if [ -d $(src_dir)/.git ]; then git describe 2> /dev/null; fi)
 
 # Setup compilation commands
+ifneq ($(LLVM),)
+CC		=	clang
+AR		=	llvm-ar
+LD		=	ld.lld
+OBJCOPY		=	llvm-objcopy
+else
 ifdef CROSS_COMPILE
 CC		=	$(CROSS_COMPILE)gcc
-CPP		=	$(CROSS_COMPILE)cpp
 AR		=	$(CROSS_COMPILE)ar
 LD		=	$(CROSS_COMPILE)ld
 OBJCOPY		=	$(CROSS_COMPILE)objcopy
 else
 CC		?=	gcc
-CPP		?=	cpp
 AR		?=	ar
 LD		?=	ld
 OBJCOPY		?=	objcopy
 endif
+endif
+CPP		=	$(CC) -E
 AS		=	$(CC)
 DTC		=	dtc
 
-# Guess the compillers xlen
-OPENSBI_CC_XLEN := $(shell TMP=`$(CC) -dumpmachine | sed 's/riscv\([0-9][0-9]\).*/\1/'`; echo $${TMP})
+ifneq ($(shell $(CC) --version 2>&1 | head -n 1 | grep clang),)
+CC_IS_CLANG	=	y
+else
+CC_IS_CLANG	=	n
+endif
+
+ifneq ($(shell $(LD) --version 2>&1 | head -n 1 | grep LLD),)
+LD_IS_LLD	=	y
+else
+LD_IS_LLD	=	n
+endif
+
+ifeq ($(CC_IS_CLANG),y)
+ifneq ($(CROSS_COMPILE),)
+CLANG_TARGET	=	--target=$(notdir $(CROSS_COMPILE:%-=%))
+endif
+endif
+
+# Guess the compiler's XLEN
+OPENSBI_CC_XLEN := $(shell TMP=`$(CC) $(CLANG_TARGET) -dumpmachine | sed 's/riscv\([0-9][0-9]\).*/\1/'`; echo $${TMP})
+
+# Guess the compiler's ABI and ISA
+ifneq ($(CC_IS_CLANG),y)
 OPENSBI_CC_ABI := $(shell TMP=`$(CC) -v 2>&1 | sed -n 's/.*\(with\-abi=\([a-zA-Z0-9]*\)\).*/\2/p'`; echo $${TMP})
 OPENSBI_CC_ISA := $(shell TMP=`$(CC) -v 2>&1 | sed -n 's/.*\(with\-arch=\([a-zA-Z0-9]*\)\).*/\2/p'`; echo $${TMP})
+endif
 
 # Setup platform XLEN
 ifndef PLATFORM_RISCV_XLEN
@@ -99,6 +132,44 @@ ifndef PLATFORM_RISCV_XLEN
   else
     PLATFORM_RISCV_XLEN = 64
   endif
+endif
+
+ifeq ($(CC_IS_CLANG),y)
+ifeq ($(CROSS_COMPILE),)
+CLANG_TARGET	=	--target=riscv$(PLATFORM_RISCV_XLEN)-unknown-elf
+endif
+endif
+
+ifeq ($(LD_IS_LLD),y)
+RELAX_FLAG	=	-mno-relax
+USE_LD_FLAG	=	-fuse-ld=lld
+else
+USE_LD_FLAG	=	-fuse-ld=bfd
+endif
+
+# Check whether the linker supports creating PIEs
+OPENSBI_LD_PIE := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) $(USE_LD_FLAG) -fPIE -nostdlib -Wl,-pie -x c /dev/null -o /dev/null >/dev/null 2>&1 && echo y || echo n)
+
+# Check whether the compiler supports -m(no-)save-restore
+CC_SUPPORT_SAVE_RESTORE := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -mno-save-restore -x c /dev/null -o /dev/null 2>&1 | grep "\-save\-restore" >/dev/null && echo n || echo y)
+
+# Build Info:
+# OPENSBI_BUILD_TIME_STAMP -- the compilation time stamp
+# OPENSBI_BUILD_COMPILER_VERSION -- the compiler version info
+BUILD_INFO ?= n
+ifeq ($(BUILD_INFO),y)
+OPENSBI_BUILD_DATE_FMT = +%Y-%m-%d %H:%M:%S %z
+ifdef SOURCE_DATE_EPOCH
+	OPENSBI_BUILD_TIME_STAMP ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" \
+		"$(OPENSBI_BUILD_DATE_FMT)" 2>/dev/null || \
+		date -u -r "$(SOURCE_DATE_EPOCH)" \
+		"$(OPENSBI_BUILD_DATE_FMT)" 2>/dev/null || \
+		date -u "$(OPENSBI_BUILD_DATE_FMT)")
+else
+	OPENSBI_BUILD_TIME_STAMP ?= $(shell date "$(OPENSBI_BUILD_DATE_FMT)")
+endif
+OPENSBI_BUILD_COMPILER_VERSION=$(shell $(CC) -v 2>&1 | grep ' version ' | \
+	sed 's/[[:space:]]*$$//')
 endif
 
 # Setup list of objects.mk files
@@ -189,20 +260,32 @@ else
 endif
 
 # Setup compilation commands flags
-GENFLAGS	=	-I$(platform_src_dir)/include
+ifeq ($(CC_IS_CLANG),y)
+GENFLAGS	+=	$(CLANG_TARGET)
+GENFLAGS	+=	-Wno-unused-command-line-argument
+endif
+GENFLAGS	+=	-I$(platform_src_dir)/include
 GENFLAGS	+=	-I$(include_dir)
 ifneq ($(OPENSBI_VERSION_GIT),)
 GENFLAGS	+=	-DOPENSBI_VERSION_GIT="\"$(OPENSBI_VERSION_GIT)\""
+endif
+ifeq ($(BUILD_INFO),y)
+GENFLAGS	+=	-DOPENSBI_BUILD_TIME_STAMP="\"$(OPENSBI_BUILD_TIME_STAMP)\""
+GENFLAGS	+=	-DOPENSBI_BUILD_COMPILER_VERSION="\"$(OPENSBI_BUILD_COMPILER_VERSION)\""
 endif
 GENFLAGS	+=	$(libsbiutils-genflags-y)
 GENFLAGS	+=	$(platform-genflags-y)
 GENFLAGS	+=	$(firmware-genflags-y)
 
-CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-strict-aliasing -O2
-CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
-CFLAGS		+=	-mno-save-restore -mstrict-align
+CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-stack-protector -fno-strict-aliasing -O2
+CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls -mstrict-align
+# enable -m(no-)save-restore option by CC_SUPPORT_SAVE_RESTORE
+ifeq ($(CC_SUPPORT_SAVE_RESTORE),y)
+CFLAGS		+=	-mno-save-restore
+endif
 CFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 CFLAGS		+=	-mcmodel=$(PLATFORM_RISCV_CODE_MODEL)
+CFLAGS		+=	$(RELAX_FLAG)
 CFLAGS		+=	$(GENFLAGS)
 CFLAGS		+=	$(platform-cflags-y)
 CFLAGS		+=	-fno-pie -no-pie
@@ -213,22 +296,36 @@ CPPFLAGS	+=	$(platform-cppflags-y)
 CPPFLAGS	+=	$(firmware-cppflags-y)
 
 ASFLAGS		=	-g -Wall -nostdlib
-ASFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
-ASFLAGS		+=	-mno-save-restore -mstrict-align
+ASFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls -mstrict-align
+# enable -m(no-)save-restore option by CC_SUPPORT_SAVE_RESTORE
+ifeq ($(CC_SUPPORT_SAVE_RESTORE),y)
+ASFLAGS		+=	-mno-save-restore
+endif
 ASFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 ASFLAGS		+=	-mcmodel=$(PLATFORM_RISCV_CODE_MODEL)
+ASFLAGS		+=	$(RELAX_FLAG)
+ifneq ($(CC_IS_CLANG),y)
+ifneq ($(RELAX_FLAG),)
+ASFLAGS		+=	-Wa,$(RELAX_FLAG)
+endif
+endif
 ASFLAGS		+=	$(GENFLAGS)
 ASFLAGS		+=	$(platform-asflags-y)
 ASFLAGS		+=	$(firmware-asflags-y)
 
 ARFLAGS		=	rcs
 
-ELFFLAGS	+=	-Wl,--build-id=none -N -static-libgcc -lgcc
+ELFFLAGS	+=	$(USE_LD_FLAG)
+ELFFLAGS	+=	-Wl,--build-id=none -Wl,-N
 ELFFLAGS	+=	$(platform-ldflags-y)
 ELFFLAGS	+=	$(firmware-ldflags-y)
 
 MERGEFLAGS	+=	-r
+ifeq ($(LD_IS_LLD),y)
+MERGEFLAGS	+=	-b elf
+else
 MERGEFLAGS	+=	-b elf$(PLATFORM_RISCV_XLEN)-littleriscv
+endif
 MERGEFLAGS	+=	-m elf$(PLATFORM_RISCV_XLEN)lriscv
 
 DTSCPPFLAGS	=	$(CPPFLAGS) -nostdinc -nostdlib -fno-builtin -D__DTS__ -x assembler-with-cpp
@@ -237,19 +334,19 @@ DTSCPPFLAGS	=	$(CPPFLAGS) -nostdinc -nostdlib -fno-builtin -D__DTS__ -x assemble
 define dynamic_flags
 -I$(shell dirname $(2)) -D__OBJNAME__=$(subst -,_,$(shell basename $(1) .o))
 endef
-merge_objs = mkdir -p `dirname $(1)`; \
+merge_objs = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " MERGE     $(subst $(build_dir)/,,$(1))"; \
 	     $(LD) $(MERGEFLAGS) $(2) -o $(1)
-merge_deps = mkdir -p `dirname $(1)`; \
+merge_deps = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " MERGE-DEP $(subst $(build_dir)/,,$(1))"; \
 	     cat $(2) > $(1)
-copy_file =  mkdir -p `dirname $(1)`; \
+copy_file =  $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " COPY      $(subst $(build_dir)/,,$(1))"; \
 	     cp -f $(2) $(1)
-inst_file =  mkdir -p `dirname $(1)`; \
+inst_file =  $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " INSTALL   $(subst $(install_root_dir)/,,$(1))"; \
 	     cp -f $(2) $(1)
-inst_file_list = if [ ! -z "$(4)" ]; then \
+inst_file_list = $(CMD_PREFIX)if [ ! -z "$(4)" ]; then \
 	     mkdir -p $(1)/$(3); \
 	     for file in $(4) ; do \
 	     rel_file=`echo $$file | sed -e 's@$(2)/$(subst $(install_firmware_path),platform,$(3))@@'`; \
@@ -260,47 +357,47 @@ inst_file_list = if [ ! -z "$(4)" ]; then \
 	     cp -f $$file $$dest_file; \
 	     done \
 	     fi
-inst_header_dir =  mkdir -p $(1); \
+inst_header_dir =  $(CMD_PREFIX)mkdir -p $(1); \
 	     echo " INSTALL   $(subst $(install_root_dir)/,,$(1))"; \
 	     cp -rf $(2) $(1)
-compile_cpp = mkdir -p `dirname $(1)`; \
+compile_cpp = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " CPP       $(subst $(build_dir)/,,$(1))"; \
 	     $(CPP) $(CPPFLAGS) -x c $(2) | grep -v "\#" > $(1)
-compile_cc_dep = mkdir -p `dirname $(1)`; \
+compile_cc_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " CC-DEP    $(subst $(build_dir)/,,$(1))"; \
 	     printf %s `dirname $(1)`/  > $(1) && \
 	     $(CC) $(CFLAGS) $(call dynamic_flags,$(1),$(2))   \
 	       -MM $(2) >> $(1) || rm -f $(1)
-compile_cc = mkdir -p `dirname $(1)`; \
+compile_cc = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " CC        $(subst $(build_dir)/,,$(1))"; \
 	     $(CC) $(CFLAGS) $(call dynamic_flags,$(1),$(2)) -c $(2) -o $(1)
-compile_as_dep = mkdir -p `dirname $(1)`; \
+compile_as_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " AS-DEP    $(subst $(build_dir)/,,$(1))"; \
 	     printf %s `dirname $(1)`/ > $(1) && \
 	     $(AS) $(ASFLAGS) $(call dynamic_flags,$(1),$(2)) \
 	       -MM $(2) >> $(1) || rm -f $(1)
-compile_as = mkdir -p `dirname $(1)`; \
+compile_as = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " AS        $(subst $(build_dir)/,,$(1))"; \
 	     $(AS) $(ASFLAGS) $(call dynamic_flags,$(1),$(2)) -c $(2) -o $(1)
-compile_elf = mkdir -p `dirname $(1)`; \
+compile_elf = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " ELF       $(subst $(build_dir)/,,$(1))"; \
 	     $(CC) $(CFLAGS) $(3) $(ELFFLAGS) -Wl,-T$(2) -o $(1)
-compile_ar = mkdir -p `dirname $(1)`; \
+compile_ar = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " AR        $(subst $(build_dir)/,,$(1))"; \
 	     $(AR) $(ARFLAGS) $(1) $(2)
-compile_objcopy = mkdir -p `dirname $(1)`; \
+compile_objcopy = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " OBJCOPY   $(subst $(build_dir)/,,$(1))"; \
 	     $(OBJCOPY) -S -O binary $(2) $(1)
-compile_dts = mkdir -p `dirname $(1)`; \
+compile_dts = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " DTC       $(subst $(build_dir)/,,$(1))"; \
 	     $(CPP) $(DTSCPPFLAGS) $(2) | $(DTC) -O dtb -i `dirname $(2)` -o $(1)
-compile_d2c = mkdir -p `dirname $(1)`; \
+compile_d2c = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " D2C       $(subst $(build_dir)/,,$(1))"; \
 	     $(if $($(2)-varalign-$(3)),$(eval D2C_ALIGN_BYTES := $($(2)-varalign-$(3))),$(eval D2C_ALIGN_BYTES := $(4))) \
 	     $(if $($(2)-varprefix-$(3)),$(eval D2C_NAME_PREFIX := $($(2)-varprefix-$(3))),$(eval D2C_NAME_PREFIX := $(5))) \
 	     $(if $($(2)-padding-$(3)),$(eval D2C_PADDING_BYTES := $($(2)-padding-$(3))),$(eval D2C_PADDING_BYTES := 0)) \
 	     $(src_dir)/scripts/d2c.sh -i $(6) -a $(D2C_ALIGN_BYTES) -p $(D2C_NAME_PREFIX) -t $(D2C_PADDING_BYTES) > $(1)
-compile_gen_dep = mkdir -p `dirname $(1)`; \
+compile_gen_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " GEN-DEP   $(subst $(build_dir)/,,$(1))"; \
 	     echo "$(1:.dep=$(2)): $(3)" >> $(1)
 
@@ -332,6 +429,11 @@ $(build_dir)/%.dep: $(src_dir)/%.c
 
 $(build_dir)/%.o: $(src_dir)/%.c
 	$(call compile_cc,$@,$<)
+
+ifeq ($(BUILD_INFO),y)
+$(build_dir)/lib/sbi/sbi_init.o: $(libsbi_dir)/sbi_init.c FORCE
+	$(call compile_cc,$@,$<)
+endif
 
 $(build_dir)/%.dep: $(src_dir)/%.S
 	$(call compile_as_dep,$@,$<)
@@ -388,14 +490,14 @@ $(platform_build_dir)/%.o: $(src_dir)/%.S
 
 # Rule for "make docs"
 $(build_dir)/docs/latex/refman.pdf: $(build_dir)/docs/latex/refman.tex
-	mkdir -p $(build_dir)/docs
-	$(MAKE) -C $(build_dir)/docs/latex
+	$(CMD_PREFIX)mkdir -p $(build_dir)/docs
+	$(CMD_PREFIX)$(MAKE) -C $(build_dir)/docs/latex
 $(build_dir)/docs/latex/refman.tex: $(build_dir)/docs/doxygen.cfg
-	mkdir -p $(build_dir)/docs
-	doxygen $(build_dir)/docs/doxygen.cfg
+	$(CMD_PREFIX)mkdir -p $(build_dir)/docs
+	$(CMD_PREFIX)doxygen $(build_dir)/docs/doxygen.cfg
 $(build_dir)/docs/doxygen.cfg: $(src_dir)/docs/doxygen.cfg
-	mkdir -p $(build_dir)/docs
-	cat docs/doxygen.cfg | sed -e "s#@@SRC_DIR@@#$(src_dir)#" -e "s#@@BUILD_DIR@@#$(build_dir)#" -e "s#@@OPENSBI_MAJOR@@#$(OPENSBI_VERSION_MAJOR)#" -e "s#@@OPENSBI_MINOR@@#$(OPENSBI_VERSION_MINOR)#" > $(build_dir)/docs/doxygen.cfg
+	$(CMD_PREFIX)mkdir -p $(build_dir)/docs
+	$(CMD_PREFIX)cat docs/doxygen.cfg | sed -e "s#@@SRC_DIR@@#$(src_dir)#" -e "s#@@BUILD_DIR@@#$(build_dir)#" -e "s#@@OPENSBI_MAJOR@@#$(OPENSBI_VERSION_MAJOR)#" -e "s#@@OPENSBI_MINOR@@#$(OPENSBI_VERSION_MINOR)#" > $(build_dir)/docs/doxygen.cfg
 .PHONY: docs
 docs: $(build_dir)/docs/latex/refman.pdf
 
@@ -460,29 +562,32 @@ install_docs: $(build_dir)/docs/latex/refman.pdf
 # Rule for "make clean"
 .PHONY: clean
 clean:
-	mkdir -p $(build_dir)
+	$(CMD_PREFIX)mkdir -p $(build_dir)
 	$(if $(V), @echo " RM        $(build_dir)/*.o")
-	find $(build_dir) -type f -name "*.o" -exec rm -rf {} +
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.o" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.a")
-	find $(build_dir) -type f -name "*.a" -exec rm -rf {} +
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.a" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.elf")
-	find $(build_dir) -type f -name "*.elf" -exec rm -rf {} +
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.elf" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.bin")
-	find $(build_dir) -type f -name "*.bin" -exec rm -rf {} +
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.bin" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.dtb")
-	find $(build_dir) -type f -name "*.dtb" -exec rm -rf {} +
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.dtb" -exec rm -rf {} +
 
 # Rule for "make distclean"
 .PHONY: distclean
 distclean: clean
-	mkdir -p $(build_dir)
+	$(CMD_PREFIX)mkdir -p $(build_dir)
 	$(if $(V), @echo " RM        $(build_dir)/*.dep")
-	find $(build_dir) -type f -name "*.dep" -exec rm -rf {} +
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.dep" -exec rm -rf {} +
 ifeq ($(build_dir),$(CURDIR)/build)
 	$(if $(V), @echo " RM        $(build_dir)")
-	rm -rf $(build_dir)
+	$(CMD_PREFIX)rm -rf $(build_dir)
 endif
 ifeq ($(install_root_dir),$(install_root_dir_default)/usr)
 	$(if $(V), @echo " RM        $(install_root_dir_default)")
-	rm -rf $(install_root_dir_default)
+	$(CMD_PREFIX)rm -rf $(install_root_dir_default)
 endif
+
+.PHONY: FORCE
+FORCE:

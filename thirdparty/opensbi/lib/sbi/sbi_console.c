@@ -9,10 +9,11 @@
 
 #include <sbi/riscv_locks.h>
 #include <sbi/sbi_console.h>
+#include <sbi/sbi_hart.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_scratch.h>
 
-static const struct sbi_platform *console_plat = NULL;
+static const struct sbi_console_device *console_dev = NULL;
 static spinlock_t console_out_lock	       = SPIN_LOCK_INITIALIZER;
 
 bool sbi_isprintable(char c)
@@ -26,19 +27,18 @@ bool sbi_isprintable(char c)
 
 int sbi_getc(void)
 {
-	return sbi_platform_console_getc(console_plat);
+	if (console_dev && console_dev->console_getc)
+		return console_dev->console_getc();
+	return -1;
 }
 
-#include <sbi/sbi_hart.h>
 void sbi_putc(char ch)
 {
-        int hartid = current_hartid();
-
-        if ((hartid == 0) || (hartid == 1)) {
+	if (console_dev && console_dev->console_putc) {
 		if (ch == '\n')
-			sbi_platform_console_putc(console_plat, '\r');
-		sbi_platform_console_putc(console_plat, ch);
-        }
+			console_dev->console_putc('\r');
+		console_dev->console_putc(ch);
+	}
 }
 
 void sbi_puts(const char *str)
@@ -67,7 +67,6 @@ void sbi_gets(char *s, int maxwidth, char endchar)
 #define PAD_RIGHT 1
 #define PAD_ZERO 2
 #define PAD_ALTERNATE 4
-#define PAD_SPACE 8
 #define PRINT_BUF_LEN 64
 
 #define va_start(v, l) __builtin_va_start((v), l)
@@ -110,8 +109,6 @@ static int prints(char **out, u32 *out_len, const char *string, int width,
 			width -= len;
 		if (flags & PAD_ZERO)
 			padchar = '0';
-		if (flags & PAD_SPACE)
-			padchar = ' ';
 	}
 	if (!(flags & PAD_RIGHT)) {
 		for (; width > 0; --width) {
@@ -210,10 +207,6 @@ static int print(char **out, u32 *out_len, const char *format, va_list args)
 				++format;
 				flags |= PAD_ZERO;
 			}
-			while (*format == ' ') {
-				++format;
-				flags |= PAD_SPACE;
-			}
 			/* Get width */
 			for (; *format >= '0' && *format <= '9'; ++format) {
 				width *= 10;
@@ -254,7 +247,6 @@ static int print(char **out, u32 *out_len, const char *format, va_list args)
 				continue;
 			}
 			if (*format == 'p') {
-				prints(out, 0, "0x", 0, 0);
 				pc += printi(out, out_len,
 					     va_arg(args, unsigned long), 16, 0,
 					     width, flags, 'a');
@@ -262,7 +254,6 @@ static int print(char **out, u32 *out_len, const char *format, va_list args)
 				continue;
 			}
 			if (*format == 'P') {
-				prints(out, 0, "0x", 0, 0);
 				pc += printi(out, out_len,
 					     va_arg(args, unsigned long), 16, 0,
 					     width, flags, 'A');
@@ -397,16 +388,43 @@ int sbi_dprintf(const char *format, ...)
 	struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
 
 	va_start(args, format);
-	if (scratch->options & SBI_SCRATCH_DEBUG_PRINTS)
+	if (scratch->options & SBI_SCRATCH_DEBUG_PRINTS) {
+		spin_lock(&console_out_lock);
 		retval = print(NULL, NULL, format, args);
+		spin_unlock(&console_out_lock);
+	}
 	va_end(args);
 
 	return retval;
 }
 
+void sbi_panic(const char *format, ...)
+{
+	va_list args;
+
+	spin_lock(&console_out_lock);
+	va_start(args, format);
+	print(NULL, NULL, format, args);
+	va_end(args);
+	spin_unlock(&console_out_lock);
+
+	sbi_hart_hang();
+}
+
+const struct sbi_console_device *sbi_console_get_device(void)
+{
+	return console_dev;
+}
+
+void sbi_console_set_device(const struct sbi_console_device *dev)
+{
+	if (!dev || console_dev)
+		return;
+
+	console_dev = dev;
+}
+
 int sbi_console_init(struct sbi_scratch *scratch)
 {
-	console_plat = sbi_platform_ptr(scratch);
-
-	return sbi_platform_console_init(console_plat);
+	return sbi_platform_console_init(sbi_platform_ptr(scratch));
 }

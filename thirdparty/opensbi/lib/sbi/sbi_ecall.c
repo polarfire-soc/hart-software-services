@@ -106,7 +106,7 @@ int sbi_ecall_handler(struct sbi_trap_regs *regs)
 	if (ext && ext->handle) {
 		ret = ext->handle(extension_id, func_id,
 				  regs, &out_val, &trap);
-		if (/* extension_id >= SBI_EXT_0_1_SET_TIMER && */ // <-- this check is always true
+		if (extension_id >= SBI_EXT_0_1_SET_TIMER &&
 		    extension_id <= SBI_EXT_0_1_SHUTDOWN)
 			is_0_1_spec = 1;
 	} else {
@@ -162,6 +162,9 @@ int sbi_ecall_init(void)
 	if (ret)
 		return ret;
 	ret = sbi_ecall_register_extension(&ecall_srst);
+	if (ret)
+		return ret;
+	ret = sbi_ecall_register_extension(&ecall_pmu);
 	if (ret)
 		return ret;
 	ret = sbi_ecall_register_extension(&ecall_legacy);

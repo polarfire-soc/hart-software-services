@@ -17,9 +17,9 @@
 #include <sbi/sbi_hart.h>
 #include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_hsm.h>
-#include <sbi/sbi_init.h>
 #include <sbi/sbi_ipi.h>
 #include <sbi/sbi_platform.h>
+#include <sbi/sbi_pmu.h>
 #include <sbi/sbi_system.h>
 #include <sbi/sbi_string.h>
 #include <sbi/sbi_timer.h>
@@ -48,12 +48,25 @@ static void sbi_boot_print_banner(struct sbi_scratch *scratch)
 		   OPENSBI_VERSION_MINOR);
 #endif
 
+#ifdef OPENSBI_BUILD_TIME_STAMP
+	sbi_printf("Build time: %s\n", OPENSBI_BUILD_TIME_STAMP);
+#endif
+
+#ifdef OPENSBI_BUILD_COMPILER_VERSION
+	sbi_printf("Build compiler: %s\n", OPENSBI_BUILD_COMPILER_VERSION);
+#endif
+
 	sbi_printf(BANNER);
 }
 
 static void sbi_boot_print_general(struct sbi_scratch *scratch)
 {
 	char str[128];
+	const struct sbi_hsm_device *hdev;
+	const struct sbi_ipi_device *idev;
+	const struct sbi_timer_device *tdev;
+	const struct sbi_console_device *cdev;
+	const struct sbi_system_reset_device *srdev;
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 
 	if (scratch->options & SBI_SCRATCH_NO_BOOT_PRINTS)
@@ -66,6 +79,25 @@ static void sbi_boot_print_general(struct sbi_scratch *scratch)
 	sbi_printf("Platform Features         : %s\n", str);
 	sbi_printf("Platform HART Count       : %u\n",
 		   sbi_platform_hart_count(plat));
+	idev = sbi_ipi_get_device();
+	sbi_printf("Platform IPI Device       : %s\n",
+		   (idev) ? idev->name : "---");
+	tdev = sbi_timer_get_device();
+	sbi_printf("Platform Timer Device     : %s @ %luHz\n",
+		   (tdev) ? tdev->name : "---",
+		   (tdev) ? tdev->timer_freq : 0);
+	cdev = sbi_console_get_device();
+	sbi_printf("Platform Console Device   : %s\n",
+		   (cdev) ? cdev->name : "---");
+	hdev = sbi_hsm_get_device();
+	sbi_printf("Platform HSM Device       : %s\n",
+		   (hdev) ? hdev->name : "---");
+	srdev = sbi_system_reset_get_device(SBI_SRST_RESET_TYPE_COLD_REBOOT, 0);
+	sbi_printf("Platform Reboot Device    : %s\n",
+		   (srdev) ? srdev->name : "---");
+	srdev = sbi_system_reset_get_device(SBI_SRST_RESET_TYPE_SHUTDOWN, 0);
+	sbi_printf("Platform Shutdown Device  : %s\n",
+		   (srdev) ? srdev->name : "---");
 
 	/* Firmware details */
 	sbi_printf("Firmware Base             : 0x%lx\n", scratch->fw_start);
@@ -116,8 +148,6 @@ static void sbi_boot_print_hart(struct sbi_scratch *scratch, u32 hartid)
 		   sbi_hart_pmp_granularity(scratch));
 	sbi_printf("Boot HART PMP Address Bits: %d\n",
 		   sbi_hart_pmp_addrbits(scratch));
-	sbi_printf("Boot HART MHPM Count      : %d\n",
-		   sbi_hart_mhpm_count(scratch));
 	sbi_printf("Boot HART MHPM Count      : %d\n",
 		   sbi_hart_mhpm_count(scratch));
 	sbi_hart_delegation_dump(scratch, "Boot HART ", "         ");
@@ -179,8 +209,6 @@ static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 
 static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
 {
-	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
-
 	/* Mark coldboot done */
 	__smp_store_release(&coldboot_done, 1);
 
@@ -188,10 +216,10 @@ static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
 	spin_lock(&coldboot_lock);
 
 	/* Send an IPI to all HARTs waiting for coldboot */
-	for (int i = 0; i <= sbi_scratch_last_hartid(); i++) {
+	for (u32 i = 0; i <= sbi_scratch_last_hartid(); i++) {
 		if ((i != hartid) &&
 		    sbi_hartmask_test_hart(i, &coldboot_wait_hmask))
-			sbi_platform_ipi_send(plat, i);
+			sbi_ipi_raw_send(i);
 	}
 
 	/* Release coldboot lock */
@@ -216,8 +244,7 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	if (rc)
 		sbi_hart_hang();
 
-	init_count_offset = sbi_scratch_alloc_offset(__SIZEOF_POINTER__,
-						     "INIT_COUNT");
+	init_count_offset = sbi_scratch_alloc_offset(__SIZEOF_POINTER__);
 	if (!init_count_offset)
 		sbi_hart_hang();
 
@@ -234,6 +261,10 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 
 	rc = sbi_console_init(scratch);
+	if (rc)
+		sbi_hart_hang();
+
+	rc = sbi_pmu_init(scratch, TRUE);
 	if (rc)
 		sbi_hart_hang();
 
@@ -270,8 +301,6 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 	}
 
-	sbi_boot_print_general(scratch);
-
 	/*
 	 * Note: Finalize domains after HSM initialization so that we
 	 * can startup non-root domains.
@@ -284,8 +313,6 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 			   __func__, rc);
 		sbi_hart_hang();
 	}
-
-	sbi_boot_print_domains(scratch);
 
 	rc = sbi_hart_pmp_configure(scratch);
 	if (rc) {
@@ -304,6 +331,10 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 			   __func__, rc);
 		sbi_hart_hang();
 	}
+
+	sbi_boot_print_general(scratch);
+
+	sbi_boot_print_domains(scratch);
 
 	sbi_boot_print_hart(scratch, hartid);
 
@@ -335,6 +366,10 @@ static void init_warm_startup(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 
 	rc = sbi_hart_init(scratch, FALSE);
+	if (rc)
+		sbi_hart_hang();
+
+	rc = sbi_pmu_init(scratch, FALSE);
 	if (rc)
 		sbi_hart_hang();
 
@@ -405,7 +440,7 @@ static void __noreturn init_warmboot(struct sbi_scratch *scratch, u32 hartid)
 			     scratch->next_mode, FALSE);
 }
 
-static atomic_t coldboot_lottery __attribute__((section(".l2_scratchpad"))) = ATOMIC_INITIALIZER(0);
+static atomic_t coldboot_lottery = ATOMIC_INITIALIZER(0);
 
 /**
  * Initialize OpenSBI library for current HART and jump to next
@@ -456,13 +491,7 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 	 * HARTs which satisfy above condition.
 	 */
 
-#if 0
 	if (next_mode_supported && atomic_xchg(&coldboot_lottery, 1) == 0)
-		coldboot = TRUE;
-#endif
-
-	bool mpfs_is_last_hart_booting(void);
-        if (next_mode_supported && mpfs_is_last_hart_booting() && atomic_xchg(&coldboot_lottery, 1) == 0)
 		coldboot = TRUE;
 
 	if (coldboot)
@@ -506,6 +535,8 @@ void __noreturn sbi_exit(struct sbi_scratch *scratch)
 		sbi_hart_hang();
 
 	sbi_platform_early_exit(plat);
+
+	sbi_pmu_exit(scratch);
 
 	sbi_timer_exit(scratch);
 

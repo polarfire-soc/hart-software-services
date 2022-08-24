@@ -33,6 +33,10 @@ int sbi_strncmp(const char *a, const char *b, size_t count)
 	for (; count > 0 && *a == *b && *a != '\0'; a++, b++, count--)
 		;
 
+	/* No difference till the end */
+	if (!count)
+		return 0;
+
 	return *a - *b;
 }
 
@@ -145,8 +149,8 @@ void *sbi_memmove(void *dest, const void *src, size_t count)
 			count--;
 		}
 	} else {
-		temp1 = dest + count - 1;
-		temp2 = src + count - 1;
+		temp1 = (char *)dest + count - 1;
+		temp2 = (char *)src + count - 1;
 
 		while (count > 0) {
 			*temp1-- = *temp2--;

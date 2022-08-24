@@ -36,7 +36,7 @@ fw_boot_hart:
 	bgt	a0, a1, _bad_dynamic_info
 
 	/* Read boot HART id */
-	li	a1, 0x2
+	li	a1, FW_DYNAMIC_INFO_VERSION_2
 	blt	a0, a1, 2f
 	REG_L	a0, FW_DYNAMIC_INFO_BOOT_HART_OFFSET(a2)
 	ret
@@ -57,14 +57,6 @@ fw_save_info:
 	lla	a4, _dynamic_next_arg1
 	REG_S	a1, (a4)
 
-	/* Sanity checks */
-	li	a4, FW_DYNAMIC_INFO_MAGIC_VALUE
-	REG_L	a3, FW_DYNAMIC_INFO_MAGIC_OFFSET(a2)
-	bne	a3, a4, _bad_dynamic_info
-	li	a4, FW_DYNAMIC_INFO_VERSION_MAX
-	REG_L	a3, FW_DYNAMIC_INFO_VERSION_OFFSET(a2)
-	bgt	a3, a4, _bad_dynamic_info
-
 	/* Save version == 0x1 fields */
 	lla	a4, _dynamic_next_addr
 	REG_L	a3, FW_DYNAMIC_INFO_NEXT_ADDR_OFFSET(a2)
@@ -77,7 +69,7 @@ fw_save_info:
 	REG_S	a3, (a4)
 
 	/* Save version == 0x2 fields */
-	li	a4, 0x2
+	li	a4, FW_DYNAMIC_INFO_VERSION_2
 	REG_L	a3, FW_DYNAMIC_INFO_VERSION_OFFSET(a2)
 	blt	a3, a4, 2f
 	lla	a4, _dynamic_boot_hart

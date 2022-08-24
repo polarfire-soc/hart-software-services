@@ -29,7 +29,7 @@
 
 /* clang-format on */
 
-static volatile void *uart_base;
+static volatile char *uart_base;
 static u32 uart_in_freq;
 static u32 uart_baudrate;
 
@@ -66,7 +66,7 @@ static void set_reg(u32 num, u32 val)
 	writel(val, uart_base + (num * 0x4));
 }
 
-void sifive_uart_putc(char ch)
+static void sifive_uart_putc(char ch)
 {
 	while (get_reg(UART_REG_TXFIFO) & UART_TXFIFO_FULL)
 		;
@@ -74,7 +74,7 @@ void sifive_uart_putc(char ch)
 	set_reg(UART_REG_TXFIFO, ch);
 }
 
-int sifive_uart_getc(void)
+static int sifive_uart_getc(void)
 {
 	u32 ret = get_reg(UART_REG_RXFIFO);
 	if (!(ret & UART_RXFIFO_EMPTY))
@@ -82,9 +82,15 @@ int sifive_uart_getc(void)
 	return -1;
 }
 
+static struct sbi_console_device sifive_console = {
+	.name = "sifive_uart",
+	.console_putc = sifive_uart_putc,
+	.console_getc = sifive_uart_getc
+};
+
 int sifive_uart_init(unsigned long base, u32 in_freq, u32 baudrate)
 {
-	uart_base     = (volatile void *)base;
+	uart_base     = (volatile char *)base;
 	uart_in_freq  = in_freq;
 	uart_baudrate = baudrate;
 
@@ -97,6 +103,8 @@ int sifive_uart_init(unsigned long base, u32 in_freq, u32 baudrate)
 	set_reg(UART_REG_TXCTRL, UART_TXCTRL_TXEN);
 	/* Enable Rx */
 	set_reg(UART_REG_RXCTRL, UART_RXCTRL_RXEN);
+
+	sbi_console_set_device(&sifive_console);
 
 	return 0;
 }

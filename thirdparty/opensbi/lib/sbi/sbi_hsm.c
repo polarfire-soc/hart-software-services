@@ -21,11 +21,12 @@
 #include <sbi/sbi_hsm.h>
 #include <sbi/sbi_init.h>
 #include <sbi/sbi_ipi.h>
-#include <sbi/sbi_platform.h>
+#include <sbi/sbi_scratch.h>
 #include <sbi/sbi_system.h>
 #include <sbi/sbi_timer.h>
 #include <sbi/sbi_console.h>
 
+static const struct sbi_hsm_device *hsm_dev = NULL;
 static unsigned long hart_data_offset;
 
 /** Per hart specific data to manage state transition **/
@@ -129,6 +130,54 @@ static void sbi_hsm_hart_wait(struct sbi_scratch *scratch, u32 hartid)
 	 */
 }
 
+const struct sbi_hsm_device *sbi_hsm_get_device(void)
+{
+	return hsm_dev;
+}
+
+void sbi_hsm_set_device(const struct sbi_hsm_device *dev)
+{
+	if (!dev || hsm_dev)
+		return;
+
+	hsm_dev = dev;
+}
+
+static bool hsm_device_has_hart_hotplug(void)
+{
+	if (hsm_dev && hsm_dev->hart_start && hsm_dev->hart_stop)
+		return true;
+	return false;
+}
+
+static bool hsm_device_has_hart_secondary_boot(void)
+{
+	if (hsm_dev && hsm_dev->hart_start && !hsm_dev->hart_stop)
+		return true;
+	return false;
+}
+
+static int hsm_device_hart_start(u32 hartid, ulong saddr)
+{
+	if (hsm_dev && hsm_dev->hart_start)
+		return hsm_dev->hart_start(hartid, saddr);
+	return SBI_ENOTSUPP;
+}
+
+static int hsm_device_hart_stop(void)
+{
+	if (hsm_dev && hsm_dev->hart_stop)
+		return hsm_dev->hart_stop();
+	return SBI_ENOTSUPP;
+}
+
+static int hsm_device_hart_suspend(u32 suspend_type, ulong raddr)
+{
+	if (hsm_dev && hsm_dev->hart_suspend)
+		return hsm_dev->hart_suspend(suspend_type, raddr);
+	return SBI_ENOTSUPP;
+}
+
 int sbi_hsm_init(struct sbi_scratch *scratch, u32 hartid, bool cold_boot)
 {
 	u32 i;
@@ -136,8 +185,7 @@ int sbi_hsm_init(struct sbi_scratch *scratch, u32 hartid, bool cold_boot)
 	struct sbi_hsm_data *hdata;
 
 	if (cold_boot) {
-		hart_data_offset = sbi_scratch_alloc_offset(sizeof(*hdata),
-							    "HART_DATA");
+		hart_data_offset = sbi_scratch_alloc_offset(sizeof(*hdata));
 		if (!hart_data_offset)
 			return SBI_ENOMEM;
 
@@ -164,7 +212,6 @@ int sbi_hsm_init(struct sbi_scratch *scratch, u32 hartid, bool cold_boot)
 void __noreturn sbi_hsm_exit(struct sbi_scratch *scratch)
 {
 	u32 hstate;
-	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 	struct sbi_hsm_data *hdata = sbi_scratch_offset_ptr(scratch,
 							    hart_data_offset);
 	void (*jump_warmboot)(void) = (void (*)(void))scratch->warmboot_addr;
@@ -174,8 +221,8 @@ void __noreturn sbi_hsm_exit(struct sbi_scratch *scratch)
 	if (hstate != SBI_HSM_STATE_STOP_PENDING)
 		goto fail_exit;
 
-	if (sbi_platform_has_hart_hotplug(plat)) {
-		sbi_platform_hart_stop(plat);
+	if (hsm_device_has_hart_hotplug()) {
+		hsm_device_hart_stop();
 		/* It should never reach here */
 		goto fail_exit;
 	}
@@ -201,13 +248,10 @@ int sbi_hsm_hart_start(struct sbi_scratch *scratch,
 	unsigned int hstate;
 	struct sbi_scratch *rscratch;
 	struct sbi_hsm_data *hdata;
-	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 
-#if 0
 	/* For now, we only allow start mode to be S-mode or U-mode. */
 	if (smode != PRV_S && smode != PRV_U)
 		return SBI_EINVAL;
-#endif
 	if (dom && !sbi_domain_is_assigned_hart(dom, hartid))
 		return SBI_EINVAL;
 	if (dom && !sbi_domain_check_addr(dom, saddr, smode,
@@ -235,12 +279,11 @@ int sbi_hsm_hart_start(struct sbi_scratch *scratch,
 	rscratch->next_addr = saddr;
 	rscratch->next_mode = smode;
 
-	if (sbi_platform_has_hart_hotplug(plat) ||
-	   (sbi_platform_has_hart_secondary_boot(plat) && !init_count)) {
-		return sbi_platform_hart_start(plat, hartid,
-					       scratch->warmboot_addr);
+	if (hsm_device_has_hart_hotplug() ||
+	   (hsm_device_has_hart_secondary_boot() && !init_count)) {
+		return hsm_device_hart_start(hartid, scratch->warmboot_addr);
 	} else {
-		sbi_platform_ipi_send(plat, hartid);
+		sbi_ipi_raw_send(hartid);
 	}
 
 	return 0;
@@ -315,12 +358,6 @@ static int __sbi_hsm_suspend_non_ret_default(struct sbi_scratch *scratch,
 {
 	void (*jump_warmboot)(void) = (void (*)(void))scratch->warmboot_addr;
 
-	/*
-	 * Save some of the M-mode CSRs which should be restored after
-	 * resuming from suspend state
-	 */
-	__sbi_hsm_suspend_non_ret_save(scratch);
-
 	/* Wait for interrupt */
 	wfi();
 
@@ -376,7 +413,6 @@ int sbi_hsm_hart_suspend(struct sbi_scratch *scratch, u32 suspend_type,
 {
 	int oldstate, ret;
 	const struct sbi_domain *dom = sbi_domain_thishart_ptr();
-	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 	struct sbi_hsm_data *hdata = sbi_scratch_offset_ptr(scratch,
 							    hart_data_offset);
 
@@ -421,9 +457,15 @@ int sbi_hsm_hart_suspend(struct sbi_scratch *scratch, u32 suspend_type,
 	/* Save the suspend type */
 	hdata->suspend_type = suspend_type;
 
+	/*
+	 * Save context which will be restored after resuming from
+	 * non-retentive suspend.
+	 */
+	if (suspend_type & SBI_HSM_SUSP_NON_RET_BIT)
+		__sbi_hsm_suspend_non_ret_save(scratch);
+
 	/* Try platform specific suspend */
-	ret = sbi_platform_hart_suspend(plat, suspend_type,
-					scratch->warmboot_addr);
+	ret = hsm_device_hart_suspend(suspend_type, scratch->warmboot_addr);
 	if (ret == SBI_ENOTSUPP) {
 		/* Try generic implementation of default suspend types */
 		if (suspend_type == SBI_HSM_SUSPEND_RET_DEFAULT) {
