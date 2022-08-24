@@ -20,6 +20,8 @@ READLINK ?= readlink
 endif
 
 # Find out source, build, and install directories
+# fix CURDIR to use relative paths, especially if building under Cygwin
+CURDIR=.
 src_dir=$(CURDIR)
 ifdef O
  build_dir=$(shell $(READLINK) -f $(O))
