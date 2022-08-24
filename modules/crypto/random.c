@@ -24,41 +24,42 @@
 
 #include <stdint.h>
 
-static uint8_t nonce_buffer[32];
+#define NONCE_CHUNK_SIZE (32u)
+static uint8_t nonce_buffer[NONCE_CHUNK_SIZE];
+
+static int get_random_chunk_(unsigned char *buf, unsigned short len)
+{
+    uint16_t retVal;
+    int result = 0;
+
+    retVal = MSS_SYS_nonce_service(nonce_buffer, 0u);
+    if (MSS_SYS_SUCCESS == retVal) {
+        memcpy(buf, nonce_buffer, len);
+    } else {
+        mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read random number (%u)\n", retVal);
+	result = 1;
+    }
+
+    return result;
+}
+
 
 int get_random(unsigned char *buf, unsigned short len);
-
 int get_random(unsigned char *buf, unsigned short len)
 {
     int result = 0;
-    uint16_t retVal;
     off_t offset = 0u;
 
     MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
     memset(nonce_buffer, 0, ARRAY_SIZE(nonce_buffer));
 
-    while (len > 32u) {
-        retVal = MSS_SYS_nonce_service(nonce_buffer, 0u);
-        if (MSS_SYS_SUCCESS == retVal) {
-            memcpy(&(buf[offset]), nonce_buffer, 32);
-	    offset += 32u;
-            len -= 32u;
-        } else {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number (%u)\n", retVal);
-	    result = 1;
-            break;
-        }
+    while (!result && (len > NONCE_CHUNK_SIZE)) {
+        result = get_random_chunk_(&buf[offset], NONCE_CHUNK_SIZE);
+        len = len - NONCE_CHUNK_SIZE;
     }
 
     if (!result && len) {
-        retVal = MSS_SYS_nonce_service(nonce_buffer, 0u);
-        if (MSS_SYS_SUCCESS == retVal) {
-            memcpy(&(buf[offset]), nonce_buffer, len);
-            len = 0u;
-        } else {
-            mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Serial Number (%u)\n", retVal);
-	    result = 1;
-        }
+        result = get_random_chunk_(&buf[offset], len);
     }
 
     return result;

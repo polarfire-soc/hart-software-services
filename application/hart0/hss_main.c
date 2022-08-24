@@ -52,9 +52,6 @@
 
 #include <string.h>
 
-//#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
-//#  include "hss_crypto.h"
-//#endif
 
 /******************************************************************************************/
 

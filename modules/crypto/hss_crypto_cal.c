@@ -139,7 +139,7 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
         result = false;
     } else {
 #define SHA384_DIGEST_SIZE  48
-#define P384_MOD 0 //TODO REMOVE
+#define P384_MOD 0
         uint8_t hashBuffer[SHA384_DIGEST_SIZE];
         retval = CALHash(SATHASHTYPE_SHA384, dataBuf, dataBufSize, hashBuffer);
 
