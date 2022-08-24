@@ -58,6 +58,7 @@ struct FlashDescriptor
 } qspiFlashes[] = {
     { 0xEFAA21u, 2048u, 64u, 1024u, SPI_NAND, "Winbond W25N01GV" }, // EFh => Winbond, AA21h => W25N01GV
     { 0x20BA19u, 256u, 256u, 512u, SPI_NOR, "Micron N25Q256A" }, // 20h => Micron, BA91h => N25Q256A, and using sector as block
+    // { 0x20BA19u, 16u, 8192, 512u, SPI_NOR, "Micron N25Q256A" }, // 20h => Micron, BA91h => N25Q256A, and using sub-sector as block
 };
 
 static uint32_t pageSize, blockSize, dieSize, eraseSize, pageCount, blockCount;
@@ -156,7 +157,6 @@ __attribute__((pure)) static inline uint32_t logical_to_physical_block_(const ui
 
 static void demandCopyFlashBlocksToCache_(size_t byteOffset, size_t byteCount, bool markDirty)
 {
-
     for (size_t offset = byteOffset; offset < (byteOffset + byteCount); offset += blockSize) {
         const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
 
@@ -259,7 +259,6 @@ static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
 //
 //
 
-
 bool HSS_QSPIInit(void)
 {
     if (!qspiInitialized) {
@@ -279,10 +278,7 @@ bool HSS_QSPIInit(void)
             if (qspiFlashes[qspiIndex].pageSize >= QSPI_MIN_BYTE_SECTOR_SIZE) {
                 pageSize = qspiFlashes[qspiIndex].pageSize;
                 blockSize = qspiFlashes[qspiIndex].pageSize * qspiFlashes[qspiIndex].pagesPerBlock;
-                eraseSize = blockSize;
                 blockCount = qspiFlashes[qspiIndex].blocksPerDie;
-                pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
-                dieSize = blockSize * blockCount;
             } else {
               /* The minimum sector size (page size) allowed for a block device is
                * 512. so for the flashes with page size less than 512 will get an
@@ -293,11 +289,13 @@ bool HSS_QSPIInit(void)
                */
                 pageSize = QSPI_MIN_BYTE_SECTOR_SIZE;
                 blockSize = pageSize * qspiFlashes[qspiIndex].pagesPerBlock;
-                eraseSize = blockSize;
                 blockCount = pageSize / 2;
-                pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
-                dieSize = blockSize * blockCount;
             }
+
+            eraseSize = blockSize;
+            blockCount = qspiFlashes[qspiIndex].blocksPerDie;
+            pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
+            dieSize = blockSize * blockCount;
             spi_type = qspiFlashes[qspiIndex].type;
 
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pageSize: %u\n", pageSize);
@@ -335,6 +333,7 @@ bool HSS_QSPIInit(void)
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalBlockDesc: %p\n", pLogicalBlockDesc);
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pCacheDataBuffer: %p\n", pCacheDataBuffer);
 
+            if (spi_type == SPI_NAND) {
                 //
                 // check for bad blocks and reduce the number of blocks accordingly...
                 // our caches and logical block descriptors above may now be slightly too large, but this
@@ -346,6 +345,7 @@ bool HSS_QSPIInit(void)
                 dieSize = blockSize * blockCount;
 
                 // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u\n", blockCount);
+            }
 
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash\n");
             qspiInitialized = true;
