@@ -23,8 +23,10 @@
  * their final_init() platform operation.
  *
  * @param fdt device tree blob
+ *
+ * @return 0 on success and negative error code on failure
  */
-void fdt_pmu_fixup(void *fdt);
+int fdt_pmu_fixup(void *fdt);
 
 /**
  * Setup PMU data from device tree
