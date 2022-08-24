@@ -56,6 +56,13 @@ __attribute__((weak)) void config_l2_cache(void)
             <= ((15U - LIBERO_SETTING_WAY_ENABLE) * WAY_BYTE_LENGTH));
 
     /*
+     * confirm the amount of l2lim used in the Linker script has been allocated
+     * in the MSS Configurator
+     */
+    ASSERT(((const uint64_t)&__l2lim_end - (const uint64_t)&__l2lim_start)\
+            <= ((15U - LIBERO_SETTING_WAY_ENABLE) * WAY_BYTE_LENGTH));
+
+    /*
      * Set the number of ways that will be shared between cache and scratchpad.
      */
     CACHE_CTRL->WAY_ENABLE = LIBERO_SETTING_WAY_ENABLE;
