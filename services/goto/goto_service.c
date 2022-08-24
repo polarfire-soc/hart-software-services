@@ -35,6 +35,7 @@
 #include "csr_helper.h"
 
 #include "hss_atomic.h"
+#include "u54_state.h"
 
 static void goto_init_handler(struct StateMachine * const pMyMachine);
 static void goto_idle_handler(struct StateMachine * const pMyMachine);
@@ -142,6 +143,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             // value y, x IE is set to x PIE; the privilege mode is changed to y; x PIE is set to 1;
             // and x PP is set to U (or M if user-mode is not supported).
             const uint32_t next_mode = immediate_arg;
+            HSS_U54_SetState(HSS_State_Running);
 
 #if IS_ENABLED(CONFIG_OPENSBI)
             sbi_hart_switch_mode(hartid, 0u, (unsigned long)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
@@ -169,6 +171,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
             // set MEPC to function address (smuggled in p_extended_buffer argument)
             mHSS_CSR_WRITE(mepc, *((void **)p_extended_buffer));
+
 
             // execute MRET, causing MIE <= MPIE, new priv mode <= PRV_S, MPIE <= 1, MPP <= U
             register unsigned long a0 asm("a0") = hartid;

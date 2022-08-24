@@ -25,6 +25,7 @@
 #include "hss_perfctr.h"
 #include "common/mss_peripherals.h"
 #include "hss_crc32.h"
+#include "u54_state.h"
 
 #include <assert.h>
 #include <string.h>
@@ -66,8 +67,8 @@
 
 
 /* Timeouts */
-#define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 5u)
-#define BOOT_WAIT_TIMEOUT               (ONE_SEC * 2u)
+#define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 1u)
+#define BOOT_WAIT_TIMEOUT               (ONE_SEC * 5u)
 
 #define BOOT_SUB_CHUNK_SIZE 256u
 
@@ -326,6 +327,7 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
     if (pBootImage) {
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot\n", pMyMachine->pMachineName);
 
+        pMyMachine->startTime = HSS_GetTime();
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
         enum HSSHartId const target = pInstanceData->target;
 
@@ -334,7 +336,6 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
         }
 
         HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
-
         pMyMachine->state = BOOT_SETUP_PMP;
     } else {
         // unexpected error state
@@ -725,6 +726,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
 
     if (!pBootImage->hart[target-1].entryPoint) {
         // nothing for me to do, not expecting GOTO ack...
+        HSS_U54_SetState_Ex(target, HSS_State_Idle);
         pMyMachine->state = BOOT_IDLE;
     } else if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_WAIT_TIMEOUT)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations\n",
@@ -1089,8 +1091,9 @@ enum IPIStatusCode HSS_Boot_PMPSetupHandler(TxId_t transaction_id, enum HSSHartI
 
     // request to setup PMP by E51 received
     enum HSSHartId myHartId = current_hartid();
+    HSS_U54_SetState(HSS_State_Booting);
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Hart%u ", myHartId);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Hart%u ", myHartId);
 
     if (!pmpSetupFlag[myHartId]) {
         pmpSetupFlag[myHartId] = true; // PMPs can be setup only once without reboot....
@@ -1112,10 +1115,10 @@ enum IPIStatusCode HSS_Boot_PMPSetupHandler(TxId_t transaction_id, enum HSSHartI
 	(void)mss_set_apb_bus_cr((uint32_t)LIBERO_SETTING_APBBUS_CR);
         //
 
-        mHSS_DEBUG_PRINTF_EX("setup complete\n");
+        //mHSS_DEBUG_PRINTF_EX("setup complete\n");
         result =  IPI_SUCCESS;
     } else {
-        mHSS_DEBUG_PRINTF_EX("PMPs already configured\n");
+        //mHSS_DEBUG_PRINTF_EX("PMPs already configured\n");
         result =  IPI_SUCCESS;
     }
 

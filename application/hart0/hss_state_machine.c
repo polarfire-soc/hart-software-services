@@ -124,7 +124,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
                         (pCurrentMachine->pStateDescs[currentState]).pStateName;
 
                     if (prevState != currentState) {
-                        mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s :: %s -> %s\n", pMachineName,
+                        mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "%s :: [%s] -> [%s]\n", pMachineName,
                             pLastStateName, pCurrentStateName);
                     }
                 }

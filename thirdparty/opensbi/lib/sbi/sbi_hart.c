@@ -525,6 +525,7 @@ int sbi_hart_reinit(struct sbi_scratch *scratch)
 	return 0;
 }
 
+#include "u54_state.h"
 int sbi_hart_init(struct sbi_scratch *scratch, bool cold_boot)
 {
 	if (cold_boot) {
@@ -539,11 +540,13 @@ int sbi_hart_init(struct sbi_scratch *scratch, bool cold_boot)
 
 	hart_detect_features(scratch);
 
+	HSS_U54_SetState(HSS_State_SBIHartInit);
 	return sbi_hart_reinit(scratch);
 }
 
 void __attribute__((noreturn)) sbi_hart_hang(void)
 {
+        HSS_U54_SetState(HSS_State_Fatal);
 	while (1)
 		wfi();
 	__builtin_unreachable();

@@ -57,5 +57,6 @@ tools/bin2chunks/bootImage.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 EXTRA_SRCS-y += \
         application/hart1-4/u54_handle_ipi.c \
+        application/hart1-4/u54_state.c \
 
 application/hart1-4/u54_handle_ipi.o: CFLAGS=$(CFLAGS_GCCEXT)

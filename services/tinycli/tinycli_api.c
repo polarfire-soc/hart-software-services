@@ -38,6 +38,7 @@
 #include "csr_helper.h"
 #include "wdog_service.h"
 #include "hss_perfctr.h"
+#include "u54_state.h"
 
 #include "hss_registry.h"
 #include "assert.h"
@@ -56,6 +57,10 @@
 
 #if IS_ENABLED(CONFIG_SERVICE_BEU)
 #    include "beu_service.h"
+#endif
+
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+#    include "hss_boot_secure.h"
 #endif
 
 #define mMAX_NUM_TOKENS 40
@@ -390,6 +395,14 @@ static void tinyCLI_Seg_(void)
     (void)HSS_DDRPrintSegConfig();
 }
 
+static void tinyCLI_OpenSBI_(void)
+{
+    extern void sbi_domain_dump_all(char const * const suffix);
+    sbi_domain_dump_all("      ");
+
+    HSS_U54_DumpStates();
+}
+
 static void tinyCLI_L2Cache_(void)
 {
     (void)HSS_DDRPrintL2CacheWaysConfig();
@@ -424,6 +437,7 @@ static void tinyCLI_Debug_(void)
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
         DBG_MONITOR,
 #endif
+        DBG_OPENSBI,
         DBG_SEG,
         DBG_L2CACHE,
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
@@ -443,6 +457,7 @@ static void tinyCLI_Debug_(void)
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
         { DBG_MONITOR,  "MONITOR", "monitor memory locations periodically" },
 #endif
+        { DBG_OPENSBI,  "OPENSBI", "debug OpenSBI state" },
         { DBG_SEG,      "SEG",     "display seg registers" },
         { DBG_L2CACHE,  "L2CACHE", "display l2cache settings" },
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
@@ -478,6 +493,10 @@ static void tinyCLI_Debug_(void)
             tinyCLI_Monitor_();
             break;
 #endif
+
+        case DBG_OPENSBI:
+	    tinyCLI_OpenSBI_();
+            break;
 
         case DBG_HEXDUMP:
             tinyCLI_HexDump_();
@@ -522,7 +541,25 @@ static void tinyCLI_Debug_(void)
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
 extern struct HSS_Storage *HSS_BootGetActiveStorage(void);
+#endif
 
+extern struct HSS_BootImage *pBootImage;
+static void tinyCLI_Boot_Info_(void)
+{
+    if ((pBootImage->magic == mHSS_BOOT_MAGIC) || (pBootImage->magic == mHSS_COMPRESSED_MAGIC)) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Set Name: %s\n", pBootImage->set_name);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Length:   %" PRIu64 " bytes\n", pBootImage->bootImageLength);
+
+#if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image %s code signing\n",
+            HSS_Boot_Secure_CheckCodeSigning(pBootImage) ? "passed" : "failed");
+#endif
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Valid boot image not registered\n");
+    }
+}
+
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 static void tinyCLI_Boot_List_(void)
 {
     HSS_GPT_t gpt;
@@ -599,10 +636,12 @@ static bool tinyCLI_Boot_(void)
     bool result = false;
     bool usageError = false;
     enum BootKey {
+        BOOT_INFO,
         BOOT_LIST,
         BOOT_SELECT
     };
     const struct tinycli_key bootKeys[] = {
+        { BOOT_INFO,   "INFO",     "display info about currently registered boot image" },
         { BOOT_LIST,   "LIST",     "list boot partitions" },
         { BOOT_SELECT, "SELECT",   "select active boot partition" },
     };
@@ -611,16 +650,15 @@ static bool tinyCLI_Boot_(void)
     if (argc_tokenCount > 1u) {
         if (tinyCLI_NameToKeyIndex_(bootKeys, ARRAY_SIZE(bootKeys), argv_tokenArray[1], &keyIndex)) {
             switch (keyIndex) {
-#if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
+            case BOOT_INFO:
+                tinyCLI_Boot_Info_();
+                break;
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
             case BOOT_LIST:
-		// if looking for GPT partitions, force eMMC as storage provider
-                HSS_BootSelectMMC();
                 tinyCLI_Boot_List_();
                 break;
 
             case BOOT_SELECT:
-		// if looking for GPT partitions, force eMMC as storage provider
-                HSS_BootSelectMMC();
                 tinyCLI_Boot_Select_();
                 break;
 #endif

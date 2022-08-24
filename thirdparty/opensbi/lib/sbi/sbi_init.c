@@ -160,6 +160,7 @@ static struct sbi_hartmask coldboot_wait_hmask = { 0 };
 
 static unsigned long coldboot_done;
 
+#include "u54_state.h"
 static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 {
 	unsigned long saved_mie, cmip;
@@ -207,6 +208,7 @@ static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	 * Also, the sbi_platform_ipi_init() called from sbi_ipi_init()
 	 * will automatically clear IPI for current HART.
 	 */
+        HSS_U54_SetState(HSS_State_SBIWaitForColdboot);
 }
 
 static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
@@ -345,6 +347,7 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	init_count = sbi_scratch_offset_ptr(scratch, init_count_offset);
 	(*init_count)++;
 
+        HSS_U54_SetState(HSS_State_Running);
 	sbi_hsm_prepare_next_jump(scratch, hartid);
 	sbi_hart_switch_mode(hartid, scratch->next_arg1, scratch->next_addr,
 			     scratch->next_mode, FALSE);
@@ -437,6 +440,7 @@ static void __noreturn init_warmboot(struct sbi_scratch *scratch, u32 hartid)
 	else
 		init_warm_startup(scratch, hartid);
 
+        HSS_U54_SetState(HSS_State_Running);
 	sbi_hart_switch_mode(hartid, scratch->next_arg1,
 			     scratch->next_addr,
 			     scratch->next_mode, FALSE);
