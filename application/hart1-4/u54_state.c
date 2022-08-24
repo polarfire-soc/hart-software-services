@@ -64,7 +64,7 @@ int HSS_U54_GetState_Ex(int hartId)
 {
     int result;
 
-    __atomic_load(&(hartStates[hartId]), &result, __ATOMIC_SEQ_CST);
+    __atomic_load(&(hartStates[hartId]), &result, __ATOMIC_RELAXED);
     return result;
 }
 
@@ -89,12 +89,15 @@ char const * HSS_U54_GetStateName(int state)
     return result;
 }
 
+static long reportingFlag = 0u;
+
 void HSS_U54_SetState_Ex(int hartId, int state)
 {
     switch (hartId) {
     case HSS_HART_U54_1 ... HSS_HART_U54_4:
-	__atomic_store(&(hartStates[hartId]), &state, __ATOMIC_SEQ_CST);
+	__atomic_store(&(hartStates[hartId]), &state, __ATOMIC_RELAXED);
         hartStates[hartId] = state;
+        __atomic_store_n(&reportingFlag, 1, __ATOMIC_RELAXED);
         break;
 
     default:
@@ -104,9 +107,26 @@ void HSS_U54_SetState_Ex(int hartId, int state)
     }
 }
 
+void HSS_U54_DumpStatesIfChanged(void)
+{
+    long retval = 0u;
+    __atomic_load(&reportingFlag, &retval, __ATOMIC_RELAXED);
+    if (retval) {
+        mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "u54 State Change: ");
+        HSS_Debug_Highlight(HSS_DEBUG_LOG_STATE_TRANSITION); \
+        for (int i = HSS_HART_U54_1; i < HSS_HART_NUM_PEERS; i++) {
+            mHSS_DEBUG_PRINTF_EX(" [%s]", HSS_U54_GetStateName(HSS_U54_GetState_Ex(i)));
+        }
+        HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+        mHSS_DEBUG_PRINTF_EX("\n");
+
+        __atomic_store_n(&reportingFlag, 0, __ATOMIC_RELAXED);
+    }
+}
+
 void HSS_U54_DumpStates(void)
 {
     for (int i = HSS_HART_U54_1; i < HSS_HART_NUM_PEERS; i++) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%d => %s\n", i, HSS_U54_GetStateName(HSS_U54_GetState_Ex(i)));
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%d :: [%s]\n", i, HSS_U54_GetStateName(HSS_U54_GetState_Ex(i)));
     }
 }

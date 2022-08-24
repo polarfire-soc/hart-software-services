@@ -55,6 +55,7 @@ char const * HSS_U54_GetStateName(int hartId);
 void HSS_U54_SetState(int state);
 void HSS_U54_SetState_Ex(int hartId, int state);
 
+void HSS_U54_DumpStatesIfChanged(void);
 void HSS_U54_DumpStates(void);
 
 #ifdef __cplusplus

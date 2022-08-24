@@ -28,6 +28,7 @@
 #include "profiling.h"
 
 #include "hss_registry.h"
+#include "u54_state.h"
 
 /**
  * \brief Ensure that state is valid for given state machine
@@ -186,6 +187,8 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
             maxLoopTime = delta;
             max_exceeded_flag = true;
        }
+
+       HSS_U54_DumpStatesIfChanged();
 
 #if IS_ENABLED(CONFIG_DEBUG_LOOP_TIMES)
         if (unlikely((loopCount % (unsigned long)CONFIG_DEBUG_LOOP_TIMES_THRESHOLD) == 0u)) {
