@@ -189,9 +189,17 @@ bool HSS_E51_Banner(void)
 #ifndef VENDOR_STRING
 #    define VENDOR_STRING ""
 #endif
+
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
+    extern const char DDR_DRIVER_VERSION[];
+#endif
+
     mHSS_FANCY_PRINTF(LOG_STATUS,
         "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" VENDOR_STRING "\n"
         "MPFS HAL version %d.%d.%d"
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
+        " / DDR Driver version %s"
+#endif
 #if IS_ENABLED(CONFIG_USE_IHC)
 	" / Mi-V IHC version %d.%d.%d"
 #endif
@@ -200,6 +208,9 @@ bool HSS_E51_Banner(void)
         "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions.\n\n",
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
         MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
+        , DDR_DRIVER_VERSION
+#endif
 #if IS_ENABLED(CONFIG_USE_IHC)
 	// add the comma separator here if adding IHC version information to prevent a
 	// compile error on the macro if CONFIG_USE_IHC is not enabled
