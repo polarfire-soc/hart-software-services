@@ -381,11 +381,7 @@ static void tinyCLI_PrintHelp_(void)
 static void tinyCLI_Reset_(void)
 {
 #if IS_ENABLED(CONFIG_SERVICE_WDOG)
-    HSS_Wdog_Reboot(HSS_HART_E51);
-    HSS_Wdog_Reboot(HSS_HART_U54_1);
-    HSS_Wdog_Reboot(HSS_HART_U54_2);
-    HSS_Wdog_Reboot(HSS_HART_U54_3);
-    HSS_Wdog_Reboot(HSS_HART_U54_4);
+    HSS_Wdog_Reboot(HSS_HART_ALL);
 #endif
 }
 

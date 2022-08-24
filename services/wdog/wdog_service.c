@@ -245,6 +245,19 @@ void HSS_Wdog_Reboot(enum HSSHartId target)
         MSS_WD_force_reset(MSS_WDOG4_LO);
         break;
 
+    case HSS_HART_ALL:
+        MSS_WD_force_reset(MSS_WDOG4_LO);
+        MSS_WD_force_reset(MSS_WDOG3_LO);
+        MSS_WD_force_reset(MSS_WDOG2_LO);
+        MSS_WD_force_reset(MSS_WDOG1_LO);
+        MSS_WD_force_reset(MSS_WDOG0_LO);
+
+        while (1) {
+            ;
+        }
+
+        break;
+
     default:
         assert(1 == 0); // should never reach here!! LCOV_EXCL_LINE
         break;

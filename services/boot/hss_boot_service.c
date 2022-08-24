@@ -33,7 +33,11 @@
 
 #if IS_ENABLED(CONFIG_OPENSBI)
 #  include "sbi/riscv_asm.h"
+#  define ffs SBI_FFS
+#  define fls SBI_FLS
 #  include "sbi/sbi_bitops.h"
+#  undef ffs
+#  undef fls
 #  include "sbi/sbi_hart.h"
 #  include "sbi_init.h"
 #  include "sbi_scratch.h"

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -48,6 +48,7 @@
 #endif
 
 extern const struct sbi_platform platform;
+extern const struct sbi_hsm_device mpfs_hsm;
 static unsigned long l_hartid_to_scratch(int hartid);
 
 //
@@ -82,6 +83,8 @@ static void opensbi_scratch_setup(enum HSSHartId hartid)
     extern unsigned long _hss_start, _hss_end;
     pScratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
     pScratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
+
+    sbi_hsm_set_device(&mpfs_hsm);
 }
 
 static unsigned long l_hartid_to_scratch(int hartid)
@@ -189,6 +192,7 @@ void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
     mpfs_mark_hart_as_booted(hartid);
     sbi_init(&(pScratches[hartid].scratch));
 
+    // should never be reached...
     while (1) {
         asm("wfi");
     };
@@ -212,7 +216,7 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
         __sync_synchronize();
 
         // small delay to ensure that IHC message has been sent before jumping into OpenSBI
-        // without this, HSS never receives ack from U54 that OPENSBI_INIT was successful
+        // without this, HSS never receives ACK from U54 that OPENSBI_INIT was successful
         HSS_SpinDelay_MilliSecs(250u);
 #endif
 
@@ -264,7 +268,6 @@ void HSS_OpenSBI_Reboot(void)
 {
     uint32_t index;
 
-sbi_printf("%s() called\n", __func__);
     IPI_MessageAlloc(&index);
     IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
 }

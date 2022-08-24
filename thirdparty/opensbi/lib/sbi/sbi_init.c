@@ -18,6 +18,7 @@
 #include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_hsm.h>
 #include <sbi/sbi_ipi.h>
+#include <sbi/sbi_init.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_pmu.h>
 #include <sbi/sbi_system.h>
@@ -25,6 +26,7 @@
 #include <sbi/sbi_timer.h>
 #include <sbi/sbi_tlb.h>
 #include <sbi/sbi_version.h>
+#include <assert.h>
 
 #define BANNER                                              \
 	"   ____                    _____ ____ _____\n"     \
@@ -491,13 +493,52 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 	 * HARTs which satisfy above condition.
 	 */
 
-	if (next_mode_supported && atomic_xchg(&coldboot_lottery, 1) == 0)
+	bool mpfs_is_last_hart_ready(void);
+	if (next_mode_supported
+		// we need to avoid a race at startup, as we have sequenced harts serially from E51
+		// rather than in parallel from power-up .. so only the last booting hart gets to
+		// coldboot ...
+		&& mpfs_is_last_hart_ready()
+		&& atomic_xchg(&coldboot_lottery, 1) == 0)
 		coldboot = TRUE;
 
-	if (coldboot)
+	if (coldboot) {
 		init_coldboot(scratch, hartid);
-	else
+	} else {
+		if (atomic_read(&coldboot_lottery)) {
+		//if (sbi_is_first_boot(plat) > 0) {
+			// we've booted before if I'm the boot hart but I'm doing a warm boot ...
+			// so we need to potentially clean-up the state of the boot hart to ensure that
+			// we don't end up deadlocked on restart with all harts waiting for someone to
+			// unlock them...
+			struct sbi_domain *dom = sbi_hartid_to_domain(hartid);
+
+			// assert if boot HART not possible for this domain
+			assert(sbi_hartmask_test_hart(hartid, dom->possible_harts));
+			// assert if boot HART assigned to different domain
+			assert(sbi_hartmask_test_hart(hartid, &dom->assigned_harts));
+
+			if (hartid == dom->boot_hartid) {
+				// if I'm the designated driver, I'm taking the keys...
+				while (!mpfs_is_last_hart_ready()) {
+					asm("wfi");
+				}
+
+				// start me up...
+				if (sbi_hsm_hart_get_state(dom, hartid) != SBI_HSM_STATE_START_PENDING) {
+					//sbi_printf("%s: Attempting warm boot, hart is in state %d\n",
+					//	__func__, sbi_hsm_hart_get_state(dom, hartid));
+
+					int rc = sbi_hsm_hart_start(scratch, NULL, hartid,
+						dom->next_addr, dom->next_mode, dom->next_arg1);
+					if (rc)
+						sbi_hart_hang();
+				}
+			}
+		}
+
 		init_warmboot(scratch, hartid);
+	}
 }
 
 unsigned long sbi_init_count(u32 hartid)

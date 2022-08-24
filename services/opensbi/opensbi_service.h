@@ -2,7 +2,7 @@
 #define HSS_OPENSBI_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -53,7 +53,7 @@ void mpfs_domains_deregister_hart(int hartid);
 void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid,
     u32 privMode, void * entryPoint, void * pArg1);
 void mpfs_mark_hart_as_booted(int hartid);
-bool mpfs_is_last_hart_booting(void);
+bool mpfs_is_last_hart_ready(void);
 bool mpfs_is_hart_using_opensbi(int hartid);
 
 extern struct StateMachine opensbi_service;
