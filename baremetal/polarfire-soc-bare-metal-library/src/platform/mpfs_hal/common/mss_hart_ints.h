@@ -381,4 +381,3 @@ void U54_f2m_31_local_IRQHandler(void);
 #endif
 
 #endif  /* MSS_HART_INTS_H */
-

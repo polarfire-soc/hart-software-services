@@ -39,11 +39,11 @@ extern "C" {
 #define unlikely(x) __builtin_expect((x), 0)
 
 #ifndef ROUNDUP
-#define ROUNDUP(a, b) ((((a)-1)/(b)+1)*(b))
+#    define ROUNDUP(a, b) ((((a)-1)/(b)+1)*(b))
 #endif
 
 #ifndef ROUNDDOWN
-#define ROUNDDOWN(a, b) ((a)/(b)*(b))
+#    define ROUNDDOWN(a, b) ((a)/(b)*(b))
 #endif
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))

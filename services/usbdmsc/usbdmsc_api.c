@@ -30,11 +30,11 @@ void USBDMSC_Init(void)
 
     PLIC_init();
 
-    PLIC_SetPriority(USB_DMA_PLIC, 3);
-    PLIC_SetPriority(USB_MC_PLIC, 3);
+    PLIC_SetPriority(PLIC_USB_DMA_INT_OFFSET, 3);
+    PLIC_SetPriority(PLIC_USB_MC_INT_OFFSET, 3);
 
-    PLIC_EnableIRQ(USB_DMA_PLIC);
-    PLIC_EnableIRQ(USB_MC_PLIC);
+    PLIC_EnableIRQ(PLIC_USB_DMA_INT_OFFSET);
+    PLIC_EnableIRQ(PLIC_USB_MC_INT_OFFSET);
 
     PLIC_SetPriority(MMC_main_PLIC, 2u);
     PLIC_SetPriority(MMC_wakeup_PLIC, 2u);
@@ -80,12 +80,12 @@ bool USBDMSC_Poll(void)
             break;
 #endif
 
-        case USB_MC_PLIC: // main USB interrupt
-            usb_mc_plic_IRQHandler(); // interrupt 87
+        case PLIC_USB_MC_INT_OFFSET: // main USB interrupt
+            PLIC_usb_mc_IRQHandler(); // interrupt 87
             break;
 
-        case USB_DMA_PLIC: // DMA USB interrupt
-            usb_dma_plic_IRQHandler(); // interrupt 86
+        case PLIC_USB_DMA_INT_OFFSET: // DMA USB interrupt
+            PLIC_usb_dma_IRQHandler(); // interrupt 86
             break;
 
         default:

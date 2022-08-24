@@ -80,7 +80,7 @@ MSS_USB_CIF_handle_rx_ep_irq
  * Main USB interrupt handler. It checks for TX/RX endpoint interrupts and USB
  * system level interrupts and calls the appropriate routine.
  */
-uint8_t usb_mc_plic_IRQHandler
+uint8_t PLIC_usb_mc_IRQHandler
 (
     void
 )
@@ -402,7 +402,7 @@ static void MSS_USB_CIF_handle_rx_ep_irq
  * Occurred and corresponding EP number then calls-back to upper layer to indicate
  * the event.
  */
-uint8_t usb_dma_plic_IRQHandler(void)
+uint8_t PLIC_usb_dma_IRQHandler(void)
 {
     mss_usb_dma_channel_t dma_channel= MSS_USB_DMA_CHANNEL1;
     uint8_t status = 0;

@@ -327,23 +327,23 @@ extern IHC_TypeDef * IHC[];
 #endif
 
 #ifndef IHCIA_hart0_INT
-#define IHCIA_hart0_INT  FABRIC_F2H_63_PLIC
+#define IHCIA_hart0_INT  PLIC_F2M_63_INT_OFFSET
 #endif
 
 #ifndef IHCIA_hart1_INT
-#define IHCIA_hart1_INT  FABRIC_F2H_62_PLIC
+#define IHCIA_hart1_INT  PLIC_F2M_62_INT_OFFSET
 #endif
 
 #ifndef IHCIA_hart2_INT
-#define IHCIA_hart2_INT  FABRIC_F2H_61_PLIC
+#define IHCIA_hart2_INT  PLIC_F2M_61_INT_OFFSET
 #endif
 
 #ifndef IHCIA_hart3_INT
-#define IHCIA_hart3_INT  FABRIC_F2H_60_PLIC
+#define IHCIA_hart3_INT  PLIC_F2M_60_INT_OFFSET
 #endif
 
 #ifndef IHCIA_hart4_INT
-#define IHCIA_hart4_INT  FABRIC_F2H_59_PLIC
+#define IHCIA_hart4_INT  PLIC_F2M_59_INT_OFFSET
 #endif
 
 

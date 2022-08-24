@@ -31,6 +31,51 @@ extern "C" {
 
 #define ICICLE_KIT_REF_DESIGN_FPGS_SWITCH_ADDRESS       0x4f000000
 
+#if !defined (LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR)
+/*To limit the number of interrupts fed to the PLINT, the seventy GPIO
+interrupts (GPIO0=14, GPIO1=24, GPIO2=32) are reduced down to 41
+interrupts by OR'ing some together. There is some flexibility regarding which
+interrupts are OR'd or are direct. This selection is controlled by a 32-bit
+system register(GPIO_INTERRUPT_FAB_CR). For example, if bit 0 of the register is
+set to 1, gpio2_0 is chosen as a direct interrupt on the PLIC and gpio0_0 will
+be OR'd with any other non-direct gpio0 interrupts. Please see the GPIO driver
+for more details on using GPIO interrupts. */
+#define LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR    0x00000000UL
+    /* GPIO0_0_OR_GPIO2_0                [0:1]   RW value= 0x0 */
+    /* GPIO0_1_OR_GPIO2_1                [1:1]   RW value= 0x0 */
+    /* GPIO0_2_OR_GPIO2_2                [2:1]   RW value= 0x0 */
+    /* GPIO0_3_OR_GPIO2_3                [3:1]   RW value= 0x0 */
+    /* GPIO0_4_OR_GPIO2_4                [4:1]   RW value= 0x0 */
+    /* GPIO0_5_OR_GPIO2_5                [5:1]   RW value= 0x0 */
+    /* GPIO0_6_OR_GPIO2_6                [6:1]   RW value= 0x0 */
+    /* GPIO0_7_OR_GPIO2_7                [7:1]   RW value= 0x0 */
+    /* GPIO0_8_OR_GPIO2_8                [8:1]   RW value= 0x0 */
+    /* GPIO0_9_OR_GPIO2_9                [9:1]   RW value= 0x0 */
+    /* GPIO0_10_OR_GPIO2_10              [10:1]  RW value= 0x0 */
+    /* GPIO0_11_OR_GPIO2_11              [11:1]  RW value= 0x0 */
+    /* GPIO0_12_OR_GPIO2_12              [12:1]  RW value= 0x0 */
+    /* GPIO0_13_OR_GPIO2_13              [13:1]  RW value= 0x0 */
+    /* GPIO1_0_OR_GPIO2_14               [14:1]  RW value= 0x0 */
+    /* GPIO1_1_OR_GPIO2_15               [15:1]  RW value= 0x0 */
+    /* GPIO1_2_OR_GPIO2_16               [16:1]  RW value= 0x0 */
+    /* GPIO1_3_OR_GPIO2_17               [17:1]  RW value= 0x0 */
+    /* GPIO1_4_OR_GPIO2_18               [18:1]  RW value= 0x0 */
+    /* GPIO1_5_OR_GPIO2_19               [19:1]  RW value= 0x0 */
+    /* GPIO1_6_OR_GPIO2_20               [20:1]  RW value= 0x0 */
+    /* GPIO1_7_OR_GPIO2_21               [21:1]  RW value= 0x0 */
+    /* GPIO1_8_OR_GPIO2_22               [22:1]  RW value= 0x0 */
+    /* GPIO1_9_OR_GPIO2_23               [23:1]  RW value= 0x0 */
+    /* GPIO1_10_OR_GPIO2_24              [24:1]  RW value= 0x0 */
+    /* GPIO1_11_OR_GPIO2_25              [25:1]  RW value= 0x0 */
+    /* GPIO1_12_OR_GPIO2_26              [26:1]  RW value= 0x0 */
+    /* GPIO1_13_OR_GPIO2_27              [27:1]  RW value= 0x0 */
+    /* GPIO1_14_OR_GPIO2_28              [28:1]  RW value= 0x0 */
+    /* GPIO1_15_OR_GPIO2_29              [29:1]  RW value= 0x0 */
+    /* GPIO1_16_OR_GPIO2_30              [30:1]  RW value= 0x0 */
+    /* GPIO1_17_OR_GPIO2_31              [31:1]  RW value= 0x0 */
+#endif
+
+
 typedef enum MSSIO_CONFIG_OPTION_
 {
     DEFAULT_MSSIO_CONFIGURATION         = 0x00,       /*!< 0 default behavior */
@@ -398,6 +443,33 @@ uint8_t switch_external_mux(MSS_IO_OPTIONS option);
 
  */
 uint8_t  mss_io_default_setting(void);
+
+/***************************************************************************//**
+  This function is used to set the apb_bus_cr register value
+
+  @param reg_value value of the register you want to set.
+  This value is available from the MSS configurator
+  LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR
+
+  Example:
+  @code
+    (void)mss_set_gpio_interrupt_fab_cr((uint32_t)LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR);
+  @endcode
+ */
+void mss_set_gpio_interrupt_fab_cr(uint32_t reg_value);
+
+/***************************************************************************//**
+  This function is used to get the gpio_interrupt_fab_cr register value
+
+  @return Return the gpio_interrupt_fab_cr reg value
+
+  Example:
+  @code
+    uint32_t cr_reg;
+    cr_reg = mss_get_gpio_interrupt_fab_cr();
+  @endcode
+ */
+uint32_t mss_get_gpio_interrupt_fab_cr(void);
 
 
 #ifdef __cplusplus

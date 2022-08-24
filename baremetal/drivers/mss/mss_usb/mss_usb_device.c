@@ -1580,8 +1580,8 @@ static void mss_usbd_disconnect_cb(void)
         g_usbd_dev_conf.device_state = MSS_USB_NOT_ATTACHED_STATE;
         MSS_USB_CIF_rx_ep_disable_irq_all();
         MSS_USB_CIF_tx_ep_disable_irq_all();
-        PLIC_EnableIRQ(USB_DMA_PLIC);
-        PLIC_EnableIRQ(USB_MC_PLIC);
+        PLIC_EnableIRQ(PLIC_USB_DMA_INT_OFFSET);
+        PLIC_EnableIRQ(PLIC_USB_MC_INT_OFFSET);
         if(0 != g_usbd_class_cb->usbd_class_release)
         {
             g_usbd_class_cb->usbd_class_release(0xFF);

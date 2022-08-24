@@ -77,7 +77,7 @@ void __enable_local_irq(uint8_t local_interrupt)
     ASSERT(local_interrupt > (int8_t)0);
     ASSERT( (local_interrupt <= LOCAL_INT_MAX));
 
-    uint8_t mhart_id = read_csr(mhartid);
+    uint8_t mhart_id = (uint8_t)read_csr(mhartid);
 
     if((local_interrupt > (int8_t)0) && (local_interrupt <= LOCAL_INT_MAX))
     {
@@ -204,7 +204,24 @@ void display_address_of_interest(uint64_t * address_of_interest, int nb_location
 }
 #endif
 
+/*------------------------------------------------------------------------------
+ * This function disables dynamic branch prediction on the hart from which it
+ * executes. It is enabled by default.
+ */
+void disable_branch_prediction(void)
+{
+    write_csr(0x7C0, 0x1u);
+}
+
+/*------------------------------------------------------------------------------
+ * This function enables dynamic branch prediction on the hart from which it
+ * executes.
+ */
+void enable_branch_prediction(void)
+{
+    write_csr(0x7C0, 0x0u);
+}
+
 #ifdef __cplusplus
 }
 #endif
-

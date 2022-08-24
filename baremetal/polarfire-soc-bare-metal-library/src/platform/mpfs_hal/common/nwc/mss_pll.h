@@ -339,10 +339,30 @@ void sgmii_mux_config_via_scb(uint8_t option);
  */
 void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option);
 
-/******************************************************************************
- * Public Functions - API                                                      *
- ******************************************************************************/
+/***************************************************************************//**
+  mss_pll_config()
+
+  Setup the MSS PLL
+  feeds in ref clock, set freq based on MSS Configurator settings and once
+  lock achieved, feeds out to the MSS.
+
+  Example:
+  @code
+
+      mss_pll_config();
+
+  @endcode
+
+ */
 void mss_pll_config(void);
+
+/***************************************************************************//**
+  flag_mss_pll_lock_error()
+
+  Instantiate platform specific function to give error feedback on your platform
+
+ */
+void flag_mss_pll_lock_error(void);
 
 #ifdef __cplusplus
 }

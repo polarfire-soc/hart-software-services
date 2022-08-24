@@ -197,7 +197,7 @@ bool HSS_DDRPrintL2CacheWayMasks(void)
  */
 
 static size_t ddr_training_progress = 0;
-#define TYPICAL_DDR_TRAINING_ITERATIONS 150u
+#define TYPICAL_DDR_TRAINING_ITERATIONS 5u
 
 bool HSS_DDRInit(void)
 {

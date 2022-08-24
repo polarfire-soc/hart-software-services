@@ -39,15 +39,6 @@ static uint32_t g_test_buffer_not_cached[765];
 /*******************************************************************************
  * External Defines
  */
-#ifdef DEBUG_DDR_INIT
-#ifdef SWEEP_ENABLED
-extern uint8_t sweep_results[MAX_NUMBER_DPC_VS_GEN_SWEEPS]\
-                            [MAX_NUMBER_DPC_H_GEN_SWEEPS]\
-                            [MAX_NUMBER_DPC_V_GEN_SWEEPS]\
-                            [MAX_NUMBER__BCLK_SCLK_OFFSET_SWEEPS]\
-                            [MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS];
-#endif
-#endif
 extern const uint32_t ddr_test_pattern[768];
 
 /*******************************************************************************
@@ -672,84 +663,6 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
     return(t_status);
 }
 #endif
-
-/***************************************************************************//**
- * display sweep results
- *
- * @param g_mss_uart_debug_pt
- */
-#ifdef DEBUG_DDR_INIT
-#ifdef SWEEP_ENABLED
-void sweep_status (mss_uart_instance_t *g_mss_uart_debug_pt)
-{
-
-    uint32_t t_status;
-    uint8_t cmd_index;
-    uint8_t bclk_sclk_index;
-    uint8_t dpc_vgen_index;
-    uint8_t dpc_vgen_h_index;
-    uint8_t dpc_vgen_vs_index;
-
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
-                    "\n\n\r dpc_vgen_vs dpc_vgen_h \t dpc_vgen_v \t bclk_sclk");
-    for (cmd_index=0U; cmd_index < MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS; \
-                                                                    cmd_index++)
-    {
-        uprint32(g_mss_uart_debug_pt, "\t ",\
-                cmd_index + LIBERO_SETTING_MIN_ADDRESS_CMD_OFFSET);
-    }
-    MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
-    "\n\r--------------------------------------------------------------------");
-
-    for (dpc_vgen_vs_index=0U; dpc_vgen_vs_index<MAX_NUMBER_DPC_VS_GEN_SWEEPS;\
-                                                            dpc_vgen_vs_index++)
-    {
-        for (dpc_vgen_h_index=0U; dpc_vgen_h_index < \
-                                MAX_NUMBER_DPC_H_GEN_SWEEPS; dpc_vgen_h_index++)
-        {
-            for (dpc_vgen_index=0U; dpc_vgen_index < \
-                                MAX_NUMBER_DPC_V_GEN_SWEEPS; dpc_vgen_index++)
-            {
-                for (bclk_sclk_index=0U; bclk_sclk_index < \
-                        MAX_NUMBER__BCLK_SCLK_OFFSET_SWEEPS; bclk_sclk_index++)
-                {
-                    uprint32(g_mss_uart_debug_pt, "\n\r ", dpc_vgen_vs_index + \
-                                                LIBERO_SETTING_MIN_DPC_VS_GEN);
-                    uprint32(g_mss_uart_debug_pt, "\t ", dpc_vgen_h_index + \
-                                                  LIBERO_SETTING_MIN_DPC_H_GEN);
-                    uprint32(g_mss_uart_debug_pt, "\t ", dpc_vgen_index + \
-                                                    LIBERO_SETTING_MIN_DPC_V_GEN);
-                    uprint32(g_mss_uart_debug_pt, "\t ", bclk_sclk_index + \
-                                    LIBERO_SETTING_MIN_ADDRESS_BCLK_SCLK_OFFSET);
-                    for (cmd_index=0U; cmd_index < \
-                                MAX_NUMBER_ADDR_CMD_OFFSET_SWEEPS; cmd_index++)
-                    {
-                        if(sweep_results[dpc_vgen_vs_index][dpc_vgen_h_index]\
-                                [dpc_vgen_index][bclk_sclk_index][cmd_index] ==\
-                                     CALIBRATION_PASSED)
-                        {
-                            MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
-                                                                   "\t\t pass");
-                        }
-                        else
-                        {
-                            /*
-                             * easier to see if not printed
-                             * todo: may add detail to fail
-                             * */
-                            MSS_UART_polled_tx_string(g_mss_uart_debug_pt,\
-                                                                      "\t\t F");
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-}
-#endif
-#endif
-
 
 /**
  * Load a pattern to DDR

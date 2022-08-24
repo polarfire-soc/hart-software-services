@@ -43,10 +43,17 @@
                                        DQ_DQS_BIT)
 
 /* supported clk speeds, these values come from the MSS Configurator
-   in the follwoing define - LIBERO_SETTING_DDR_CLK                           */
+   in the following define - LIBERO_SETTING_DDR_CLK                           */
 #define DDR_1067_MHZ                            1067000000UL
 #define DDR_1333_MHZ                            1332000000UL
 #define DDR_1600_MHZ                            1600000000UL
 #define DDR_FREQ_MARGIN                         10UL
+
+/*
+ * Error flags for ADD_CMD
+ */
+#define DDR_ADD_CMD_A5_OFFSET_PASS              0x00
+#define DDR_ADD_CMD_A5_OFFSET_FAIL              0x01
+#define DDR_ADD_CMD_A5_OFFSET_FAIL_LOW_FREQ     0x04
 
 #endif /* SRC_PLATFORM_MPFS_HAL_NWC_MSS_DDR_DEFS_H_ */

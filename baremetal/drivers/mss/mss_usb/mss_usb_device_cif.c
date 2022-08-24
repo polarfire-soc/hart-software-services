@@ -54,8 +54,8 @@ void MSS_USBD_CIF_init(mss_usb_device_speed_t speed)
     MSS_USB_CIF_clr_usb_irq_reg();
 
     /*Reset and Resume are by default enabled in INTRUSBE reg after soft reset*/
-    PLIC_EnableIRQ(USB_DMA_PLIC);
-    PLIC_EnableIRQ(USB_MC_PLIC);
+    PLIC_EnableIRQ(PLIC_USB_DMA_INT_OFFSET);
+    PLIC_EnableIRQ(PLIC_USB_MC_INT_OFFSET);
 
     MSS_USB_CIF_rx_ep_disable_irq_all();
     MSS_USB_CIF_tx_ep_disable_irq_all();

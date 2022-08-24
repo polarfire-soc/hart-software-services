@@ -127,8 +127,7 @@ bool HSS_Setup_MPU(void)
 bool HSS_Setup_L2Cache(void)
 {
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-    void config_l2_cache2(void);
-    config_l2_cache2();
+    config_l2_cache();
 #endif
 
     return true;

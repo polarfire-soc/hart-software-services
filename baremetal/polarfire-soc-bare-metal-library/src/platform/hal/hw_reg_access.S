@@ -45,7 +45,7 @@ HW_set_32bit_reg:
  * HW_get_32bit_reg is used to read the content of a 32 bits wide peripheral
  * register.
  *
- * R0:   addr_t reg_addr
+ * a0:   addr_t reg_addr
  * @return          32 bits value read from the peripheral register.
  */
 HW_get_32bit_reg:

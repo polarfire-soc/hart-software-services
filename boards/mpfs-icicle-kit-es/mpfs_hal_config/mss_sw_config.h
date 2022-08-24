@@ -197,55 +197,5 @@
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG
 
-#define LIBERO_SETTING_CFG_VREFDQ_TRN_ENABLE        0x00000001UL
-#define LIBERO_SETTING_CFG_VREFDQ_TRN_RANGE         0x00000001UL
-#define LIBERO_SETTING_CFG_VREFDQ_TRN_VALUE         0x00000017UL
-
-/*
-  * Changes are fixes to data mismatches seen when applying the new
-  * DDR workload identified by the Linux boot failures on the icicle kit.
-  * CFG_MIN_READ_IDLE helped it pass in DDR3/DDR4, and CFG_READ_TO_WRITE fixed
-  * a different issue where 0's were being read back with the same workload on
-  * LPDDR3.
-  */
-#define LIBERO_SETTING_CFG_MIN_READ_IDLE            0x00000007UL
-#define LIBERO_SETTING_CFG_DM_EN                    0x00000000UL
-#define LIBERO_SETTING_CFG_RMW_EN                   0x00000001UL
-#define LIBERO_SETTING_DDRPHY_MODE                  0x00014A24UL
-
-/*
- * To match DCT version Feb 2022
- */
-#define LIBERO_SETTING_DPC_BITS                     0x00050422UL
-#define LIBERO_SETTING_RPC_ODT_DQ                   0x00000003UL
-#define LIBERO_SETTING_TIP_CFG_PARAMS               0x07CFE02FUL
-#define LIBERO_SETTING_CFG_READ_TO_WRITE_ODT        0x0000000FUL
-
-#define LIBERO_SETTING_CFG_PU_CAL                   0x00000000UL
-
-/*
- * skip extra error checking on startup
- * Set to 0xF to skip extra checking at end of training
- * */
-// #define LIBERO_FAST_START                           0x0FU
-
-/*
- * To lower training time adjust LIBERO_SETTING_CFG_DFI_T_PHY_WRLAT value so
- * wr calib result is 00001111
- *
- * */
-// #define LIBERO_SETTING_CFG_DFI_T_PHY_WRLAT          0x00000007UL
-
-
-/*
- * The hardware configuration settings imported from Libero project get generated
- * into <project_name>/src/boards/<your-board>/<fpga-design-config> folder.
- * If you need to overwrite them for testing purposes, you can do so here.
- * e.g. If you want change the default SEG registers configuration defined by
- * LIBERO_SETTING_SEG0_0, define it here and it will take precedence.
- * #define LIBERO_SETTING_SEG0_0 0x80007F80UL
- *
- */
-
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 

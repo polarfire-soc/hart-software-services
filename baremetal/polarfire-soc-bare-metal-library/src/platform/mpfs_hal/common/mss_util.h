@@ -70,6 +70,8 @@ void __disable_all_irqs(void);
 void __enable_irq(void);
 void __enable_local_irq(uint8_t local_interrupt);
 void __disable_local_irq(uint8_t local_interrupt);
+void disable_branch_prediction(void);
+void enable_branch_prediction(void);
 
 static inline void spinunlock(volatile long *pLock)
 {

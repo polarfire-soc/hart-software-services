@@ -547,8 +547,6 @@ bool HSS_Storage_Init(void)
     if (pStorage->init) {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "initialize %s\n", pStorage->name);
         result = pStorage->init();
-    } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting %s\n", pStorage->name);
     }
 
     return result;

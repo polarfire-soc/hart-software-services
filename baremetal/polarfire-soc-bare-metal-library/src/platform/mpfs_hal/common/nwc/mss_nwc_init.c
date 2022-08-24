@@ -308,9 +308,9 @@ uint8_t mss_nwc_init(void)
      */
     SIM_FEEDBACK0(3);
     mss_pll_config();
+
     return error;
 }
-
 
 /**
  *  mss_nwc_init_ddr(void)
@@ -358,7 +358,7 @@ uint8_t mss_nwc_init_ddr(void)
  */
 static uint64_t report_status_functions(MSS_REPORT_STATUS report_status, uint64_t next_time)
 {
-    if (next_time >= rdcycle())
+    if (next_time <= rdcycle())
     {
         switch(report_status)
         {

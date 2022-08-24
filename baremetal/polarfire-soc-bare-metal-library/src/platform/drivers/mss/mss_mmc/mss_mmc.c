@@ -434,6 +434,7 @@ MSS_MMC_init
                         hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
                         hw_strobe_suport = pcsd_reg [EXT_CSD_ES_SUPPORT_OFFSET];
                         g_device_hpi_suport = pcsd_reg[EXT_CSD_ES_SUPPORT_OFFSET];
+
                         if ((g_device_hpi_suport & DEVICE_HPI_SUPPORT) == DEVICE_HPI_SUPPORT)
                         {
                             /* enable HPI in device */
@@ -573,6 +574,7 @@ MSS_MMC_init
                                 g_hw_sec_count = csd_reg[EXT_CSD_SECTOR_COUNT_OFFSET/WORD_SIZE];
                                 hw_ext_csd_rev = pcsd_reg[EXT_CSD_REVISION_OFFSET] & BYTE_MASK;
                                 hw_hs_timing   = pcsd_reg[EXT_CSD_HS_TIMING_OFFSET];
+
                                 if ((MMC_CLEAR == hw_hs_timing) &&
                                     (cfg->bus_speed_mode != MSS_MMC_MODE_LEGACY))
                                 {

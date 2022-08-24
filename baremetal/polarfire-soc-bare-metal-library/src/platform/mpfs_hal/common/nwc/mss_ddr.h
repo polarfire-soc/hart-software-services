@@ -351,20 +351,20 @@ typedef enum DDR_MEMORY_ACCESS_
 #define BCLK_DPC_VRGEN_VS_MASK           (0xFU<<0U)
 
 /* offsets and masks LIBERO_SETTING_DPC_BITS */
-#define DPC_VS_SHIFT                            0U
-#define DPC_VRGEN_H_SHIFT                       4U
-#define DPC_VRGEN_EN_H_SHIFT                    10U
-#define DPC_MOVE_EN_H_SHIFT                     11U
-#define DPC_VRGEN_V_SHIFT                       12U
-#define DPC_VRGEN_EN_V_SHIFT                    18U
-#define DPC_MOVE_EN_V_SHIFT                     19U
-#define DPC_VS_MASK                             (0xFU << DPC_VS_SHIFT)
-#define DPC_VRGEN_H_MASK                        (0x3FU << DPC_VRGEN_H_SHIFT)
-#define DPC_VRGEN_EN_H_MASK                     (0x1U << DPC_VRGEN_EN_H_SHIFT)
-#define DPC_MOVE_EN_H_MASK                      (0x1U << DPC_MOVE_EN_H_SHIFT)
-#define DPC_VRGEN_V_MASK                        (0xFU << DPC_VRGEN_V_SHIFT)
-#define DPC_VRGEN_EN_V_MASK                     (0x1U << DPC_VRGEN_EN_V_SHIFT)
-#define DPC_MOVE_EN_V_MASK                      (0x1U << DPC_MOVE_EN_V_SHIFT)
+#define DDR_DPC_VS_SHIFT                      0U
+#define DDR_DPC_VRGEN_H_SHIFT                 4U
+#define DDR_DPC_VRGEN_EN_H_SHIFT              10U
+#define DDR_DPC_MOVE_EN_H_SHIFT               11U
+#define DDR_DPC_VRGEN_V_SHIFT                 12U
+#define DDR_DPC_VRGEN_EN_V_SHIFT              18U
+#define DDR_DPC_MOVE_EN_V_SHIFT               19U
+#define DDR_DPC_VS_MASK                       (0xFU << DDR_DPC_VS_SHIFT)
+#define DDR_DPC_VRGEN_H_MASK                  (0x3FU << DDR_DPC_VRGEN_H_SHIFT)
+#define DDR_DPC_VRGEN_EN_H_MASK               (0x1U << DDR_DPC_VRGEN_EN_H_SHIFT)
+#define DDR_DPC_MOVE_EN_H_MASK                (0x1U << DDR_DPC_MOVE_EN_H_SHIFT)
+#define DDR_DPC_VRGEN_V_MASK                  (0xFU << DDR_DPC_VRGEN_V_SHIFT)
+#define DDR_DPC_VRGEN_EN_V_MASK               (0x1U << DDR_DPC_VRGEN_EN_V_SHIFT)
+#define DDR_DPC_MOVE_EN_V_MASK                (0x1U << DDR_DPC_MOVE_EN_V_SHIFT)
 
 /* masks and associated values used with  DDRPHY_MODE register */
 #define DDRPHY_MODE_MASK                0x7U
@@ -384,16 +384,16 @@ typedef enum DDR_MEMORY_ACCESS_
 /* Write latency min/max settings If write calibration fails
  * For Libero setting, we iterate through these values looking for a
  * Calibration pass */
-#define MIN_LATENCY                     0UL
-#define MAX_LATENCY                     3UL
+#define DDR_CAL_MIN_LATENCY             0UL
+#define DDR_CAL_MAX_LATENCY             3UL
 
 #define MTC_TIMEOUT_ERROR               0x02U
 
 #define DDR_MODE_REG_VREF               0xCU
 
-#define CALIBRATION_PASSED              0xFF
-#define CALIBRATION_FAILED              0xFE
-#define CALIBRATION_SUCCESS             0xFC
+#define DDR_CALIBRATION_PASSED          0xFF
+#define DDR_CALIBRATION_FAILED          0xFE
+#define DDR_CALIBRATION_SUCCESS         0xFC
 
 /*
  * Some settings that are only used during testing in new DDR setup
@@ -409,7 +409,6 @@ typedef enum DDR_MEMORY_ACCESS_
 #define LIBERO_SETTING_MAX_RPC_156_VALUE            9U
 #endif
 #if !defined (LIBERO_SETTING_RPC_156_VALUE)
-
 
 /* DDR clk frequency - should come from  */
 #if (LIBERO_SETTING_DDR_CLK == DDR_1600_MHZ)
@@ -434,13 +433,17 @@ typedef enum DDR_MEMORY_ACCESS_
     /* CA_BUS_RX_OFF_POST_TRAINING       [0:1]   RW value= 0x1 */
 #endif
 
+#ifndef TRANSITION_A5_THRESHOLD
+#define TRANSITION_A5_THRESHOLD                     18U
+#endif
 
-/*
- * We currently need at least one retrain, otherwise driver can get stuck in
- * sanity check state
- */
-#if !defined (EN_RETRY_ON_FIRST_TRAIN_PASS)
-#define EN_RETRY_ON_FIRST_TRAIN_PASS    0
+/* Value used during write leveling */
+#ifndef DPC_VRGEN_H_LPDDR4_WR_LVL_VAL
+#define DPC_VRGEN_H_LPDDR4_WR_LVL_VAL   0x5U
+#endif
+/* Value used during write leveling */
+#ifndef DPC_VRGEN_H_DDR3_WR_LVL_VAL
+#define DPC_VRGEN_H_DDR3_WR_LVL_VAL     0x2U
 #endif
 
 #if !defined (DDR_FULL_32BIT_NC_CHECK_EN)
@@ -482,9 +485,21 @@ typedef enum DDR_MEMORY_ACCESS_
 
 #define NUM_RPC_166_VALUES (MAX_RPC_166_VALUE - MIN_RPC_166_VALUE)
 
-/* This is a fixed setting, will move into driver in next commit */
-#if !defined (SW_TRAING_BCLK_SCLK_OFFSET)
-#define SW_TRAING_BCLK_SCLK_OFFSET                  0x00000005UL
+/* Offsets for each mem type- fixed values */
+#if !defined (LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_LPDDR4)
+#define LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_LPDDR4            0x00000005UL
+#endif
+#if !defined (LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_LPDDR3)
+#define LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_LPDDR3            0x00000007UL
+#endif
+#if !defined (LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_DDR4)
+#define LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_DDR4              0x00000006UL
+#endif
+#if !defined (LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_DDR3)
+#define LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_DDR3              0x00000006UL
+#endif
+#if !defined (LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_DDR3L)
+#define LIBERO_SETTING_SW_TRAING_BCLK_SCLK_OFFSET_DDR3L             0x00000006UL
 #endif
 /*
  * 0x6DU => setting vref_ca to 40%
@@ -1096,8 +1111,8 @@ typedef struct mss_ddr_calibration_{
   /* CMSIS related defines identifying the UART hardware. */
     mss_ddr_write_calibration write_cal;
     mss_lpddr4_dq_calibration dq_cal;
-  mss_ddr_vref fpga_vref;
-  mss_ddr_vref mem_vref;
+    mss_ddr_vref fpga_vref;
+    mss_ddr_vref mem_vref;
 } mss_ddr_calibration;
 
 /***************************************************************************//**

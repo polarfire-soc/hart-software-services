@@ -16,7 +16,7 @@
     header and the driver files. The header files need to be included in a
     project in the following order to allow over-ride of user settings.
      - miv_ihc_defines.h
-     - miv_ihc_config.h    we can over-ride default setting in this file
+     - miv_ihc_config.h  we can over-ride default setting in this file
                          This config file is stored in the boards directory and
                          is called from the mss_sw_config.h file.
      - miv_ihc_regs.h
@@ -32,13 +32,13 @@ extern "C" {
 #endif
 
 #ifndef __I
-#define __I  const volatile
+#  define __I  const volatile
 #endif
 #ifndef __IO
-#define __IO volatile
+#  define __IO volatile
 #endif
 #ifndef __O
-#define __O volatile
+#  define __O volatile
 #endif
 
 /*******************************************************************************
@@ -51,14 +51,14 @@ extern "C" {
 
   Register Bit definitions of the control register of the MiV-IHCC.
 
-  |bit position|constant|description|
-  |---|-----------------------------| -----------------------------------------|
-  | 0 | **RMP_MESSAGE_PRESENT**     | Remote side message present |
-  | 1 | **MP_MESSAGE_PRESENT**      | local side message present |
-  | 2 | **MPIE_EN**                 | Enable MP interrupt |
-  | 3 | **ACK_INT**                 | Incoming ACK |
-  | 4 | **ACK_CLR**                 | Clear ACK |
-  | 5 | **ACKIE_EN**                | Enable Ack Interrupt                     |
+  | bit position | constant                | description                 |
+  |--------------|-------------------------|-----------------------------|
+  | 0            | **RMP_MESSAGE_PRESENT** | Remote side message present |
+  | 1            | **MP_MESSAGE_PRESENT**  | local side message present  |
+  | 2            | **MPIE_EN**             | Enable MP interrupt         |
+  | 3            | **ACK_INT**             | Incoming ACK                |
+  | 4            | **ACK_CLR**             | Clear ACK                   |
+  | 5            | **ACKIE_EN**            | Enable Ack Interrupt        |
 
  */
 #define RMP_MESSAGE_PRESENT         (0x01U << 0U)
@@ -86,10 +86,10 @@ extern "C" {
 
   ## Flags return by IHC_tx_message()
 
-  |value|constant|description|
-  |-----|-----------------------------| ---------------------------------------|
-  | 0   | **MESSAGE_SENT**            | message sent |
-  | 1   | **MESSAGE_RX**              | message received |
+  |value|constant          |description                           |
+  |-----|---------------------------------------------------------|
+  | 0   | **MESSAGE_SENT** | message sent                         |
+  | 1   | **MESSAGE_RX**   | message received                     |
 
  */
 #define MESSAGE_SENT    0U
@@ -100,10 +100,10 @@ extern "C" {
 
   ## Flags return by IHC_rx_message()
 
-  |value|constant|description|
-  |-----|-----------------------------| ---------------------------------------|
-  | 0   | **MESSAGE_RX**              | message sent |
-  | 1   | **NO_MESSAGE_RX**           | message received |
+  |value|constant           |description           |
+  |-----|-------------------|----------------------|
+  | 0   | **MESSAGE_RX**    | message sent         |
+  | 1   | **NO_MESSAGE_RX** | message received     |
 
  */
 #define NO_MESSAGE_RX   0U
@@ -171,14 +171,14 @@ typedef union{      /*!< IHCC_CTL_REG register definition*/
  */
 typedef struct IHCC_IP_TypeDef_
 {
-  __IO  uint32_t  version;                  /*!< IP version   */
-  __IO  IHCC_CTL_REG_TypeDef CTR_REG ;  /*!< control reg  */
-  __IO  uint32_t local_hart_id;             /*!< local_hart_id: my hart id, set at local init   */
-  __I   uint32_t size_msg;                  /*!< Size of msg buffer instantiated in fabric      */
-  __I   uint32_t unused[4U];                /*!< not used  */
-  __I   uint32_t  mesg_in[IHC_MAX_MESSAGE_SIZE]; 	/*!< message in           */
-  __IO  uint32_t  mesg_out[IHC_MAX_MESSAGE_SIZE]; 	/*!< message out          */
-  __I   uint8_t  reserved[RESREVED_ADDRESS_SPACE_IHC - IHC_USED__ADDRESS_SIZE];  /*!< reserved address space       */
+  __IO  uint32_t  version;                              /*!< IP version   */
+  __IO  IHCC_CTL_REG_TypeDef CTR_REG;                   /*!< control reg  */
+  __IO  uint32_t local_hart_id;                         /*!< local_hart_id: my hart id, set at local init */
+  __I   uint32_t size_msg;                              /*!< Size of msg buffer instantiated in fabric */
+  __I   uint32_t unused[4U];                            /*!< not used  */
+  __I   uint32_t  mesg_in[IHC_MAX_MESSAGE_SIZE]; 	/*!< message in */
+  __IO  uint32_t  mesg_out[IHC_MAX_MESSAGE_SIZE]; 	/*!< message out */
+  __I   uint8_t  reserved[RESREVED_ADDRESS_SPACE_IHC - IHC_USED__ADDRESS_SIZE];  /*!< reserved address space */
 } IHCC_IP_TypeDef;
 
 /***************************************************************************//**
@@ -201,20 +201,20 @@ typedef struct IHCC_IP_TypeDef_
       - _reserved_ - Reserved.
  */
 typedef union IHCIA_IP_MSG_AVAIL_STAT_TypeDef_{    /*!< IHCIA_IP_MSG_AVAIL_STAT register definition*/
-    __IO  uint32_t                        MSG_AVAIL;
+    __IO  uint32_t MSG_AVAIL;
     struct
     {
-        __I  uint32_t              MP_H0        :1;
-        __I  uint32_t              ACK_H0       :1;
-        __I  uint32_t              MP_H1        :1;
-        __I  uint32_t              ACK_H1       :1;
-        __I  uint32_t              MP_H2        :1;
-        __I  uint32_t              ACK_H2       :1;
-        __I  uint32_t              MP_H3        :1;
-        __I  uint32_t              ACK_H3       :1;
-        __I  uint32_t              MP_H4        :1;
-        __I  uint32_t              ACK_H4       :1;
-        __I   uint32_t             reserved     :22;
+        __I  uint32_t MP_H0:1;
+        __I  uint32_t ACK_H0:1;
+        __I  uint32_t MP_H1:1;
+        __I  uint32_t ACK_H1:1;
+        __I  uint32_t MP_H2:1;
+        __I  uint32_t ACK_H2:1;
+        __I  uint32_t MP_H3:1;
+        __I  uint32_t ACK_H3:1;
+        __I  uint32_t MP_H4:1;
+        __I  uint32_t ACK_H4:1;
+        __I  uint32_t reserved:22;
     } bitfield;
 } IHCIA_IP_MSG_AVAIL_STAT_TypeDef;
 
@@ -239,20 +239,20 @@ typedef union IHCIA_IP_MSG_AVAIL_STAT_TypeDef_{    /*!< IHCIA_IP_MSG_AVAIL_STAT 
  */
 
 typedef union IHCIA_IP_INT_EN_TypeDef_ {                       /*!< IHCIA_IP_INT_EN_TypeDef register definition*/
-    __IO  uint32_t                        INT_EN;
+    __IO  uint32_t INT_EN;
     struct
     {
-        __I  uint32_t              MP_H0_EN     :1;
-        __I  uint32_t              ACK_H0_EN    :1;
-        __I  uint32_t              MP_H1_EN     :1;
-        __I  uint32_t              ACK_H1_EN    :1;
-        __I  uint32_t              MP_H2_EN     :1;
-        __I  uint32_t              ACK_H2_EN    :1;
-        __I  uint32_t              MP_H3_EN     :1;
-        __I  uint32_t              ACK_H3_EN    :1;
-        __I  uint32_t              MP_H4_EN     :1;
-        __I  uint32_t              ACK_H4_EN    :1;
-        __I   uint32_t             reserved     :22;
+        __I  uint32_t MP_H0_EN:1;
+        __I  uint32_t ACK_H0_EN:1;
+        __I  uint32_t MP_H1_EN:1;
+        __I  uint32_t ACK_H1_EN:1;
+        __I  uint32_t MP_H2_EN:1;
+        __I  uint32_t ACK_H2_EN:1;
+        __I  uint32_t MP_H3_EN:1;
+        __I  uint32_t ACK_H3_EN:1;
+        __I  uint32_t MP_H4_EN:1;
+        __I  uint32_t ACK_H4_EN:1;
+        __I   uint32_t reserved:22;
     } bitfield;
 } IHCIA_IP_INT_EN_TypeDef;
 
@@ -277,7 +277,7 @@ typedef union IHCIA_IP_INT_EN_TypeDef_ {                       /*!< IHCIA_IP_INT
 typedef struct IHCIA_IP_TypeDef_
 {
   __IO  uint32_t  version;
-  __IO  IHCIA_IP_INT_EN_TypeDef			INT_EN;
+  __IO  IHCIA_IP_INT_EN_TypeDef	INT_EN;
   __I   IHCIA_IP_MSG_AVAIL_STAT_TypeDef  MSG_AVAIL_STAT;
 } IHCIA_IP_TypeDef;
 
@@ -290,7 +290,7 @@ typedef struct IHCIA_IP_TypeDef_
   registered.
 
  */
-typedef uint32_t (*QUEUE_IHC_INCOMING)(uint32_t ,  uint32_t *, uint32_t, bool, uint32_t *);
+typedef uint32_t (*QUEUE_IHC_INCOMING)(uint32_t, uint32_t *, uint32_t, bool, uint32_t *);
 
 
 /***************************************************************************//**
@@ -316,11 +316,11 @@ ___msg_in_handler[5]___:
  */
 typedef struct IHC_DRIVER_HART_INFO_TypeDef_
 {
-  uint32_t  connected_harts;
-  uint32_t  connected_hart_ints;
-  uint32_t  context_hart;
-  uint32_t  padding;
-  QUEUE_IHC_INCOMING  msg_in_handler[5U];
+  uint32_t connected_harts;
+  uint32_t connected_hart_ints;
+  uint32_t context_hart;
+  uint32_t padding;
+  QUEUE_IHC_INCOMING msg_in_handler[5U];
 } IHC_DRIVER_HART_INFO_TypeDef;
 
 
@@ -407,7 +407,7 @@ typedef struct IHC_TypeDef_
 #endif
 
 #ifndef IHCIA_LOCAL_H0
-#define IHCIA_LOCAL_H0               0x50000400
+#define IHCIA_LOCAL_H0              0x50000400
 #endif
 
 /************** My Hart 1 ************/
@@ -429,7 +429,7 @@ typedef struct IHC_TypeDef_
 #endif
 
 #ifndef IHCIA_LOCAL_H1
-#define IHCIA_LOCAL_H1               0x50000900
+#define IHCIA_LOCAL_H1              0x50000900
 #endif
 
 /************** My Hart 2 ************/
@@ -451,7 +451,7 @@ typedef struct IHC_TypeDef_
 #endif
 
 #ifndef IHCIA_LOCAL_H2
-#define IHCIA_LOCAL_H2               0x50000E00
+#define IHCIA_LOCAL_H2              0x50000E00
 #endif
 
 /************** My Hart 3 ************/
@@ -473,7 +473,7 @@ typedef struct IHC_TypeDef_
 #endif
 
 #ifndef IHCIA_LOCAL_H3
-#define IHCIA_LOCAL_H3               0x50001300
+#define IHCIA_LOCAL_H3              0x50001300
 #endif
 
 /************** My Hart 4 ************/
@@ -495,7 +495,7 @@ typedef struct IHC_TypeDef_
 #endif
 
 #ifndef IHCIA_LOCAL_H4
-#define IHCIA_LOCAL_H4               0x50001800
+#define IHCIA_LOCAL_H4              0x50001800
 #endif
 
 #ifdef __cplusplus

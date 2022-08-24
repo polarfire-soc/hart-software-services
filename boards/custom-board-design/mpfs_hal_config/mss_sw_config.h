@@ -175,46 +175,6 @@
 #define MSSIO_SUPPORT
 
 /*
-* We need to redefine the following AXI address range if set incorrectly
-* This is the case for Libero 12.5 and Libero 12.6
-* If using MSS Configurator 2021.1 or later the following four lines can be
-* removed.
-* LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0
-* is the definition for cached axi addrress
-* LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0
-* is the address for non-cached Libero address
-* 0x7FFFFFFFUL => 2 GB address range
-*
-*/
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_0    0x7FFFFFFFUL
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI1_1    0x00000000UL
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0    0x7FFFFFFFUL
-#define LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_1    0x00000000UL
-
-/*
-  * Changes are fixes to data mismatches seen when applying the new
-  * DDR workload identified by the Linux boot failures on the icicle kit.
-  * CFG_MIN_READ_IDLE helped it pass in DDR3/DDR4, and CFG_READ_TO_WRITE fixed
-  * a different issue where 0's were being read back with the same workload on
-  * LPDDR3.
-  */
-#define LIBERO_SETTING_CFG_MIN_READ_IDLE             0x00000007UL
-
-/* For LPDDR3 only: */
-//#define LIBERO_SETTING_CFG_READ_TO_WRITE             0x00000006UL
-//#define LIBERO_SETTING_CFG_READ_TO_WRITE_ODT         0x00000006UL
-
-/*
-* The following three setting disable Data Mask and enable Read Write Modify
-* This is required if accessing LPDDR4 with non-cached writes and using
-* MSS Configurator 2021.1 or earlier.
-*/
-#define LIBERO_SETTING_CFG_DM_EN 0x00000000UL
-#define LIBERO_SETTING_CFG_RMW_EN 0x00000001UL
-#define LIBERO_SETTING_DDRPHY_MODE 0x00014A24UL
-
-
-/*
  * Debugging IHC. This placed memory map in volatile memory and uses software
  * state machine
  */
@@ -239,15 +199,6 @@
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG
 
-/*
- * The hardware configuration settings imported from Libero project get generated
- * into <project_name>/src/boards/<your-board>/<fpga-design-config> folder.
- * If you need to overwrite them for testing purposes, you can do so here.
- * e.g. If you want change the default SEG registers configuration defined by
- * LIBERO_SETTING_SEG0_0, define it here and it will take precedence.
- * #define LIBERO_SETTING_SEG0_0 0x80007F80UL
- *
- */
 
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 

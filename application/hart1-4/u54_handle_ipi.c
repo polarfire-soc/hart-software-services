@@ -38,8 +38,6 @@
 #include "hss_atomic.h"
 
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
-#  define set_csr  csr_write
-#  define read_csr csr_read
 #  include "mss_plic.h"
 #  include "miv_ihc.h"
 #endif

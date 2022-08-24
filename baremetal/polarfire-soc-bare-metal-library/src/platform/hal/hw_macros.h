@@ -10,15 +10,15 @@
  *
  *  Hardware registers access macros.
  *
- *  THE MACROS DEFINED IN THIS FILE ARE DEPRECATED. DO NOT USED FOR NEW
+ *  THE MACROS DEFINED IN THIS FILE ARE DEPRECATED. DO NOT USE FOR NEW
  *  DEVELOPMENT.
  *
- * These macros are used to access peripheral's registers. They allow access to
+ * These macros are used to access peripheral registers. They allow access to
  * 8, 16 and 32 bit wide registers. All accesses to peripheral registers should
  * be done through these macros in order to ease porting across different
  * processors/bus architectures.
  *
- * Some of these macros also allow to access a specific register field.
+ * Some of these macros also allow access to a specific register field.
  *
  */
 

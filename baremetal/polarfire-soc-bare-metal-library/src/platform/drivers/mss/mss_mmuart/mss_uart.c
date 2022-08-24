@@ -12,6 +12,7 @@
 #include "mss_uart_regs.h"
 #include "mss_plic.h"
 #include "mss_util.h"
+#include "mss_legacy_defines.h"
 #include "fpga_design_config/fpga_design_config.h"
 
 #ifdef __cplusplus

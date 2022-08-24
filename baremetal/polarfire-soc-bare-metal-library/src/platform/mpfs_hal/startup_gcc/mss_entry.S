@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2021 Microchip Corporation.
+ * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -273,70 +273,46 @@ _start:
     nop
     j .LoopForeverOther
 
-#else /* IMAGE_LOADED_BY_BOOTLOADER == 1 */
-
-/***********************************************************************************
+#else   /* IMAGE_LOADED_BY_BOOTLOADER == 1 */
+/*******************************************************************************
  *The program has been loaded by a bootloader
  * a0 - contains the hart ID
  * a1 - contains pointer to bootloader -Hart Local Storage, for this hart.
  */
-_start_non_bootloader_image:
-    /* ebreak called at the start of the program if required when debuging.   */
-    /* DEBUG_EBREAK_AT_START is set to one in the debug build, 0 in the       */
-    /* release build                                                          */
-    /* uncomment the 3 lines below if you want to use this method to for      */
-    /* debugging                                                              */
-    /* li a2, DEBUG_EBREAK_AT_START
-    beq x0, a2, 1f
-    ebreak */
-1:
-    /* store the value here received from boot-loader */
-    /* a0 will always contain the hart ID */
-    /* If a1 is null, boot-loader is not passing pointer to the HLS */
-    /* If this is the case, point HLS to out own and fill with hart ID */
+_start_non_bootloader_amp_image:
     /* Setup trap handler */
-    /* we are currently only supporting mmode */
-    /* m-mode/s-mode set-up option will be added here */
     la a4, trap_vector
     csrw mtvec, a4          # initalise machine trap vector address
     /* Make sure that mtvec is updated before continuing */
-2:
+    1:
     csrr    a5, mtvec
-    bne a4, a5, 2b
-    /* Disable and clear all interrupts */
-    /* assumption is this has been done by the Boot-loader */
-    # Init delegation registers, mideleg, medeleg, if a U54
-    # These are not initialised by the hardware and come up in a random state
-    # mhartid is in a0
-    beqz a0, 3f
-    csrw mideleg, 0
-    csrw medeleg, 0
-3:
-    # mscratch must be init to zero- we are not using scratch memory
-    csrw mscratch, zero
-    csrw mcause, zero
-    csrw mepc, zero
+    bne a4, a5, 1b
+    /* assume ints in init state */
+    /* assume PMP's set as required */
+    # enable FPU and accelerator if present, setting ignored on E51
+    li t0, MSTATUS_FS | MSTATUS_XS
+    csrs mstatus, t0
 
     # Init floating point control register to zero
     # skip if e51
-    # mhartid is in a0
-    beqz a0, 1f
+    csrr a0, mhartid
+    beqz a0, .no_float
 #ifdef __riscv_flen
-    # enable FPU and accelerator
-    li t0, MSTATUS_FS | MSTATUS_XS
-    csrs mstatus, t0
     fscsr x0
 #endif
-1:  # no float
-    # make sure XLEN agrees with compilation choice, if not will loop here
+.no_float:
+
+     # make sure XLEN agrees with compilation choice, if not will loop here
+.LxlenCheck:
     csrr t0, misa
 #if __riscv_xlen == 64
-    bltz t0, 2f
+    bltz t0, .LxlenPass
 #else
-    bgez t0, 2f
+    bgez t0, .LxlenPass
 #endif
-    j 1b
-2:
+    j .LxlenCheck
+.LxlenPass:
+
     # initialize global pointer, global data
     # The __global_pointer is allocated in the linker script. It points to a
     # location 2k after sdata start as the offsets used in the gp are +/- 2k
@@ -347,38 +323,153 @@ _start_non_bootloader_image:
     la gp, __global_pointer$
     .option pop
 
-    la a4, __app_stack_bottom  # keep bottom of stack in a5 so we can init later
-    la a5, __app_stack_top
-    la sp, __app_stack_top
-1:
+    # get core id
+    csrr a0, mhartid
+    li a1,  0
+    beq a0, a1, .hart0
+    li a1,  1
+    beq a0, a1, .hart1
+    li a1,  2
+    beq a0, a1, .hart2
+    li a1,  3
+    beq a0, a1, .hart3
+    li a1,  4
+    beq a0, a1, .hart4
+
+.hart0:
+    la a4, __stack_bottom_h0$  # keep bottom of stack in a5 so we can init later
+    la sp, __stack_top_h0$
+    j .continue
+.hart1:
+    la a4, __stack_bottom_h1$  # keep bottom of stack in a5 so we can init later
+    la sp, __stack_top_h1$
+    j .continue
+.hart2:
+    la a4, __stack_bottom_h2$  # keep bottom of stack in a5 so we can init later
+    la sp, __stack_top_h2$
+    j .continue
+.hart3:
+    la a4, __stack_bottom_h3$  # keep bottom of stack in a5 so we can init later
+    la sp, __stack_top_h3$
+    j .continue
+.hart4:
+    la a4, __stack_bottom_h4$  # keep bottom of stack in a5 so we can init later
+    la sp, __stack_top_h4$
+
+.continue:
+    # clear HLS and stack
+    mv  a5, sp
+.init_stack:
+    #csrw mepc, zero
     STORE x0, 0(a4)
     add a4, a4, __SIZEOF_POINTER__
-    blt a4, a5, 1b
-    # clear the common heap
-    la  a4, __heap_start
-    la  a5, __heap_end
-2:
-    STORE x0, 0(a4)
-    add a4, a4, __SIZEOF_POINTER__
-    blt a4, a5, 2b
-    # check if HLS passed by BL, if not allocate one here
-    bnez a1, 1f
-    # Allocate some space at top of stack for the HLS, as HLS mem not passed
+    blt a4, a5, .init_stack
+    # Allocate some space at top of stack for the HLS
     addi sp, sp, -HLS_DEBUG_AREA_SIZE
     # HLS grows up from new top of stack
     mv tp, sp
-    mv a0, tp
-    j u54_single_hart
+    # get core id
+    csrr a0, mhartid
+    li a1, MPFS_HAL_FIRST_HART
+    bne a0, a1, .LOtherHartstoWFI
+    # clear the common heap
+    la  a4, __heap_start
+    la  a5, __heap_end
+.init_heap:
+    #csrw mepc, zero
+    STORE x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, .init_heap
+    # now core MPFS_HAL_FIRST_HART jumps to main_first_hart
+.main_hart:
+    # pass HLS address
+    mv  a0, tp
+    j main_first_hart_app
+.LoopForeverMain:
+    #in case of return, loop forever. nop's added so can be seen in debugger
+    nop
+    nop
+    j .LoopForeverMain
+
+.LOtherHartstoWFI:
+    li a2,  MSTATUS_MIE
+    csrc mstatus, a2       # clear interrupt enable bit
+    csrw mie, zero
+    csrw mip, zero
+    li a2, MIP_MSIP
+    csrw mie, a2           # Set MSIE bit to receive IPI. This needs to be
+                           # enabled- otherwise stays in wfi.
+                           # Other interrupts appera to bring out of wfi,even if
+                           # not enabled.
+    #
+    # Wait here until main hart is up and running
+    #
+    # get core id
+    la a2, MPFS_HAL_FIRST_HART
+    li a3,  0
+    beq a3, a2, .main_hart0
+    li a3,  1
+    beq a3, a2, .main_hart1
+    li a3,  2
+    beq a3, a2, .main_hart2
+    li a3,  3
+    beq a3, a2, .main_hart3
+    li a3,  4
+    beq a3, a2, .main_hart4
+
+.main_hart0:
+    la a4, (__stack_top_h0$ - HLS_DEBUG_AREA_SIZE)
+    j  1f
+.main_hart1:
+    la a4, (__stack_top_h1$ - HLS_DEBUG_AREA_SIZE)
+    j  1f
+.main_hart2:
+    la a4, (__stack_top_h2$ - HLS_DEBUG_AREA_SIZE)
+    j  1f
+.main_hart3:
+    la a4, (__stack_top_h3$ - HLS_DEBUG_AREA_SIZE)
+    j  1f
+.main_hart4:
+    la a4, (__stack_top_h4$ - HLS_DEBUG_AREA_SIZE)
 1:
-    # pass HLS address from the boot-loader
-    mv a0, a1
-    j u54_single_hart
-2:
-    # in case of return, loop forever. nop's added so can be seen in debugger
+    li a3, HLS_MAIN_HART_STARTED
+.wait_main_hart:
+    LWU a2, 0(a4)
+    bne a3, a2, .wait_main_hart
+    # Flag we are here to the main hart
+    li a1, HLS_OTHER_HART_IN_WFI
+    sw a1, 0(tp)
+    /* flush the instruction cache */
+    fence.i
+.LwaitOtherHart:
+    # We assume wfi instruction will be run before main hart attampts to take
+    # out of wfi
+    wfi
+    # Only start if MIP_MSIP is set - the wfi will ensure this, but adding
+    # breakpoints in the debugger (halt)
+    # will wakeup wfi, so the following code will make sure we remain here until
+    # we get a software interrupt
+    csrr a2, mip
+    andi a2, a2, MIP_MSIP
+    beqz a2, .LwaitOtherHart
+    /* Disable and clear all interrupts- should be only a sw interrupt */
+    li a2,  MSTATUS_MIE
+    csrc mstatus, a2        # clear interrupt enable bit
+    csrw mie, zero
+    csrw mip, zero
+    # set marker as to where we are
+    li a1, HLS_OTHER_HART_PASSED_WFI
+    sw a1, 0(tp)
+    # pass HLS address
+    mv  a0, tp
+    j main_other_hart
+.LoopForeverOther:
+    #in case of return, loop forever. nop's added so can be seen in debugger
     nop
     nop
-    j 2b
-#endif /* IMAGE_LOADED_BY_BOOTLOADER */
+    j .LoopForeverOther
+
+#endif /* IMAGE_LOADED_BY_BOOTLOADER == 0 */
 
 /******************************************************************************/
 /******************************interrupt handeling below here******************/
@@ -561,7 +652,7 @@ copy_section:
     ret
 
 
-/***********************************************************************************
+/*******************************************************************************
  *
  * The following copy_switch_code() symbol overrides the weak symbol in the HAL and does
  * a safe copy of HW config data

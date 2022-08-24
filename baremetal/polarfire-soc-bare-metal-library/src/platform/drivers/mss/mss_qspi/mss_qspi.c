@@ -356,7 +356,7 @@ static void default_status_handler(uint32_t value)
 }
 
 /*QSPI interrupt handler function*/
-uint8_t qspi_plic_IRQHandler(void)
+uint8_t PLIC_qspi_IRQHandler(void)
 {
     qspi_isr();
     return (uint8_t)EXT_IRQ_KEEP_ENABLED;
