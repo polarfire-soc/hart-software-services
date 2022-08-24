@@ -93,6 +93,8 @@ int sbi_fifo_is_empty(struct sbi_fifo *fifo)
 }
 
 /* Note: must be called with fifo->qlock held */
+#if 0
+// UNUSED
 static inline void __sbi_fifo_reset(struct sbi_fifo *fifo)
 {
 	size_t size = (size_t)fifo->num_entries * fifo->entry_size;
@@ -113,6 +115,7 @@ bool sbi_fifo_reset(struct sbi_fifo *fifo)
 
 	return TRUE;
 }
+#endif
 
 /**
  * Provide a helper function to do inplace update to the fifo.
