@@ -1123,7 +1123,7 @@ mss_mmc_status_t MSS_MMC_sdma_write(const uint8_t *src, uint32_t dest, uint32_t 
                 /* check eMMC/SD device is busy */
                 mMMC_ARM_TIMEOUT(mmc_spin_timeout);
                 do
-                {
+                { 
 
                     response_status = cif_send_cmd(sdcard_RCA << SHIFT_16BIT,
                                                         MMC_CMD_13_SEND_STATUS,

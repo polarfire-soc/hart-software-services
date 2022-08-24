@@ -134,6 +134,8 @@ void send_mmc_cmd(uint32_t cmd_arg, uint32_t cmd_type, uint8_t resp_type, cmd_re
     MMC->SRS02 = cmd_arg;
     MMC->SRS03 = (uint32_t)((cmd_index << CMD_SHIFT) | cmd_type | command_information);
 
+    mMMC_DECLARE_TIMEOUT(mmc_spin_timeout);
+
     switch (cmd_option)
     {
         /* only need to wait around if expecting no response */
