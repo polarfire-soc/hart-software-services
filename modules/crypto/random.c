@@ -53,13 +53,15 @@ int get_random(unsigned char *buf, unsigned short len)
     MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
     memset(nonce_buffer, 0, ARRAY_SIZE(nonce_buffer));
 
-    while (!result && (len > NONCE_CHUNK_SIZE)) {
+    ssize_t slen = (ssize_t)len;
+
+    while (!result && (slen > NONCE_CHUNK_SIZE)) {
         result = get_random_chunk_(&buf[offset], NONCE_CHUNK_SIZE);
-        len = len - NONCE_CHUNK_SIZE;
+        slen = slen - NONCE_CHUNK_SIZE;
     }
 
-    if (!result && len) {
-        result = get_random_chunk_(&buf[offset], len);
+    if (!result && (slen > 0)) {
+        result = get_random_chunk_(&buf[offset], slen);
     }
 
     return result;
