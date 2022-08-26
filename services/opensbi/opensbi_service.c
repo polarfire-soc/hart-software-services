@@ -164,10 +164,10 @@ void HSS_OpenSBI_Setup(void)
     enum HSSHartId hartid = current_hartid();
 
     if (hartid == HSS_HART_E51) {
-        uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);
+        uint32_t mstatus_val = csr_read(CSR_MSTATUS);
         mstatus_val = EXTRACT_FIELD(mstatus_val, MSTATUS_MPIE);
-        mHSS_CSR_WRITE(CSR_MSTATUS, mstatus_val);
-        mHSS_CSR_WRITE(CSR_MIE, 0u);
+        csr_write(CSR_MSTATUS, mstatus_val);
+        csr_write(CSR_MIE, 0u);
 
         opensbi_scratch_setup(hartid);
 
@@ -183,10 +183,10 @@ void HSS_OpenSBI_Setup(void)
 void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid);
 void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
 {
-    uint32_t mstatus_val = mHSS_CSR_READ(CSR_MSTATUS);
+    uint32_t mstatus_val = csr_read(CSR_MSTATUS);
     mstatus_val = EXTRACT_FIELD(mstatus_val, MSTATUS_MPIE);
-    mHSS_CSR_WRITE(CSR_MSTATUS, mstatus_val);
-    mHSS_CSR_WRITE(CSR_MIE, 0u);
+    csr_write(CSR_MSTATUS, mstatus_val);
+    csr_write(CSR_MIE, 0u);
 
     opensbi_scratch_setup(hartid);
     mpfs_mark_hart_as_booted(hartid);

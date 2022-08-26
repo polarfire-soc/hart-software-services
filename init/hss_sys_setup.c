@@ -28,9 +28,6 @@
 #include "hss_init.h"
 #include "hss_debug.h"
 
-#define read_csr csr_read
-#define set_csr  csr_write
-
 #include <assert.h>
 #include <string.h>
 

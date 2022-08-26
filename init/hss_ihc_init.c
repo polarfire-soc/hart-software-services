@@ -23,8 +23,6 @@
 #include "hss_types.h"
 #include "ssmb_ipi.h"
 
-#define set_csr  csr_write
-#define read_csr csr_read
 #include "mss_plic.h"
 #include "miv_ihc.h"
 
@@ -80,7 +78,7 @@ void HSS_IHCInit_U54(void)
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
     const enum HSSHartId local_hartid = current_hartid();
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing PLIC (Mi-V IHC) for hart %d\n", local_hartid);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing PLIC (Mi-V IHC) for u54_%d\n", local_hartid);
 
     // enable PLIC interrupt for IHC
     // the E51 will be calling PLIC_init_on_reset(), so we'll delay here to allow that to complete...

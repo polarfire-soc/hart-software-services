@@ -28,7 +28,7 @@ HSSTicks_t CSR_GetTickCount(void)
 {
     HSSTicks_t tickCount;
 
-    tickCount = mHSS_CSR_READ(mcycle);
+    tickCount = csr_read(mcycle);
 
     return tickCount;
 }

@@ -21,8 +21,6 @@
 #include <assert.h>
 #include "csr_helper.h"
 
-#define read_csr csr_read
-#define set_csr  csr_write
 #include "mss_plic.h"
 #include "mpfs_reg_map.h"
 

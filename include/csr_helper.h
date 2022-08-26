@@ -54,13 +54,16 @@ extern "C" {
 #  include "sbi/sbi_hsm.h"
 #  include "sbi/sbi_init.h"
 #  include "sbi/sbi_scratch.h"
-#  define mHSS_CSR_READ csr_read
-#  define mHSS_CSR_WRITE csr_write
+#define set_csr(reg, bit) __extension__({ unsigned long __tmp; \
+  asm volatile ("csrrs %0, " #reg ", %1" : "=r"(__tmp) : "rK"(bit)); \
+  __tmp; })
+#  define read_csr csr_read
+#  define write_csr csr_write
 #else
 #  include "mpfs_hal/encoding.h"
 #  include "mpfs_hal/bits.h"
-#  define mHSS_CSR_READ read_csr
-#  define mHSS_CSR_WRITE write_csr
+#  define csr_read read_csr
+#  define csr_write write_csr
 #endif
 
 
