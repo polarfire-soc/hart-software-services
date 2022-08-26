@@ -39,12 +39,11 @@ x509-ec-sepc384r1-public.h: $(subst $\",,$(CONFIG_CRYPTO_SIGNING_KEY_PUBLIC))
 #
 # libecc
 #
+
 ifdef CONFIG_CRYPTO_LIBECC
 SRCS-$(CONFIG_CRYPTO_LIBECC) += \
 	modules/crypto/hss_crypto_libecc.c \
 	modules/crypto/random.c \
-        thirdparty/libecc/src/external_deps/print.c \
-        thirdparty/libecc/src/external_deps/time.c \
 	thirdparty/libecc/src/curves/aff_pt.c \
 	thirdparty/libecc/src/curves/aff_pt_edwards.c \
 	thirdparty/libecc/src/curves/aff_pt_montgomery.c \
@@ -101,16 +100,8 @@ SRCS-$(CONFIG_CRYPTO_LIBECC) += \
 	thirdparty/libecc/src/sig/ecsdsa_common.c \
 	thirdparty/libecc/src/sig/ecsdsa.c \
 	thirdparty/libecc/src/sig/eddsa.c \
-	thirdparty/libecc/src/sig/fuzzing_ecdsa.c \
-	thirdparty/libecc/src/sig/fuzzing_ecgdsa.c \
-	thirdparty/libecc/src/sig/fuzzing_ecrdsa.c \
 	thirdparty/libecc/src/sig/sig_algs.c \
 	thirdparty/libecc/src/sig/sm2.c \
-	thirdparty/libecc/src/utils/print_buf.c \
-	thirdparty/libecc/src/utils/print_curves.c \
-	thirdparty/libecc/src/utils/print_fp.c \
-	thirdparty/libecc/src/utils/print_keys.c \
-	thirdparty/libecc/src/utils/print_nn.c \
 	thirdparty/libecc/src/utils/utils.c \
 
 INCLUDES +=\
@@ -120,9 +111,7 @@ LIBECC_OVERRIDE_FLAGS=-DWITH_LIBECC_CONFIG_OVERRIDE -DWITH_CURVE_SECP384R1 -DWIT
 
 modules/crypto/hss_crypto_libecc.o: x509-ec-sepc384r1-public.h
 modules/crypto/hss_crypto_libecc.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/external_deps/print.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/external_deps/rand.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/external_deps/time.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 
 thirdparty/libecc/src/curves/aff_pt.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/curves/aff_pt_edwards.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
@@ -180,16 +169,8 @@ thirdparty/libecc/src/sig/ecrdsa.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCC
 thirdparty/libecc/src/sig/ecsdsa_common.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/sig/ecsdsa.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/sig/eddsa.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/sig/fuzzing_ecdsa.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/sig/fuzzing_ecgdsa.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/sig/fuzzing_ecrdsa.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/sig/sig_algs.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/sig/sm2.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/utils/print_buf.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/utils/print_curves.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/utils/print_fp.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/utils/print_keys.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
-thirdparty/libecc/src/utils/print_nn.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 thirdparty/libecc/src/utils/utils.o: CFLAGS=$(LIBECC_OVERRIDE_FLAGS) $(CFLAGS_GCCEXT)
 endif
 
