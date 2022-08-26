@@ -232,6 +232,7 @@ static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
 
 static unsigned long init_count_offset;
 
+#pragma GCC optimize("O0")
 static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 {
 	int rc;

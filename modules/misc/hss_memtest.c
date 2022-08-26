@@ -218,7 +218,7 @@ bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
 
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is %lu MiB\n",
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Lo size is % 4lu MiB\n",
         (uint32_t)(HSS_DDR_GetSize()/mMiB_IN_BYTES));
 
     static int perf_ctr_index_mem32 = PERF_CTR_UNINITIALIZED;
@@ -230,7 +230,7 @@ bool HSS_MemTestDDRFast(void)
     }
     HSS_PerfCtr_Lap(perf_ctr_index_mem32);
 
-    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is %lu MiB\n",
+    mHSS_FANCY_PRINTF(LOG_NORMAL, "DDR-Hi size is % 4lu MiB\n",
         (uint32_t)(HSS_DDRHi_GetSize()/mMiB_IN_BYTES));
 
     HSS_PerfCtr_Allocate(&perf_ctr_index_mem64, "MemTest(DDR64)");

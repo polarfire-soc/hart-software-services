@@ -97,4 +97,13 @@ config DISPLAY_TOOL_VERSIONS
 
 		If you do not know what to do here, say Y.
 
+config LOG_FUNCTION_NAMES
+	bool "Display function names in console log messages"
+	default y
+	help
+		This features displays the function names when loggin messages to the HSS console.
+		This may be useful for debugging, but increases the code size by a few KiB.
+
+		If you do not know what to do here, say Y.
+
 endmenu

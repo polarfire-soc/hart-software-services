@@ -205,7 +205,9 @@ bool HSS_E51_Banner(void)
 #endif
         " / BOARD=" STR(BOARD)
         "\n"
-        "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions.\n\n",
+        "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions.\n\n"
+        "incorporating OpenSBI - version %d.%d\n"
+        "(c) Copyright 2019-2022 Western Digital Corporation.\n\n",
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
         MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH
 #if !IS_ENABLED(CONFIG_SKIP_DDR)
@@ -216,11 +218,8 @@ bool HSS_E51_Banner(void)
 	// compile error on the macro if CONFIG_USE_IHC is not enabled
 	, MIV_IHC_VERSION_MAJOR, MIV_IHC_VERSION_MINOR, MIV_IHC_VERSION_PATCH
 #endif
-    )
-
-    mHSS_FANCY_PRINTF(LOG_STATUS, "incorporating OpenSBI - version %d.%d\n"
-        "(c) Copyright 2019-2022 Western Digital Corporation.\n\n",
-        OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR);
+        , OPENSBI_VERSION_MAJOR, OPENSBI_VERSION_MINOR
+    );
 
 #if IS_ENABLED(CONFIG_CC_USE_GNU_BUILD_ID)
     HSS_PrintBuildId();

@@ -158,7 +158,7 @@ static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
         if (accrued & BEU_ENABLE_MASK) {
             if (accrued & BEU_ENABLE_UNCORRECTABLE_MASK) {
                 if ((BEU->regs[hartid].ENABLE) && (value == shadow_value_[hartid])) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Uncorrectable errors: hart %d - error %llu at %p\n", hartid, accrued, value);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Uncorrectable errors: u54_%d - error %llu at %p\n", hartid, accrued, value);
                 }
 
                 // hart has experienced fatal error, so stop checking for BEU errors for this hart...

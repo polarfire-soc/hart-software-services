@@ -137,7 +137,7 @@ static void mpfs_modify_dt(void *fdt)
 
     fdt_fixups(fdt);
 
-    //fdt_reserved_memory_nomap_fixup(fdt); // not needed for PolarFire SoC
+    fdt_reserved_memory_nomap_fixup(fdt);
 }
 
 static void __attribute__((__noreturn__)) mpfs_system_reset(u32 reset_type, u32 reset_reason)
@@ -509,7 +509,7 @@ static int mpfs_domains_init(void)
                 }
             }
         } else {
-           //sbi_printf("%s(): boot_hart_id not set for hart %d\n", __func__, hartid);
+           //sbi_printf("%s(): boot_hart_id not set for u54_%d\n", __func__, hartid);
         }
     }
 
@@ -534,7 +534,7 @@ static int mpfs_hart_stop(void)
     if (hart_ledger[hartid].owner_hartid == hartid) {
         switch (hart_ledger[hartid].reset_reason) {
         case SBI_SRST_RESET_REASON_SYSFAIL:
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "U54_%d reported SYSTEM FAILURE\n", hartid);
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d reported SYSTEM FAILURE\n", hartid);
             break;
 
         case SBI_SRST_RESET_REASON_NONE:

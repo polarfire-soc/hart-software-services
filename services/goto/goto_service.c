@@ -102,9 +102,9 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     int hartid = current_hartid();
 
     if (source != HSS_HART_E51) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from hart %d\n", source);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from u54_%d\n", source);
     } else if (hartid == HSS_HART_E51) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "hart %d: request prohibited by policy\n", HSS_HART_E51);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d: request prohibited by policy\n", HSS_HART_E51);
     } else {
         // the following should always be true if we have consumed intents for GOTO...
         assert(p_extended_buffer != NULL);

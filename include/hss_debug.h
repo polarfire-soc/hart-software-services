@@ -72,24 +72,31 @@ void sbi_putc(char c);
 #endif
 
 void HSS_Debug_Timestamp(void);
-#    define mHSS_TIMESTAMP HSS_Debug_Timestamp()
+
+#    if (IS_ENABLED(CONFIG_LOG_FUNCTION_NAMES))
+#        define mHSS_FUNCTION \
+             HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
+             (void)sbi_printf(" %s(): ", __func__);
+#    else
+#        define mHSS_FUNCTION ;
+#    endif
+
+#    define mHSS_TIMESTAMP HSS_Debug_Timestamp();
 
 #    define mHSS_PUTS sbi_puts
 #    define mHSS_PUTC sbi_putc
 #    define mHSS_FANCY_PRINTF(logLevel, ...) { \
-         mHSS_TIMESTAMP; \
-         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
-         (void)sbi_printf(" %s(): ", __func__); \
+         mHSS_TIMESTAMP \
+         mHSS_FUNCTION \
          HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
-         sbi_printf(__VA_ARGS__); \
+         sbi_printf(" "  __VA_ARGS__); \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
      }
 #    define mHSS_FANCY_PUTS(logLevel, ...) { \
-         mHSS_TIMESTAMP; \
-         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
-         (void)sbi_printf(" %s(): ", __func__); \
+         mHSS_TIMESTAMP \
+         mHSS_FUNCTION \
          HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
-         sbi_puts(__VA_ARGS__); \
+         sbi_puts(" " __VA_ARGS__); \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
      }
 
@@ -99,11 +106,10 @@ void HSS_Debug_Timestamp(void);
 #ifndef mHSS_DEBUG_PRINTF
 //#  ifdef DEBUG
 #    define mHSS_DEBUG_PRINTF(logLevel, ...) { \
-         mHSS_TIMESTAMP; \
-         HSS_Debug_Highlight(HSS_DEBUG_LOG_FUNCTION); \
-         (void)sbi_printf(" %s(): ", __func__); \
+         mHSS_TIMESTAMP \
+         mHSS_FUNCTION \
          HSS_Debug_Highlight(HSS_DEBUG_##logLevel); \
-         sbi_printf(__VA_ARGS__); \
+         sbi_printf(" " __VA_ARGS__); \
          HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL); \
      }
 #      define mHSS_DEBUG_PRINTF_EX sbi_printf

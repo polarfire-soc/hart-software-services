@@ -368,7 +368,7 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
             } else if ((peer == target) ||
                 (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[target-1].entryPoint)) {
                 pInstanceData->hartMask |= (1u << peer);
-                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering hart %d to domain \"%s\"\n",
+                //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering u54_%d to domain \"%s\"\n",
                 //    pMyMachine->pMachineName, peer, pBootImage->hart[target-1].name);
                 mpfs_domains_register_hart(peer, target);
             }
@@ -809,7 +809,7 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
                result = true;
             } else {
                result = false;
-               mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for hart %u\n", pMachine->state, i+1u);
+               mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for u54_%u\n", pMachine->state, i+1u);
             }
         }
     }
@@ -822,9 +822,9 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
     enum IPIStatusCode result = IPI_FAIL;
 
     if (!HSS_Boot_ValidateImage(pBootImage)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for hart %u\n", source);
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for u54_%u\n", source);
     } else if (source != HSS_HART_ALL) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u\n", source);
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for u54_%u\n", source);
 
         union HSSHartBitmask restartHartBitmask = { .uint = 0u };
 
@@ -849,7 +849,7 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
             }
         }
     } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts\n");
+        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts\n");
 
         const union HSSHartBitmask restartHartBitmask = {
             .s = {
@@ -1138,8 +1138,6 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
     assert(target != HSS_HART_ALL); // need to setup PMPs on each Hart individually
 
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u\n", target);
-
     result = IPI_MessageAlloc(indexOut);
     assert(result);
 
@@ -1148,7 +1146,7 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing\n", target);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%u: failed to send message, so freeing\n", target);
             IPI_MessageFree(*indexOut);
         }
     }
@@ -1169,7 +1167,7 @@ bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
     assert(target != HSS_HART_ALL); // need to setup SBIs on each Hart individually
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for hart %u\n", target);
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for u54_%u\n", target);
 
     result = IPI_MessageAlloc(indexOut);
     assert(result);
@@ -1179,7 +1177,7 @@ bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "hart %u: failed to send message, so freeing\n", target); //TODO
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%u: failed to send message, so freeing\n", target); //TODO
             IPI_MessageFree(*indexOut);
         }
     }

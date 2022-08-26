@@ -185,7 +185,7 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target)
 {
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "monitoring ");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "wdog_service monitoring ");
 
     switch (target) {
     case HSS_HART_U54_1:

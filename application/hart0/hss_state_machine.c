@@ -204,15 +204,13 @@ void RunStateMachines(const size_t spanOfPStateMachines, struct StateMachine *co
 
             if (IS_ENABLED(CONFIG_DEBUG_LOOP_TIMES)) {
                 if (dump_flag) {
-                    mHSS_DEBUG_PRINTF(LOG_STATUS, " loop %" PRIu64
-                        " took %" PRIu64 " tick%s"
-                        " (max %" PRIu64 " tick%s)\n", loopCount,
+                    mHSS_DEBUG_PRINTF(LOG_STATUS, "loop %" PRIu64
+                        " took %" PRIu64 " tick%s (max %" PRIu64 " tick%s)\n", loopCount,
                         delta, delta == 1u ? "" : "s",
                         maxLoopTime, maxLoopTime == 1u ? "" : "s");
                 } else /* if (max_exceeded_flag) */ {
-                    mHSS_DEBUG_PRINTF(LOG_WARN, " loop %" PRIu64
-                        " took %" PRIu64 " tick%s"
-                        " (max %" PRIu64 " tick%s)\n", loopCount,
+                    mHSS_DEBUG_PRINTF(LOG_WARN, "loop %" PRIu64
+                        " took %" PRIu64 " tick%s (max %" PRIu64 " tick%s)\n", loopCount,
                         delta, delta == 1u ? "" : "s",
                         maxLoopTime, maxLoopTime == 1u ? "" : "s");
                 }

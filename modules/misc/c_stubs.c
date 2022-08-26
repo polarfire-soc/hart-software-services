@@ -38,7 +38,7 @@ __attribute__((weak)) size_t strnlen(const char *s, size_t count)
     return result;
 }
 
-__attribute__((weak)) void *memcpy(void * restrict dest, const void * restrict src, size_t n)
+__attribute__((weak,used)) void *memcpy(void * restrict dest, const void * restrict src, size_t n)
 {
     // no overlaps allowed!!
     char *cDest = (char*)dest;
