@@ -834,7 +834,7 @@ mss_mmc_status_t MSS_MMC_sdma_read(uint32_t src, uint8_t *dest, uint32_t size)
     uint32_t blocklen;
     uint32_t tmp, srs03_data, srs9;
     cif_response_t response_status;
-    mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR; 
+    mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
     mMMC_DECLARE_TIMEOUT(mmc_spin_timeout);
 
     blocklen = BLK_SIZE;
@@ -1123,7 +1123,7 @@ mss_mmc_status_t MSS_MMC_sdma_write(const uint8_t *src, uint32_t dest, uint32_t 
                 /* check eMMC/SD device is busy */
                 mMMC_ARM_TIMEOUT(mmc_spin_timeout);
                 do
-                { 
+                {
 
                     response_status = cif_send_cmd(sdcard_RCA << SHIFT_16BIT,
                                                         MMC_CMD_13_SEND_STATUS,
