@@ -221,8 +221,12 @@ bool HSS_DDRInit(void)
             result = false;
         } else {
             HSS_PerfCtr_Lap(perf_ctr_index);
-            sbi_printf(CURSOR_UP "%s Passed (%d ms)\n", ddr_training_prefix,
+            sbi_printf(CURSOR_UP "%s Passed");
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
+            sbi_printf(" ( %d ms)", ddr_training_prefix,
                 HSS_PerfCtr_GetTime(perf_ctr_index)/TICKS_PER_MILLISEC);
+#endif
+            sbi_printf("\n");
         }
         HSS_PerfCtr_Lap(perf_ctr_index);
 #  endif
