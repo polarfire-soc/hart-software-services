@@ -589,8 +589,6 @@ usbd_msc_process_request_cb
                 }
 
             default:
-                length = 0u;
-
                 return USB_FAIL;
         }
     }
