@@ -315,7 +315,9 @@ static cif_response_t cq_execute_task(uint8_t task_id)
     reg = MMC_SET << task_id;
     MMC->CQRS10 = reg;
 
-    while (value--);
+    while (value--) {
+        ;
+    }
 
     mMMC_DECLARE_TIMEOUT(mmc_spin_timeout);
     mMMC_ARM_TIMEOUT(mmc_spin_timeout);
