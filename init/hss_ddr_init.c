@@ -203,10 +203,13 @@ bool HSS_DDRInit(void)
             result = false;
         } else {
             HSS_PerfCtr_Lap(perf_ctr_index);
-            sbi_printf(CURSOR_UP "%s Passed");
+            sbi_printf(CURSOR_UP "%s Passed", ddr_training_prefix);
+
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-            sbi_printf(" ( %d ms)", ddr_training_prefix,
-                HSS_PerfCtr_GetTime(perf_ctr_index)/TICKS_PER_MILLISEC);
+            size_t ticks = HSS_PerfCtr_GetTime(perf_ctr_index);
+            size_t millisecs = (ticks + (TICKS_PER_MILLISEC/2)) / TICKS_PER_MILLISEC;
+
+            sbi_printf(" ( %lu ms)", millisecs);
 #endif
             sbi_printf("\n");
         }
