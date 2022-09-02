@@ -163,7 +163,7 @@ void Flash_init(mss_qspi_io_format io_format)
     case MSS_QSPI_QUAD_EX_RO:
         __attribute__((fallthrough)); // deliberate fallthrough
     case MSS_QSPI_QUAD_EX_RW:
-        g_qspi_config.io_format = MSS_QSPI_QUAD_EX_RO;
+        g_qspi_config.io_format = MSS_QSPI_QUAD_EX_RW;
         break;
 
     case MSS_QSPI_DUAL_FULL:
