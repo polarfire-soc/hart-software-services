@@ -51,8 +51,8 @@
  * 	set-name: 'PolarFire-SoC-HSS::TestImage'
  * 	hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
  * 	payloads:
- *   	test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m}
- *   	test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/amp-context-0.dtb}
+ *   	test/baremetal: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m, payload-name: "baremetal"}
+ *   	test/u-boot:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/amp-context-0.dtb, payload-name: "Yocto (U-Boot)"}
  */
 
 /////////////////////////////////////////////////////////////////////////////
@@ -85,6 +85,7 @@ enum token
 	TOKEN_PAYLOAD_EXEC_ADDR,
 	TOKEN_PAYLOAD_OWNER_HART,
 	TOKEN_PAYLOAD_SECONDARY_HART,
+	TOKEN_PAYLOAD_PAYLOAD_NAME,
 	TOKEN_PAYLOAD_PRIV_MODE,
 	TOKEN_PAYLOAD_SKIP_OPENSBI,
 	TOKEN_PAYLOAD_ANCILLIARY_DATA,
@@ -110,8 +111,9 @@ const struct hss_config_token tokens[] = {
 	{ TOKEN_PAYLOADS,			"payloads" },
 	{ TOKEN_PAYLOAD_EXEC_ADDR,		"exec-addr" },
 	{ TOKEN_PAYLOAD_OWNER_HART,		"owner-hart" },
-	{ TOKEN_PAYLOAD_SECONDARY_HART,		"secondary-hart" },
+	{ TOKEN_PAYLOAD_PAYLOAD_NAME,		"payload-name" },
 	{ TOKEN_PAYLOAD_PRIV_MODE,		"priv-mode" },
+	{ TOKEN_PAYLOAD_SECONDARY_HART,		"secondary-hart" },
 	{ TOKEN_PAYLOAD_SKIP_OPENSBI,		"skip-opensbi" },
 	{ TOKEN_PAYLOAD_ANCILLIARY_DATA,	"ancilliary-data" },
 	{ TOKEN_PRIV_MODE_M,			"prv_m" },
@@ -139,8 +141,9 @@ enum ParserState
 	STATE_NEW_PAYLOAD,
 	STATE_NEW_PAYLOAD_EXEC_ADDR,
 	STATE_NEW_PAYLOAD_OWNER_HART,
-	STATE_NEW_PAYLOAD_SECONDARY_HART,
+	STATE_NEW_PAYLOAD_PAYLOAD_NAME,
 	STATE_NEW_PAYLOAD_PRIV_MODE,
+	STATE_NEW_PAYLOAD_SECONDARY_HART,
 	STATE_NEW_PAYLOAD_SKIP_OPENSBI,
 	STATE_NEW_PAYLOAD_ANCILLIARY_DATA,
 };
@@ -161,8 +164,9 @@ const char * const stateNames[] =
 	[ STATE_NEW_PAYLOAD ] =			"STATE_NEW_PAYLOAD",
 	[ STATE_NEW_PAYLOAD_EXEC_ADDR ] =	"STATE_NEW_PAYLOAD_EXEC_ADDR",
 	[ STATE_NEW_PAYLOAD_OWNER_HART ] =	"STATE_NEW_PAYLOAD_OWNER_HART",
-	[ STATE_NEW_PAYLOAD_SECONDARY_HART ] =	"STATE_NEW_PAYLOAD_SECONDARY_HART",
+	[ STATE_NEW_PAYLOAD_PAYLOAD_NAME ] =	"STATE_NEW_PAYLOAD_PAYLOAD_NAME",
 	[ STATE_NEW_PAYLOAD_PRIV_MODE ] =	"STATE_NEW_PAYLOAD_PRIV_MODE",
+	[ STATE_NEW_PAYLOAD_SECONDARY_HART ] =	"STATE_NEW_PAYLOAD_SECONDARY_HART",
 	[ STATE_NEW_PAYLOAD_SKIP_OPENSBI ] =	"STATE_NEW_PAYLOAD_SKIP_OPENSBI",
 	[ STATE_NEW_PAYLOAD_ANCILLIARY_DATA ] =	"STATE_NEW_PAYLOAD_ANCILLIARY_DATA",
 };
@@ -200,8 +204,9 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)			__attribute__(
 static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)			__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_EXEC_ADDR(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)		__attribute__((nonnull));
-static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)	__attribute__((nonnull));
+static void Handle_STATE_NEW_PAYLOAD_PAYLOAD_NAME(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)		__attribute__((nonnull));
+static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)	__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)	__attribute__((nonnull));
 
@@ -230,8 +235,9 @@ static struct StateHandler stateHandler[] = {
 	{ STATE_NEW_PAYLOAD,			Handle_STATE_NEW_PAYLOAD },
 	{ STATE_NEW_PAYLOAD_EXEC_ADDR,		Handle_STATE_NEW_PAYLOAD_EXEC_ADDR },
 	{ STATE_NEW_PAYLOAD_OWNER_HART,		Handle_STATE_NEW_PAYLOAD_OWNER_HART },
-	{ STATE_NEW_PAYLOAD_SECONDARY_HART,	Handle_STATE_NEW_PAYLOAD_SECONDARY_HART },
+	{ STATE_NEW_PAYLOAD_PAYLOAD_NAME,	Handle_STATE_NEW_PAYLOAD_PAYLOAD_NAME },
 	{ STATE_NEW_PAYLOAD_PRIV_MODE,		Handle_STATE_NEW_PAYLOAD_PRIV_MODE },
+	{ STATE_NEW_PAYLOAD_SECONDARY_HART,	Handle_STATE_NEW_PAYLOAD_SECONDARY_HART },
 	{ STATE_NEW_PAYLOAD_SKIP_OPENSBI,	Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI },
 	{ STATE_NEW_PAYLOAD_ANCILLIARY_DATA,	Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA },
 };
@@ -623,6 +629,7 @@ static void Handle_STATE_HART_ENTRY_POINTS_U54_4(yaml_event_t *pEvent)
 }
 
 static char base_name[BOOT_IMAGE_MAX_NAME_LEN];
+static char payload_name[BOOT_IMAGE_MAX_NAME_LEN];
 static uintptr_t base_exec_addr = 0u;
 static size_t base_owner = 0u;
 static size_t base_secondary[3] = { 0u, 0u, 0u };
@@ -648,6 +655,7 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 		debug_printf(0, "Parsing payload >>%s<<\n", pEvent->data.scalar.value);
 
 		strncpy(base_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN-2);
+                payload_name[0] = '\0';
 		base_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
 
 		base_exec_addr = 0u;
@@ -678,11 +686,26 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 
 	switch (pEvent->type) {
 	case YAML_MAPPING_START_EVENT:
+		base_owner = 0u;
 		break;
 
 	case YAML_MAPPING_END_EVENT:
 		if (!override_set_name_flag) {
-			concatenate(bootImage.set_name, base_name, ARRAY_SIZE(bootImage.set_name));
+			if (strlen(payload_name)) {
+				concatenate(bootImage.set_name, payload_name, ARRAY_SIZE(bootImage.set_name));
+			} else {
+				concatenate(bootImage.set_name, base_name, ARRAY_SIZE(bootImage.set_name));
+			}
+		}
+assert(base_owner);
+		if (strlen(bootImage.hart[base_owner-1].name)) {
+			concatenate(bootImage.hart[base_owner-1].name, "+", ARRAY_SIZE(bootImage.hart[base_owner-1].name));
+		}
+
+		if (strlen(payload_name)) {
+			concatenate(bootImage.hart[base_owner-1].name, payload_name, ARRAY_SIZE(bootImage.hart[base_owner-1].name));
+		} else {
+			concatenate(bootImage.hart[base_owner-1].name, base_name, ARRAY_SIZE(bootImage.hart[base_owner-1].name));
 		}
 
 		bool retVal = elf_parser(base_name, base_owner);
@@ -717,6 +740,10 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 
 		case TOKEN_PAYLOAD_SECONDARY_HART:
 			Do_State_Transition(STATE_NEW_PAYLOAD_SECONDARY_HART);
+			break;
+
+		case TOKEN_PAYLOAD_PAYLOAD_NAME:
+			Do_State_Transition(STATE_NEW_PAYLOAD_PAYLOAD_NAME);
 			break;
 
 		case TOKEN_PAYLOAD_PRIV_MODE:
@@ -799,13 +826,6 @@ static void Handle_STATE_NEW_PAYLOAD_OWNER_HART(yaml_event_t *pEvent)
 			// deliberate fallthrough
 		case TOKEN_HART_U54_4:
 			base_owner = (token_idx - TOKEN_HART_U54_1 + 1u);
-
-			if (strlen(bootImage.hart[base_owner-1].name)) {
-				concatenate(bootImage.hart[base_owner-1].name, "+", ARRAY_SIZE(bootImage.hart[base_owner-1].name));
-			}
-
-			concatenate(bootImage.hart[base_owner-1].name, base_name, ARRAY_SIZE(bootImage.hart[base_owner-1].name));
-
 			debug_printf(1, "\towner is %" PRIu64 "\n", base_owner);
 			Do_State_Transition(STATE_NEW_PAYLOAD);
 			break;
@@ -888,6 +908,35 @@ static void populate_boot_flags(void)
 		if (base_secondary[i] != 0u) {
 			bootImage.hart[base_secondary[i]-1].flags = flags;
 		}
+	}
+}
+
+static void Handle_STATE_NEW_PAYLOAD_PAYLOAD_NAME(yaml_event_t *pEvent)
+{
+	assert(pEvent);
+
+	switch (pEvent->type) {
+	case YAML_MAPPING_START_EVENT:
+		assert(0==1);
+		Do_State_Transition(STATE_MAPPING);
+		break;
+
+	case YAML_MAPPING_END_EVENT:
+		assert(0==1);
+		Do_State_Transition(STATE_MAPPING);
+		break;
+
+	case YAML_SCALAR_EVENT:
+		strncpy(payload_name, (char *)pEvent->data.scalar.value, BOOT_IMAGE_MAX_NAME_LEN-2);
+		payload_name[BOOT_IMAGE_MAX_NAME_LEN-1] = '\0';
+		override_set_name_flag = true;
+		Do_State_Transition(STATE_NEW_PAYLOAD);
+		break;
+
+	default:
+		report_illegal_event(stateNames[parser_state], pEvent);
+		exit(EXIT_FAILURE);
+		break;
 	}
 }
 

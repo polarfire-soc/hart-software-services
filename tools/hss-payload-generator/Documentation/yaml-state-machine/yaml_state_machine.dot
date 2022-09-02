@@ -6,7 +6,7 @@ digraph yaml_state_machine {
 	node [shape=ellipse, style=filled, color=cornflowerblue, fixedsize=false] idle, document, mapping;
 	node [shape=ellipse, style=filled, color=coral2] set_name, hart_entry_points,
 		u54_1, u54_2, u54_3, u54_4, payload_mapping, new_payload,
-		exec_addr, owner_hart, secondary_hart, priv_mode;
+		exec_addr, owner_hart, secondary_hart, skip_opensbi, payload_name, priv_mode;
 
 	idle[label="event::idle"];
 	document[label="event::Document"];
@@ -18,10 +18,12 @@ digraph yaml_state_machine {
 	u54_3[label="token::u54_3"];
 	u54_4[label="token::u54_4"];
 	payload_mapping[label="token::payload"];
-	new_payload[label="token::elf_filename"];
+	new_payload[label="token::<elf_filename>"];
 	exec_addr[label="token::exec-addr"];
 	owner_hart[label="token::owner-hart"];
 	secondary_hart[label="token::secondary-hart"];
+	skip_opensbi[label="token::skip-opensbi"];
+	payload_name[label="token::payload-name"];
 	priv_mode[label="token::priv-mode"];
 
 	start -> idle;
@@ -54,7 +56,11 @@ digraph yaml_state_machine {
 	owner_hart -> new_payload;
 	new_payload -> secondary_hart;
 	secondary_hart -> new_payload;
+	new_payload -> skip_opensbi;
+	skip_opensbi -> new_payload;
 	new_payload -> priv_mode;
 	priv_mode -> new_payload;
+	new_payload -> payload_name;
+	payload_name -> new_payload;
 }	
 

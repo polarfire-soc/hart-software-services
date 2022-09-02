@@ -1,5 +1,5 @@
 % HSS Payload Generator
-% 2021-03-17
+% 2022-09-02
 
 # Introduction 
 
@@ -63,9 +63,14 @@ For a bare metal application that doesn't want to be concerned with OpenSBI, the
 
 It is also possible to associate ancilliary data with each payload, for example a devicetree blob (DTB) file, by specifying the ancilliary-data filename as follows:
 
-    test/u-boot-icicle-kit-es-2020.01-r0.bin: { exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/icicle-kit-es-microchip.dtb }
+    test/u-boot-icicle-kit-es-2022.01-r0.bin: { exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/icicle-kit-es-microchip.dtb }
 
 This ancilliary data will get included in the payload (placed straight after the main file in executable space), and its address will be passed to OpenSBI in the ``next_arg1`` field (i.e., passed in the `$a1` register to the image at boot time).
+
+Finally, we can optionally override the names of individual payloads, using the `payload-name` option. For example:
+
+    test/u-boot-icicle-kit-es-2022.01-r0.bin: { exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/icicle-kit-es-microchip.dtb, payload-name: 'u-boot' }
+
 
 ### Complete Example
 
@@ -75,7 +80,7 @@ Here is the complete example:
     hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
     payloads:
       test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m, skip-opensbi: true}
-      test/u-boot-dtb.bin:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s}
+      test/u-boot-dtb.bin:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s, payload-name: 'u-boot-dtb'}
 
 Here is another example, this time of a bare metal SMP application that doesn't require OpenSBI:
 

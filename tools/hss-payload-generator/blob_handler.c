@@ -118,7 +118,7 @@ bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner
 			exit(EXIT_FAILURE);
 		}
 
-			fseeko(fileIn, 0, SEEK_END);
+		fseeko(fileIn, 0, SEEK_END);
 		size = (size_t)ftello(fileIn);
 
 		void *pBuffer = malloc(size);
