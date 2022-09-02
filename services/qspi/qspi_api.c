@@ -58,7 +58,6 @@ struct FlashDescriptor
 } qspiFlashes[] = {
     { 0xEFAA21u, 2048u, 64u, 1024u, SPI_NAND, "Winbond W25N01GV" }, // EFh => Winbond, AA21h => W25N01GV
     { 0x20BA19u, 256u, 256u, 512u, SPI_NOR, "Micron N25Q256A" }, // 20h => Micron, BA91h => N25Q256A, and using sector as block
-    // { 0x20BA19u, 16u, 8192, 512u, SPI_NOR, "Micron N25Q256A" }, // 20h => Micron, BA91h => N25Q256A, and using sub-sector as block
 };
 
 static uint32_t pageSize, blockSize, dieSize, eraseSize, pageCount, blockCount;
@@ -157,6 +156,7 @@ __attribute__((pure)) static inline uint32_t logical_to_physical_block_(const ui
 
 static void demandCopyFlashBlocksToCache_(size_t byteOffset, size_t byteCount, bool markDirty)
 {
+
     for (size_t offset = byteOffset; offset < (byteOffset + byteCount); offset += blockSize) {
         const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
 
@@ -333,7 +333,6 @@ bool HSS_QSPIInit(void)
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalBlockDesc: %p\n", pLogicalBlockDesc);
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pCacheDataBuffer: %p\n", pCacheDataBuffer);
 
-            if (spi_type == SPI_NAND) {
                 //
                 // check for bad blocks and reduce the number of blocks accordingly...
                 // our caches and logical block descriptors above may now be slightly too large, but this
@@ -345,7 +344,6 @@ bool HSS_QSPIInit(void)
                 dieSize = blockSize * blockCount;
 
                 // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u\n", blockCount);
-            }
 
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash\n");
             qspiInitialized = true;
