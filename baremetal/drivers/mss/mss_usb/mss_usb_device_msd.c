@@ -44,7 +44,7 @@ extern "C" {
 #define MSC_RX_EP_MAX_PKT_SIZE_FS                       64
 
 
-#define G_BOT_CBW_INIT();                               g_bot_cbw.signature = 0;\
+#define G_BOT_CBW_INIT()                                g_bot_cbw.signature = 0;\
                                                         g_bot_cbw.tag = 0;\
                                                         g_bot_cbw.xfr_length = 0;\
                                                         g_bot_cbw.flags = 0;\
@@ -103,7 +103,7 @@ static uint8_t usbd_msc_process_read_capacity_10(void);
 /***************************************************************************//**
  Implementations of Call-back functions used by USBD.
  */
-static uint8_t* usbd_msc_get_descriptor_cb(uint8_t recepient,
+static uint8_t* usbd_msc_get_descriptor_cb(uint8_t recipient,
                                            uint8_t type,
                                            uint32_t* length,
                                            mss_usb_device_speed_t musb_speed);
@@ -329,7 +329,7 @@ MSS_USBD_MSC_get_state
 static uint8_t*
 usbd_msc_get_descriptor_cb
 (
-    uint8_t recepient,
+    uint8_t recipient,
     uint8_t type,
     uint32_t* length,
     mss_usb_device_speed_t musb_speed
@@ -346,7 +346,7 @@ usbd_msc_get_descriptor_cb
         Device connected to 2.0 Host(musb_speed = HS):Operate in HS
         Device connected to 1.x Host(musb_speed = FS):Operate in FS
     */
-    if(MSS_USB_DEVICE_FS == g_usbd_msc_user_speed)
+    if (MSS_USB_DEVICE_FS == g_usbd_msc_user_speed)
     {
         conf_desc = msc_fs_conf_descr;
         conf_desc[MSCD_CONF_DESCR_DESCTYPE_IDX] = USB_CONFIGURATION_DESCRIPTOR_TYPE;
@@ -354,9 +354,9 @@ usbd_msc_get_descriptor_cb
         os_conf_desc = 0u;
         os_conf_desc_len = 0u;
     }
-    else if(MSS_USB_DEVICE_HS == g_usbd_msc_user_speed)
+    else if (MSS_USB_DEVICE_HS == g_usbd_msc_user_speed)
     {
-        if(MSS_USB_DEVICE_HS == musb_speed)
+        if (MSS_USB_DEVICE_HS == musb_speed)
         {
             conf_desc = msc_hs_conf_descr;
             conf_desc[MSCD_CONF_DESCR_DESCTYPE_IDX] = USB_CONFIGURATION_DESCRIPTOR_TYPE;
@@ -365,7 +365,7 @@ usbd_msc_get_descriptor_cb
             os_conf_desc[MSCD_CONF_DESCR_DESCTYPE_IDX] = USB_OTHER_SPEED_CONFIG_DESCRIPTOR_TYPE;
             os_conf_desc_len = sizeof(msc_fs_conf_descr);
         }
-        else if(MSS_USB_DEVICE_FS == musb_speed)
+        else if (MSS_USB_DEVICE_FS == musb_speed)
         {
             conf_desc = msc_fs_conf_descr;
             conf_desc[MSCD_CONF_DESCR_DESCTYPE_IDX] = USB_CONFIGURATION_DESCRIPTOR_TYPE;
@@ -380,26 +380,26 @@ usbd_msc_get_descriptor_cb
         ASSERT(0);      //user must select FS or HS, nothing else.
     }
 
-    if(USB_STD_REQ_RECIPIENT_DEVICE == recepient)
+    if (USB_STD_REQ_RECIPIENT_DEVICE == recipient)
     {
-        if(USB_CONFIGURATION_DESCRIPTOR_TYPE == type)
+        if (USB_CONFIGURATION_DESCRIPTOR_TYPE == type)
         {
            *length = conf_desc_len;
-            return(conf_desc);
+            return (conf_desc);
         }
-        else if(USB_OTHER_SPEED_CONFIG_DESCRIPTOR_TYPE == type)
+        else if (USB_OTHER_SPEED_CONFIG_DESCRIPTOR_TYPE == type)
         {
             ASSERT(os_conf_desc != NULL);
             *length = os_conf_desc_len;
 
-            return(os_conf_desc);
+            return (os_conf_desc);
         }
     }
-    else if(USB_STD_REQ_RECIPIENT_ENDPOINT == recepient)    /*Need index(EP Num) here*/
+    else if (USB_STD_REQ_RECIPIENT_ENDPOINT == recipient)    /*Need index(EP Num) here*/
     {
         /*Do nothing*/
     }
-    else if(USB_STD_REQ_RECIPIENT_INTERFACE == recepient)     /*Need index(interface number) here*/
+    else if (USB_STD_REQ_RECIPIENT_INTERFACE == recipient)     /*Need index(interface number) here*/
     {
         /*Do nothing*/
     }
@@ -416,12 +416,7 @@ usbd_msc_get_descriptor_cb
  SET_CONFIGURATION command. The MSC class specific configurations are performed
  by this function.
  */
-static uint8_t
-usbd_msc_init_cb
-(
-    uint8_t cfgidx,
-    mss_usb_device_speed_t musb_speed
-)
+static uint8_t usbd_msc_init_cb( uint8_t cfgidx, mss_usb_device_speed_t musb_speed)
 {
     uint16_t bulk_rxep_fifo_sz = 0u;
     uint16_t bulk_rxep_maxpktsz = 0u;
@@ -451,14 +446,14 @@ usbd_msc_init_cb
       respective endpoint speed. This is done so that the config descriptor change
       reflects here and this function need not be updated for that.
       */
-    if(MSS_USB_DEVICE_FS == musb_speed)
+    if (MSS_USB_DEVICE_FS == musb_speed)
     {
         bulk_txep_fifo_sz = (uint16_t)((msc_fs_conf_descr[23u] << 8u) | (msc_fs_conf_descr[22u]));
         bulk_txep_maxpktsz = (uint16_t)((msc_fs_conf_descr[23u] << 8u) | (msc_fs_conf_descr[22u]));
         bulk_rxep_fifo_sz = (uint16_t)((msc_fs_conf_descr[30u] << 8u) | (msc_fs_conf_descr[29u]));
         bulk_rxep_maxpktsz = (uint16_t)((msc_fs_conf_descr[30u] << 8u) | (msc_fs_conf_descr[29u]));
     }
-    else if(MSS_USB_DEVICE_HS == musb_speed)
+    else if (MSS_USB_DEVICE_HS == musb_speed)
     {
         bulk_txep_fifo_sz = (uint16_t)((msc_hs_conf_descr[23u] << 8u) | (msc_hs_conf_descr[22u]));
         bulk_txep_maxpktsz = (uint16_t)((msc_hs_conf_descr[23u] << 8u) | (msc_hs_conf_descr[22u]));
@@ -470,33 +465,18 @@ usbd_msc_init_cb
         ASSERT(0); /*speed value can not be any other than FS or HS*/
     }
 
-    MSS_USBD_rx_ep_configure(MSC_CLASS_BULK_RX_EP,
-                             0x100u,
-                             bulk_rxep_fifo_sz,
-                             bulk_rxep_maxpktsz,
-                             1u,
-                             DMA_DISABLE,
-                             MSS_USB_DMA_CHANNEL1,
-                             MSS_USB_XFR_BULK,
-                             NO_ZLP_TO_XFR);
+    MSS_USBD_rx_ep_configure(MSC_CLASS_BULK_RX_EP, 0x100u, bulk_rxep_fifo_sz, bulk_rxep_maxpktsz,
+                             1u, DMA_DISABLE, MSS_USB_DMA_CHANNEL1, MSS_USB_XFR_BULK, NO_ZLP_TO_XFR);
 
-    MSS_USBD_rx_ep_read_prepare(MSC_CLASS_BULK_RX_EP,
-                                (uint8_t*)&g_bot_cbw,
-                                USBD_MSC_BOT_CBW_LENGTH);
+    MSS_USBD_rx_ep_read_prepare(MSC_CLASS_BULK_RX_EP, (uint8_t*)&g_bot_cbw, USBD_MSC_BOT_CBW_LENGTH);
 
-    MSS_USBD_tx_ep_configure(MSC_CLASS_BULK_TX_EP,
-                             0x300u,
-                             bulk_txep_fifo_sz,
-                             bulk_txep_maxpktsz,
-                             1u,
-                             DMA_DISABLE,
-                             MSS_USB_DMA_CHANNEL2,
-                             MSS_USB_XFR_BULK,
-                             NO_ZLP_TO_XFR);
+    MSS_USBD_tx_ep_configure(MSC_CLASS_BULK_TX_EP, 0x300u, bulk_txep_fifo_sz,
+                             bulk_txep_maxpktsz, 1u, DMA_DISABLE,
+                             MSS_USB_DMA_CHANNEL2, MSS_USB_XFR_BULK, NO_ZLP_TO_XFR);
 
     g_usbd_msc_state = USBD_MSC_CONFIGURED;
 
-    if(0 != g_usbd_msc_media_ops->media_init)
+    if (0 != g_usbd_msc_media_ops->media_init)
     {
         g_usbd_msc_media_ops->media_init(0);/*Todo:Remove the lun parameter*/
     }
@@ -508,11 +488,7 @@ usbd_msc_init_cb
  usbd_msc_release_cb() call-back is called by USB Device mode driver on receiving
  a command to clear the configuration.
  */
-static uint8_t
-usbd_msc_release_cb
-(
-    uint8_t cfgidx
-)
+static uint8_t usbd_msc_release_cb(uint8_t cfgidx)
 {
     g_usbd_msc_state = USBD_MSC_NOT_CONFIGURED;
     MSS_USB_CIF_tx_ep_disable_irq(MSC_CLASS_BULK_TX_EP);
@@ -523,7 +499,7 @@ usbd_msc_release_cb
     MSS_USB_CIF_rx_ep_clr_csrreg(MSC_CLASS_BULK_RX_EP);
     MSS_USB_CIF_dma_clr_ctrlreg(MSS_USB_DMA_CHANNEL1);
 
-    if(0 != g_usbd_msc_media_ops->media_release)
+    if (0 != g_usbd_msc_media_ops->media_release)
     {
         g_usbd_msc_media_ops->media_release(cfgidx);
     }
@@ -534,15 +510,9 @@ usbd_msc_release_cb
 /***************************************************************************//**
  usbd_msc_process_request_cb() call-back function Process the MSC class requests.
  */
-static uint8_t
-usbd_msc_process_request_cb
-(
-    mss_usbd_setup_pkt_t* setup_pkt,
-    uint8_t** buf_pp,
-    uint32_t* length
-)
+static uint8_t usbd_msc_process_request_cb( mss_usbd_setup_pkt_t* setup_pkt, uint8_t** buf_pp, uint32_t* length)
 {
-    if((MSC_CLASS_INTERFACE_NUM == setup_pkt->index) && (0u == setup_pkt->value))
+    if ((MSC_CLASS_INTERFACE_NUM == setup_pkt->index) && (0u == setup_pkt->value))
     {
         switch(setup_pkt->request)
         {
@@ -550,7 +520,7 @@ usbd_msc_process_request_cb
                 /*Return the max LUN index, not the actual number of LUNs*/
                 ASSERT(g_usbd_msc_media_ops->media_get_max_lun != NULL);
 
-                if(0 != g_usbd_msc_media_ops->media_get_max_lun)
+                if (0 != g_usbd_msc_media_ops->media_get_max_lun)
                 {
                     get_max_lun_response[0] = (g_usbd_msc_media_ops->media_get_max_lun() - 1u);
                 }
@@ -561,7 +531,7 @@ usbd_msc_process_request_cb
             return USB_SUCCESS;
 
             case USB_MSC_BOT_REQ_BMS_RESET:
-                if(0u == setup_pkt->length)
+                if (0u == setup_pkt->length)
                 {
                     /*
                     LVp:62 - prepare for next CBW. Don't change the stall
@@ -605,15 +575,11 @@ usbd_msc_process_request_cb
  on completion of the Current Data Transmissions (IN Transaction) which was
  previously initiated using MSS_USBD_tx_ep_configure().
  */
-static uint8_t usbd_msc_tx_complete_cb
-(
-    mss_usb_ep_num_t num,
-    uint8_t status
-)
+static uint8_t usbd_msc_tx_complete_cb(mss_usb_ep_num_t num, uint8_t status)
 {
     /*Underrun error ignore, it only means we are slow and that is because of
     the slow serial flash memory*/
-    if(status & (TX_EP_STALL_ERROR))
+    if (status & (TX_EP_STALL_ERROR))
     {
         g_bottx_events = BOT_EVENT_TX_ERROR;
     }
@@ -633,13 +599,7 @@ static uint8_t usbd_msc_tx_complete_cb
  previously prepared for this data reception using
  MSS_USBD_rx_ep_read_prepare()
  */
-static uint8_t
-usbd_msc_rx_cb
-(
-    mss_usb_ep_num_t num,
-    uint8_t status,
-    uint32_t rx_count
-)
+static uint8_t usbd_msc_rx_cb(mss_usb_ep_num_t num, uint8_t status, uint32_t rx_count)
 {
     /*
     4.3.5.6
@@ -648,7 +608,7 @@ usbd_msc_rx_cb
     when NACA bit = 0 ==> ACA condition is not set = command abort should be done
     as per sam-5, 5.8.2
     */
-    if(status & (RX_EP_OVER_RUN_ERROR | RX_EP_STALL_ERROR |
+    if (status & (RX_EP_OVER_RUN_ERROR | RX_EP_STALL_ERROR |
                  RX_EP_DATA_ERROR | RX_EP_PID_ERROR | RX_EP_ISO_INCOMP_ERROR))
     {
         g_botrx_events = BOT_EVENT_RX_ERROR;
@@ -666,20 +626,15 @@ usbd_msc_rx_cb
 /***************************************************************************//**
  usbd_msc_bot_fsm() function is the state machine for BOT transfers.
  */
-static void
-usbd_msc_bot_fsm
-(
-    uint8_t status,
-    uint32_t rx_count
-)
+static void usbd_msc_bot_fsm(uint8_t status, uint32_t rx_count)
 {
     uint8_t cb_result = CB_INTERNAL_ERROR;
     switch (g_bot_state)
     {
     case BOT_IDLE:
-        if(BOT_EVENT_RX == g_botrx_events)
+        if (BOT_EVENT_RX == g_botrx_events)
         {
-            if(rx_count != USBD_MSC_BOT_CBW_LENGTH )
+            if (rx_count != USBD_MSC_BOT_CBW_LENGTH )
             {
                 g_current_command_csw.status = SCSI_COMMAND_PHASE_ERR;
                 usbd_msc_abort_cbw(0u);
@@ -694,17 +649,17 @@ usbd_msc_bot_fsm
                 {
                     case CB_PASS:
                         g_current_command_csw.status = SCSI_COMMAND_PASS;
-                        if(g_req_type == SCSI_OUT)
+                        if (g_req_type == SCSI_OUT)
                         {
                             //CASE:12 (Success)
                             usbd_msc_receive_data((uint8_t *)g_xfr_buf_ptr, g_xfr_buf_len);
                         }
-                        else if(g_req_type == SCSI_IN)
+                        else if (g_req_type == SCSI_IN)
                         {
                             //CASE:6 (Success)
                             usbd_msc_send_data((uint8_t *)g_xfr_buf_ptr, g_xfr_buf_len);
                         }
-                        else if(g_req_type == SCSI_ZDR)
+                        else if (g_req_type == SCSI_ZDR)
                         {
                             //CASE:1 (Success)
                             usbd_msc_send_csw();
@@ -718,9 +673,9 @@ usbd_msc_bot_fsm
                     case CB_LESSDATA:
                         g_current_command_csw.status = SCSI_COMMAND_LESSDATAPASS;
 
-                        if(SCSI_OUT == g_req_type)
+                        if (SCSI_OUT == g_req_type)
                         {
-                            if(g_xfr_buf_len)
+                            if (g_xfr_buf_len)
                             {
                                 //CASE11(lvr:dont stall this)
                                 usbd_msc_receive_data((uint8_t *)g_xfr_buf_ptr, g_xfr_buf_len);
@@ -731,9 +686,9 @@ usbd_msc_bot_fsm
                                 usbd_msc_stallin_sendstatus();
                             }
                         }
-                        else if(SCSI_IN == g_req_type)
+                        else if (SCSI_IN == g_req_type)
                         {
-                            if(g_xfr_buf_len)
+                            if (g_xfr_buf_len)
                             {
                                 //CASE5: send a stall and status after dataPhase.
                                 usbd_msc_send_data((uint8_t *)g_xfr_buf_ptr, g_xfr_buf_len);
@@ -751,9 +706,9 @@ usbd_msc_bot_fsm
                     break;
 
                     case CB_MOREDATA:
-                        if(SCSI_OUT == g_req_type )
+                        if (SCSI_OUT == g_req_type )
                         {
-                            if(g_xfr_buf_len)
+                            if (g_xfr_buf_len)
                             {
                                 //CASE13
                                 g_current_command_csw.status = SCSI_COMMAND_PHASE_ERR;
@@ -764,7 +719,7 @@ usbd_msc_bot_fsm
                                 ASSERT(0);   //shouldn't happen
                             }
                         }
-                        else if(SCSI_IN == g_req_type)
+                        else if (SCSI_IN == g_req_type)
                         {
                             //CASE7 stall then send status
                             g_current_command_csw.status = SCSI_COMMAND_FAIL;
@@ -786,13 +741,13 @@ usbd_msc_bot_fsm
                         /*Command Not supported.*/
                         g_current_command_csw.status = SCSI_COMMAND_FAIL;
 
-                        if(0 == g_bot_cbw.xfr_length)
+                        if (0 == g_bot_cbw.xfr_length)
                         {
                             usbd_msc_stallin_sendstatus();
                         }
                         else
                         {
-                            if(g_bot_cbw.flags & 0x80u) //IN D2H
+                            if (g_bot_cbw.flags & 0x80u) //IN D2H
                             {
                                 usbd_msc_stallin_sendstatus();
                             }
@@ -811,14 +766,14 @@ usbd_msc_bot_fsm
                     break;
 
                     case CB_LENGTH_MISMATCH:
-                        if(SCSI_OUT == g_req_type)
+                        if (SCSI_OUT == g_req_type)
                         {
-                            if(0u == g_xfr_buf_len)
+                            if (0u == g_xfr_buf_len)
                             {
                                 g_current_command_csw.status = SCSI_COMMAND_FAIL;
                                 usbd_msc_stallout_sendstatus();
                             }
-                            else if(g_xfr_buf_len > g_bot_cbw.xfr_length)
+                            else if (g_xfr_buf_len > g_bot_cbw.xfr_length)
                             {
                                 //CASE13
                                 g_current_command_csw.status = SCSI_COMMAND_PHASE_ERR;
@@ -831,14 +786,14 @@ usbd_msc_bot_fsm
                                 usbd_msc_receive_data((uint8_t *)g_xfr_buf_ptr, g_xfr_buf_len);
                             }
                         }
-                        else if(SCSI_IN == g_req_type)
+                        else if (SCSI_IN == g_req_type)
                         {
-                            if(0u == g_xfr_buf_len)
+                            if (0u == g_xfr_buf_len)
                             {
                                 g_current_command_csw.status = SCSI_COMMAND_FAIL;
                                 usbd_msc_stallout_sendstatus();
                             }
-                            else if(g_xfr_buf_len > g_bot_cbw.xfr_length)
+                            else if (g_xfr_buf_len > g_bot_cbw.xfr_length)
                             {
                                 //CASE7 stall then send status
                                 g_current_command_csw.status = SCSI_COMMAND_PHASE_ERR;
@@ -854,7 +809,7 @@ usbd_msc_bot_fsm
                         {
                             g_current_command_csw.status = SCSI_COMMAND_FAIL;
 
-                            if(g_bot_cbw.flags & 0x80u)
+                            if (g_bot_cbw.flags & 0x80u)
                             {
                                 usbd_msc_stallin_sendstatus();
                             }
@@ -892,9 +847,9 @@ usbd_msc_bot_fsm
 
     break;
         case BOT_DATA_TX:
-            if(BOT_EVENT_TX == g_bottx_events) /* Data TX from Device*/
+            if (BOT_EVENT_TX == g_bottx_events) /* Data TX from Device*/
             {
-                if(SCSI_COMMAND_LESSDATAPASS == g_current_command_csw.status)
+                if (SCSI_COMMAND_LESSDATAPASS == g_current_command_csw.status)
                 {
                     g_xfr_buf_ptr = (uint8_t*)0;
                     g_xfr_buf_len = 0u;
@@ -902,9 +857,9 @@ usbd_msc_bot_fsm
                     g_current_command_csw.status = SCSI_COMMAND_PASS;
                     usbd_msc_stallin_sendstatus();
                 }
-                else if(SCSI_COMMAND_PASS == g_current_command_csw.status)
+                else if (SCSI_COMMAND_PASS == g_current_command_csw.status)
                 {
-                    if(g_current_command_csw.data_residue >= g_xfr_buf_len)
+                    if (g_current_command_csw.data_residue >= g_xfr_buf_len)
                     {
                         g_current_command_csw.data_residue -= g_xfr_buf_len;
                     }
@@ -913,7 +868,7 @@ usbd_msc_bot_fsm
                         ASSERT(0);/*corrupt/invalid data_residue value*/
                     }
 
-                    if(0u == g_current_command_csw.data_residue)
+                    if (0u == g_current_command_csw.data_residue)
                     {
                         g_xfr_buf_ptr = (uint8_t*)0;
                         g_xfr_buf_len = 0u;
@@ -931,7 +886,7 @@ usbd_msc_bot_fsm
                         uint32_t actual_read_len;
                         uint8_t* buf;
 
-                        if(0 != g_usbd_msc_media_ops->media_read)
+                        if (0 != g_usbd_msc_media_ops->media_read)
                         {
                             g_xfr_lba_addr += g_xfr_buf_len;
                             actual_read_len = g_usbd_msc_media_ops->media_read(g_bot_cbw.lun,
@@ -957,7 +912,7 @@ usbd_msc_bot_fsm
                         }
                     }
                 }
-                else if(SCSI_COMMAND_FAIL == g_current_command_csw.status)
+                else if (SCSI_COMMAND_FAIL == g_current_command_csw.status)
                 {
                     g_xfr_buf_ptr = (uint8_t*)0;
                     g_xfr_buf_len = 0u;
@@ -969,10 +924,10 @@ usbd_msc_bot_fsm
                     ASSERT(0); //should never come there with Phase Error status
                 }
             }
-            else if(BOT_EVENT_TX_ERROR == g_bottx_events)
+            else if (BOT_EVENT_TX_ERROR == g_bottx_events)
             {
                 /* Stall Error*/
-                if(status & TX_EP_STALL_ERROR)
+                if (status & TX_EP_STALL_ERROR)
                 {
                     ASSERT(0); //should never get a stall in this state
                 }
@@ -984,9 +939,9 @@ usbd_msc_bot_fsm
         break;
 
         case BOT_DATA_RX:
-            if(BOT_EVENT_RX == g_botrx_events)
+            if (BOT_EVENT_RX == g_botrx_events)
             {
-                if(SCSI_COMMAND_LESSDATAPASS == g_current_command_csw.status)
+                if (SCSI_COMMAND_LESSDATAPASS == g_current_command_csw.status)
                 {
                     g_xfr_buf_ptr = (uint8_t*)0;
                     g_xfr_buf_len = 0u;
@@ -994,11 +949,11 @@ usbd_msc_bot_fsm
                     g_current_command_csw.status = SCSI_COMMAND_PASS;
                     usbd_msc_stallin_sendstatus();
                 }
-                else if(SCSI_COMMAND_PASS == g_current_command_csw.status)
+                else if (SCSI_COMMAND_PASS == g_current_command_csw.status)
                 {
                     uint8_t result = CB_DATAPHASE_ERROR;
 
-                    if(g_current_command_csw.data_residue >= g_xfr_buf_len)
+                    if (g_current_command_csw.data_residue >= g_xfr_buf_len)
                     {
                         g_current_command_csw.data_residue -= g_xfr_buf_len;
                     }
@@ -1008,7 +963,7 @@ usbd_msc_bot_fsm
                     }
 
                     /*Write the received data on flash*/
-                    if(rx_count == g_xfr_buf_len)
+                    if (rx_count == g_xfr_buf_len)
                     {
                         result = CB_PASS;
                     }
@@ -1017,7 +972,7 @@ usbd_msc_bot_fsm
                         result = CB_DATAPHASE_ERROR;
                     }
 
-                    if(0 != g_usbd_msc_media_ops->media_write_ready)
+                    if (0 != g_usbd_msc_media_ops->media_write_ready)
                     {
                         g_usbd_msc_media_ops->media_write_ready(g_bot_cbw.lun,
                                                                 g_xfr_lba_addr,
@@ -1029,13 +984,13 @@ usbd_msc_bot_fsm
                          result = CB_DATAPHASE_ERROR;
                     }
 
-                    if(CB_PASS == result)
+                    if (CB_PASS == result)
                     {
                         /*
                         data_residue == 0 means we are done with current Data
                         phase of OUT transaction, send the status.
                         */
-                        if(0u == g_current_command_csw.data_residue)
+                        if (0u == g_current_command_csw.data_residue)
                         {
                             g_xfr_buf_ptr = 0; // Data end.
                             g_xfr_buf_len = 0u;
@@ -1045,7 +1000,7 @@ usbd_msc_bot_fsm
                         }
                         else
                         {
-                            uint32_t app_write_len;
+                            uint32_t app_write_len = 0u;
                             uint8_t* write_buf = (uint8_t*) 0;
 
                             /*
@@ -1055,7 +1010,7 @@ usbd_msc_bot_fsm
                             */
                             g_xfr_lba_addr += g_xfr_buf_len;
 
-                            if(0 != g_usbd_msc_media_ops->media_acquire_write_buf)
+                            if (0 != g_usbd_msc_media_ops->media_acquire_write_buf)
                                 write_buf = g_usbd_msc_media_ops->media_acquire_write_buf(g_bot_cbw.lun,
                                                                                           g_xfr_lba_addr,
                                                                                           &app_write_len);
@@ -1065,7 +1020,7 @@ usbd_msc_bot_fsm
                             requested data from Host,then read amount of data
                             that the application can handle at the moment.
                             */
-                            if(app_write_len < g_current_command_csw.data_residue)
+                            if (app_write_len < g_current_command_csw.data_residue)
                             {
                                 g_xfr_buf_len = app_write_len;
                             }
@@ -1085,7 +1040,7 @@ usbd_msc_bot_fsm
                         usbd_msc_abort_cbw(0u);                //Internal Error
                     }
                 }
-                else if(SCSI_COMMAND_FAIL == g_current_command_csw.status)
+                else if (SCSI_COMMAND_FAIL == g_current_command_csw.status)
                 {
                     g_xfr_buf_ptr = 0;
                     g_xfr_buf_len = 0u;
@@ -1093,10 +1048,10 @@ usbd_msc_bot_fsm
                     usbd_msc_send_csw();
                 }
             }
-            else if(BOT_EVENT_RX_ERROR == g_botrx_events)
+            else if (BOT_EVENT_RX_ERROR == g_botrx_events)
             {
                 /* Stall Error*/
-                if(status & 0x02u)
+                if (status & 0x02u)
                 {
                     ASSERT(0); //should never get a stall in this state
                 }
@@ -1109,7 +1064,7 @@ usbd_msc_bot_fsm
 
         case BOT_SEND_STATUS:
 
-            if(BOT_EVENT_TX == g_bottx_events)
+            if (BOT_EVENT_TX == g_bottx_events)
             {
                 G_BOT_CBW_INIT();
                 g_current_command_csw.data_residue = 0u;
@@ -1125,12 +1080,12 @@ usbd_msc_bot_fsm
                                             (uint8_t*)&g_bot_cbw,
                                             USBD_MSC_BOT_CBW_LENGTH);
             }
-            else if(BOT_EVENT_TX_ERROR == g_bottx_events)
+            else if (BOT_EVENT_TX_ERROR == g_bottx_events)
             {
                 /* Stall Error*/
-                if(status & TX_EP_STALL_ERROR)
+                if (status & TX_EP_STALL_ERROR)
                 {
-                    if(g_current_command_csw.status == SCSI_COMMAND_LESSDATAPASS)
+                    if (g_current_command_csw.status == SCSI_COMMAND_LESSDATAPASS)
                     {
                         g_current_command_csw.status = SCSI_COMMAND_PASS;
                     }
@@ -1163,13 +1118,7 @@ usbd_msc_bot_fsm
  required information from application and returns the status. If the Command
  was invalid or is not processed by this driver, it returns the Failure status.
  */
-
-
-static uint8_t
-usbd_msc_process_cbw
-(
-    mss_usb_msc_cbw_t * cbw
-)
+static uint8_t usbd_msc_process_cbw(mss_usb_msc_cbw_t * cbw)
 {
     uint8_t cbw_command = cbw->cmd_block[0];
     uint8_t result = CB_PASS;
@@ -1187,7 +1136,7 @@ usbd_msc_process_cbw
      No. Max LUN index provided by App in get_max_lun request.
      */
 
-    if((cbw->signature != USB_MSC_BOT_CBW_SIGNATURE) ||
+    if ((cbw->signature != USB_MSC_BOT_CBW_SIGNATURE) ||
        (cbw->lun > get_max_lun_response[0]) ||
        (cbw->cmd_length < 1) ||
        (cbw->cmd_length > 16))
@@ -1196,7 +1145,7 @@ usbd_msc_process_cbw
     }
     else
     {
-        if(g_current_command_csw.data_residue != 0u)
+        if (g_current_command_csw.data_residue != 0u)
         {
             ASSERT(0);
         }
@@ -1214,16 +1163,15 @@ usbd_msc_process_cbw
 
             case USB_MSC_SCSI_READ_FORMAT_CAPACITIES:/*Returns no. of blocks and block size*/
             {
-                uint32_t no_of_blocks, block_size;
-                uint32_t dev_data_len = 0;
+                uint32_t no_of_blocks = 0u;
+                uint32_t block_size = 0u;
+                uint32_t dev_data_len = 0u;
 
                 dev_data_len = ((g_bot_cbw.cmd_block[7u] << 8u) | g_bot_cbw.cmd_block[8u]);
 
-                if(0 != g_usbd_msc_media_ops->media_get_capacity)
+                if (0 != g_usbd_msc_media_ops->media_get_capacity)
                 {
-                    g_usbd_msc_media_ops->media_get_capacity(cbw->lun,
-                                                           (uint32_t*)&no_of_blocks,
-                                                           (uint32_t*)&block_size);
+                    g_usbd_msc_media_ops->media_get_capacity(cbw->lun, (uint32_t*)&no_of_blocks, (uint32_t*)&block_size);
                 }
 
                 format_capacity_list [4u] = (uint8_t)(no_of_blocks >> 24u);
@@ -1240,15 +1188,13 @@ usbd_msc_process_cbw
                 g_xfr_buf_ptr = (uint8_t*)format_capacity_list;
                 g_xfr_buf_len = sizeof(format_capacity_list);
 
-                usbd_msc_prepare_sense_data(cbw->lun,
-                                            SC_ILLEGAL_REQUEST,
-                                            ASC_INVALID_CDB);
+                usbd_msc_prepare_sense_data(cbw->lun, SC_ILLEGAL_REQUEST, ASC_INVALID_CDB);
 
-                if(g_xfr_buf_len < dev_data_len)
+                if (g_xfr_buf_len < dev_data_len)
                 {
                     result = CB_LESSDATA;
                 }
-                else if(g_xfr_buf_len > dev_data_len)
+                else if (g_xfr_buf_len > dev_data_len)
                 {
                     result = CB_LESSDATA;
                 }
@@ -1272,11 +1218,11 @@ usbd_msc_process_cbw
                 g_xfr_buf_ptr = mode_sense_response;
                 g_xfr_buf_len = sizeof(mode_sense_response);
 
-                if(dev_data_len > g_xfr_buf_len)
+                if (dev_data_len > g_xfr_buf_len)
                 {
                     result = CB_LESSDATA;
                 }
-                else if(dev_data_len < g_xfr_buf_len)
+                else if (dev_data_len < g_xfr_buf_len)
                 {
                     result = CB_MOREDATA;
                 }
@@ -1292,21 +1238,21 @@ usbd_msc_process_cbw
                 uint32_t dev_data_len =0;
                 dev_data_len = g_bot_cbw.cmd_block[4u];
 
-                if(g_bot_cbw.cmd_block[1u] & 0x01u)//DESC bit 0 - only fixed format is supported
+                if (g_bot_cbw.cmd_block[1u] & 0x01u)//DESC bit 0 - only fixed format is supported
                 {
-                    return(CB_INVALID_CDB_FIELD);
+                    return (CB_INVALID_CDB_FIELD);
                 }
 
                 /*SPC-4, table 39*/
                 g_req_type = SCSI_IN;
                 g_xfr_buf_ptr = (uint8_t*)&g_sense_response;
 
-                if(0 == dev_data_len)
+                if (0 == dev_data_len)
                 {
                     result = CB_LESSDATA;
                     g_xfr_buf_len = dev_data_len;
                 }
-                else if(dev_data_len > (sizeof(g_sense_response)))
+                else if (dev_data_len > (sizeof(g_sense_response)))
                 {
                     g_xfr_buf_len = dev_data_len;
                     result = CB_MOREDATA;
@@ -1329,7 +1275,7 @@ usbd_msc_process_cbw
                 g_xfr_buf_len = 0u;
 
                 /*Fail if DataTransferLength and Allocation length in CBW are mismatched*/
-                if(0 != g_bot_cbw.xfr_length)
+                if (0 != g_bot_cbw.xfr_length)
                 {
                     result = CB_LENGTH_MISMATCH;
                 }
@@ -1345,7 +1291,7 @@ usbd_msc_process_cbw
                 g_xfr_buf_len = 0u;
 
                 /*Fail if DataTransferLength and Allocation length in CBW are mismatched*/
-                if(0 != g_bot_cbw.xfr_length)
+                if (0 != g_bot_cbw.xfr_length)
                 {
                     result = CB_LENGTH_MISMATCH;
                 }
@@ -1361,9 +1307,7 @@ usbd_msc_process_cbw
                 g_req_type = SCSI_IN;
                 g_xfr_buf_ptr = (uint8_t*)0;
                 g_xfr_buf_len = 0u;
-                usbd_msc_prepare_sense_data(cbw->lun,
-                                            SC_ILLEGAL_REQUEST,
-                                            ASC_INVALID_FIELED_IN_COMMAND);
+                usbd_msc_prepare_sense_data(cbw->lun, SC_ILLEGAL_REQUEST, ASC_INVALID_FIELED_IN_COMMAND);
             break;
         }
     }
@@ -1375,13 +1319,7 @@ usbd_msc_process_cbw
  by the host in case there was an error in processing CBW. This information is
  sent as response to REQUEST_SENSE command.
  */
-static void
-usbd_msc_prepare_sense_data
-(
-    uint8_t lun,
-    uint8_t skey,
-    uint8_t asc
-)
+static void usbd_msc_prepare_sense_data(uint8_t lun, uint8_t skey, uint8_t asc)
 {
     g_sense_response.sense_key = skey;
     g_sense_response.asc = asc;
@@ -1391,11 +1329,7 @@ usbd_msc_prepare_sense_data
  usbd_msc_abort_cbw() function aborts the current command CBW.and prepares
  the driver to receive new CBW from HOST.
  */
-static void
-usbd_msc_abort_cbw
-(
-    uint8_t lun
-)
+static void usbd_msc_abort_cbw(uint8_t lun)
 {
     g_bot_state = BOT_ABORTED;
 
@@ -1412,33 +1346,20 @@ usbd_msc_abort_cbw
  usbd_msc_send_data() function send data to the host (DATA phase of IN transactions)
  in response to current CBW command.
  */
-static void
-usbd_msc_send_data
-(
-    uint8_t* buf,
-    uint32_t len
-)
+static void usbd_msc_send_data(uint8_t* buf, uint32_t len)
 {
     /*TODO: check if the length can be accommodated in EP buffer*/
     g_bot_state = BOT_DATA_TX;
     MSS_USBD_tx_ep_write(MSC_CLASS_BULK_TX_EP, buf, len);
 }
 
-static void
-usbd_msc_stallin_sendstatus
-(
-    void
-)
+static void usbd_msc_stallin_sendstatus(void)
 {
     g_bot_state = BOT_SEND_STATUS;
     MSS_USBD_tx_ep_stall(MSC_CLASS_BULK_TX_EP);
 }
 
-static void
-usbd_msc_stallout_sendstatus
-(
-    void
-)
+static void usbd_msc_stallout_sendstatus(void)
 {
     g_bot_state = BOT_SEND_STATUS;
     MSS_USBD_rx_ep_stall(MSC_CLASS_BULK_RX_EP);
@@ -1449,12 +1370,7 @@ usbd_msc_stallout_sendstatus
  from USB host (DATA phase of OUT transactions) in response to the current CBW
  command.
  */
-static void
-usbd_msc_receive_data
-(
-    uint8_t* buf,
-    uint32_t len
-)
+static void usbd_msc_receive_data(uint8_t* buf, uint32_t len)
 {
     g_bot_state = BOT_DATA_RX;
     MSS_USBD_rx_ep_read_prepare(MSC_CLASS_BULK_RX_EP, (uint8_t *)g_xfr_buf_ptr, len);
@@ -1465,16 +1381,10 @@ usbd_msc_receive_data
  (DATA phase of IN transactions), indicating the Success/Failure status of the
  current CBW command.
  */
-static void
-usbd_msc_send_csw
-(
-    void
-)
+static void usbd_msc_send_csw(void)
 {
     g_bot_state = BOT_SEND_STATUS;
-    MSS_USBD_tx_ep_write(MSC_CLASS_BULK_TX_EP,
-                         (uint8_t*)&g_current_command_csw,
-                         USBD_MSC_BOT_CSW_LENGTH);
+    MSS_USBD_tx_ep_write(MSC_CLASS_BULK_TX_EP, (uint8_t*)&g_current_command_csw, USBD_MSC_BOT_CSW_LENGTH);
 }
 
 volatile uint64_t capture_dev_data_len = 0u;
@@ -1483,11 +1393,7 @@ volatile uint64_t capture_dev_data_len = 0u;
  usbd_msc_process_read_10() function processes read command and calls application
  call-back function to read data from media.
  */
-static uint8_t
-usbd_msc_process_read_10
-(
-    void
-)
+static uint8_t usbd_msc_process_read_10(void)
 {
     uint32_t app_read_len = 0u;
     uint32_t lba = 0u;
@@ -1515,37 +1421,34 @@ usbd_msc_process_read_10
     dev_data_len = ((g_bot_cbw.cmd_block[7u] << 8u) | g_bot_cbw.cmd_block[8u]) *
                                             lun_capacity[g_bot_cbw.lun].blk_sz_len;
 
-    if(lba_addr > capture_dev_data_len)
+    if (lba_addr > capture_dev_data_len)
     capture_dev_data_len = lba_addr;
 
     /*Data Direction must be D2H (IN)*/
-    if(!(g_bot_cbw.flags & 0x80u))
+    if (!(g_bot_cbw.flags & 0x80u))
     {
         g_xfr_buf_len = dev_data_len;
         cb_res = CB_DATA_DIR_MISMATCH;
     }
     /*Fail if DataTransferLength and Allocation length in CBW are mismatched*/
-    if(dev_data_len != g_bot_cbw.xfr_length)
+    if (dev_data_len != g_bot_cbw.xfr_length)
     {
         cb_res = CB_LENGTH_MISMATCH;
     }
 
-    if(0 == g_usbd_msc_media_ops->media_read)
+    if (0 == g_usbd_msc_media_ops->media_read)
     {
         cb_res = CB_INTERNAL_ERROR;
     }
 
-    if(CB_PASS == cb_res)
+    if (CB_PASS == cb_res)
     {
-        if(0 != g_usbd_msc_media_ops->media_read)
+        if (0 != g_usbd_msc_media_ops->media_read)
         {
-            app_read_len = g_usbd_msc_media_ops->media_read(g_bot_cbw.lun,
-                                                            &buf,
-                                                            lba_addr,
-                                                            dev_data_len);
+            app_read_len = g_usbd_msc_media_ops->media_read(g_bot_cbw.lun, &buf, lba_addr, dev_data_len);
         }
 
-        if((uint8_t*)0 == buf)
+        if ((uint8_t*)0 == buf)
         {
             cb_res = CB_INTERNAL_ERROR;
         }
@@ -1554,7 +1457,7 @@ usbd_msc_process_read_10
             cb_res = CB_PASS;
             g_xfr_buf_ptr = buf;
 
-            if(app_read_len < dev_data_len)
+            if (app_read_len < dev_data_len)
             {
                 g_xfr_buf_len = app_read_len;
             }
@@ -1570,7 +1473,7 @@ usbd_msc_process_read_10
         }
     }
 
-    if(CB_PASS != cb_res)
+    if (CB_PASS != cb_res)
     {
         g_xfr_buf_ptr = (uint8_t*)0;
         g_xfr_buf_len = 0u;
@@ -1584,11 +1487,7 @@ usbd_msc_process_read_10
  usbd_msc_process_write_10() function processes Write command and calls application
  call-back function to acquire a buffer where the data will be receive.
  */
-static uint8_t
-usbd_msc_process_write_10
-(
-    void
-)
+static uint8_t usbd_msc_process_write_10(void)
 {
     uint32_t lba = 0u;
     uint64_t lba_addr = 0u;
@@ -1620,28 +1519,26 @@ usbd_msc_process_write_10
                                          lun_capacity[g_bot_cbw.lun].blk_sz_len;
 
     /*Data Direction must be H2D (OUT)*/
-    if(g_bot_cbw.flags & 0x80u)
+    if (g_bot_cbw.flags & 0x80u)
     {
         g_xfr_buf_len = dev_data_len;
         cb_res = CB_DATA_DIR_MISMATCH;
     }
     /*Fail if DataTransferLength and Allocation length in CBW are mismatched*/
-    if(dev_data_len != g_bot_cbw.xfr_length)
+    if (dev_data_len != g_bot_cbw.xfr_length)
     {
         cb_res = CB_LENGTH_MISMATCH;
     }
 
-    if(0 == g_usbd_msc_media_ops->media_acquire_write_buf)
+    if (0 == g_usbd_msc_media_ops->media_acquire_write_buf)
     {
         cb_res = CB_INTERNAL_ERROR;
     }
 
-    if(CB_PASS == cb_res)
+    if (CB_PASS == cb_res)
     {
-        write_buf = g_usbd_msc_media_ops->media_acquire_write_buf(g_bot_cbw.lun,
-                                                                  lba_addr,
-                                                                  &app_write_len);
-        if(write_buf == (uint8_t*)0)
+        write_buf = g_usbd_msc_media_ops->media_acquire_write_buf(g_bot_cbw.lun, lba_addr, &app_write_len);
+        if (write_buf == (uint8_t*)0)
         {
             cb_res = CB_INTERNAL_ERROR;
         }
@@ -1660,7 +1557,7 @@ usbd_msc_process_write_10
             from Host, then read the amount of data that the application can
             handle at the moment
             */
-            if(app_write_len < dev_data_len)
+            if (app_write_len < dev_data_len)
             {
                 g_xfr_buf_len = app_write_len;
             }
@@ -1671,7 +1568,7 @@ usbd_msc_process_write_10
         }
     }
 
-    if(CB_PASS != cb_res)
+    if (CB_PASS != cb_res)
     {
         g_xfr_buf_ptr = (uint8_t*)0;
         g_xfr_buf_len = 0u;
@@ -1694,58 +1591,58 @@ static uint8_t usbd_msc_process_inquiry(void)
     dev_data_len = ((g_bot_cbw.cmd_block[3u] << 8u) | g_bot_cbw.cmd_block[4u]);
 
     /*Data Direction must be D2H (IN)*/
-    if(!(g_bot_cbw.flags & 0x80u))
+    if (!(g_bot_cbw.flags & 0x80u))
     {
         g_xfr_buf_len = dev_data_len;
-        return(CB_DATA_DIR_MISMATCH);
+        return (CB_DATA_DIR_MISMATCH);
     }
 
     /*Fail if DataTransferLength and Allocation length in CBW are mismatched*/
-    if(dev_data_len != g_bot_cbw.xfr_length)
+    if (dev_data_len != g_bot_cbw.xfr_length)
     {
-        return(CB_LENGTH_MISMATCH);
+        return (CB_LENGTH_MISMATCH);
     }
 
     /*If EVPD is zero then Page code must be zero*/
-    if((!(g_bot_cbw.cmd_block[1u] & 0x01u)) && (g_bot_cbw.cmd_block[1u]))
+    if ((!(g_bot_cbw.cmd_block[1u] & 0x01u)) && (g_bot_cbw.cmd_block[1u]))
     {
-        return(CB_INVALID_CDB_FIELD);
+        return (CB_INVALID_CDB_FIELD);
     }
 
-    if(0 == g_usbd_msc_media_ops->media_inquiry)
+    if (0 == g_usbd_msc_media_ops->media_inquiry)
     {
-        return(CB_INTERNAL_ERROR);
+        return (CB_INTERNAL_ERROR);
     }
 
-    if(0 != g_usbd_msc_media_ops->media_inquiry)
+    if (0 != g_usbd_msc_media_ops->media_inquiry)
     {
         buf = g_usbd_msc_media_ops->media_inquiry(g_bot_cbw.lun, &app_data_len);
     }
 
-    if((uint8_t*)0 == buf)
+    if ((uint8_t*)0 == buf)
     {
-        return(CB_INTERNAL_ERROR);
+        return (CB_INTERNAL_ERROR);
     }
     else
     {
         g_xfr_buf_ptr = buf;
 
-        if(dev_data_len <= app_data_len)
+        if (dev_data_len <= app_data_len)
         {
             g_xfr_buf_len = dev_data_len;
-            return(CB_PASS);
+            return (CB_PASS);
         }
         else
         {
             g_xfr_buf_len = app_data_len;
-            return(CB_LESSDATA);
+            return (CB_LESSDATA);
         }
     }
 }
 
 static uint8_t usbd_msc_process_read_capacity_10(void)
 {
-    uint32_t no_of_blocks, block_size;
+    uint32_t no_of_blocks = 0u, block_size = 0u;
 
     /*
      Returns last block address and block size
@@ -1756,24 +1653,24 @@ static uint8_t usbd_msc_process_read_capacity_10(void)
     g_req_type = SCSI_IN;
 
     /*Data Direction must be D2H (IN)*/
-    if(!(g_bot_cbw.flags & 0x80u))
+    if (!(g_bot_cbw.flags & 0x80u))
     {
         g_xfr_buf_len = 8u;
-        return(CB_DATA_DIR_MISMATCH);
+        return (CB_DATA_DIR_MISMATCH);
     }
 
     /*PMI bit set to one is not supported*/
-    if(g_bot_cbw.cmd_block[8u] & 0x01u)
+    if (g_bot_cbw.cmd_block[8u] & 0x01u)
     {
-        return(CB_INVALID_CDB_FIELD);
+        return (CB_INVALID_CDB_FIELD);
     }
 
-    if(0 == g_usbd_msc_media_ops->media_get_capacity)
+    if (0 == g_usbd_msc_media_ops->media_get_capacity)
     {
-        return(CB_INTERNAL_ERROR);
+        return (CB_INTERNAL_ERROR);
     }
 
-    if(0 != g_usbd_msc_media_ops->media_get_capacity)
+    if (0 != g_usbd_msc_media_ops->media_get_capacity)
     {
         g_usbd_msc_media_ops->media_get_capacity(g_bot_cbw.lun,
                                                  (uint32_t*)&no_of_blocks,
@@ -1794,7 +1691,7 @@ static uint8_t usbd_msc_process_read_capacity_10(void)
     g_xfr_buf_ptr = (uint8_t*)&lun_capacity[g_bot_cbw.lun];
     g_xfr_buf_len = 8u;
 
-    return(CB_PASS);
+    return (CB_PASS);
 }
 
 
