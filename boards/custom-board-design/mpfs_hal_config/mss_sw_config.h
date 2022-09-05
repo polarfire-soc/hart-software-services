@@ -199,6 +199,27 @@
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG
 
+/*
+ * SDIO register address location in fabric
+ */
+/*
+ * We want the Kconfig-generated config.h file to get the SDIO Register Address,
+ * but it defines CONFIG_OPENSBI...
+ *
+ * OpenSBI type definitions conflict with mpfs_hal
+ * so we need to undefine CONFIG_OPENSBI after including config.h
+ */
+#include "config.h"
+#undef CONFIG_OPENSBI
+
+#ifdef CONFIG_SERVICE_SDIO_REGISTER_ADDRESS
+#  undef LIBERO_SETTING_FPGA_SWITCH_ADDRESS
+#  define LIBERO_SETTING_FPGA_SWITCH_ADDRESS CONFIG_SERVICE_SDIO_REGISTER_ADDRESS
+#else
+#  ifndef LIBERO_SETTING_FPGA_SWITCH_ADDRESS
+#    define LIBERO_SETTING_FPGA_SWITCH_ADDRESS 0x4f000000
+#  endif
+#endif
 
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 

@@ -174,8 +174,6 @@
 #define DDR_SUPPORT
 #define MSSIO_SUPPORT
 
-
-
 /*
  * Debugging IHC. This placed memory map in volatile memory and uses software
  * state machine
@@ -184,18 +182,44 @@
 #define LIBERO_SETTING_CONTEXT_B_HART_EN    0x00000010UL    /* hart 4 */
 
 /*
+ * DDR software options
+ */
+
+/*
  * Debug DDR startup through a UART
- * Comment out in normal operation. Useful for debug purposes in bring-up of DDR
- * in a new board design.
- * See the weak function setup_ddr_debug_port(mss_uart_instance_t * uart)
- * If you need to edit this function, make a copy of the function without the
- * weak declaration in your application code.
+ * Comment out in normal operation. May be useful for debug purposes in bring-up
+ * of a new board design.
+ * See the weakly linked function setup_ddr_debug_port(mss_uart_instance_t * uart)
+ * If you need to edit this function, make another copy of the function in your
+ * application without the weak linking attribute. This copy will then get linked.
  * */
 //#define DEBUG_DDR_INIT
 //#define DEBUG_DDR_RD_RW_FAIL
 //#define DEBUG_DDR_RD_RW_PASS
 //#define DEBUG_DDR_CFG_DDR_SGMII_PHY
 //#define DEBUG_DDR_DDRCFG
+
+/*
+ * SDIO register address location in fabric
+ */
+/*
+ * We want the Kconfig-generated config.h file to get the SDIO Register Address,
+ * but it defines CONFIG_OPENSBI...
+ *
+ * OpenSBI type definitions conflict with mpfs_hal
+ * so we need to undefine CONFIG_OPENSBI after including config.h
+ */
+#include "config.h"
+#undef CONFIG_OPENSBI
+
+#ifdef CONFIG_SERVICE_SDIO_REGISTER_ADDRESS
+#  undef LIBERO_SETTING_FPGA_SWITCH_ADDRESS
+#  define LIBERO_SETTING_FPGA_SWITCH_ADDRESS CONFIG_SERVICE_SDIO_REGISTER_ADDRESS
+#else
+#  ifndef LIBERO_SETTING_FPGA_SWITCH_ADDRESS
+#    define LIBERO_SETTING_FPGA_SWITCH_ADDRESS 0x4f000000
+#  endif
+#endif
 
 #endif /* USER_CONFIG_MSS_USER_CONFIG_H_ */
 

@@ -29,8 +29,6 @@ extern "C" {
 #define SD_CONFIGURED_MASK                              (0x01U<<1U) /*!< set => SD is configured */
 #define DEFAULT_ON_START_MASK                           (0x01U<<2U) /*!< set => default is SD config, not set default is eMMC config */
 
-#define ICICLE_KIT_REF_DESIGN_FPGS_SWITCH_ADDRESS       0x4f000000
-
 #if !defined (LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR)
 /*To limit the number of interrupts fed to the PLINT, the seventy GPIO
 interrupts (GPIO0=14, GPIO1=24, GPIO2=32) are reduced down to 41

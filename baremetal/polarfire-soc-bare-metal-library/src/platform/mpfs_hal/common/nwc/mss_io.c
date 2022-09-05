@@ -559,7 +559,7 @@ __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
 {
     uint8_t result = false;
 
-    volatile uint32_t *reg_pt = (uint32_t *)ICICLE_KIT_REF_DESIGN_FPGS_SWITCH_ADDRESS;
+    volatile uint32_t *reg_pt = (uint32_t *)LIBERO_SETTING_FPGA_SWITCH_ADDRESS;
     switch(option)
     {
         case SD_MSSIO_CONFIGURATION:
