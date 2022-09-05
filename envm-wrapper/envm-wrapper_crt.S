@@ -89,7 +89,8 @@ _start:
 	la	s8, STACK_SIZE_PER_HART
         csrr	a0, CSR_MHARTID
 
-        la	tp, __stack_bottom + 63
+        la	tp, __stack_bottom
+        add	tp, tp, 63
         and	tp, tp, -64
         li	a1, 1
 
