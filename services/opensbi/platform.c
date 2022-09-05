@@ -205,14 +205,14 @@ static int mpfs_early_init(bool cold_boot)
 
 static int mpfs_final_init(bool cold_boot)
 {
-    void *fdt;
-
     if (!cold_boot) {
         return 0;
     }
 
-    fdt = sbi_scratch_thishart_arg1_ptr();
-    mpfs_modify_dt(fdt);
+    void *fdt = sbi_scratch_thishart_arg1_ptr();
+    if (fdt) {
+        mpfs_modify_dt(fdt);
+    }
 
     return 0;
 }
