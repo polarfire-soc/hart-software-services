@@ -30,7 +30,6 @@ EXTRA_SRCS-y += \
         modules/misc/assert.c \
         modules/misc/csr_helper.c \
         modules/misc/c_stubs.c \
-        modules/misc/vsnprintf.c \
         modules/misc/hss_crc16.c \
         modules/misc/hss_crc32.c \
         modules/misc/hss_memcpy_via_pdma.c \
@@ -38,6 +37,7 @@ EXTRA_SRCS-y += \
         modules/misc/device_serial_number.c \
 
 #        modules/misc/ee_printf.c \
+#        modules/misc/vsnprintf.c \
 
 EXTRA_SRCS-$(CONFIG_TINYCLI) += \
         modules/misc/hss_tinycli.c \

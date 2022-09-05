@@ -111,24 +111,6 @@ bool HSS_DDRPrintSegConfig(void)
     return true;
 }
 
-//
-// We use the GCC intrinsic __builtin_popcount() to count cache way bits set
-// if we don't have an implementation for __popcountdi2, we'll use the weakly
-// bound one here, which does some common bit tricks
-__attribute__((weak, used)) int64_t __popcountdi2(int64_t n);
-__attribute__((weak, used)) int64_t __popcountdi2(int64_t n)
-{
-    n = n - ((n >> 1) & 0x5555555555555555ul);
-    n = ((n >> 2) & 0x3333333333333333ul) + (n & 0x3333333333333333ul);
-    n = ((n >> 4) + n)  & 0x0f0f0f0f0f0f0f0ful;
-
-    n = ((n >> 32) + n); // & 0x00000000fffffffful;
-    n = ((n >> 16) + n); // & 0x000000000000fffful;
-    n = ((n >> 8) + n)  & 0x000000000000007ful;
-
-    return n;
-}
-
 bool HSS_DDRPrintL2CacheWaysConfig(void)
 {
     mHSS_DEBUG_PRINTF(LOG_STATUS, "L2 Cache Configuration:\n");

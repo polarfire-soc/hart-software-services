@@ -18,7 +18,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stddef.h>
-//#include <ctype.h>  // including ctype.h breaks the build currently
 #include <string.h>
 #include <sbi_string.h>
 
@@ -26,7 +25,6 @@
 
 #define MAX_TEXT_LENGTH   256
 
-//#ifndef CONFIG_OPENSBI
 __attribute__((weak)) size_t strnlen(const char *s, size_t count)
 {
     size_t result = 0;
@@ -109,7 +107,7 @@ __attribute__((weak)) void *memset(void *dest, int c, size_t n)
 #endif
 }
 
-__attribute__((weak)) size_t strlen (const char *s)
+__attribute__((weak)) size_t strlen(const char *s)
 {
 #ifndef CONFIG_OPENSBI
     size_t result = 0;
@@ -205,7 +203,6 @@ __attribute__((weak)) char *strtok_r(char *str, const char *delim, char **savept
     return result;
 }
 
-
 __attribute__((weak)) int strncmp(const char *s1, const char *s2, size_t n)
 {
     int result = 0;
@@ -232,7 +229,7 @@ __attribute__((weak)) int strncmp(const char *s1, const char *s2, size_t n)
 }
 
 
-__attribute__((weak)) int64_t __bswapdi2(int64_t a);
+int64_t __bswapdi2(int64_t a);
 __attribute__((weak)) int64_t __bswapdi2(int64_t a)
 {
     int64_t result;
@@ -297,6 +294,50 @@ __attribute__((weak)) uint64_t strtoul(const char * restrict nptr, char ** restr
     if (endptr) {
         *endptr = (char *)nptr;
     }
+
+    return result;
+}
+
+//
+// We use the GCC intrinsic __builtin_popcount() to count cache way bits set
+// if we don't have an implementation for __popcountdi2, we'll use the weakly
+// bound one here, which does some common bit tricks
+int64_t __popcountdi2(int64_t n);
+__attribute__((weak, used)) int64_t __popcountdi2(int64_t n)
+{
+    n = n - ((n >> 1) & 0x5555555555555555ul);
+    n = ((n >> 2) & 0x3333333333333333ul) + (n & 0x3333333333333333ul);
+    n = ((n >> 4) + n)  & 0x0f0f0f0f0f0f0f0ful;
+
+    n = ((n >> 32) + n); // & 0x00000000fffffffful;
+    n = ((n >> 16) + n); // & 0x000000000000fffful;
+    n = ((n >> 8) + n)  & 0x000000000000007ful;
+
+    return n;
+}
+
+
+//
+// fortify wrappers, if needed...
+//
+void * __memcpy_chk(void *dest, const void *src, size_t n, size_t os);
+__attribute__((weak)) void * __memcpy_chk(void *dest, const void *src, size_t n, size_t os)
+{
+    void * result = NULL;
+
+    (void)os;
+    result = memcpy(dest, src, n);
+
+    return result;
+}
+
+void * __memset_chk (void *s, int c, size_t n, size_t os);
+__attribute__((weak)) void * __memset_chk (void *s, int c, size_t n, size_t os)
+{
+    void * result = NULL;
+
+    (void)os;
+    result = memset(s, c, n);
 
     return result;
 }
