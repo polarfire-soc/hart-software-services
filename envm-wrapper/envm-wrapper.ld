@@ -70,7 +70,7 @@ MEMORY
     u54_2_itim (rwx) :	ORIGIN = 0x01810000,	LENGTH = 28k
     u54_3_itim (rwx) :	ORIGIN = 0x01818000,	LENGTH = 28k
     u54_4_itim (rwx) :	ORIGIN = 0x01820000,	LENGTH = 28k
-    l2lim (rwx) :	ORIGIN = 0x08000000,	LENGTH = (512k-144k)
+    l2lim (rwx) :	ORIGIN = 0x08000000,	LENGTH = 512k
     l2zerodevice (rwx) :ORIGIN = 0x0A000000,	LENGTH = 512k
     ddr (rwx) :		ORIGIN = 0x80000000,	LENGTH = 1024m
     ddrhi (rwx) :	ORIGIN = 0x1400000000,	LENGTH = 1024m
