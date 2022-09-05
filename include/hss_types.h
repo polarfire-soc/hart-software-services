@@ -131,7 +131,6 @@ struct HSS_BootChunkDesc {
 /**
  *  * \brief Descriptor for U54 Boot Zero-Initialized Chunk
  *   */
-#pragma pack(8)
 struct HSS_BootZIChunkDesc {
     enum HSSHartId owner;
     void *execAddr;
@@ -144,8 +143,6 @@ struct HSS_BootZIChunkDesc {
  * \warning The chunk table *must* be terminated with a size of 0 sentinel!
  */
 #define BOOT_IMAGE_MAX_NAME_LEN (256)
-
-#pragma pack(8)
 
 // pre crypto-signing, the BootImage format was slightly different, so to ensure
 // no CRC failures on older images, we provide a legacy structure here purely for sizing
@@ -176,7 +173,6 @@ struct HSS_Signature {
     uint8_t ecdsaSig[96]; // SECP384R1
 };
 
-#pragma pack(8)
 struct HSS_BootImage {
     uint32_t magic;
     uint32_t version;
@@ -203,7 +199,6 @@ struct HSS_BootImage {
  * \brief Compressed Image Structure
  *
  */
-#pragma pack(8)
 struct HSS_CompressedImage {
     uint32_t magic;
     uint32_t version;
