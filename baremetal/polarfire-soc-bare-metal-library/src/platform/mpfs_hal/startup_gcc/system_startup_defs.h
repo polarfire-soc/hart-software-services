@@ -14,7 +14,7 @@
  */
 
 #ifndef SYSTEM_STARTUP_DEFS_H
-#define SYSTEM_STARTUP_DESF_H
+#define SYSTEM_STARTUP_DEFS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,4 +43,4 @@ extern "C" {
 }
 #endif
 
-#endif /* SYSTEM_STARTUP_DESF_H */
+#endif /* SYSTEM_STARTUP_DEFS_H */

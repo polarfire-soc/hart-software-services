@@ -195,9 +195,9 @@ static void mss_mux_pre_mss_pll_config(void)
      *
      */
     volatile uint32_t i;
-    for(i = 0U; i < 400U; i++)
+    for(i = 0U; i < 200U; i++)
     {
-        i++;
+        ; //i++;
     }
 }
 

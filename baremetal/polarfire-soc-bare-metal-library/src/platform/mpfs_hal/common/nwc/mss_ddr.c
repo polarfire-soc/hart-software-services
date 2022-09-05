@@ -1106,7 +1106,7 @@ static uint32_t ddr_setup(void)
                         }
                         else
                         {
-                            vref_answer = vref_answer;
+                            //vref_answer = vref_answer;
                             dpc_bits_new=( CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS & 0xFFFC0FFF ) | (vref_answer <<12) | (0x1<<18U);
                         }
 
@@ -5182,7 +5182,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
         }
         else
         {
-            vref_answer = vref_answer;
+            //vref_answer = vref_answer;
             dpc_bits_new=( CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS & 0xFFFC0FFF ) | (vref_answer <<12) | (0x1<<18U);
         }
 
