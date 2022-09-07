@@ -88,7 +88,7 @@ $(TARGET-envm-wrapper): $(COMPRESSED_TARGET) $(OBJS-envm-wrapper)
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
 	$(call common-boot-mode-programmer,--dryrun,`basename $@`)
-	@$(CP) $(BINDIR)/bootmode1/hss-envm-wrapper-bm1-p0.hex $(BINDIR)/`basename $@ .elf`.hex
+	@$(CP) $(BINDIR)/bootmode1/hss-envm-wrapper-bm1-p0.hex $(BINDIR)/`basename $@ .elf`.${BOARD}.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm-wrapper) 2>/dev/null
 
 $(COMPRESSED_TARGET): $(BINDIR)/$(TARGET-l2scratch:.elf=.bin) $(COMPRESS)
