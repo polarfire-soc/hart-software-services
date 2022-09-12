@@ -25,6 +25,10 @@ extern "C" {
 #define MMC_SET                         1u
 #define SHIFT_16BIT                     16u
 #define DELAY_COUNT                     0xFFFFu
+#define SDHCI_CMD_MAX_TIMEOUT           3200u
+#define SDHCI_CMD_DEFAULT_TIMEOUT       100u
+#define CMD_INDEX_MASK                  0x3Fu
+#define CMD_TYPE_MASK                   0xC0u
 
 /***************************************************************************//**
  * Local Function Prototypes
@@ -45,9 +49,30 @@ cif_response_t cif_send_cmd
 {
     uint32_t trans_status_isr;
     cif_response_t ret_status = TRANSFER_IF_FAIL;
+    uint32_t time = MMC_CLEAR;
+    uint32_t cmd_timeout = SDHCI_CMD_DEFAULT_TIMEOUT;
+    uint32_t value = DELAY_COUNT;
 
-   /* clear all status interrupts except:
-    * current limit error, card interrupt, card removal, card insertion */
+    /* check if command line is not busy */
+    while ((MMC->SRS09 & SRS9_CMD_INHIBIT_CMD) != NO_CMD_INHIBIT)
+    {
+        if (time >= cmd_timeout)
+        {
+            if (2u * cmd_timeout <= SDHCI_CMD_MAX_TIMEOUT)
+            {
+                cmd_timeout += cmd_timeout;
+            }
+            else
+            {
+                return TRANSFER_IF_FAIL;
+            }
+        }
+        time++;
+        while (value--);
+        value = DELAY_COUNT;
+    }
+    /* clear all status interrupts except:
+     * current limit error, card interrupt, card removal, card insertion */
     MMC->SRS12 = ~(SRS12_CURRENT_LIMIT_ERROR
                             | SRS12_CARD_INTERRUPT
                             | SRS12_CARD_REMOVAL
@@ -62,7 +87,8 @@ cif_response_t cif_send_cmd
     {
         trans_status_isr = MMC->SRS12;
 
-        if (SRS12_COMMAND_COMPLETE == (trans_status_isr & SRS12_COMMAND_COMPLETE))
+        if ((SRS12_COMMAND_COMPLETE == (trans_status_isr & SRS12_COMMAND_COMPLETE)) &&
+            (MMC_CLEAR == (SRS12_ERROR_INTERRUPT & trans_status_isr)))
         {
             /* If the response is an R1/B response */
             if ((MSS_MMC_RESPONSE_R1 == resp_type) || (MSS_MMC_RESPONSE_R1B == resp_type))
@@ -109,19 +135,15 @@ void send_mmc_cmd
     cmd_response_check_options cmd_option
 )
 {
-    uint32_t command_information;
-    uint32_t srs9, trans_status_isr;
-
-    /* check if command line is not busy */
-    do
-    {
-        srs9 = MMC->SRS09;
-    }while ((srs9 & SRS9_CMD_INHIBIT_CMD) != NO_CMD_INHIBIT);
+    uint32_t cmd_index, command_information;
+    uint32_t trans_status_isr;
 
     command_information = process_request_checkresptype(resp_type);
+	cmd_index = cmd_type & CMD_INDEX_MASK;
+	cmd_type = (cmd_type & CMD_TYPE_MASK) << SHIFT_16BIT;
 
     MMC->SRS02 = cmd_arg;
-    MMC->SRS03 = (uint32_t)((cmd_type << CMD_SHIFT) | command_information);
+    MMC->SRS03 = (uint32_t)((cmd_index << CMD_SHIFT) | cmd_type | command_information);
 
     switch (cmd_option)
     {
