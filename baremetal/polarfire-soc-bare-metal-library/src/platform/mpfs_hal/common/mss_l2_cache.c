@@ -46,7 +46,7 @@ static void check_config_l2_scratchpad(void);
  */
 __attribute__((weak)) void config_l2_cache(void)
 {
-    ASSERT(LIBERO_SETTING_WAY_ENABLE < 16U);
+    _Static_assert(LIBERO_SETTING_WAY_ENABLE < 16U, "Too many ways");
 
     /*
      * confirm the amount of l2lim used in the Linker script has been allocated
@@ -70,12 +70,12 @@ __attribute__((weak)) void config_l2_cache(void)
 
     /* If you are not using scratchpad, no need to include the following code */
 
-    ASSERT(LIBERO_SETTING_WAY_ENABLE >= LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS);
+    _Static_assert(LIBERO_SETTING_WAY_ENABLE >= LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS, "Scratchpad Missing");
 
 
 
     /*
-     * Compute the mask used to specify ways that will be used by the
+     * Compute the CONFIG_SERVICE_SCRUB=ymask used to specify ways that will be used by the
      * scratchpad.
      */
 

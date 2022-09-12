@@ -18,6 +18,7 @@
 #include "hss_debug.h"
 #include "hss_crc32.h"
 
+#if IS_ENABLED(CONFIG_CRC32_USE_PRECALC_TABLE)
 static const uint32_t precalcTable_[256] = {
     0x00000000u, 0x77073096u, 0xEE0E612Cu, 0x990951BAu, 0x076DC419u, 0x706AF48Fu,
     0xE963A535u, 0x9E6495A3u, 0x0EDB8832u, 0x79DCB8A4u, 0xE0D5E91Eu, 0x97D2D988u,
@@ -63,6 +64,39 @@ static const uint32_t precalcTable_[256] = {
     0x54DE5729u, 0x23D967BFu, 0xB3667A2Eu, 0xC4614AB8u, 0x5D681B02u, 0x2A6F2B94u,
     0xB40BBE37u, 0xC30C8EA1u, 0x5A05DF1Bu, 0x2D02EF8Du
 };
+#else
+// We can save space in eNVM (when compressed)
+// by calculating the CRC32 table on the fly once
+static bool precalc_initialized_ = false;
+static uint32_t precalcTable_[256] = { 0u, };
+
+static void CRC32_genTable_(void);
+static void CRC32_genTable_(void)
+{
+	uint32_t crc;
+	uint8_t i;
+
+	// Polynomial defining this crc (except x^32):
+	// static const char p[] = { 0, 1, 2, 4, 5, 7, 8, 10, 11, 12, 16, 22, 23, 26 };
+
+	// Generate xor pattern from polynomial (0xedb88320)
+	// uint32_t xor_pattern = 0u;
+	// for (i = 0; i < ARRAY_SIZE(p); i++) {
+	//	xor_pattern |= 1ul << (31 - p[i]);
+	// }
+	const uint32_t xor_pattern = 0xEDB88320u;
+
+	// Compute table of CRC's
+	for (i = 1; i /* < 256 */; i++) {
+		crc = i;
+
+		for (uint8_t bit = 8u; bit; bit--) {
+			crc = crc & 1 ? (crc >> 1) ^ xor_pattern : crc >> 1;
+		}
+		precalcTable_[i] = crc;
+	}
+}
+#endif
 
 #define CRC32_MASK (0xFFFFFFFFu)
 #define	CRC32_SEED (CRC32_MASK)
@@ -87,6 +121,13 @@ uint32_t CRC32_calculate(uint8_t const *pInput, size_t numBytes)
 uint32_t CRC32_calculate_ex(uint32_t seed, uint8_t const *pInput, size_t numBytes)
 {
     uint32_t crc32 = ~seed;
+
+#if !IS_ENABLED(CONFIG_CRC32_USE_PRECALC_TABLE)
+    if (!precalc_initialized_) {
+        precalc_initialized_ = true;
+        CRC32_genTable_();
+    }
+#endif
 
     if (pInput != NULL) {
         while (numBytes--) {
