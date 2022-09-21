@@ -66,17 +66,30 @@ $(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 
 ################################################################################################
 #
-# Extra hardware dependency rules for YMODEM
+# Extra hardware dependency rules for QSPI
 #
 
 INCLUDES += \
 	-Ibaremetal/ \
+
+ifdef CONFIG_SERVICE_QSPI_WINBOND_W25N01GV
+INCLUDES += \
 	-Ibaremetal/drivers/winbond_w25n01gv \
 
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
-
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
+endif
+
+ifdef CONFIG_SERVICE_QSPI_MICRON_MQ25T
+INCLUDES += \
+	-Ibaremetal/drivers/micron_mq25t \
+
+EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
+	baremetal/drivers/micron_mq25t/micron_mq25t.c
+baremetal/drivers/micron_mq25t/micron_mq25t.o: CFLAGS=$(CFLAGS_GCCEXT)
+endif
+
 
 ################################################################################################
 #

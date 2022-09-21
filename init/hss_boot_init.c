@@ -409,7 +409,6 @@ static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootI
         sizeof(struct HSS_BootImage));
     result = HSS_QSPI_ReadBlock(&bootImage, srcLBAOffset * blockSize,
         sizeof(struct HSS_BootImage));
-
     if (!result) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_QSPI_ReadBlock() failed\n");
     } else {
