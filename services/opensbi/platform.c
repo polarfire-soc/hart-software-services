@@ -127,6 +127,8 @@ static struct {
     int boot_pending;
     int reset_type;
     int reset_reason;
+    bool allow_cold_reboot;
+    bool allow_warm_reboot;
 } hart_ledger[MAX_NUM_HARTS] = { { { 0, }, } };
 
 extern unsigned long STACK_SIZE_PER_HART;
@@ -179,10 +181,6 @@ static int mpfs_system_reset_check(u32 reset_type, u32 reset_reason)
         result = 1;
         break;
     }
-
-    //const u32 hartid = current_hartid();
-    //hart_ledger[hartid].reset_reason = reset_reason;
-    //hart_ledger[hartid].reset_type = reset_type;
 
     return result;
 }
@@ -461,7 +459,7 @@ bool mpfs_is_last_hart_ready(void)
 }
 
 void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid, u32 privMode,
-     void * entryPoint, void * pArg1)
+     void * entryPoint, void * pArg1, bool allow_cold_reboot, bool allow_warm_reboot)
 {
     assert(hart_ledger[boot_hartid].owner_hartid == boot_hartid);
 
@@ -470,6 +468,8 @@ void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid,
     hart_ledger[boot_hartid].next_arg1 = (u64)pArg1;
     hart_ledger[boot_hartid].hartMask.bits[0] = hartMask;
     hart_ledger[boot_hartid].next_mode = privMode;
+    hart_ledger[boot_hartid].allow_cold_reboot = allow_cold_reboot;
+    hart_ledger[boot_hartid].allow_warm_reboot = allow_warm_reboot;
 }
 
 static struct sbi_domain dom_table[MAX_NUM_HARTS] = { 0 };
@@ -547,11 +547,15 @@ static int mpfs_hart_stop(void)
         case SBI_SRST_RESET_TYPE_SHUTDOWN:
             break;
 
+#if IS_ENABLED(CONFIG_ALLOW_COLDREBOOT)
         case SBI_SRST_RESET_TYPE_COLD_REBOOT:
-#if IS_ENABLED(CONFIG_SERVICE_WDOG)
-            HSS_Wdog_Reboot(HSS_HART_ALL);
-            break;
-#else
+#  if IS_ENABLED(CONFIG_SERVICE_WDOG)
+            if (hart_ledger[hartid].allow_cold_reboot) {
+                HSS_Wdog_Reboot(HSS_HART_ALL);
+            } else {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d not permitted to cold reboot\n", hartid);
+            }
+#  endif
             __attribute__((fallthrough)); // deliberate fallthrough
 #endif
         case SBI_SRST_RESET_TYPE_WARM_REBOOT:

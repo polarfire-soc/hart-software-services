@@ -96,8 +96,10 @@ enum HSSHartId {
 #define MAX_NUM_HARTS ((unsigned)HSS_HART_NUM_PEERS)
 #define mHSS_BITMASK_ALL_U54 (0x1Eu)
 
-#define BOOT_FLAG_ANCILLIARY_DATA (0x80u)
-#define BOOT_FLAG_SKIP_OPENSBI    (0x40u)
+#define BOOT_FLAG_ANCILLIARY_DATA      (0x80u)
+#define BOOT_FLAG_SKIP_OPENSBI         (0x40u)
+#define BOOT_FLAG_ALLOW_COLD_REBOOT    (0x20u)
+#define BOOT_FLAG_ALLOW_WARM_REBOOT    (0x10u)
 
 typedef union HSSHartBitmask {
     unsigned int uint;

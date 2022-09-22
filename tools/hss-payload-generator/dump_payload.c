@@ -128,6 +128,12 @@ void dump_payload(const char *filename_input)
 			if (pBootImage->hart[i].flags & BOOT_FLAG_SKIP_OPENSBI) {
 				printf(" SKIP_OPENSBI");
 			}
+			if (pBootImage->hart[i].flags & BOOT_FLAG_ALLOW_COLD_REBOOT) {
+				printf(" COLD_REBOOT");
+			}
+			if (pBootImage->hart[i].flags & BOOT_FLAG_ALLOW_WARM_REBOOT) {
+				printf(" WARM_REBOOT");
+			}
 			printf("\n");
 		}
 

@@ -51,7 +51,7 @@ void mpfs_domains_register_hart(int hartid, int boot_hartid);
 void mpfs_domains_deregister_hart(int hartid);
 
 void mpfs_domains_register_boot_hart(char *pName, u32 hartMask, int boot_hartid,
-    u32 privMode, void * entryPoint, void * pArg1);
+    u32 privMode, void * entryPoint, void * pArg1, bool allow_cold_reboot, bool allow_warm_reboot);
 void mpfs_mark_hart_as_booted(int hartid);
 bool mpfs_is_last_hart_ready(void);
 bool mpfs_is_hart_using_opensbi(int hartid);

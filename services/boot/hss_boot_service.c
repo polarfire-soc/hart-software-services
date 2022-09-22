@@ -386,7 +386,9 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
                 pInstanceData->hartMask, target,
                 pBootImage->hart[target-1].privMode,
                 (void *)pBootImage->hart[target-1].entryPoint,
-                (void *)pInstanceData->ancilliaryData);
+                (void *)pInstanceData->ancilliaryData,
+		pBootImage->hart[target-1].flags & BOOT_FLAG_ALLOW_COLD_REBOOT,
+		pBootImage->hart[target-1].flags & BOOT_FLAG_ALLOW_WARM_REBOOT);
         }
     }
 }

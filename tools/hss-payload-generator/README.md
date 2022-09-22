@@ -61,6 +61,8 @@ Case only matters for the file path names, not the keywords. So, for instance, `
 
 For a bare metal application that doesn't want to be concerned with OpenSBI, the option `skip-opensbi`, if true, will cause the payload on that hart to be invoked using a simple mret rather than an OpenSBI `sbi_init()` call. This means the hart will start running the bare metal code irrespective of any OpenSBI HSM considerations. Note that this also means the hart cannot use `ECALL`s to invoke OpenSBI functionality.  The `skip-opensbi` option is optional, and defaults to false.
 
+To allow a context warm reboot another context, we can add the option `allow-reboot: warm`. To allow a context cold reboot the entire system, we can add the option `allow-reboot: cold`. By default, without specifying `allow-reboot`, a context is only allowed warm reboot itself.
+
 It is also possible to associate ancilliary data with each payload, for example a devicetree blob (DTB) file, by specifying the ancilliary-data filename as follows:
 
     test/u-boot-icicle-kit-es-2022.01-r0.bin: { exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/icicle-kit-es-microchip.dtb }
@@ -80,14 +82,14 @@ Here is the complete example:
     hart-entry-points: {u54_1: '0x80200000', u54_2: '0x80200000', u54_3: '0xB0000000', u54_4: '0x80200000'}
     payloads:
       test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m, skip-opensbi: true}
-      test/u-boot-dtb.bin:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s, payload-name: 'u-boot-dtb'}
+      test/u-boot-dtb.bin:    {exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_4, priv-mode: prv_s, payload-name: 'u-boot-dtb', allow-reboot: warm}
 
 Here is another example, this time of a bare metal SMP application that doesn't require OpenSBI:
 
     set-name: 'PolarFire-SoC-HSS::SMPBareMetal'
     hart-entry-points: {u54_1: '0x80000000', u54_2: '0x80000000', u54_3: '0x80000000', u54_4: '0x80000000'}
     payloads:
-      path/to/smp-baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_m, skip-opensbi: true}
+      path/to/smp-baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_m, skip-opensbi: true, allow-reboot: cold }
 
 ## File Structure
 
