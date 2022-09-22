@@ -174,7 +174,6 @@ static void demandCopyFlashBlocksToCache_(size_t byteOffset, size_t byteCount, b
     }
 }
 
-
 #if IS_ENABLED(CONFIG_SERVICE_QSPI_MICRON_MQ25T)
 static uint8_t flashEraseSector(uint32_t addr)
 {

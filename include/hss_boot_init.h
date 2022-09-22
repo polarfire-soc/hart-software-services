@@ -40,6 +40,7 @@ void HSS_BootSelectMMC(void);
 void HSS_BootSelectPayload(void);
 void HSS_BootSelectSPI(void);
 
+void HSS_BootListStorageProviders(void);
 #ifdef __cplusplus
 }
 #endif

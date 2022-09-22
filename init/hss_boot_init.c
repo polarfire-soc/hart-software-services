@@ -167,7 +167,13 @@ struct HSS_Storage *HSS_BootGetActiveStorage(void)
     }
 
     return pResult;
+}
 
+void HSS_BootListStorageProviders(void)
+{
+    for (uint32_t i = 0; i < ARRAY_SIZE(pStorages); i++) {
+        mHSS_DEBUG_PRINTF_EX(" - %s\n", pStorages[i]->name);
+    }
 }
 
 bool HSS_BootInit(void)
