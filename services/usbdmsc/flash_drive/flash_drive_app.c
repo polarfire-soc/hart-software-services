@@ -12,7 +12,7 @@
 
 #include "config.h"
 
-// undefine OPENSBI as we want to use MPFS_HAL types in thie module
+// undefine OPENSBI as we want to use MPFS_HAL types in this module
 #undef CONFIG_OPENSBI
 #include "mss_plic.h"
 #include "mss_clint.h"
@@ -147,7 +147,6 @@ bool FLASH_DRIVE_init(void)
   Local function definitions
 */
 
-//#define IS_ENABLED defined
 #undef MIN
 #include "hss_types.h"
 
@@ -167,9 +166,6 @@ void FLASH_DRIVE_dump_xfer_status(void)
     if (HSS_Timer_IsElapsed(last_sec_time, 5*TICKS_PER_SEC) ||
         ((lastWriteCount == writeCount) && (lastReadCount == readCount))) {
         activeThrobber = '.';
-
-        //void HSS_Storage_FlushWriteBuffer(void);
-        //HSS_Storage_FlushWriteBuffer();
     } else if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
         activeThrobber = throbber[throbber_iterator];
         throbber_iterator++;

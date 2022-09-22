@@ -123,6 +123,9 @@ endif
 # is compile toolchain what we are expecting?
 
 ifeq ($(HOST_LINUX), true)
+  ifeq ($, $(shell which $(CC)))
+    $(error "No $(CC) in $(PATH)"
+  endif
   CC_VERSION = $(strip $(shell $(CC) -dumpversion))
   EXPECTED_CC_VERSION := 8.3.0
   ifneq ($(CC_VERSION),$(EXPECTED_CC_VERSION))
