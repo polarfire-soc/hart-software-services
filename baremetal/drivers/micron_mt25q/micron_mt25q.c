@@ -15,7 +15,7 @@
  * transmit 4 bytes address.
  *
  */
-#include "drivers/micron_mq25t/micron_mq25t.h"
+#include "drivers/micron_mt25q/micron_mt25q.h"
 #include "drivers/mss/mss_mmuart/mss_uart.h"
 
 

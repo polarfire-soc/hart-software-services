@@ -31,7 +31,7 @@
 #  include "winbond_w25n01gv.h"
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_QSPI_MICRON_MQ25T)
-#  include "micron_mq25t.h"
+#  include "micron_mt25q.h"
 #endif
 
 /*

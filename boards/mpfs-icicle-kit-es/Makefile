@@ -83,11 +83,11 @@ endif
 
 ifdef CONFIG_SERVICE_QSPI_MICRON_MQ25T
 INCLUDES += \
-	-Ibaremetal/drivers/micron_mq25t \
+	-Ibaremetal/drivers/micron_mt25q \
 
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
-	baremetal/drivers/micron_mq25t/micron_mq25t.c
-baremetal/drivers/micron_mq25t/micron_mq25t.o: CFLAGS=$(CFLAGS_GCCEXT)
+	baremetal/drivers/micron_mt25q/micron_mt25q.c
+baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
 endif
 
 
