@@ -24,4 +24,15 @@ config SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS
                 This parameter throttles the scrubbing service to only run once every
                 specified number of superloop iterations.
 
+config SERVICE_SCRUB_CACHED_DDR
+	bool "Cached RAM Scrubbing support"
+	default n
+	help
+                This feature enables support for Cached RAM. This will conflict
+                with any Linux drivers using non-coherent DMA transfers for speed
+                on PolarFire SoC, such as PCIe, but may be of use in bare metal
+                systems where the working set won't guarantee sufficient
+                flushing of the cache to prevent undetected singe-bit errors.
+
+		If you do not know what to do here, say N.
 endmenu

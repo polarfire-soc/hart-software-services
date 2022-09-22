@@ -26,6 +26,10 @@
 #include "scrub_service.h"
 #include "scrub_types.h"
 
+#ifndef PRIx64
+#  define PRIx64 "llu"
+#endif
+
 static void scrub_init_handler(struct StateMachine * const pMyMachine);
 static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine);
 
@@ -77,6 +81,7 @@ extern const uint64_t __l2lim_start,         __l2lim_end;
 extern const uint64_t __l2_start, __l2_end;
 extern const uint64_t __ddr_start,           __ddr_end;
 extern const uint64_t __ddrhi_start,         __ddrhi_end;
+extern const uint64_t __ncddrhi_start,       __ncddrhi_end;
 extern const uint64_t __dtim_start,          __dtim_end;
 extern const uint64_t __e51itim_start,       __e51itim_end;
 extern const uint64_t __u54_1_itim_start,    __u54_1_itim_end;
@@ -91,8 +96,11 @@ const struct {
     { (uintptr_t)&__l2lim_start,         (uintptr_t)&__l2lim_end },
     { (uintptr_t)&__l2_start,            (uintptr_t)&__l2_end },
 #if !IS_ENABLED(CONFIG_SKIP_DDR)
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB_CACHED_DDR)
     { (uintptr_t)&__ddr_start,           (uintptr_t)&__ddr_end },
     { (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end },
+#endif
+    { (uintptr_t)&__ncddrhi_start,       (uintptr_t)&__ncddrhi_end },
 #endif
     //{ (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
     //{ (uintptr_t)&__e51itim_start,       (uintptr_t)&__e51itim_end },
@@ -143,7 +151,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
 void scrub_dump_stats(void)
 {
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "index:      0x%" PRIx64 "\n", index);
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Mem base:   0x%" PRIx64 "\n", rams[index].baseAddr);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "mem base:   0x%" PRIx64 "\n", rams[index].baseAddr);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "offset:     0x%" PRIx64 "\n", offset);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "entryCount: 0x%" PRIx64 "\n", entryCount);
 }
