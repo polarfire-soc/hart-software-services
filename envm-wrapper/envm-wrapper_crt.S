@@ -389,6 +389,9 @@ config_copy:
        .align 8
 decomp_msg:
        .ascii "\033[2J\033[H"
+#if defined(CONFIG_COLOR_OUTPUT)
+       .ascii "\033[0m"
+#endif
        .asciz "\r\nHSS: decompressing from eNVM to L2 Scratch ... \0"
 passed_msg:
        .asciz "Passed\r\n"
