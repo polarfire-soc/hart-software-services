@@ -49,6 +49,21 @@ config ALLOW_COLDREBOOT
 
 		If you do not know what to do here, say Y.
 
+menu "Cold Reboot"
+	visible if ALLOW_COLDREBOOT
+
+config ALLOW_COLDREBOOT_ALWAYS
+	bool "Always allow contexts to issue a cold reboot"
+	default y
+	depends on ALLOW_COLDREBOOT
+	help
+		If enabled, this feature globally allows all contexts to issue a
+		cold reboot ecall, irrespective of payload.bin flag entitlements.
+
+		If you do not know what to do here, say Y.
+
+endmenu
+
 endmenu
 
 menu "OpenSBI"
