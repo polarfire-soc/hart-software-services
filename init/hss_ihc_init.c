@@ -61,14 +61,16 @@ bool HSS_IHCInit(void)
     const bool e51_mp_enable = false;
     const bool u54_mp_enable = true;
     const bool ack_disable   = false;
+#endif
 
     for (uint32_t remote_hartid = (uint32_t)HSS_HART_U54_1; remote_hartid <= (uint32_t)HSS_HART_U54_4; remote_hartid++) {
 
         IHC_local_context_init(remote_hartid);
+#if IS_ENABLED(CONFIG_HSS_USE_IHC)
         IHC_local_remote_config(local_hartid, remote_hartid, hss_ihc_incoming_, e51_mp_enable, ack_disable);
         IHC_local_remote_config(remote_hartid, local_hartid, u54_ihc_incoming_, u54_mp_enable, ack_disable);
-    }
 #endif
+    }
 
     return true;
 }
