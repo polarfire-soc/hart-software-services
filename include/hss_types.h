@@ -100,6 +100,7 @@ enum HSSHartId {
 #define BOOT_FLAG_SKIP_OPENSBI         (0x40u)
 #define BOOT_FLAG_ALLOW_COLD_REBOOT    (0x20u)
 #define BOOT_FLAG_ALLOW_WARM_REBOOT    (0x10u)
+#define BOOT_FLAG_SKIP_AUTOBOOT        (0x08u)
 
 typedef union HSSHartBitmask {
     unsigned int uint;

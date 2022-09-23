@@ -134,6 +134,9 @@ void dump_payload(const char *filename_input)
 			if (pBootImage->hart[i].flags & BOOT_FLAG_ALLOW_WARM_REBOOT) {
 				printf(" WARM_REBOOT");
 			}
+			if (pBootImage->hart[i].flags & BOOT_FLAG_SKIP_AUTOBOOT) {
+				printf(" SKIP_AUTOBOOT");
+			}
 			printf("\n");
 		}
 

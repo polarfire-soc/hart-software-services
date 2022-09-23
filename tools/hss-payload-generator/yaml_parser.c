@@ -89,6 +89,7 @@ enum token
 	TOKEN_PAYLOAD_PRIV_MODE,
 	TOKEN_PAYLOAD_SKIP_OPENSBI,
 	TOKEN_PAYLOAD_ALLOW_REBOOT,
+	TOKEN_PAYLOAD_SKIP_AUTOBOOT,
 	TOKEN_PAYLOAD_ANCILLIARY_DATA,
 	TOKEN_PRIV_MODE_M,
 	TOKEN_PRIV_MODE_H,
@@ -119,6 +120,7 @@ const struct hss_config_token tokens[] = {
 	{ TOKEN_PAYLOAD_SECONDARY_HART,		"secondary-hart" },
 	{ TOKEN_PAYLOAD_SKIP_OPENSBI,		"skip-opensbi" },
 	{ TOKEN_PAYLOAD_ALLOW_REBOOT,		"allow-reboot" },
+	{ TOKEN_PAYLOAD_SKIP_AUTOBOOT,		"skip-autoboot" },
 	{ TOKEN_PAYLOAD_ANCILLIARY_DATA,	"ancilliary-data" },
 	{ TOKEN_PRIV_MODE_M,			"prv_m" },
 	{ TOKEN_PRIV_MODE_S,			"prv_s" },
@@ -152,6 +154,7 @@ enum ParserState
 	STATE_NEW_PAYLOAD_SECONDARY_HART,
 	STATE_NEW_PAYLOAD_SKIP_OPENSBI,
 	STATE_NEW_PAYLOAD_ALLOW_REBOOT,
+	STATE_NEW_PAYLOAD_SKIP_AUTOBOOT,
 	STATE_NEW_PAYLOAD_ANCILLIARY_DATA,
 };
 
@@ -176,6 +179,7 @@ const char * const stateNames[] =
 	[ STATE_NEW_PAYLOAD_SECONDARY_HART ] =	"STATE_NEW_PAYLOAD_SECONDARY_HART",
 	[ STATE_NEW_PAYLOAD_SKIP_OPENSBI ] =	"STATE_NEW_PAYLOAD_SKIP_OPENSBI",
 	[ STATE_NEW_PAYLOAD_ALLOW_REBOOT ] =	"STATE_NEW_PAYLOAD_ALLOW_REBOOT",
+	[ STATE_NEW_PAYLOAD_SKIP_AUTOBOOT ] =	"STATE_NEW_PAYLOAD_SKIP_AUTOBOOT",
 	[ STATE_NEW_PAYLOAD_ANCILLIARY_DATA ] =	"STATE_NEW_PAYLOAD_ANCILLIARY_DATA",
 };
 
@@ -217,6 +221,7 @@ static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)		__attribut
 static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)	__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI(yaml_event_t *pEvent)		__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_ALLOW_REBOOT(yaml_event_t *pEvent)		__attribute__((nonnull));
+static void Handle_STATE_NEW_PAYLOAD_SKIP_AUTOBOOT(yaml_event_t *pEvent)	__attribute__((nonnull));
 static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)	__attribute__((nonnull));
 
 /////////////////////////////////////////////////////////////////////////////
@@ -249,6 +254,7 @@ static struct StateHandler stateHandler[] = {
 	{ STATE_NEW_PAYLOAD_SECONDARY_HART,	Handle_STATE_NEW_PAYLOAD_SECONDARY_HART },
 	{ STATE_NEW_PAYLOAD_SKIP_OPENSBI,	Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI },
 	{ STATE_NEW_PAYLOAD_ALLOW_REBOOT,	Handle_STATE_NEW_PAYLOAD_ALLOW_REBOOT },
+	{ STATE_NEW_PAYLOAD_SKIP_AUTOBOOT,	Handle_STATE_NEW_PAYLOAD_SKIP_AUTOBOOT },
 	{ STATE_NEW_PAYLOAD_ANCILLIARY_DATA,	Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA },
 };
 
@@ -648,6 +654,7 @@ static size_t secondary_idx = 0u;
 
 static bool ancilliary_data_present_flag = false;
 static bool skip_opensbi_flag = false;
+static bool skip_autoboot_flag = false;
 static bool allow_cold_reboot_flag = false;
 static bool allow_warm_reboot_flag = false;
 static char ancilliary_name[BOOT_IMAGE_MAX_NAME_LEN];
@@ -683,6 +690,7 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 		skip_opensbi_flag = false;
 		allow_cold_reboot_flag = false;
 		allow_warm_reboot_flag = false;
+		skip_autoboot_flag = false;
 
 		Do_State_Transition(STATE_NEW_PAYLOAD);
 		break;
@@ -773,6 +781,11 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 		case TOKEN_PAYLOAD_SKIP_OPENSBI:
 			debug_printf(1, "\tskipping OpenSBI for this context\n");
 			Do_State_Transition(STATE_NEW_PAYLOAD_SKIP_OPENSBI);
+			break;
+
+		case TOKEN_PAYLOAD_SKIP_AUTOBOOT:
+			debug_printf(1, "\tskipping autoboot for this payload\n");
+			Do_State_Transition(STATE_NEW_PAYLOAD_SKIP_AUTOBOOT);
 			break;
 
 		case TOKEN_PAYLOAD_ALLOW_REBOOT:
@@ -933,6 +946,10 @@ static void populate_boot_flags(void)
 		flags |= BOOT_FLAG_ALLOW_WARM_REBOOT;
 	} else if (allow_warm_reboot_flag) {
 		flags |= BOOT_FLAG_ALLOW_WARM_REBOOT;
+	}
+
+	if (skip_autoboot_flag) {
+		flags |= BOOT_FLAG_SKIP_AUTOBOOT;
 	}
 
 	bootImage.hart[base_owner-1].flags = flags;
@@ -1096,6 +1113,39 @@ static void Handle_STATE_NEW_PAYLOAD_ALLOW_REBOOT(yaml_event_t *pEvent)
                         exit(EXIT_FAILURE);
                         break;
                 }
+		Do_State_Transition(STATE_NEW_PAYLOAD);
+                break;
+
+        default:
+                report_illegal_event(stateNames[parser_state], pEvent);
+                exit(EXIT_FAILURE);
+                break;
+        }
+}
+
+static void Handle_STATE_NEW_PAYLOAD_SKIP_AUTOBOOT(yaml_event_t *pEvent)
+{
+        assert(pEvent);
+	uint8_t value;
+
+        switch (pEvent->type) {
+        case YAML_MAPPING_START_EVENT:
+                break;
+
+        case YAML_MAPPING_END_EVENT:
+                Do_State_Transition(STATE_MAPPING);
+                break;
+
+        case YAML_SCALAR_EVENT:
+		if (!strncasecmp((char *)pEvent->data.scalar.value, "true", 4)) {
+			value = 1;
+		} else {
+			value = (uint8_t)strtoul((char *)pEvent->data.scalar.value, NULL, 0);
+		}
+
+                if (value) {
+			skip_autoboot_flag = true;
+		}
 		Do_State_Transition(STATE_NEW_PAYLOAD);
                 break;
 
