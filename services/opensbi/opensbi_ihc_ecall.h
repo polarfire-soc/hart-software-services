@@ -45,8 +45,8 @@ struct mpfs_ihc_msg {
 };
 
 struct ihc_sbi_rx_msg {
-    uint8_t irq_type;
     struct mpfs_ihc_msg ihc_msg;
+    uint8_t irq_type;
 };
 
 int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,

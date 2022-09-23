@@ -43,7 +43,7 @@ static uint32_t message_present_handler(uint32_t remote_hart_id, uint32_t * mess
         msg.irq_type = ACK_IRQ;
     } else {
         msg.irq_type = MP_IRQ;
-        memcpy((uint32_t *) &msg.ihc_msg, message, message_size);
+        memcpy((uint32_t *) &msg.ihc_msg, message, message_size * (sizeof(uint32_t)));
     }
 
     memcpy((uint32_t *) message_storage_ptr, (uint32_t *) &msg, sizeof(struct ihc_sbi_rx_msg));
