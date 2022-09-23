@@ -29,8 +29,8 @@ void HSS_U54_SetState(int state)
 
     switch (myHartId) {
     case HSS_HART_U54_1 ... HSS_HART_U54_4:
-        mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "u54_%d :: [%s] -> [%s]\n", myHartId,
-            HSS_U54_GetStateName(HSS_U54_GetState_Ex(myHartId)), HSS_U54_GetStateName(state));
+        //mHSS_DEBUG_PRINTF(LOG_STATE_TRANSITION, "u54_%d :: [%s] -> [%s]\n", myHartId,
+        //    HSS_U54_GetStateName(HSS_U54_GetState_Ex(myHartId)), HSS_U54_GetStateName(state));
         HSS_U54_SetState_Ex(myHartId, state);
         break;
 
