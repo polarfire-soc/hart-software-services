@@ -32,6 +32,10 @@
 #  include "opensbi_ihc_ecall.h"
 #endif
 
+#if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
+#  include "opensbi_rproc_ecall.h"
+#endif
+
 #include "hss_boot_service.h"
 
 int HSS_SBI_ECALL_Handler(long extid, long funcid,
@@ -53,6 +57,16 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
 #endif
             break;
 
+        case SBI_EXT_RPROC_STATE:
+            __attribute__((fallthrough)); // deliberate fallthrough
+        case SBI_EXT_RPROC_START:
+            __attribute__((fallthrough)); // deliberate fallthrough
+        case SBI_EXT_RPROC_STOP:
+#if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
+            result = sbi_ecall_rproc_handler(extid, funcid, regs, out_val, out_trap);
+#endif
+            break;
+
         //
         // HSS functions
         case SBI_EXT_HSS_REBOOT:
@@ -66,10 +80,10 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
     };
 
 //exit:
-    if (result >= 0) {
-        *out_val = result;
-        result = 0;
-    }
+    //if (result >= 0) {
+    //    *out_val = result;
+    //    result = 0;
+    //}
     return result;
 }
 

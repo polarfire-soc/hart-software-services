@@ -13,3 +13,11 @@ config SERVICE_OPENSBI_IHC
                 This feature enables support for IHC ecall service.
                 
 		If you do not know what to do here, say Y.
+
+config SERVICE_OPENSBI_RPROC
+	def_bool y
+	depends on SERVICE_OPENSBI_IHC
+	help
+                This feature enables support for Remote Proc ecall service.
+                
+		If you do not know what to do here, say Y.

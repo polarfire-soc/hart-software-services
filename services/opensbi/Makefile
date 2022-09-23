@@ -75,6 +75,9 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 SRCS-$(CONFIG_SERVICE_OPENSBI_IHC) += \
 	services/opensbi/opensbi_ihc_ecall.c \
 
+SRCS-$(CONFIG_SERVICE_OPENSBI_RPROC) += \
+    services/opensbi/opensbi_rproc_ecall.c \
+
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/riscv_hardfp.S \
 	thirdparty/opensbi/lib/sbi/sbi_expected_trap.S \

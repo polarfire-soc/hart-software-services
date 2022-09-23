@@ -52,6 +52,10 @@ extern "C" {
 #define SBI_EXT_IHC_SEND       0x01
 #define SBI_EXT_IHC_RECEIVE    0x02
 
+#define SBI_EXT_RPROC_STATE    0x03
+#define SBI_EXT_RPROC_START    0x04
+#define SBI_EXT_RPROC_STOP     0x05
+
 #define SBI_EXT_HSS_REBOOT     0x10
 
 #include <sbi/sbi_ecall.h>

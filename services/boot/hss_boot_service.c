@@ -65,6 +65,10 @@
 #  include "hss_boot_secure.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
+#  include "opensbi_rproc_ecall.h"
+#endif
+
 
 /* Timeouts */
 #define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 1u)
@@ -418,11 +422,14 @@ static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachi
 
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
 {
+
+    struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+    enum HSSHartId const target = pInstanceData->target;
+
     if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_SETUP_PMP_COMPLETE_TIMEOUT)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Timeout after %" PRIu64 " iterations\n",
             pMyMachine->pMachineName, pMyMachine->executionCount);
 
-        struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
         for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
             enum HSSHartId peer = bootMachine[i].hartId;
             free_msg_index_aux(pInstanceData, peer);
@@ -438,6 +445,9 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK\n", pMyMachine->pMachineName);
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed\n", pMyMachine->pMachineName);
 
+        if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_AUTOBOOT)
+            pMyMachine->state = BOOT_IDLE;
+        else
             pMyMachine->state = BOOT_ZERO_INIT_CHUNKS;
         }
     }
@@ -726,6 +736,8 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
 
+    pMyMachine->startTime = HSS_GetTime();
+
     if (!pBootImage->hart[target-1].entryPoint) {
         // nothing for me to do, not expecting GOTO ack...
         HSS_U54_SetState_Ex(target, HSS_State_Idle);
@@ -800,10 +812,13 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
     // TODO: should it restart all, or only the non-busy boot state machines??
     //
     for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-        if (restartHartBitmask.uint && (1u << bootMachine[i].hartId)) {
+        if (restartHartBitmask.uint & (1u << bootMachine[i].hartId)) {
             struct StateMachine * const pMachine = bootMachine[i].pMachine;
 
-            if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) {
+            if (pMachine->state == BOOT_OPENSBI_INIT) {
+                pMachine->state = (stateType_t)BOOT_OPENSBI_INIT;
+                result = true;
+            } else if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) {
                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
                result = true;
             } else if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
@@ -871,6 +886,18 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
     return result;
 }
 
+bool HSS_SkipBoot_IsSet(enum HSSHartId target)
+{
+    bool result = false;
+
+    assert(pBootImage != NULL);
+
+    if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_AUTOBOOT)
+        result = true;
+
+    return result;
+}
+
 enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId source,
     uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr)
 {
@@ -882,6 +909,20 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
 
     // boot strap IPI received from one of the U54s...
     //mHSS_DEBUG_PRINTF(LOG_ERROR, "called for %d\n", source);
+
+    /* Remoteproc use case 1.1:
+       Elf file loaded by Linux using rproc elf loader, so
+       no need to reload the payload on the HSS
+    */
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
+    if(immediate_arg == RPROC_BOOT)
+    {
+        struct RemoteProcMsg *rproc_data = (struct RemoteProcMsg *)p_extended_buffer_in_ddr;
+        source = rproc_data->target;
+        struct StateMachine * const pMachine = bootMachine[source - 1].pMachine;
+        pMachine->state = (stateType_t)BOOT_OPENSBI_INIT;
+    }
+#endif
 
     return HSS_Boot_RestartCore(source);
     return IPI_SUCCESS;

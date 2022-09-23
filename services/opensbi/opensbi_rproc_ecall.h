@@ -1,5 +1,5 @@
-#ifndef HSS_BOOT_SERVICE_H
-#define HSS_BOOT_SERVICE_H
+#ifndef OPENSBI_RPROC_SERVICE_H
+#define OPENSBI_RPROC_SERVICE_H
 
 /*******************************************************************************
  * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
@@ -25,44 +25,28 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Boot Service
  *
  */
 
-/*!
- * \file  Boot Boot Service
- * \brief State Machine and API functions for booting firmware service
- *
- */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "ssmb_ipi.h"
-#include "hss_types.h"
+#include "opensbi_ecall.h"
 
-enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId source,
-    uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);
-enum IPIStatusCode HSS_Boot_PMPSetupHandler(TxId_t transaction_id, enum HSSHartId source,
-    uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);
-bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut);
-bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut);
-enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source);
-bool HSS_SkipBoot_IsSet(enum HSSHartId target);
+# define RPROC_BOOT 0x80
+# define RPROC_SHUTDOWN_MSG 0xFFFFFF02
 
-void HSS_Register_Boot_Image(struct HSS_BootImage *pImage);
+#define CONTEXT_OFFLINE 0
+#define CONTEXT_RUNNING 1
 
-bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask);
-bool HSS_Boot_ValidateImage(struct HSS_BootImage *pBootImage);
-bool HSS_Boot_VerifyMagic(struct HSS_BootImage const * const pBootImage);
+struct RemoteProcMsg {
+    enum HSSHartId target;
+};
 
-bool HSS_Boot_Custom(void);
-
-extern struct StateMachine boot_service1;
-extern struct StateMachine boot_service2;
-extern struct StateMachine boot_service3;
-extern struct StateMachine boot_service4;
+int sbi_ecall_rproc_handler(unsigned long extid, unsigned long funcid,
+    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
 
 #ifdef __cplusplus
 }
