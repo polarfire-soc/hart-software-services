@@ -37,7 +37,7 @@ Next, we'll define the entry point addresses for each hart, as follows:
 
 The ELF source images can specify an entry point, but we want to be able to support secondary entry points for harts if needed -- i.e., if multiple harts are intended to boot the same image, they might have individual entry points. To support this, we specify the actual entry point addresses in the configuration file itself.
 
-Finally, we'll define some payloads (source ELF files, or binary blobs) that will be placed at certain regions in memory.  The payload section is defined with the keyword payloads, and then a number of individual payload descriptors.
+We can now define some payloads (source ELF files, or binary blobs) that will be placed at certain regions in memory.  The payload section is defined with the keyword payloads, and then a number of individual payload descriptors.
 
 Each payload has a name (path to its file), an owner-hart, and optionally 1-3 secondary-harts.
 
@@ -67,7 +67,11 @@ It is also possible to associate ancilliary data with each payload, for example 
 
     test/u-boot-icicle-kit-es-2022.01-r0.bin: { exec-addr: '0x80200000', owner-hart: u54_1, secondary-hart: u54_2, secondary-hart: u54_3, secondary-hart: u54_4, priv-mode: prv_s, ancilliary-data: test/icicle-kit-es-microchip.dtb }
 
-This ancilliary data will get included in the payload (placed straight after the main file in executable space), and its address will be passed to OpenSBI in the ``next_arg1`` field (i.e., passed in the `$a1` register to the image at boot time).
+This ancilliary data will get included in the payload (placed straight after the main file in executable space), and its address will be passed to OpenSBI in the `next_arg1` field (i.e., passed in the `$a1` register to the image at boot time).
+
+To prevent the HSS from automatically booting a context (for instance, if we instead want to delegate control of this to a context using remoteProc), use the `skip-autoboot` flag.
+
+      test/baremetal.elf: {exec-addr: '0xB0000000', owner-hart: u54_3, priv-mode: prv_m, skip-opensbi: true, skip-autoboot: true}
 
 Finally, we can optionally override the names of individual payloads, using the `payload-name` option. For example:
 

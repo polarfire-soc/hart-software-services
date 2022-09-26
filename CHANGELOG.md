@@ -22,11 +22,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  * HSS: eMMC: fixes for HS200 / HS400
 
+ * HSS: remoteproc: ecall support for remoteproc - the ability to start and stop a
+   remote AMP context using the remoteproc framework in Linux.
+
+    - Payload Generator: add `skip-autoboot` flag to YAML to skip automatically
+      loading and booting a payload on a per-context basis
+
+    - IHC: various related ecall fixes
+
  * HSS: reboot: add context-based reboot support (via SRST)
 
     - Kconfig: add `ALLOW_COLDREBOOT` option to enable cold reboot
 
-    - Payload Generator: add `allow-reboot:` flag to YAML to control entitlement to warm/cold reboot
+    - Payload Generator: add `allow-reboot` flag to YAML to control entitlement to
+      warm/cold reboot
 
  * HSS: ddr: add Kconfig option to skip training DDR
 
