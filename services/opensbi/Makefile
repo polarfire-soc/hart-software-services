@@ -72,11 +72,14 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/utils/timer/aclint_mtimer.c \
 	thirdparty/opensbi/lib/utils/ipi/aclint_mswi.c \
 
+ifdef CONFIG_USE_IHC
 SRCS-$(CONFIG_SERVICE_OPENSBI_IHC) += \
 	services/opensbi/opensbi_ihc_ecall.c \
 
 SRCS-$(CONFIG_SERVICE_OPENSBI_RPROC) += \
     services/opensbi/opensbi_rproc_ecall.c \
+
+endif
 
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	thirdparty/opensbi/lib/sbi/riscv_hardfp.S \
