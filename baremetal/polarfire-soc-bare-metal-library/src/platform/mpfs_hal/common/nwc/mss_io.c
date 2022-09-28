@@ -559,6 +559,7 @@ __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
 {
     uint8_t result = false;
 
+#ifdef LIBERO_SETTING_FPGA_SWITCH_ADDRESS
     volatile uint32_t *reg_pt = (uint32_t *)LIBERO_SETTING_FPGA_SWITCH_ADDRESS;
     switch(option)
     {
@@ -576,6 +577,8 @@ __attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
         case NOT_SETUP_MSSIO_CONFIGURATION:
             break;
     }
+#endif
+
     result = true;
 
     return result;

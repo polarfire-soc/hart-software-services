@@ -118,8 +118,13 @@ static bool mmc_init_emmc(void)
         mHSS_DEBUG_PRINTF(LOG_ERROR, "switch_mssio_config returned false %d\n", result);
     }
 
+#if IS_ENABLED(CONFIG_MODULE_M100PFS)
+    MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 0);
+#else
     /* we will attempt to switch anyway as default may be eMMC */
     switch_external_mux(EMMC_MSSIO_CONFIGURATION);
+#endif
+
     /* Initialize eMMC/SD */
     result = mmc_init_common(&emmcConfig);
 
@@ -148,7 +153,11 @@ static bool mmc_init_sdcard(void)
     }
 
     /* we will attempt to switch anyway as default may be SD */
+#if IS_ENABLED(CONFIG_MODULE_M100PFS)
+    MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 1);
+#else
     switch_external_mux(SD_MSSIO_CONFIGURATION);
+#endif
 
     /* Initialize eMMC/SD */
     result = mmc_init_common(&sdcardConfig);
