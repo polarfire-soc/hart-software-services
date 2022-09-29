@@ -63,7 +63,7 @@ $(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 
 ################################################################################################
 #
-# Extra hardware dependency rules for YMODEM
+# Extra hardware dependency rules for QSPI
 #
 
 INCLUDES += \
