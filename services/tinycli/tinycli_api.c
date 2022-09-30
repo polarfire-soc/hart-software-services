@@ -1002,6 +1002,8 @@ static void tinyCLI_CmdHandler_(int tokenId)
 #endif
         break;
 
+    case CMD_EMMC:
+        __attribute__((fallthrough)); // deliberate fallthrough
     case CMD_MMC:
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
         HSS_BootSelectMMC();
