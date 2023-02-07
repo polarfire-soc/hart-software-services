@@ -22,18 +22,9 @@
 #include "csr_helper.h"
 
 #include "mss_plic.h"
-#include "mpfs_reg_map.h"
+#include "mpfs_fabric_reg_map.h"
 
-// Register Defintions
-#define TAMPER_IRQn                    (PLIC_F2M_6_INT_OFFSET)
-
-// Set base address of tamper and register offsets
-#define TAMPER_BASE_ADDR               (CONFIG_TAMPER_BASE_ADDRESS)
-#define TAMPER_FLAGS_OFFSET            (0x0u)
-#define TAMPER_RESET_REASON_OFFSET     (0x4u)
-#define TAMPER_VOLT_REG_OFFSET         (0xCu)
-#define TAMPER_RESET_OFFSET            (0x14u)
-#define TAMPER_IRQ_EN_OFFSET           (0x20u)
+#define TAMPER_IRQn     (PLIC_F2M_6_INT_OFFSET)
 
 bool HSS_TamperInit(void)
 {

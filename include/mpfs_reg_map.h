@@ -91,8 +91,6 @@ extern "C" {
 #define MPU_SEG0_OFFSET				(0x0D00u)
 #define MPU_SEG1_OFFSET				(0x0E00u)
 
-#define TAMPER_BASE_ADDR                        (CONFIG_TAMPER_BASE_ADDRESS)
-
 #define WDOG0_LO_BASE_ADDR                      (0x20001000u)
 #define WDOG1_LO_BASE_ADDR                      (0x20101000u)
 #define WDOG2_LO_BASE_ADDR                      (0x20103000u)
