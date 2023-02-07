@@ -46,6 +46,9 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
 #ifdef CONFIG_USE_PCIE
     { "HSS_PCIeInit",           HSS_PCIeInit,           false, false },
 #endif
+#ifdef CONFIG_USE_TAMPER
+    { "HSS_TamperInit",       HSS_TamperInit,       false, false },
+#endif
     //{ "HSS_USBInit",            HSS_USBInit,            false, false },
 };
 

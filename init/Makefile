@@ -40,6 +40,9 @@ EXTRA_SRCS-$(CONFIG_USE_IHC) += \
 EXTRA_SRCS-$(CONFIG_USE_PCIE) += \
 	init/hss_pcie_init.c
 
+EXTRA_SRCS-$(CONFIG_USE_TAMPER) += \
+	init/hss_tamper_init.c
+
 EXTRA_SRCS-$(CONFIG_USE_PDMA) += \
 	init/hss_pdma_init.c \
 
@@ -55,5 +58,6 @@ init/hss_boot_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_opensbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_sys_setup.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_pcie_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+init/hss_tamper_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_usb_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 init/hss_ihc_init.o: CFLAGS=$(CFLAGS_GCCEXT)
