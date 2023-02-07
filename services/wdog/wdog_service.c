@@ -25,6 +25,8 @@
 
 #include "mss_watchdog.h"
 
+#include "mpfs_fabric_reg_map.h"
+
 static void wdog_init_handler(struct StateMachine * const pMyMachine);
 static void wdog_idle_handler(struct StateMachine * const pMyMachine);
 
@@ -250,11 +252,19 @@ void HSS_Wdog_Reboot(enum HSSHartId target)
         break;
 
     case HSS_HART_ALL:
-        MSS_WD_force_reset(MSS_WDOG4_LO);
-        MSS_WD_force_reset(MSS_WDOG3_LO);
-        MSS_WD_force_reset(MSS_WDOG2_LO);
-        MSS_WD_force_reset(MSS_WDOG1_LO);
-        MSS_WD_force_reset(MSS_WDOG0_LO);
+        if (IS_ENABLED(CONFIG_COLDREBOOT_FULL_FPGA_RESET)) {
+            /*
+             * Writing a 1 to the reset register of the tamper macro triggers a
+             * full reset of the FPGA.
+             */
+            mHSS_WriteRegU32(TAMPER, RESET, 1u);
+        } else {
+            MSS_WD_force_reset(MSS_WDOG4_LO);
+            MSS_WD_force_reset(MSS_WDOG3_LO);
+            MSS_WD_force_reset(MSS_WDOG2_LO);
+            MSS_WD_force_reset(MSS_WDOG1_LO);
+            MSS_WD_force_reset(MSS_WDOG0_LO);
+        }
 
         while (1) {
             ;
