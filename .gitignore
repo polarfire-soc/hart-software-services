@@ -5,6 +5,7 @@
 *.hex
 *.map
 *.sym
+*__pycache__
 
 .config
 .config.old
