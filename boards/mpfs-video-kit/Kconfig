@@ -1,8 +1,8 @@
-menu "mpfs-sev-kit Configuration Options"
+menu "mpfs-video-kit Configuration Options"
 
 config SOC_FPGA_DESIGN_XML
 	string "Enter path to Libero XML file"
-	default "boards/$(BOARD)/soc_fpga_design/xml/MSS_SEV_kit_linux_mss_cfg.xml"
+	default "boards/$(BOARD)/soc_fpga_design/xml/MSS_Video_kit_linux_mss_cfg.xml"
 	help
 		This option specifies the design XML file to use.
 endmenu

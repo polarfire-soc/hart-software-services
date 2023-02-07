@@ -4,10 +4,10 @@
 #
 
 #
-# mpfs-sev-kit Configuration Options
+# mpfs-video-kit Configuration Options
 #
-CONFIG_SOC_FPGA_DESIGN_XML="boards/mpfs-sev-kit/fpga_design/design_description/MSS_SEV_mss_cfg.xml"
-# end of mpfs-sev-kit Configuration Options
+CONFIG_SOC_FPGA_DESIGN_XML="boards/mpfs-video-kit/fpga_design/design_description/MSS_video-kit_mss_cfg.xml"
+# end of mpfs-video-kit Configuration Options
 # end of Board/Design Configuration Options
 
 #

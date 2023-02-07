@@ -28,9 +28,9 @@
 #
 
 #
-# Confusingly, the CONFIG_MODULE_SEV_KIT is platform MPFS
+# Confusingly, the CONFIG_MODULE_VIDEO_KIT is platform MPFS
 #
-$(info mpfs-sev-kit selected)
+$(info mpfs-video-kit selected)
 
 BINDIR=Default
 TARGET-l2scratch=hss-l2scratch.elf
@@ -41,8 +41,8 @@ TARGET:=$(RISCV_TARGET)
 LINKER_SCRIPT-l2scratch=boards/${BOARD}/hss-l2scratch.ld
 
 CONFIG_PLATFORM_MPFS=y
-PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1 -DCONFIG_MODULE_SEV_KIT=1
-BOARD_DIR=boards/mpfs-sev-kit
+PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1 -DCONFIG_MODULE_VIDEO_KIT=1
+BOARD_DIR=boards/mpfs-video-kit
 
 INCLUDES += \
 	-I$(BOARD_DIR)/mpfs_hal_config/\

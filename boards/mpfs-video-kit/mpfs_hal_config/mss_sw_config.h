@@ -181,7 +181,7 @@
 #define LIBERO_SETTING_CONTEXT_A_HART_EN    0x0000000EUL    /* harts 1 to 3 */
 #define LIBERO_SETTING_CONTEXT_B_HART_EN    0x00000010UL    /* hart 4 */
 
-#define LIBERO_SETTING_FPGA_SWITCH_ADDRESS 0 /* not used in SEV kit but define
+#define LIBERO_SETTING_FPGA_SWITCH_ADDRESS 0 /* not used in MPFS-Video kit but define
                                                 required */
 
 /*
@@ -211,7 +211,7 @@
 //#define LIBERO_SETTING_RPC_ODT_DQ                   0x00000003UL
 // Mode register 3 - 1 => VDDQ3 , 0 => VDDQ2P5
 //#define LIBERO_SETTING_CFG_PU_CAL                   0x00000000UL
-// On the tab DDR Controller, DQ DQS offset set to 6 for SEV kit @800MHz
+// On the tab DDR Controller, DQ DQS offset set to 6 for MPFS-Video kit @800MHz
 //#define LIBERO_SETTING_RPC_156_VALUE                6U
 
 #endif

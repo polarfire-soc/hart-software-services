@@ -89,7 +89,7 @@ bool HSS_BoardLateInit(void)
 
 /*
  * this function is used to switch external demux, and is board dependent
- * For the SEV kit, we are changing I/O pullup and pull down states
+ * For the MPFS-Video kit, we are changing I/O pullup and pull down states
  * The setup for this is being automated in a future MSS Configurator release
  * */
 uint8_t switch_external_mux(MSS_IO_OPTIONS option)
