@@ -31,6 +31,7 @@ static void usbdmsc_init_handler(struct StateMachine * const pMyMachine);
 static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine);
 static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachine);
 static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachine);
+static void usbdmsc_active_onEntry(struct StateMachine * const pMyMachine);
 static void usbdmsc_active_handler(struct StateMachine * const pMyMachine);
 static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine);
 
@@ -54,7 +55,7 @@ static const struct StateDesc usbdmsc_state_descs[] = {
     { (const stateType_t)USBDMSC_INITIALIZATION,    (const char *)"Init",             NULL,                            NULL,                   &usbdmsc_init_handler },
     { (const stateType_t)USBDMSC_IDLE,              (const char *)"Idle",             NULL,                            NULL,                   &usbdmsc_idle_handler },
     { (const stateType_t)USBDMSC_WAIT_FOR_USB_HOST, (const char *)"WaitForUSBHost",   &usbdmsc_waitForUSBHost_onEntry, NULL,                   &usbdmsc_waitForUSBHost_handler },
-    { (const stateType_t)USBDMSC_ACTIVE,            (const char *)"Active",           NULL,                            &usbdmsc_active_onExit, &usbdmsc_active_handler },
+    { (const stateType_t)USBDMSC_ACTIVE,            (const char *)"Active",           &usbdmsc_active_onEntry,         &usbdmsc_active_onExit, &usbdmsc_active_handler },
 };
 
 /*!
@@ -112,9 +113,31 @@ static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachin
 
 /////////////////
 
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT)
+static HSSTicks_t activeTimer = 0u;
+#  define USBDMSC_ACTIVE_TIMEOUT (ONE_SEC * CONFIG_SERVICE_USBDMSC_MAX_SESSION_TIMEOUT) /* 60 minutes */
+#endif
+
+static void usbdmsc_active_onEntry(struct StateMachine * const pMyMachine)
+{
+    (void)pMyMachine;
+
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT)
+   activeTimer = HSS_GetTime();
+#endif
+}
+
 static void usbdmsc_active_handler(struct StateMachine * const pMyMachine)
 {
-    if (!FLASH_DRIVE_is_host_connected()) {
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT)
+    bool activeTimeout = HSS_Timer_IsElapsed(activeTimer, USBDMSC_ACTIVE_TIMEOUT);
+
+    if (activeTimeout) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "***** USBDMSC Max Session Timeout *****\n");
+        pMyMachine->state = USBDMSC_IDLE;
+    } else
+#endif
+    if ((!FLASH_DRIVE_is_host_connected())) {
         pMyMachine->state = USBDMSC_IDLE;
     }
 

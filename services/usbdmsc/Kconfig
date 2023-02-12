@@ -19,4 +19,23 @@ config SERVICE_USBDMSC_REGISTER
 		as a state machine, which makes it available at all times via the E51.
 
 		If you do not know what to do here, say N.
+
+config SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT
+	bool "Apply timeout to USBDMSC"
+	default n
+	help
+		This feature will ensure that accidentally leaving USBDMSC running
+		too long will cause it to disconnect.
+
+		If you do not know what to do here, say N.
+
+config SERVICE_USBDMSC_MAX_SESSION_TIMEOUT
+	int "Timeout for USBDMSC prompt (in seconds)"
+        default 3600
+        depends on SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT
+        range 0 10000000
+	help
+		This value controls the maximum time in seconds that USBDMSC is
+		allowed to run before it auto-disconnects.
+
 endmenu
