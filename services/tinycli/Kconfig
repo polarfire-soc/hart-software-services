@@ -50,18 +50,18 @@ config SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT
 	bool "Apply timeout to TinyCLI prompt if entered before boot"
 	default n
 	help
-		This feature will ensure that accidentally entering TinyCLI before boot-up
-		permanently prevent booting.
+                This feature will ensure that accidentally entering TinyCLI before boot-up
+                permanently prevent booting.
 
 		If you do not know what to do here, say N.
 
 config SERVICE_TINYCLI_PREBOOT_TIMEOUT
 	int "Timeout for TinyCLI prompt (in seconds)"
-	default 3600
-	depends on SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT
-	range 0 10000000
+        default 6
+        depends on SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT
+        range 0 10000000
 	help
-		This value controls the time in seconds that a pre-boot TinyCLI prompt
-		can be idle before the device will reset.
+                This value controls the time in seconds that a pre-boot TinyCLI prompt
+                can be idle before the device will reset.
 
 endmenu

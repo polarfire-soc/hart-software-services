@@ -385,11 +385,34 @@ static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootIm
     return result;
 }
 
+void HSS_BootSelectSDCARD(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SDCARD as boot source ...\n");
+    pDefaultStorage = &mmcStorage_;
+    HSS_MMC_SelectSDCARD();
+#else
+    (void)getBootImageFromMMC_;
+#endif
+}
+
 void HSS_BootSelectMMC(void)
 {
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting MMC as boot source ...\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SDCARD/MMC (fallback) as boot source ...\n");
     pDefaultStorage = &mmcStorage_;
+    HSS_MMC_SelectMMC();
+#else
+    (void)getBootImageFromMMC_;
+#endif
+}
+
+void HSS_BootSelectEMMC(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting EMMC as boot source ...\n");
+    pDefaultStorage = &mmcStorage_;
+    HSS_MMC_SelectEMMC();
 #else
     (void)getBootImageFromMMC_;
 #endif

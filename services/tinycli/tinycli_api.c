@@ -99,6 +99,7 @@ enum CmdId {
 #endif
     CMD_QSPI,
     CMD_EMMC,
+    CMD_SDCARD,
     CMD_MMC,
 #if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
     CMD_PAYLOAD,
@@ -134,8 +135,9 @@ const struct tinycli_key cmdKeys[] = {
     { CMD_MEMTEST, "MEMTEST", "Full DDR memory test." },
 #endif
     { CMD_QSPI,    "QSPI",    "Select boot via QSPI." },
-    { CMD_EMMC,    "EMMC",    "Select boot via MMC." },
-    { CMD_MMC,     "MMC",     "Select boot via MMC." },
+    { CMD_MMC,     "MMC",     "Select boot via SDCARD with fallback to EMMC." },
+    { CMD_EMMC,    "EMMC",    "Select boot via EMMC." },
+    { CMD_SDCARD,  "SDCARD",  "Select boot via SDCARD." },
 #if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_PAYLOAD, "PAYLOAD", "Select boot via payload." },
 #endif
@@ -199,6 +201,7 @@ static struct tinycli_command commands[] = {
     { CMD_QSPI,    true,  tinyCLI_CmdHandler_ },
     { CMD_EMMC,    true,  tinyCLI_CmdHandler_ },
     { CMD_MMC,     true,  tinyCLI_CmdHandler_ },
+    { CMD_SDCARD,  true,  tinyCLI_CmdHandler_ },
 #if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
     { CMD_PAYLOAD, true,  tinyCLI_CmdHandler_ },
 #endif
@@ -1006,15 +1009,28 @@ static void tinyCLI_CmdHandler_(int tokenId)
 #endif
         break;
 
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+    case CMD_EMMC:
+	HSS_BootSelectEMMC();
+        break;
+
+    case CMD_MMC:
+        HSS_BootSelectMMC();
+        break;
+
+    case CMD_SDCARD:
+        HSS_BootSelectSDCARD();
+        break;
+
+#else
     case CMD_EMMC:
         __attribute__((fallthrough)); // deliberate fallthrough
     case CMD_MMC:
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-        HSS_BootSelectMMC();
-#else
+        __attribute__((fallthrough)); // deliberate fallthrough
+    case CMD_SDCARD:
         tinyCLI_UnsupportedBootMechanism_("eMMC/SDCard");
-#endif
         break;
+#endif
 
 #if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
     case CMD_PAYLOAD:
