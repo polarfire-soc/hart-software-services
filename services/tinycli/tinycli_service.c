@@ -29,10 +29,6 @@
 
 #include "drivers/mss/mss_mmuart/mss_uart.h"
 
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
-#  include "usbdmsc_service.h"
-#endif
-
 static void tinycli_init_handler(struct StateMachine * const pMyMachine);
 static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine);
 static void tinycli_readline_handler(struct StateMachine * const pMyMachine);
