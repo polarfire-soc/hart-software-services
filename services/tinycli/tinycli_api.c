@@ -63,6 +63,10 @@
 #    include "hss_boot_secure.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT)
+#  include "hss_clock.h"
+#endif
+
 #define mMAX_NUM_TOKENS 40
 static size_t argc_tokenCount = 0u;
 static char *argv_tokenArray[mMAX_NUM_TOKENS];
@@ -1128,6 +1132,11 @@ bool HSS_TinyCLI_Parser(void)
         mHSS_FANCY_PUTS(LOG_NORMAL, "CLI boot interrupt timeout\n");
     } else {
         mHSS_FANCY_PUTS(LOG_NORMAL, "Type HELP for list of commands\n");
+
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT)
+        HSSTicks_t readlineIdleTime = HSS_GetTime();
+#endif
+
         while (!quitFlag) {
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
             static char *pBuffer = NULL;
@@ -1147,6 +1156,16 @@ bool HSS_TinyCLI_Parser(void)
             RunStateMachine(&usbdmsc_service);
 #  endif
 #endif
+
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT)
+#  define PREBOOT_IDLE_TIMEOUT (ONE_SEC * CONFIG_SERVICE_TINYCLI_PREBOOT_TIMEOUT)
+            if (HSS_Timer_IsElapsed(readlineIdleTime, PREBOOT_IDLE_TIMEOUT)) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "***** Timeout on Pre-Boot TinyCLI *****\n");
+                HSS_SpinDelay_Secs(5u);
+                tinyCLI_Reset_();
+            }
+#endif
+
         }
     }
 
