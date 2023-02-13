@@ -62,6 +62,8 @@ CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 CORE_CFLAGS+=-g3 -DDEBUG -pipe -grecord-gcc-switches
 #CORE_CFLAGS+=-pipe
 
+VENDOR_STRING=$(shell git describe --tags)
+CORE_CFLAGS+=-DVENDOR_STRING="$(VENDOR_STRING)"
 
 # Warning / Code Quality
 CORE_CFLAGS+=-Wall -Werror -Wshadow -fno-builtin -fno-builtin-printf \

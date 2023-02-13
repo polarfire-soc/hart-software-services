@@ -186,16 +186,12 @@ void HSS_PrintToolVersions(void)
 
 bool HSS_E51_Banner(void)
 {
-#ifndef VENDOR_STRING
-#    define VENDOR_STRING ""
-#endif
-
 #if !IS_ENABLED(CONFIG_SKIP_DDR)
     extern const char DDR_DRIVER_VERSION[];
 #endif
 
     mHSS_FANCY_PRINTF(LOG_STATUS,
-        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d" VENDOR_STRING "\n"
+        "PolarFire(R) SoC Hart Software Services (HSS) - version %d.%d.%d-" STR(VENDOR_STRING) "\n"
         "MPFS HAL version %d.%d.%d"
 #if !IS_ENABLED(CONFIG_SKIP_DDR)
         " / DDR Driver version %s"
