@@ -101,6 +101,25 @@ config COLDREBOOT_FULL_FPGA_RESET
 
 		If you do not know what to do here, say N.
 
+config ALLOW_COLDREBOOT_ON_OPENSBI_FAULT
+	bool "Trigger a cold reboot on OpenSBI fault"
+	default n
+	depends on ALLOW_COLDREBOOT
+	help
+		If enabled, this feature globally allows all contexts to issue a
+		cold reboot on encountering an OpenSBI fault condition.
+
+		If you do not know what to do here, say N.
+
+config COLDREBOOT_ON_OPENSBI_FAULT_DELAY
+	int "Cold reboot on OpenSBI fault delay (in seconds)"
+        default 5
+        depends on ALLOW_COLDREBOOT_ON_OPENSBI_FAULT
+        range 0 3600
+	help
+                if ALLOW_COLDREBOOT_ON_OPENSBI_FAULT is enabled, this value determines
+                the time in seconds that a U54 ending the OpenSBI fault state before
+                triggering a cold reboot.
 endmenu
 
 endmenu
