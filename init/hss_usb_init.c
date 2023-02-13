@@ -49,7 +49,7 @@ bool HSS_USBInit(void)
     //						operations.
 
     SYSREG->SOFT_RESET_CR &= ~ (1u << 16u);
-    mHSS_WriteRegU32(MSS_USB, ADDR_UPPER, 0x10u);
+    mHSS_WriteRegU32(MSS_USB, ADDR_UPPER, 0x14u);
 
     return true;
 }
