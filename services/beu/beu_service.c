@@ -149,7 +149,9 @@ static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
         if (accrued & BEU_ENABLE_MASK) {
             if (accrued & BEU_ENABLE_UNCORRECTABLE_MASK) {
                 if ((BEU->regs[hartid].ENABLE) && (value == shadow_value_[hartid])) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Uncorrectable errors: u54_%d - error %llu at %p\n", hartid, accrued, value);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "Uncorrectable errors: %s%d: error %llu at %p\n",
+                        hartid ? "u54_" : "e5", hartid ? hartid: 1,
+                        accrued, value);
                 }
 
                 // hart has experienced fatal error, so stop checking for BEU errors for this hart...
@@ -162,6 +164,10 @@ static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
                 if (accrued & BIT(beu_stats_[i].bit_position)) {
                     beu_stats_[i].counter++;
                     BEU->regs[hartid].ACCRUED &= ~(BIT(beu_stats_[i].bit_position));
+
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s%d: BEU event: %45s\n",
+                       hartid ? "u54_" : "e5", hartid ? hartid: 1,
+                       beu_stats_[i].pName);
                 }
             }
 
