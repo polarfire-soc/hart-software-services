@@ -45,6 +45,10 @@ extern "C" {
 #define IPI_FENCE_I       0x02
 #define IPI_SFENCE_VMA    0x04
 
+#define IRQ_M_BEU         0x80
+#define IRQ_M_LOCAL_MIN   16
+#define IRQ_M_LOCAL_MAX   63
+
 #define MACHINE_STACK_SIZE  (RISCV_PGSIZE)    /* this is 4k for HLS and 4k for the stack*/
 #define MENTRY_HLS_OFFSET   (INTEGER_CONTEXT_SIZE + SOFT_FLOAT_CONTEXT_SIZE)
 #define MENTRY_FRAME_SIZE   (MENTRY_HLS_OFFSET + HLS_SIZE)

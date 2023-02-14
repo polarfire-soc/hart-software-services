@@ -127,7 +127,6 @@ void handle_m_timer_interrupt(void)
 
 }
 
-
 /**
  *
  */

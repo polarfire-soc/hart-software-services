@@ -22,57 +22,28 @@
 extern "C" {
 #endif
 
+#define CMD_SD_EMMC_DEMUX_EMMC_ON   0U
+#define CMD_SD_EMMC_DEMUX_SD_ON     1U
+
 /*
  * fields of LIBERO_SETTING_MSSIO_CONFIGURATION_OPTIONS
  * */
-#define EMMC_CONFIGURED_MASK                            (0x01U<<0U) /*!< set => eMMC is configured */
-#define SD_CONFIGURED_MASK                              (0x01U<<1U) /*!< set => SD is configured */
-#define DEFAULT_ON_START_MASK                           (0x01U<<2U) /*!< set => default is SD config, not set default is eMMC config */
-
-#if !defined (LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR)
-/*To limit the number of interrupts fed to the PLINT, the seventy GPIO
-interrupts (GPIO0=14, GPIO1=24, GPIO2=32) are reduced down to 41
-interrupts by OR'ing some together. There is some flexibility regarding which
-interrupts are OR'd or are direct. This selection is controlled by a 32-bit
-system register(GPIO_INTERRUPT_FAB_CR). For example, if bit 0 of the register is
-set to 1, gpio2_0 is chosen as a direct interrupt on the PLIC and gpio0_0 will
-be OR'd with any other non-direct gpio0 interrupts. Please see the GPIO driver
-for more details on using GPIO interrupts. */
-#define LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR    0x00000000UL
-    /* GPIO0_0_OR_GPIO2_0                [0:1]   RW value= 0x0 */
-    /* GPIO0_1_OR_GPIO2_1                [1:1]   RW value= 0x0 */
-    /* GPIO0_2_OR_GPIO2_2                [2:1]   RW value= 0x0 */
-    /* GPIO0_3_OR_GPIO2_3                [3:1]   RW value= 0x0 */
-    /* GPIO0_4_OR_GPIO2_4                [4:1]   RW value= 0x0 */
-    /* GPIO0_5_OR_GPIO2_5                [5:1]   RW value= 0x0 */
-    /* GPIO0_6_OR_GPIO2_6                [6:1]   RW value= 0x0 */
-    /* GPIO0_7_OR_GPIO2_7                [7:1]   RW value= 0x0 */
-    /* GPIO0_8_OR_GPIO2_8                [8:1]   RW value= 0x0 */
-    /* GPIO0_9_OR_GPIO2_9                [9:1]   RW value= 0x0 */
-    /* GPIO0_10_OR_GPIO2_10              [10:1]  RW value= 0x0 */
-    /* GPIO0_11_OR_GPIO2_11              [11:1]  RW value= 0x0 */
-    /* GPIO0_12_OR_GPIO2_12              [12:1]  RW value= 0x0 */
-    /* GPIO0_13_OR_GPIO2_13              [13:1]  RW value= 0x0 */
-    /* GPIO1_0_OR_GPIO2_14               [14:1]  RW value= 0x0 */
-    /* GPIO1_1_OR_GPIO2_15               [15:1]  RW value= 0x0 */
-    /* GPIO1_2_OR_GPIO2_16               [16:1]  RW value= 0x0 */
-    /* GPIO1_3_OR_GPIO2_17               [17:1]  RW value= 0x0 */
-    /* GPIO1_4_OR_GPIO2_18               [18:1]  RW value= 0x0 */
-    /* GPIO1_5_OR_GPIO2_19               [19:1]  RW value= 0x0 */
-    /* GPIO1_6_OR_GPIO2_20               [20:1]  RW value= 0x0 */
-    /* GPIO1_7_OR_GPIO2_21               [21:1]  RW value= 0x0 */
-    /* GPIO1_8_OR_GPIO2_22               [22:1]  RW value= 0x0 */
-    /* GPIO1_9_OR_GPIO2_23               [23:1]  RW value= 0x0 */
-    /* GPIO1_10_OR_GPIO2_24              [24:1]  RW value= 0x0 */
-    /* GPIO1_11_OR_GPIO2_25              [25:1]  RW value= 0x0 */
-    /* GPIO1_12_OR_GPIO2_26              [26:1]  RW value= 0x0 */
-    /* GPIO1_13_OR_GPIO2_27              [27:1]  RW value= 0x0 */
-    /* GPIO1_14_OR_GPIO2_28              [28:1]  RW value= 0x0 */
-    /* GPIO1_15_OR_GPIO2_29              [29:1]  RW value= 0x0 */
-    /* GPIO1_16_OR_GPIO2_30              [30:1]  RW value= 0x0 */
-    /* GPIO1_17_OR_GPIO2_31              [31:1]  RW value= 0x0 */
+#define EMMC_CONFIGURED_MASK    (0x01U<<0U) /*!< set => eMMC is configured */
+#define SD_CONFIGURED_MASK      (0x01U<<1U) /*!< set => SD is configured */
+#define DEFAULT_ON_START_MASK   (0x01U<<2U) /*!< set => default is SD config,
+                                               not set default is eMMC config */
+/*
+ * Please note in Icicle kit reference design pre 2022.09, the address below
+ * was 0x4F000000UL
+ */
+#ifndef FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS
+#define FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS 0x4FFFFF00UL /*!< This is design
+                                                            dependent */
 #endif
-
+#ifndef FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT
+#define FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT true /*!< true/false This is design
+                                                      dependent */
+#endif
 
 #if !defined (LIBERO_SETTING_GPIO_INTERRUPT_FAB_CR)
 /*To limit the number of interrupts fed to the PLINT, the seventy GPIO
@@ -358,9 +329,9 @@ set_bank2_and_bank4_volts
 
   if ( switch_mssio_config(EMMC_MSSIO_CONFIGURATION) == false )
   {
-      while(1u);
+      // print warning message
+      return;
   }
-  switch_external_mux(EMMC_MSSIO_CONFIGURATION);
   g_mmc.clk_rate = MSS_MMC_CLOCK_200MHZ;
   g_mmc.card_type = MSS_MMC_CARD_TYPE_MMC;
   g_mmc.bus_speed_mode = MSS_MMC_MODE_HS200;
@@ -401,9 +372,22 @@ uint8_t  mss_does_xml_ver_support_switch(void);
 
   @code
 
+  // e.g. first try SD, and fail, then try alt config
+
   if ( mss_is_alternate_io_configured() == true )
   {
-      ...
+      if ( switch_mssio_config(EMMC_MSSIO_CONFIGURATION) == false )
+      {
+          // print warning message
+          return
+      }
+      g_mmc.clk_rate = MSS_MMC_CLOCK_200MHZ;
+      g_mmc.card_type = MSS_MMC_CARD_TYPE_MMC;
+      g_mmc.bus_speed_mode = MSS_MMC_MODE_HS200;
+      g_mmc.data_bus_width = MSS_MMC_DATA_WIDTH_4BIT;
+      g_mmc.bus_voltage = MSS_MMC_1_8V_BUS_VOLTAGE;
+
+      // ...
   }
 
   @endcode
@@ -450,10 +434,11 @@ uint8_t  mss_is_alternate_io_setting_emmc(void);
 uint8_t  mss_is_alternate_io_setting_sd(void);
 
 /***************************************************************************//**
-  switch_external_mux()
+  switch_demux_using_fabric_ip()
   This is a function used to switch external mux.
-  Requires fpga switch hdl. This comes with reference icicle kit design.
-  Will need to create your own or copy when creating your own fpga design
+  It requires fpga switch IP in the fabric. This comes with reference icicle 
+  kit design.
+  You will need to create your own or copy when creating your own fpga design
   along with an external mux in your board design if you wish to use SD/eMMC
   muxing in your hardware design.
 
@@ -461,12 +446,35 @@ uint8_t  mss_is_alternate_io_setting_sd(void);
 
   @code
 
-  switch_external_mux(SD_MSSIO_CONFIGURATION);
+	case SD_MSSIO_CONFIGURATION:
+	    if (mss_is_alternate_io_setting_sd() == true)
+	    {
+	        io_mux_and_bank_config_alt();
+	    }
+	    else
+	    {
+	        io_mux_and_bank_config();
+	    }
+	    switch_demux_using_fabric_ip(SD_MSSIO_CONFIGURATION);
+	    break;
+	
+	case EMMC_MSSIO_CONFIGURATION:
+	    if (mss_is_alternate_io_setting_emmc() == true)
+	    {
+	        io_mux_and_bank_config_alt();
+	    }
+	    else
+	    {
+	        io_mux_and_bank_config();
+	    }
+	    switch_demux_using_fabric_ip(EMMC_MSSIO_CONFIGURATION);
+	    break;
+
 
   @endcode
 
  */
-uint8_t switch_external_mux(MSS_IO_OPTIONS option);
+uint8_t switch_demux_using_fabric_ip(MSS_IO_OPTIONS option);
 
 /***************************************************************************//**
   mss_io_default_setting()
@@ -486,6 +494,51 @@ uint8_t switch_external_mux(MSS_IO_OPTIONS option);
 
  */
 uint8_t  mss_io_default_setting(void);
+
+/***************************************************************************//**
+  fabric_sd_emmc_demux_present()
+
+  Is there sd_emmc_demux IP present in the fabric.
+
+  @return true/false
+
+  Example:
+
+  @code
+
+  if ( fabric_sd_emmc_demux_present() == true )
+  {
+      // ...
+  }
+
+  @endcode
+
+ */
+uint8_t fabric_sd_emmc_demux_present(void);
+
+/***************************************************************************//**
+  fabric_sd_emmc_demux_address()
+
+  This function is used by the routine switch_demux_using_fabric_ip()
+  The address returned is a default address, used by the Icicle kit design
+  post v2022.09.
+  If another address is used in your Libero design, instantiate this function
+  in your application, and return the address that matches your Libero design.
+
+  @return returns the address of the sd_emmc_demux in fabric
+
+  Example:
+
+  @code
+
+  volatile uint32_t *reg_pt = fabric_sd_emmc_demux_address();
+
+  *reg_pt = CMD_SD_EMMC_DEMUX_SD_ON;
+
+  @endcode
+
+ */
+uint32_t * fabric_sd_emmc_demux_address(void);
 
 /***************************************************************************//**
   This function is used to set the apb_bus_cr register value

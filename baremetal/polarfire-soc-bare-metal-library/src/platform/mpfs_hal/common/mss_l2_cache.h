@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -522,7 +522,56 @@ typedef struct {
 
 #define CACHE_CTRL  ((volatile CACHE_CTRL_typedef *) CACHE_CTRL_BASE)
 
+
+/***************************************************************************//**
+  The end_l2_cache_address() function is used to return the end address of the
+  initialised scratchpad. It is used in the startup code.
+
+  @return
+    This end address of the allocated scratchpad.
+
+  Example:
+  @code
+        // When called from assembly
+        call    config_l2_cache
+        call    end_l2_cache_address  # end address returned in a0
+        call    .clear_scratchpad
+  @endcode
+ */
+uint64_t end_l2_cache_address(void);
+
+/***************************************************************************//**
+  The config_l2_cache() function is used to setup scratchpad. It will be used by
+  bootloader. e.g. Hart Software Services (HSS)
+  This code should only be executed from E51 to be functional.
+  Configure the L2 cache memory:
+   - Set the number of cache ways used as cache based on the MSS Configurator
+     settings.
+   - Configure some of the enabled ways as scratchpad based on space allocated
+     by the MSS configurator.
+
+  Example:
+  @code
+        // When called from assembly
+        call    config_l2_cache
+        call    end_l2_cache_address  # end address returned in a0
+        call    .clear_scratchpad
+  @endcode
+ */
 void config_l2_cache(void);
+
+/***************************************************************************//**
+  The check_num_scratch_ways() function is used tocheck that the linker script
+  has not allocated more ways than has been allocated by the MSS Configurator.
+
+  Example:
+  @code
+        // When called from assembly
+        call    config_l2_cache
+        call    end_l2_cache_address  # end address returned in a0
+        call    .clear_scratchpad
+  @endcode
+ */
 uint8_t check_num_scratch_ways(uint64_t *start, uint64_t *end);
 
 #ifdef __cplusplus

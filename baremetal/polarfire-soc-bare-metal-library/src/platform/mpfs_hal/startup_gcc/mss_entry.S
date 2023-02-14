@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -19,6 +19,8 @@
 #include "../common/mss_mtrap.h"
 #include "system_startup_defs.h"
 #include "mpfs_hal_config/mss_sw_config.h"
+
+#define NUM_CACHEWAYS_AT_RESET 1
 
   .option norvc
   .section .text.init,"ax", %progbits
@@ -178,14 +180,6 @@ _start:
     csrr a0, mhartid
     li a1, MPFS_HAL_FIRST_HART
     bne a0, a1, .LOtherHartstoWFI
-    # clear the common heap
-    la  a4, __heap_start
-    la  a5, __heap_end
-.init_heap:
-    #csrw mepc, zero
-    STORE x0, 0(a4)
-    add a4, a4, __SIZEOF_POINTER__
-    blt a4, a5, .init_heap
     #
     # clear DTIM - this is required to stop memory errors on initial access by
     # cache
@@ -197,6 +191,20 @@ _start:
     call    .clear_dtim
     call    .clear_l2lim
 .skip_mem_clear:
+    li  a0, NUM_CACHEWAYS_AT_RESET    # flush default way in case it has already
+                                      # been used by system controller loader
+                                      # (bootmode2 or 3)
+    call    .flush_early_caching
+    call    config_l2_cache
+    call    end_l2_cache_address  # end address returned in a0
+    call    .clear_scratchpad
+    # place pattern in the common heap
+    la  a4, __heap_start
+    la  a5, __heap_end
+.init_heap:
+    STORE x0, 0(a4)
+    add a4, a4, __SIZEOF_POINTER__
+    blt a4, a5, .init_heap
     /*
      * Clear bus error unit accrued register on start-up
      * This is cleared by the first hart only
@@ -682,8 +690,19 @@ copy_switch_code:
 #define END__OF_LIM   0x08200000
 #define START__OF_DTM 0x01000000
 #define END__OF_DTM   0x01002000
+#define START_OF_SCRATCH   0x0A000000
 
-
+.clear_scratchpad:
+    // Clear the scratchpad
+    //
+    // a0 = end of scratchpad addr passed from caller
+    //
+    // Note: This must be called post calling config_l2_cache()
+    //
+    la  a4, START_OF_SCRATCH    # start of l2 scratchpad
+    mv  a5, a0                  # end of l2 scratchpad
+    // common loop used to clear memory
+    j   1f
 .clear_l2lim:
     // Clear the LIM
     //
@@ -712,6 +731,54 @@ copy_switch_code:
     add a4, a4, __SIZEOF_POINTER__
     blt a4, a5, 1b
 .done_clear:
+    ret
+
+/*******************************************************************************
+ *
+ */
+    .equ    L2_ZERO_DEVICE_ADDR, 0x0A000000
+    .equ    L2_CCACHE_ADDR, 0x02010000
+    .equ    FLUSH64_OFFSET, 0x200
+
+    //
+    // We want to flush anything that may be inadvertently cached
+    // by the actions of G5C at startup...
+    //
+    // The cache block is 64-bytes wide, and there are 4 banks * 512 sets * 16
+    // ways.
+    // From power on, only a single way is enabled as cache (the remaining
+    // 15 are LIM), but this function is parameterisable (number of ways is
+    // passed via a0)...
+    //
+    // First, load the cache with "known" addresses by walking up L2 scratch
+    // with a 64-byte stride. We need to read (4 banks * 512 sets) to fill
+    // a single way.
+    //
+.flush_early_caching:
+                        // a0 = num_ways
+    slli    a0, a0, 17  // a0' = a0 * (4 * 512 * 64)
+    li  a5, L2_ZERO_DEVICE_ADDR
+    add a0, a0, a5      // a0''  = a0' + (4 * 512 * 64 * a0)
+                        //  = 0x0A000000 + (4 * 512 * 64 * num_ways)
+    beq a0, a5, .early_exit
+
+.preload_cache_with_known_addrs:
+    ld  a3, 0(a5)
+    addi    a5, a5, 64
+    bne a5, a0, .preload_cache_with_known_addrs
+
+    //
+    // Now that the cache is filled with known addresses, we can simply flush each
+    // known address to end up with an empty cache...
+    //
+    li  a5, L2_ZERO_DEVICE_ADDR
+    li  a3, L2_CCACHE_ADDR
+.flush_known_addrs_from_cache:
+    sd  a5, FLUSH64_OFFSET(a3)      // write address to 0x02010200 (FLUSH64)
+    addi    a5, a5, 64
+    bne a5, a0, .flush_known_addrs_from_cache
+
+.early_exit:
     ret
 
 /*

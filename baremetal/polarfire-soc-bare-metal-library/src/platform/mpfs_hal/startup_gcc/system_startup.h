@@ -128,7 +128,6 @@ void init_memory( void);
 void init_ddr( void);
 uint8_t init_mem_protection_unit(void);
 uint8_t init_pmp(uint8_t hart_id);
-uint8_t init_bus_error_unit( void);
 char * memfill(void *dest, const void * src, size_t len);
 char * config_copy(void *dest, const void * src, size_t len);
 char * config_16_copy(void *dest, const void * src, size_t len);

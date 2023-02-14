@@ -40,6 +40,7 @@ static uint32_t g_test_buffer_not_cached[765];
  * External Defines
  */
 extern const uint32_t ddr_test_pattern[768];
+extern const uint32_t ddr_init_pattern[64U];
 
 /*******************************************************************************
  * External function declarations
@@ -667,18 +668,33 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
 /**
  * Load a pattern to DDR
  */
-void load_ddr_pattern(uint64_t base, uint32_t size, uint8_t pattern_offset)
+void load_ddr_pattern(uint64_t base, uint64_t size, uint32_t pattern_type, \
+        volatile uint8_t pattern_offset)
 {
     int alive = 0;
-
+    uint32_t *pattern;
+    volatile uint32_t pattern_size;
     uint8_t *p_ddr = (uint8_t *)base;
-    uint32_t pattern_length = (uint32_t)(sizeof(ddr_test_pattern) - pattern_offset) ;
+
+    if (pattern_type == DDR_TEST_FILL)
+    {
+        pattern = (uint32_t *)ddr_test_pattern;
+        pattern_size = sizeof(ddr_test_pattern);
+    }
+    else
+    {
+        pattern = (uint32_t *)ddr_init_pattern;
+        pattern_size = sizeof(ddr_init_pattern);
+    }
+
+    uint32_t pattern_length = (uint32_t)(pattern_size - pattern_offset) ;
 
 #ifdef DEBUG_DDR_INIT
     uprint(g_debug_uart, (const char*)(const uint8_t*)"\r\nLoading test pattern\r\n");
+    uprint32(g_debug_uart, (const char*)(const uint8_t*)"\r\npattern_length = \r\n",pattern_length);
 #endif
 
-    while(((uint64_t)p_ddr + pattern_length) <  (base + size))
+    while(((uint64_t)p_ddr + pattern_length) <=  (base + size))
     {
 
         switch ( ((uint64_t)p_ddr)%8U )
@@ -686,22 +702,22 @@ void load_ddr_pattern(uint64_t base, uint32_t size, uint8_t pattern_offset)
             case 0:
             case 4:
                 pdma_transfer_complete(PDMA_CHANNEL0_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)ddr_test_pattern, pattern_length, PDMA_CHANNEL0_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL0_BASE_ADDRESS);
                 break;
             case 1:
             case 5:
                 pdma_transfer_complete(PDMA_CHANNEL1_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)ddr_test_pattern, pattern_length, PDMA_CHANNEL1_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL1_BASE_ADDRESS);
                 break;
             case 2:
             case 6:
                 pdma_transfer_complete(PDMA_CHANNEL2_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)ddr_test_pattern, pattern_length, PDMA_CHANNEL2_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL2_BASE_ADDRESS);
                 break;
             case 3:
             case 7:
                 pdma_transfer_complete(PDMA_CHANNEL3_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)ddr_test_pattern, pattern_length, PDMA_CHANNEL3_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL3_BASE_ADDRESS);
                 break;
         }
 
@@ -763,8 +779,8 @@ static void load_test_buffers(uint32_t * p_cached_ddr, uint32_t * p_not_cached_d
 uint32_t test_ddr(uint32_t no_of_iterations, uint32_t size)
 {
     uint32_t pattern_length = sizeof(ddr_test_pattern) - (3 * sizeof(uint32_t));
-    uint32_t * p_ddr_cached = (uint32_t *)0x80000000;
-    uint32_t * p_ddr_noncached = (uint32_t *)0x1400000000;
+    uint32_t * p_ddr_cached = (uint32_t *)BASE_ADDRESS_CACHED_32_DDR;
+    uint32_t * p_ddr_noncached = (uint32_t *)BASE_ADDRESS_NON_CACHED_64_DDR;
     uint32_t word_offset;
     uint32_t alive = 0;
     uint32_t alive_idx = 0U;
@@ -812,8 +828,8 @@ uint32_t test_ddr(uint32_t no_of_iterations, uint32_t size)
         }
         else
         {
-            p_ddr_cached = (uint32_t *)0x80000000;
-            p_ddr_noncached = (uint32_t *)0x1400000000;
+            p_ddr_cached = (uint32_t *)BASE_ADDRESS_CACHED_32_DDR;
+            p_ddr_noncached = (uint32_t *)BASE_ADDRESS_NON_CACHED_64_DDR;
             iteration++;
 #ifdef DEBUG_DDR_INIT
             uprint32(g_debug_uart, "  Iteration ", (uint64_t)(unsigned int)iteration);
