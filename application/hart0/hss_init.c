@@ -61,7 +61,7 @@
 #define mMEM_SIZE(REGION)      (REGION##_END - REGION##_START + 1u)
 extern const uint64_t __dtim_start,    __dtim_end;
 extern const uint64_t __l2_start;
-extern const uint64_t __ddr_start,        __ddr_end;
+extern const uint64_t __ncddrhi_start,   __ncddrhi_end;
 extern const uint64_t _hss_start;
 
 #define E51_DTIM_START         (&__dtim_start)
@@ -85,17 +85,19 @@ extern const uint64_t _hss_start;
 #define L2_START               (&__l2_start)
 #define L2_END                 (&__l2_end)
 
-#define DDR_START              (&__ddr_start)
-// can't access DDR_END without getting an error:
-//     R_RISCV_PCREL_HI20 against symbol `__ddr_end'
+// can't access NCDDRHI_START without getting an error:
+//     R_RISCV_PCREL_HI20 against symbol `__ncddrhi_start'
 // solution is to use assembler instead as the symbol is constant at link time
 //
-//  #define DDR_END                (&__ddr_end)
+//  #define NCDDRHI_START                (&__ncddrhi_start)
 asm(".align 3\n"
-    "hss_init_ddr_end: .quad (__ddr_end)\n");
+    "hss_init_ncddrhi_start: .quad (__ncddrhi_start)\n");
+asm(".align 3\n"
+    "hss_init_ncddrhi_end: .quad (__ncddrhi_end)\n");
 
-extern const uint64_t hss_init_ddr_end;
-#define DDR_END                (&hss_init_ddr_end)
+extern const uint64_t hss_init_ncddrhi_start, hss_init_ncddrhi_end;
+#define NCDDRHI_START          (&hss_init_ncddrhi_start)
+#define NCDDRHI_END            (&hss_init_ncddrhi_end)
 
 #if IS_ENABLED(CONFIG_PLATFORM_MPFS)
 #  include "mss_sysreg.h"
@@ -104,9 +106,9 @@ extern const uint64_t hss_init_ddr_end;
 bool HSS_ZeroDDR(void)
 {
 #if IS_ENABLED(CONFIG_INITIALIZE_MEMORIES)
-    uint64_t volatile *pDWord = (uint64_t volatile *)DDR_START;
+    uint64_t volatile *pDWord = (uint64_t volatile *)NCDDRHI_START;
 
-    while (pDWord < (uint64_t volatile const * const)DDR_END) {
+    while (pDWord < (uint64_t volatile const * const)NCDDRHI_END) {
         *pDWord = 0llu;
         pDWord++;
     }
