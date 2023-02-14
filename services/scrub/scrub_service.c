@@ -102,7 +102,7 @@ const struct {
 #endif
     { (uintptr_t)&__ncddrhi_start,       (uintptr_t)&__ncddrhi_end },
 #endif
-    //{ (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
+    { (uintptr_t)&__dtim_start,          (uintptr_t)&__dtim_end },
     //{ (uintptr_t)&__e51itim_start,       (uintptr_t)&__e51itim_end },
     //{ (uintptr_t)&__u54_1_itim_start,    (uintptr_t)&__u54_1_itim_end },
     //{ (uintptr_t)&__u54_2_itim_start,    (uintptr_t)&__u54_2_itim_end },
@@ -110,7 +110,7 @@ const struct {
     //{ (uintptr_t)&__u54_4_itim_start,    (uintptr_t)&__u54_4_itim_end },
 };
 
-static size_t offset = 0u;
+static uintptr_t offset = 0u;
 static size_t index = 0u;
 static size_t entryCount = 0u;
 static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
@@ -122,7 +122,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
             if ((rams[index].baseAddr + offset)  >= rams[index].endAddr) {
                 index = (index + 1u) % ARRAY_SIZE(rams);
                 // mHSS_DEBUG_PRINTF(LOG_NORMAL, "Scrubbing %p to %p\n", rams[index].baseAddr, rams[index].endAddr);
-		offset = 0u;
+                offset = 0u;
             }
 
             const uintptr_t length = rams[index].endAddr - rams[index].baseAddr;
@@ -130,10 +130,10 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
             if (length) {
                 const size_t chunkSize = MIN(CONFIG_SERVICE_SCRUB_MAX_SIZE_PER_LOOP_ITER, length-offset);
 
-                const uint64_t *pStart = (uint64_t *)(rams[index].baseAddr + offset);
-                const uint64_t *pEnd = (uint64_t *)(pStart + chunkSize);
+                const uintptr_t chunkStartAddr = (uintptr_t)(rams[index].baseAddr) + offset;
+                const uintptr_t chunkEndAddr =   (uintptr_t)(chunkStartAddr) + chunkSize;
 
-                for (uint64_t *pMem = (uint64_t *)pStart; pMem < pEnd; pMem++) {
+                for (uint64_t *pMem = (uint64_t*)chunkStartAddr; pMem < (uint64_t*)chunkEndAddr; pMem++) {
                     *(volatile uint64_t *)pMem;
                 }
                 offset = offset + chunkSize;
