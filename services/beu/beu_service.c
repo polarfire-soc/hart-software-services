@@ -26,7 +26,9 @@
 #include "beu_service.h"
 #include "sbi_bitops.h"
 
-#include "mss_hart_ints.h"
+
+#include "mss_beu_def.h"
+#include "mss_beu.h"
 
 #ifndef BIT
 #  define BIT(nr)			(1UL << (nr))
@@ -84,17 +86,6 @@ struct StateMachine beu_service = {
 // | 7     | Data cache uncorrectalbe ECC error                  |
 // +-------+-----------------------------------------------------|
 //
-enum BEU_Event_Cause {
-    BEU_EVENT_NO_ERROR                 = 0,
-    BEU_EVENT_RESEVERD1                = 1,
-    BEU_EVENT_ITIM_CORRECTABLE         = 2,
-    BEU_EVENT_ITIM_UNCORRECTABLE       = 3,
-    BEU_EVENT_RESERVED2                = 4,
-    BEU_EVENT_TILELINK_BUS_ERROR       = 5,
-    BEU_EVENT_DATA_CACHE_CORRECTABLE   = 6,
-    BEU_EVENT_DATA_CACHE_UNCORRECTABLE = 7,
-    MAX_BEU_CAUSES                     = BEU_EVENT_DATA_CACHE_UNCORRECTABLE + 1
-};
 
 char const * const BEU_Event_Name[] = {
     [BEU_EVENT_NO_ERROR]                 = "No error",
@@ -117,7 +108,7 @@ const uint64_t BEU_ENABLE_UNCORRECTABLE_MASK = (BIT(BEU_EVENT_ITIM_UNCORRECTABLE
     BIT(BEU_EVENT_DATA_CACHE_UNCORRECTABLE));
 
 static struct {
-  const enum BEU_Event_Cause bit_position;
+  const enum BEU_event_cause bit_position;
   char const * const pName;
   size_t counter;
 } beu_stats_[] = {
