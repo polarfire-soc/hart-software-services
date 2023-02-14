@@ -131,6 +131,7 @@ SECTIONS
 
     PROVIDE(__ddrhi_start      = ORIGIN(ddrhi));
     PROVIDE(__ddrhi_end        = ORIGIN(ddrhi) + LENGTH(ddrhi));
+    pROVIDE(__ddrhi_max_end    = ORIGIN(ddrhi) + LENGTH(ncddrhi));
 
     PROVIDE(__ncddrhi_start    = ORIGIN(ncddrhi));
     PROVIDE(__ncddrhi_end      = ORIGIN(ncddrhi) + LENGTH(ncddrhi));
