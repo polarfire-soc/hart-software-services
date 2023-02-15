@@ -34,7 +34,7 @@ config SERVICE_BOOT_CUSTOM_FLOW
 
 config SERVICE_BOOT_DDR_TARGET_ADDR
 	hex "Target Base address for BOOT to DDR copy"
-	default 0xA0000000
+	default 0x103FC00000
 	depends on SERVICE_BOOT
 	help
                 This feature specifies a scratch address for EMMC/QSPI decompression
