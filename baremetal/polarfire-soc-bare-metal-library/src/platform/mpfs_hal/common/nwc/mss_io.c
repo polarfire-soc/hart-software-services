@@ -509,12 +509,12 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
             if (mss_is_alternate_io_setting_sd() == true)
             {
                 io_mux_and_bank_config_alt();
-
             }
             else
             {
                 io_mux_and_bank_config();
             }
+            switch_demux_using_fabric_ip(SD_MSSIO_CONFIGURATION);
             break;
 
         case EMMC_MSSIO_CONFIGURATION:
@@ -526,6 +526,7 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
             {
                 io_mux_and_bank_config();
             }
+            switch_demux_using_fabric_ip(EMMC_MSSIO_CONFIGURATION);
             break;
 
         case NO_SUPPORT_MSSIO_CONFIGURATION:
@@ -544,43 +545,64 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
 }
 
 /**
- * switch_external_mux()
- * Requires fpga switch hdl. This comes with reference icicle kit design.
+ * Is there a mux present, define is true by default
+ * @return true/false
+ */
+__attribute__((weak)) uint8_t fabric_sd_emmc_demux_present(void)
+{
+    return (uint8_t) FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT;
+}
+
+/**
+ * Returns the fabric mux address
+ * @return address of the mux in fabric
+ */
+__attribute__((weak)) uint32_t * fabric_sd_emmc_demux_address(void)
+{
+    return (uint32_t *)FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS;
+}
+
+/**
+ * switch_demux_using_fabric_ip()
+ * Requires fpga switch hdl. This comes with the reference icicle kit design.
  * You will need to create your own or copy when creating your own fpga design
  * along with an external mux in your board design if you wish to use SD/eMMC
  * muxing in your hardware design.
  * Please note this function will cause a hang if you do not have support
- * for switching in your fpga design, nlu use if you have this support if your
+ * for switching in your fpga design. Only use if you have this support if your
  * fabric design.
  * @param option SD_MSSIO_CONFIGURATION/EMMC_MSSIO_CONFIGURATION
  * @return
  */
-__attribute__((weak)) uint8_t switch_external_mux(MSS_IO_OPTIONS option)
+__attribute__((weak)) uint8_t switch_demux_using_fabric_ip(MSS_IO_OPTIONS option)
 {
     uint8_t result = false;
 
-#ifdef LIBERO_SETTING_FPGA_SWITCH_ADDRESS
-    volatile uint32_t *reg_pt = (uint32_t *)LIBERO_SETTING_FPGA_SWITCH_ADDRESS;
-    switch(option)
+    if (fabric_sd_emmc_demux_present() == true)
     {
-        case SD_MSSIO_CONFIGURATION:
-            *reg_pt = 1UL;
-            break;
+        volatile uint32_t *reg_pt = fabric_sd_emmc_demux_address();
+        switch(option)
+        {
+            case SD_MSSIO_CONFIGURATION:
+                *reg_pt = CMD_SD_EMMC_DEMUX_SD_ON;
+                break;
 
-        case EMMC_MSSIO_CONFIGURATION:
-            *reg_pt = 0UL;
-            break;
+            case EMMC_MSSIO_CONFIGURATION:
+                *reg_pt = CMD_SD_EMMC_DEMUX_EMMC_ON;
+                break;
 
-        case NO_SUPPORT_MSSIO_CONFIGURATION:
-            break;
+            case NO_SUPPORT_MSSIO_CONFIGURATION:
+                break;
 
-        case NOT_SETUP_MSSIO_CONFIGURATION:
-            break;
+            case NOT_SETUP_MSSIO_CONFIGURATION:
+                break;
+        }
+        result = true;
     }
-#endif
-
-    result = true;
-
+    else
+    {
+        result = false;
+    }
     return result;
 }
 

@@ -92,7 +92,7 @@ bool HSS_BoardLateInit(void)
  * For the MPFS-Video kit, we are changing I/O pullup and pull down states
  * The setup for this is being automated in a future MSS Configurator release
  * */
-uint8_t switch_external_mux(MSS_IO_OPTIONS option)
+uint8_t switch_demux_using_fabric_ip(MSS_IO_OPTIONS option)
 {
     uint8_t result = false;
 

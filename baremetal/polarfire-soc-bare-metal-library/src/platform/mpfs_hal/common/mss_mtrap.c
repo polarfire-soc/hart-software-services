@@ -7,7 +7,7 @@
  *
  */
 
-/***************************************************************************
+/*******************************************************************************
  *
  * @file mss_mtrap.c
  * @author Microchip-FPGA Embedded Systems Solutions
@@ -20,8 +20,6 @@
 extern "C" {
 #endif
 
-
-
 void handle_local_interrupt(uint8_t interrupt_no);
 void handle_m_soft_interrupt(void);
 void handle_m_timer_interrupt(void);
@@ -31,7 +29,6 @@ void misaligned_load_trap(uintptr_t * regs, uintptr_t mcause, uintptr_t mepc);
 void pmp_trap(uintptr_t * regs, uintptr_t mcause, uintptr_t mepc);
 void trap_from_machine_mode(uintptr_t * regs, uintptr_t dummy, uintptr_t mepc);
 void bad_trap(uintptr_t* regs, uintptr_t dummy, uintptr_t mepc);
-
 
 void bad_trap(uintptr_t* regs, uintptr_t dummy, uintptr_t mepc)
 {
@@ -631,7 +628,7 @@ void handle_m_ext_interrupt(void)
     }
 
     uint8_t disable = EXT_IRQ_KEEP_ENABLED;
-    disable = ext_irq_handler_table[int_num /* + OFFSET_TO_MSS_GLOBAL_INTS Think this was required in early bitfile */]();
+    disable = ext_irq_handler_table[int_num]();
 
     PLIC_CompleteIRQ(int_num);
 
@@ -662,29 +659,38 @@ void trap_from_machine_mode(uintptr_t * regs, uintptr_t dummy, uintptr_t mepc)
 {
     volatile uintptr_t mcause = read_csr(mcause);
 
-    if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)  > 15U)&& ((mcause & MCAUSE_CAUSE)  < 64U))
+    if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE) >=\
+            IRQ_M_LOCAL_MIN)&& ((mcause & MCAUSE_CAUSE)  <= IRQ_M_LOCAL_MAX))
     {
         handle_local_interrupt((uint8_t)(mcause & MCAUSE_CAUSE));
     }
-    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)  == IRQ_M_EXT))
+    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)\
+            == IRQ_M_EXT))
     {
         handle_m_ext_interrupt();
     }
-    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)  == IRQ_M_SOFT))
+    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)\
+            == IRQ_M_SOFT))
     {
         handle_m_soft_interrupt();
     }
-    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)  == IRQ_M_TIMER))
+    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)\
+            == IRQ_M_TIMER))
     {
         handle_m_timer_interrupt();
+    }
+    else if (((mcause & MCAUSE_INT) == MCAUSE_INT) && ((mcause & MCAUSE_CAUSE)\
+            == IRQ_M_BEU ))
+    {
+        handle_local_beu_interrupt();
     }
     else
     {
         uint32_t i = 0U;
-        while(1)
+        while(1U)
         {
             /* wait for watchdog */
-            i++;        /* added some code as SC debugger hangs if in loop doing nothing */
+            i++;
             if(i == 0x1000U)
             {
                 i = (uint32_t)mcause; /* so mcause is not optimised out */

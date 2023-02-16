@@ -52,6 +52,9 @@
 #include "mpfs_reg_map.h"
 #include "hss_sys_setup.h"
 
+#include "mss_beu_def.h"
+#include "mss_beu.h"
+
 /******************************************************************************/
 
 
