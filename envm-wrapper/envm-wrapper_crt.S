@@ -352,8 +352,16 @@ config_copy:
 	// until DDR is initialized, so will have no effect other than clear ECC
 	//
 	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
+	// Instead of taking L2 end address from link script
+	// we can call a routine to get the actual configured end of L2
+	addi	sp, sp, -8
+	sw	ra, 0(sp)
+	call	end_l2_scratchpad_address		// l2 scratchpad end address is returned in a0
+	lw	ra, 0(sp)
+	addi	sp, sp, 8
+	mv	a5, a0
+
 	la	a4, __l2_start
-	la	a5, __l2_end
 	j	1f
 .clear_l2lim:
 	// Clear the LIM
