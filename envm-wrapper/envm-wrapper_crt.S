@@ -114,12 +114,12 @@ _start:
         j	.decompress_done
 
 .e51_decompress:
-    li  a0, 1    # flush default way in case it has already been used
-    call    .flush_early_caching
+	li  a0, 1    # flush default way in case it has already been used
+	call    .flush_early_caching
 	call	config_l2_cache
-    call	.clear_dtim
-    call	.clear_l2lim
-    call	.clear_l2scratchpad
+	call	.clear_dtim
+	call	.clear_l2lim
+	call	.clear_l2scratchpad
 	call	init_memory
 	call	HSS_Setup_Clocks
 
@@ -386,51 +386,51 @@ config_copy:
 /***********************************************************************************
  *
  */
-    .equ    L2_ZERO_DEVICE_ADDR, 0x0A000000
-    .equ    L2_CCACHE_ADDR, 0x02010000
-    .equ    FLUSH64_OFFSET, 0x200
+	.equ	L2_ZERO_DEVICE_ADDR, 0x0A000000
+	.equ	L2_CCACHE_ADDR, 0x02010000
+	.equ	FLUSH64_OFFSET, 0x200
 
-    //
-    // We want to flush anything that may be inadvertently cached
-    // by the actions of G5C at startup...
-    //
-    // The cache block is 64-bytes wide, and there are 4 banks * 512 sets * 16 ways.
-    //
-    // From power on, only a single way is enabled as cache (the remaining
-    // 15 are LIM), but this function is parameterisable (number of ways is
-    // passed via a0)...
-    //
+	//
+	// We want to flush anything that may be inadvertently cached
+	// by the actions of G5C at startup...
+	//
+	// The cache block is 64-bytes wide, and there are 4 banks * 512 sets * 16 ways.
+	//
+	// From power on, only a single way is enabled as cache (the remaining
+	// 15 are LIM), but this function is parameterisable (number of ways is
+	// passed via a0)...
+	//
 
-    // First, load the cache with "known" addresses by walking up L2 scratch
-    // with a 64-byte stride. We need to read (4 banks * 512 sets) to fill
-    // a single way.
-    //
+	// First, load the cache with "known" addresses by walking up L2 scratch
+	// with a 64-byte stride. We need to read (4 banks * 512 sets) to fill
+	// a single way.
+	//
 .flush_early_caching:
-                        // a0 = num_ways
-    slli    a0, a0, 17  // a0' = a0 * (4 * 512 * 64)
-    li  a5, L2_ZERO_DEVICE_ADDR
-    add a0, a0, a5      // a0''  = a0' + (4 * 512 * 64 * a0)
-                        //  = 0x0A000000 + (4 * 512 * 64 * num_ways)
-    beq a0, a5, .early_exit
+					// a0 = num_ways
+	slli	a0, a0, 17		// a0' = a0 * (4 * 512 * 64)
+	li	a5, L2_ZERO_DEVICE_ADDR
+	add	a0, a0, a5		// a0''  = a0' + (4 * 512 * 64 * a0)
+                        		//  = 0x0A000000 + (4 * 512 * 64 * num_ways)
+	beq	a0, a5, .early_exit
 
 .preload_cache_with_known_addrs:
-    ld  a3, 0(a5)
-    addi    a5, a5, 64
-    bne a5, a0, .preload_cache_with_known_addrs
+	ld	a3, 0(a5)
+	addi	a5, a5, 64
+	bne	a5, a0, .preload_cache_with_known_addrs
 
-    //
-    // Now that the cache is filled with known addresses, we can simply flush each
-    // known address to end up with an empty cache...
-    //
-    li  a5, L2_ZERO_DEVICE_ADDR
-    li  a3, L2_CCACHE_ADDR
+	//
+	// Now that the cache is filled with known addresses, we can simply flush each
+	// known address to end up with an empty cache...
+	//
+	li	a5, L2_ZERO_DEVICE_ADDR
+	li	a3, L2_CCACHE_ADDR
 .flush_known_addrs_from_cache:
-    sd  a5, FLUSH64_OFFSET(a3)      // write address to 0x02010200 (FLUSH64)
-    addi    a5, a5, 64
-    bne a5, a0, .flush_known_addrs_from_cache
+	sd	a5, FLUSH64_OFFSET(a3)      // write address to 0x02010200 (FLUSH64)
+	addi	a5, a5, 64
+	bne	a5, a0, .flush_known_addrs_from_cache
 
 .early_exit:
-    ret
+	ret
 
 /***********************************************************************************
  *
