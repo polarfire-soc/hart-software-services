@@ -116,9 +116,9 @@ _start:
 .e51_decompress:
 	li  a0, 1    # flush default way in case it has already been used
 	call    .flush_early_caching
+	call	.clear_l2lim
 	call	config_l2_cache
 	call	.clear_dtim
-	call	.clear_l2lim
 	call	.clear_l2scratchpad
 	call	init_memory
 	call	HSS_Setup_Clocks
@@ -354,7 +354,7 @@ config_copy:
 	//
 	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
 	la	a4, __l2_start
-	la	a5, __l2_end_max
+	la	a5, __l2_end
 	j	1f
 .clear_l2lim:
 	// Clear the LIM
@@ -366,7 +366,7 @@ config_copy:
 	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
 	//
 	la 	a4, __l2lim_start
-	la	a5, __l2lim_end
+	la	a5, __l2lim_end_max
         j	1f
 .clear_dtim:
         //

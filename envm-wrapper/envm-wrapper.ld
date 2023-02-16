@@ -82,9 +82,9 @@ SECTIONS
     PROVIDE(__envm_end =		ORIGIN(envm)		+ LENGTH(envm));
     PROVIDE(__l2lim_start =		ORIGIN(l2lim));
     PROVIDE(__l2lim_end =		ORIGIN(l2lim)		+ LENGTH(l2lim));
+    PROVIDE(__l2lim_end_max =		ORIGIN(l2lim)    	+ (128k*(16-1)));
     PROVIDE(__l2_start =		ORIGIN(l2zerodevice));
     PROVIDE(__l2_end =			ORIGIN(l2zerodevice)	+ LENGTH(l2zerodevice));
-    PROVIDE(__l2_end_max =		ORIGIN(l2zerodevice)    + (128*15*1024));
     PROVIDE(__ddr_start =		ORIGIN(ddr));
     PROVIDE(__ddr_end =			ORIGIN(ddr)		+ LENGTH(ddr));
     PROVIDE(__ddrhi_start =		ORIGIN(ddrhi));
