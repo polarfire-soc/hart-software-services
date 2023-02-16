@@ -43,7 +43,6 @@
 	.globl	_start
 
 _start:
-	#j _start
 	la	t0, .early_trap_handler
 	csrw	CSR_MTVEC, t0
 	li	ra, 0
@@ -101,8 +100,8 @@ _start:
 	add	sp, sp, tp
 
 .disable_and_clear_interrupts:
-	csrw	CSR_MIE, zero			# disable all interrupts
-	csrw	CSR_MIP, zero			# clear all interrupts
+	csrw	CSR_MIE, zero			// disable all interrupts
+	csrw	CSR_MIP, zero			// clear all interrupts
 
 .check_if_e51:
     beqz	a0, .e51_decompress
@@ -114,7 +113,7 @@ _start:
         j	.decompress_done
 
 .e51_decompress:
-	li  a0, 1    # flush default way in case it has already been used
+	li  a0, 1    				// flush default way in case it has already been used
 	call    .flush_early_caching
 	call	.clear_l2lim
 	call	config_l2_cache
@@ -153,28 +152,28 @@ _start:
 	call	MSS_UART_polled_tx_string
 #endif
 
-	la	a0, hss_l2scratch_lz				# compressed image header
-	lw	a1, OFFSET_OF(HSS_CompressedImage, version)(a0)	# version
+	la	a0, hss_l2scratch_lz				// compressed image header
+	lw	a1, OFFSET_OF(HSS_CompressedImage, version)(a0)	// version
 	li	a2, mHSS_COMPRESSED_VERSION_DEFLATE
 	beq	a1, a2, .e51_miniz_decompress
 .spin_unknown_compressor:
 	j	.spin_unknown_compressor
 
 .e51_miniz_decompress:
-	# a3 => compressed length...
+	// a3 => compressed length...
         REG_L	a3, OFFSET_OF(HSS_CompressedImage, compressedImageLen)(a0)
 
-	# a2 => pointer to source
+	// a2 => pointer to source
 	REG_L	a2, OFFSET_OF(HSS_CompressedImage, headerLength)(a0)
-	add	a2, a0, a2			# ... jump source past header to payload
+	add	a2, a0, a2			// ... jump source past header to payload
 
-	# a1 => pointer to store decompressed size, seeded with inital value from image header
+	// a1 => pointer to store decompressed size, seeded with inital value from image header
 	REG_L	a0, OFFSET_OF(HSS_CompressedImage, originalImageLen)(a0)
 	la	a1, decompressed_size
 	REG_S	a0, 0(a1)
 
-	# a0 => pointer to destination (where to decompress to)
-	la	a0, __l2_start		# destination
+	// a0 => pointer to destination (where to decompress to)
+	la	a0, __l2_start		// destination
 	call 	mz_uncompress
 	j	.clear_progress
 
@@ -192,7 +191,7 @@ _start:
 	call	MSS_UART_get_tx_status
 
 	andi	a0, a0, 64
-	beq	a0, zero, 1b # loop until transmitter empty (TEMT)
+	beq	a0, zero, 1b // loop until transmitter empty (TEMT)
 #endif
 
 .spin_bad_crc:
@@ -208,7 +207,7 @@ _start:
 	call	MSS_UART_get_tx_status
 
 	andi	a0, a0, 64
-	beq	a0, zero, 1b # loop until transmitter empty (TEMT)
+	beq	a0, zero, 1b // loop until transmitter empty (TEMT)
 #endif
 
 
@@ -224,7 +223,7 @@ _start:
 	call	_hss_start
 	la	a0, _hss_start
 	csrw	CSR_MEPC, a0
-	csrw	CSR_MIE, zero			# disable all interrupts
+	csrw	CSR_MIE, zero			// disable all interrupts
 	csrr	a0, CSR_MSTATUS
 	and	a0, a0, ~MSTATUS_MPIE
 	li	a1, ~MSTATUS_MPP
@@ -328,15 +327,15 @@ init_memory:
         .weak  config_copy
         .type   config_copy, @function
 config_copy:
-        li      a5,0                     # initialize offset
+        li      a5,0                     // initialize offset
 .check_if_config_copy_done:
-        beq     a2,a5, .config_copy_done # if offset == length, goto config_copy_done
+        beq     a2,a5, .config_copy_done // if offset == length, goto config_copy_done
 .do_config_copy:
-        add     a4,a1,a5                 # csrc = src + offset
-        lbu     a3,0(a4)                 # tmp = *csrc
-        add     a4,a0,a5                 # cdest = dest + offset
-        addi    a5,a5,1                  # offset = offset + 1
-        sb      a3,0(a4)                 # *cdest = *csrc
+        add     a4,a1,a5                 // csrc = src + offset
+        lbu     a3,0(a4)                 // tmp = *csrc
+        add     a4,a0,a5                 // cdest = dest + offset
+        addi    a5,a5,1                  // offset = offset + 1
+        sb      a3,0(a4)                 // *cdest = *csrc
         j       .check_if_config_copy_done
 .config_copy_done:
         ret
@@ -376,7 +375,7 @@ config_copy:
         la	a4, __dtim_start
         la	a5, __dtim_end
 1:
-        // common loop used by both .clear_l2lim and .clear_dtim
+        // common loop used by .clear_l2scratchpad, .clear_l2lim and .clear_dtim
 	REG_S	x0, 0(a4)
 	add	a4, a4, __SIZEOF_POINTER__
 	blt	a4, a5, 1b
