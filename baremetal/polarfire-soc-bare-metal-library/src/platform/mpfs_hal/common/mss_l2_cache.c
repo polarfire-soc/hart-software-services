@@ -39,7 +39,7 @@ static void check_config_l2_scratchpad(void);
 /***************************************************************************//**
  * See hw_l2_scratch.h for details of how to use this function.
  */
-__attribute__((weak)) uint64_t end_l2_cache_address(void)
+__attribute__((weak)) uint64_t end_l2_scratchpad_address(void)
 {
    return (uint64_t)(ZERO_DEVICE_BOTTOM + (LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS
            * WAY_BYTE_LENGTH));

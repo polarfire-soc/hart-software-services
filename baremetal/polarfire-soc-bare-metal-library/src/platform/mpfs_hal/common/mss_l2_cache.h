@@ -524,7 +524,7 @@ typedef struct {
 
 
 /***************************************************************************//**
-  The end_l2_cache_address() function is used to return the end address of the
+  The end_l2_scratchpad_address() function is used to return the end address of the
   initialised scratchpad. It is used in the startup code.
 
   @return
@@ -534,11 +534,11 @@ typedef struct {
   @code
         // When called from assembly
         call    config_l2_cache
-        call    end_l2_cache_address  # end address returned in a0
+        call    end_l2_scratchpad_address  # end address returned in a0
         call    .clear_scratchpad
   @endcode
  */
-uint64_t end_l2_cache_address(void);
+uint64_t end_l2_scratchpad_address(void);
 
 /***************************************************************************//**
   The config_l2_cache() function is used to setup scratchpad. It will be used by

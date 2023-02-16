@@ -196,7 +196,7 @@ _start:
                                       # (bootmode2 or 3)
     call    .flush_early_caching
     call    config_l2_cache
-    call    end_l2_cache_address  # end address returned in a0
+    call    end_l2_scratchpad_address  # end address returned in a0
     call    .clear_scratchpad
     # place pattern in the common heap
     la  a4, __heap_start
