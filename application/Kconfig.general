@@ -35,6 +35,31 @@ config USE_IHC
 	help
 		Enable MiV Inter-Hart Communication (IHC)
 
+menu "Tamper"
+
+config USE_TAMPER
+	bool "Setup tamper module"
+	default n
+	help
+		Configure the tamper module on start up to clear and disable
+		interrupts
+
+		If you don't know what to do here, say N.
+
+config TAMPER_BASE_ADDRESS
+	depends on USE_TAMPER
+	hex "Base address of the tamper module"
+	default 0x40000500
+	help
+		This is the base address of the tamper macro. The address is
+		determined by the implementation, and may vary between FPGA
+		designs.
+
+		The default represents that used in the Icicle Kit Reference
+		Design as of the v2023.02 release.
+
+endmenu
+
 config ALLOW_COLDREBOOT
 	bool "Allow contexts to issue a cold reboot"
 	default y
@@ -61,6 +86,20 @@ config ALLOW_COLDREBOOT_ALWAYS
 		cold reboot ecall, irrespective of payload.bin flag entitlements.
 
 		If you do not know what to do here, say Y.
+
+config COLDREBOOT_FULL_FPGA_RESET
+	bool "Reset the FPGA when cold reboot is requested"
+	default n
+	depends on ALLOW_COLDREBOOT
+	depends on USE_TAMPER
+	help
+		If enabled, this feature allows the HSS to do a full reset of
+		the FPGA when a cold reboot is requested. This is required to
+		initiate an Auto-Update at runtime but should be disabled
+		otherwise. Ensure the "TAMPER_BASE_ADDRESS" is set to match
+		the address of the tamper macro in your FPGA design.
+
+		If you do not know what to do here, say N.
 
 endmenu
 
