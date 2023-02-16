@@ -819,14 +819,14 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
                 pMachine->state = (stateType_t)BOOT_OPENSBI_INIT;
                 result = true;
             } else if (pMachine->state == BOOT_SETUP_PMP_COMPLETE) {
-               pMachine->state = (stateType_t)BOOT_INITIALIZATION;
-               result = true;
+                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
+                result = true;
             } else if ((pMachine->state == BOOT_INITIALIZATION) || (pMachine->state == BOOT_IDLE)) {
-               pMachine->state = (stateType_t)BOOT_INITIALIZATION;
-               result = true;
+                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
+                result = true;
             } else {
-               result = false;
-               mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for u54_%u\n", pMachine->state, i+1u);
+                result = false;
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for u54_%u\n", pMachine->state, i+1u);
             }
         }
     }
