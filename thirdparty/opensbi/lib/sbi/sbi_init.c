@@ -511,7 +511,6 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 		init_coldboot(scratch, hartid);
 	} else {
 		if (atomic_read(&coldboot_lottery)) {
-		//if (sbi_is_first_boot(plat) > 0) {
 			// we've booted before if I'm the boot hart but I'm doing a warm boot ...
 			// so we need to potentially clean-up the state of the boot hart to ensure that
 			// we don't end up deadlocked on restart with all harts waiting for someone to
@@ -536,6 +535,7 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 
 					int rc = sbi_hsm_hart_start(scratch, NULL, hartid,
 						dom->next_addr, dom->next_mode, dom->next_arg1);
+
 					if (rc)
 						sbi_hart_hang();
 				}
