@@ -735,7 +735,7 @@ static inline void MSS_WD_force_reset(mss_watchdog_num_t wd_num)
                        (uint32_t)(wdog_hw_base[wd_num]->STATUS |
                                                        MSS_WDOG_TRIGGERED_MASK))
     {
-        wdog_hw_base[wd_num]->FORCE = 0xDEADu;
+        wdog_hw_base[wd_num]->FORCE = MSS_WDOG_FORCE_RESET_KEY;
     }
     else
     {
