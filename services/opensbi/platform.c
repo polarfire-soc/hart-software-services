@@ -433,12 +433,23 @@ bool mpfs_is_hart_using_opensbi(int hartid)
 
 void mpfs_mark_hart_as_booted(int hartid)
 {
-    assert(hartid < ARRAY_SIZE(hart_ledger));
     assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_ledger)));
 
     if (hartid < ARRAY_SIZE(hart_ledger)) {
         hart_ledger[hartid].boot_pending = 0;
     }
+}
+
+bool mpfs_are_harts_in_same_domain(int hartid1, int hartid2)
+{
+    bool result = false;
+
+    assert((hartid1 >= 0) & (hartid1 < ARRAY_SIZE(hart_ledger)));
+    assert((hartid2 >= 0) & (hartid2 < ARRAY_SIZE(hart_ledger)));
+
+    result = (hart_ledger[hartid1].owner_hartid == hart_ledger[hartid2].owner_hartid);
+
+    return result;
 }
 
 bool mpfs_is_last_hart_ready(void)
