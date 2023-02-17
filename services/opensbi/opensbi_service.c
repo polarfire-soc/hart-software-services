@@ -26,8 +26,6 @@
 
 #include "csr_helper.h"
 
-#include "ssmb_ipi.h"
-
 #include "opensbi_service.h"
 #include "opensbi_ecall.h"
 #include "riscv_encoding.h"
