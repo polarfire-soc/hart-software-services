@@ -265,7 +265,7 @@ void RunInitFunctions(const size_t spanOfInitFunctions, const struct InitFunctio
 
                     (void)HSS_TinyCLI_Parser();
                 } else {
-                    void _start(void);
+                    extern void _start(void);
                     _start();
                 }
             }

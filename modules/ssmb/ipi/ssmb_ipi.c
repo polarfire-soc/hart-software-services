@@ -535,7 +535,7 @@ bool IPI_MessageAlloc(uint32_t *indexOut)
         if (!IPI_DATA.ipi_completes[index].used) {
             IPI_DATA.ipi_completes[index].used = true;
             IPI_DATA.ipi_completes[index].transaction_id =
-                IPI_DATA.my_transaction_id[current_hartid()];;
+                IPI_DATA.my_transaction_id[current_hartid()];
 
             IPI_DATA.ipi_completes[index].status = IPI_PENDING;
             IPI_DATA.my_transaction_id[current_hartid()]++;

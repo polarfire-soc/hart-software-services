@@ -99,7 +99,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     enum IPIStatusCode result = IPI_FAIL;
     (void)p_ancilliary_buffer_in_ddr;
 
-    int hartid = current_hartid();
+    const int hartid = current_hartid();
 
     if (source != HSS_HART_E51) {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "security policy prevented GOTO request from u54_%d\n", source);
@@ -113,7 +113,7 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         IPI_Send(source, IPI_MSG_ACK_COMPLETE, transaction_id, IPI_SUCCESS, NULL, NULL);
         IPI_MessageUpdateStatus(transaction_id, IPI_IDLE); // free the IPI
 
-        struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, current_hartid());
+        struct IPI_Outbox_Msg *pMsg = IPI_DirectionToFirstMsgInQueue(source, hartid);
         size_t i;
 
         for (i = 0u; i < IPI_MAX_NUM_QUEUE_MESSAGES; i++) {
