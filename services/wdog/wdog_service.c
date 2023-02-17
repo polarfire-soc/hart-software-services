@@ -22,10 +22,27 @@
 
 #include "wdog_service.h"
 #include "hss_boot_service.h"
+#include "opensbi_service.h"
+
+#include "sbi/riscv_encoding.h"
+#include "sbi/sbi_ecall_interface.h"
+#include "csr_helper.h"
 
 #include "mss_watchdog.h"
 
 #include "mpfs_fabric_reg_map.h"
+
+static void __attribute__((__noreturn__)) do_srst_ecall(void)
+{
+    register uintptr_t a7 asm ("a7") = SBI_EXT_SRST;
+    register uintptr_t a6 asm ("a6") = SBI_EXT_SRST_RESET;
+    register uintptr_t a0 asm ("a0") = SBI_SRST_RESET_TYPE_WARM_REBOOT;
+    register uintptr_t a1 asm ("a1") = SBI_SRST_RESET_REASON_NONE;
+    asm volatile ("ecall" : "+r" (a0), "+r" (a1) : "r" (a6), "r" (a7) : "memory");
+
+    csr_write(CSR_MIE, MIP_MSIP);
+    while (1) { asm("wfi"); }
+}
 
 static void wdog_init_handler(struct StateMachine * const pMyMachine);
 static void wdog_idle_handler(struct StateMachine * const pMyMachine);
@@ -149,39 +166,48 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
     }
 #endif
 
-    uint32_t status = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
-    status = (status >> 4) & mHSS_BITMASK_ALL_U54; // move bits[8:4] to [4:0]
+    uint32_t wdog_status = mHSS_ReadRegU32(SYSREGSCB, MSS_STATUS);
+    wdog_status = (wdog_status >> 4) & mHSS_BITMASK_ALL_U54; // move bits[8:4] to [4:0]
+    wdog_status &= hartBitmask.uint;
 
-    status &= hartBitmask.uint;
-
-    if (status) {
+    if (wdog_status) {
 #if IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ALWAYS)
         HSS_Wdog_Reboot(HSS_HART_ALL);
 #else
+        uint32_t restart_mask = 0u;
+
         // watchdog timer has triggered for a monitored hart..
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "Watchdog has triggered - %02x\n", status);
+        for (enum HSSHartId source = HSS_HART_U54_1; source < HSS_HART_NUM_PEERS; source++) {
+            if (wdog_status & (1u << source)) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d: Watchdog has fired\n", source);
+                restart_mask |= (1 << source);
 
+                for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
+                    if (peer == source) { continue; }
+
+                    if (mpfs_are_harts_in_same_domain(peer, source)) {
+                        restart_mask |= (1 << peer);
+                    }
+                }
+            }
+        }
+
+        if (restart_mask) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog triggering reboot of ");
+            for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
+                if (restart_mask & (1u << peer)) {
+                    mHSS_DEBUG_PRINTF_EX("[u54_%d] ", peer);
 #  if IS_ENABLED(CONFIG_SERVICE_BOOT)
-        if (hartBitmask.s.u54_1) {
-            HSS_Boot_RestartCore(HSS_HART_U54_1);
-            wdogInitTime[HSS_HART_U54_1] = HSS_GetTime();
-        }
-
-        if (hartBitmask.s.u54_2) {
-            HSS_Boot_RestartCore(HSS_HART_U54_2);
-            wdogInitTime[HSS_HART_U54_2] = HSS_GetTime();
-        }
-
-        if (hartBitmask.s.u54_3) {
-            HSS_Boot_RestartCore(HSS_HART_U54_3);
-            wdogInitTime[HSS_HART_U54_3] = HSS_GetTime();
-        }
-
-        if (hartBitmask.s.u54_4) {
-            HSS_Boot_RestartCore(HSS_HART_U54_4);
-            wdogInitTime[HSS_HART_U54_4] = HSS_GetTime();
-        }
+                    //HSS_Boot_RestartCore(peer);
+                    IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL); // TODO: check TxID
+                    wdogInitTime[peer] = HSS_GetTime();
+                    HSS_SpinDelay_MilliSecs(50u);
 #  endif
+                }
+            }
+            mHSS_DEBUG_PUTS("\n");
+
+        }
 #endif
     }
 }
@@ -195,27 +221,27 @@ void HSS_Wdog_MonitorHart(enum HSSHartId target)
 
     switch (target) {
     case HSS_HART_U54_1:
-	mHSS_DEBUG_PRINTF_EX("U54_1\n");
+	mHSS_DEBUG_PRINTF_EX("[u54_1]\n");
         hartBitmask.s.u54_1 = 1;
         break;
 
     case HSS_HART_U54_2:
-	mHSS_DEBUG_PRINTF_EX("U54_2\n");
+	mHSS_DEBUG_PRINTF_EX("[u54_2]\n");
         hartBitmask.s.u54_2 = 1;
         break;
 
     case HSS_HART_U54_3:
-	mHSS_DEBUG_PRINTF_EX("U54_3\n");
+	mHSS_DEBUG_PRINTF_EX("[u54_3]\n");
         hartBitmask.s.u54_3 = 1;
         break;
 
     case HSS_HART_U54_4:
-	mHSS_DEBUG_PRINTF_EX("U54_4\n");
+	mHSS_DEBUG_PRINTF_EX("[u54_4]\n");
         hartBitmask.s.u54_4 = 1;
         break;
 
     case HSS_HART_ALL:
-	mHSS_DEBUG_PRINTF_EX("U54_1 U54_2 U54_3 U54_4\n");
+	mHSS_DEBUG_PRINTF_EX("[u54_1] [u54_2] [u54_3] [u54_4]\n");
         hartBitmask.s.u54_1 = 1;
         hartBitmask.s.u54_2 = 1;
         hartBitmask.s.u54_3 = 1;
