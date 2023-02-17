@@ -29,10 +29,11 @@
 #include "csr_helper.h"
 
 #include "mss_watchdog.h"
+#include "mss_sysreg.h"
 
 #include "mpfs_fabric_reg_map.h"
 
-static void __attribute__((__noreturn__)) do_srst_ecall(void)
+static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
 {
     register uintptr_t a7 asm ("a7") = SBI_EXT_SRST;
     register uintptr_t a6 asm ("a6") = SBI_EXT_SRST_RESET;
@@ -147,6 +148,7 @@ static void wdog_idle_handler(struct StateMachine * const pMyMachine)
 static HSSTicks_t lastEntryTime = 0u;
 #  endif
 #endif
+
 static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
 {
     (void) pMyMachine;
@@ -177,29 +179,43 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
         uint32_t restart_mask = 0u;
 
         // watchdog timer has triggered for a monitored hart..
+        // ensure OpenSBI housekeeping in order for requesting reboots...
+        // if any of these harts are allowed permission to force a cold reboot
+        // it will happen here also...
+
         for (enum HSSHartId source = HSS_HART_U54_1; source < HSS_HART_NUM_PEERS; source++) {
             if (wdog_status & (1u << source)) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d: Watchdog has fired\n", source);
-                restart_mask |= (1 << source);
 
-                for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
-                    if (peer == source) { continue; }
+#if IS_ENABLED(CONFIG_ALLOW_COLDREBOOT)
+                if (mpfs_is_cold_reboot_allowed(source)) {
+                    HSS_Wdog_Reboot(HSS_HART_ALL);
+                } else
+#endif
+                { // if (mpfs_is_warm_reboot_allowed(source)) {
+                    restart_mask |= (1 << source);
 
-                    if (mpfs_are_harts_in_same_domain(peer, source)) {
-                        restart_mask |= (1 << peer);
+                    for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
+                        if (peer == source) { continue; }
+
+                        if (mpfs_are_harts_in_same_domain(peer, source)) {
+                            restart_mask |= (1 << peer);
+                        }
                     }
                 }
             }
         }
 
+        // if we reached here, nobody triggered a cold reboot, so
+        // now trigger warm restarts as needed...
         if (restart_mask) {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog triggering reboot of ");
             for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
                 if (restart_mask & (1u << peer)) {
                     mHSS_DEBUG_PRINTF_EX("[u54_%d] ", peer);
 #  if IS_ENABLED(CONFIG_SERVICE_BOOT)
-                    //HSS_Boot_RestartCore(peer);
-                    IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL); // TODO: check TxID
+                    // Restart core using SRST mechanism
+                    IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL);
                     wdogInitTime[peer] = HSS_GetTime();
                     HSS_SpinDelay_MilliSecs(50u);
 #  endif
@@ -254,7 +270,7 @@ void HSS_Wdog_MonitorHart(enum HSSHartId target)
     }
 }
 
-void HSS_Wdog_Reboot(enum HSSHartId target)
+void __attribute__((__section__(".ramcode"))) HSS_Wdog_Reboot(enum HSSHartId target)
 {
     switch (target) {
     case HSS_HART_E51:
@@ -285,17 +301,14 @@ void HSS_Wdog_Reboot(enum HSSHartId target)
              */
             mHSS_WriteRegU32(TAMPER, RESET, 1u);
         } else {
-            MSS_WD_force_reset(MSS_WDOG4_LO);
-            MSS_WD_force_reset(MSS_WDOG3_LO);
-            MSS_WD_force_reset(MSS_WDOG2_LO);
-            MSS_WD_force_reset(MSS_WDOG1_LO);
-            MSS_WD_force_reset(MSS_WDOG0_LO);
+	    SYSREG->MSS_RESET_CR = 0xDEAD;
         }
 
         while (1) {
             ;
         }
 
+        while (1) { ; }
         break;
 
     default:

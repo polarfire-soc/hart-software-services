@@ -390,7 +390,7 @@ static struct sbi_domain_memregion * mpfs_domains_root_regions(void)
     return mpfs_memregion;
 }
 
-u32 mpfs_hart_index2id[MPFS_HART_COUNT] = {
+__extension__ static u32 mpfs_hart_index2id[MPFS_HART_COUNT] = {
     [0] = -1,
     [1] = 1,
     [2] = 2,
@@ -448,6 +448,18 @@ bool mpfs_are_harts_in_same_domain(int hartid1, int hartid2)
     result = (hart_ledger[hartid1].owner_hartid == hart_ledger[hartid2].owner_hartid);
 
     return result;
+}
+
+bool mpfs_is_cold_reboot_allowed(int hartid)
+{
+    assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_ledger)));
+    return hart_ledger[hartid].allow_cold_reboot;
+}
+
+bool mpfs_is_warm_reboot_allowed(int hartid)
+{
+    assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_ledger)));
+    return hart_ledger[hartid].allow_warm_reboot;
 }
 
 bool mpfs_is_last_hart_ready(void)
