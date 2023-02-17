@@ -106,12 +106,11 @@ static struct aclint_mswi_data mswi = {
 };
 
 static struct aclint_mtimer_data mtimer = {
-        .mtime_freq = MPFS_ACLINT_MTIMER_FREQ,
-        .mtime_addr = MPFS_ACLINT_MTIMER_ADDR + ACLINT_DEFAULT_MTIME_OFFSET,
-        .mtime_size = ACLINT_DEFAULT_MTIME_SIZE,
-        .mtimecmp_addr = MPFS_ACLINT_MTIMER_ADDR + ACLINT_DEFAULT_MTIMECMP_OFFSET,
-        .mtimecmp_size = ACLINT_DEFAULT_MTIMECMP_SIZE,
-
+    .mtime_freq = MPFS_ACLINT_MTIMER_FREQ,
+    .mtime_addr = MPFS_ACLINT_MTIMER_ADDR + ACLINT_DEFAULT_MTIME_OFFSET,
+    .mtime_size = ACLINT_DEFAULT_MTIME_SIZE,
+    .mtimecmp_addr = MPFS_ACLINT_MTIMER_ADDR + ACLINT_DEFAULT_MTIMECMP_OFFSET,
+    .mtimecmp_size = ACLINT_DEFAULT_MTIMECMP_SIZE,
     .first_hartid = 0,
     .hart_count = MPFS_HART_COUNT,
     .has_64bit_mmio = TRUE
@@ -136,9 +135,7 @@ extern unsigned long STACK_SIZE_PER_HART;
 static void mpfs_modify_dt(void *fdt)
 {
     fdt_cpu_fixup(fdt);
-
     fdt_fixups(fdt);
-
     fdt_reserved_memory_nomap_fixup(fdt);
 }
 
@@ -160,8 +157,7 @@ static void __attribute__((__noreturn__)) mpfs_system_reset(u32 reset_type, u32 
 
     sbi_exit(scratch);
 
-    // never reached
-    __builtin_unreachable();
+    __builtin_unreachable(); // never reached
 }
 
 static int mpfs_system_reset_check(u32 reset_type, u32 reset_reason)
