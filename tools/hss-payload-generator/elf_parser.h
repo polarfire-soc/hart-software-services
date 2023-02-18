@@ -35,6 +35,6 @@
 #include "hss_types.h"
 
 void elf_parser_init(void);
-bool elf_parser(char const * const filename, size_t owner);
+bool elf_parser(char const * const filename, size_t owner, uintptr_t base_entry_point);
 
 #endif

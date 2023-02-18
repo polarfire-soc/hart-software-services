@@ -739,7 +739,7 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 					ARRAY_SIZE(bootImage.hart[base_owner-1].name));
 		}
 
-		bool retVal = elf_parser(base_name, base_owner);
+		bool retVal = elf_parser(base_name, base_owner, base_exec_addr);
 		if (!retVal) {
 			// assume it is a binary file, so just embed the entire thing...
 			if (entitlement_flags.ancilliary_data_present) {

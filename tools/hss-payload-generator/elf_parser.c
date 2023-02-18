@@ -281,7 +281,7 @@ void elf_parser_init(void)
 	}
 }
 
-bool elf_parser(char const * const filename, size_t owner)
+bool elf_parser(char const * const filename, size_t owner, uintptr_t base_entry_point)
 {
 	bool result = true;
 
@@ -311,6 +311,10 @@ bool elf_parser(char const * const filename, size_t owner)
 		fprintf(stderr, ">>%s<< is not an ELF object\n", filename);
 		result = false;
 	} else {
+		if (base_entry_point) {
+			fprintf(stderr, "NOTICE: %s: ignoring >>exec-addr=0x%" PRIx64 "<< as payload is an ELF file\n\n", filename, base_entry_point);
+		}
+
 		parse_elf_program_headers(pElf, owner);
 
 		bootImage.hart[owner-1].lastChunk = numChunks - 1u;
