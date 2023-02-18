@@ -70,7 +70,7 @@ config ALLOW_COLDREBOOT
 		If disabled, only warm reboots will be permitted.
 
 		In addition to enabling this option, the permission to issue a cold
-		reboot must granted to a context via the payload generator YAML file.
+		reboot must be granted to a context via the payload generator YAML file.
 
 		If you do not know what to do here, say Y.
 
