@@ -652,11 +652,14 @@ static size_t base_secondary[3] = { 0u, 0u, 0u };
 static uint8_t base_priv_mode = PRV_ILLEGAL;
 static size_t secondary_idx = 0u;
 
-static bool ancilliary_data_present_flag = false;
-static bool skip_opensbi_flag = false;
-static bool skip_autoboot_flag = false;
-static bool allow_cold_reboot_flag = false;
-static bool allow_warm_reboot_flag = false;
+static struct {
+	bool ancilliary_data_present;
+	bool skip_opensbi;
+	bool skip_autoboot_flag;
+	bool allow_coldreboot;
+	bool allow_warmreboot;
+} entitlement_flags = { false, false, false, false, false };
+
 static char ancilliary_name[BOOT_IMAGE_MAX_NAME_LEN];
 
 static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
@@ -686,11 +689,11 @@ static void Handle_STATE_PAYLOAD_MAPPINGS(yaml_event_t *pEvent)
 		base_secondary[2] = 0u;
 		base_priv_mode = PRV_M;
 
-		ancilliary_data_present_flag = false;
-		skip_opensbi_flag = false;
-		allow_cold_reboot_flag = false;
-		allow_warm_reboot_flag = false;
-		skip_autoboot_flag = false;
+		entitlement_flags.ancilliary_data_present = false;
+		entitlement_flags.skip_opensbi = false;
+		entitlement_flags.skip_autoboot_flag = false;
+		entitlement_flags.allow_coldreboot = false;
+		entitlement_flags.allow_warmreboot = false;
 
 		Do_State_Transition(STATE_NEW_PAYLOAD);
 		break;
@@ -739,7 +742,7 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 		bool retVal = elf_parser(base_name, base_owner);
 		if (!retVal) {
 			// assume it is a binary file, so just embed the entire thing...
-			if (ancilliary_data_present_flag) {
+			if (entitlement_flags.ancilliary_data_present) {
 				// legacy: smuggle this into owner highest bit...
 				blob_handler(base_name, base_exec_addr, base_owner, true, ancilliary_name);
 			} else {
@@ -795,7 +798,7 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 
 		case TOKEN_PAYLOAD_ANCILLIARY_DATA:
 			debug_printf(1, "\tancilliary data found\n");
-			ancilliary_data_present_flag = true;
+			entitlement_flags.ancilliary_data_present = true;
 			Do_State_Transition(STATE_NEW_PAYLOAD_ANCILLIARY_DATA);
 			break;
 
@@ -932,23 +935,23 @@ static void populate_boot_flags(void)
 {
 	uint8_t flags = 0u;
 
-	if (ancilliary_data_present_flag) {
+	if (entitlement_flags.ancilliary_data_present) {
 		flags |= BOOT_FLAG_ANCILLIARY_DATA;
 	}
 
-	if (skip_opensbi_flag) {
+	if (entitlement_flags.skip_opensbi) {
 		flags |= BOOT_FLAG_SKIP_OPENSBI;
 	}
 
-	if (allow_cold_reboot_flag) {
+	if (entitlement_flags.allow_coldreboot) {
 		// cold reboot implies warm reboot also allowed
 		flags |= BOOT_FLAG_ALLOW_COLD_REBOOT;
 		flags |= BOOT_FLAG_ALLOW_WARM_REBOOT;
-	} else if (allow_warm_reboot_flag) {
+	} else if (entitlement_flags.allow_warmreboot) {
 		flags |= BOOT_FLAG_ALLOW_WARM_REBOOT;
 	}
 
-	if (skip_autoboot_flag) {
+	if (entitlement_flags.skip_autoboot_flag) {
 		flags |= BOOT_FLAG_SKIP_AUTOBOOT;
 	}
 
@@ -1071,7 +1074,7 @@ static void Handle_STATE_NEW_PAYLOAD_SKIP_OPENSBI(yaml_event_t *pEvent)
 		}
 
                 if (value) {
-			skip_opensbi_flag = true;
+			entitlement_flags.skip_opensbi = true;
 		}
 		Do_State_Transition(STATE_NEW_PAYLOAD);
                 break;
@@ -1101,11 +1104,11 @@ static void Handle_STATE_NEW_PAYLOAD_ALLOW_REBOOT(yaml_event_t *pEvent)
                 token_idx = string_to_scalar(pEvent->data.scalar.value);
                 switch (token_idx) {
                 case TOKEN_REBOOT_WARM:
-			allow_warm_reboot_flag = true;
+			entitlement_flags.allow_warmreboot = true;
                         break;
 
                 case TOKEN_REBOOT_COLD:
-			allow_cold_reboot_flag = true;
+			entitlement_flags.allow_coldreboot = true;
                         break;
 
                 default:
@@ -1144,7 +1147,7 @@ static void Handle_STATE_NEW_PAYLOAD_SKIP_AUTOBOOT(yaml_event_t *pEvent)
 		}
 
                 if (value) {
-			skip_autoboot_flag = true;
+			entitlement_flags.skip_autoboot_flag = true;
 		}
 		Do_State_Transition(STATE_NEW_PAYLOAD);
                 break;
