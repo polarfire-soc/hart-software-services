@@ -445,6 +445,8 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
                 break;
             case IPI_MSG_ACK_PENDING:
                 break;
+            case IPI_MSG_BOOT_REQUEST:
+                break;
             default:
                 switch (result) {
                 case IPI_SUCCESS:
