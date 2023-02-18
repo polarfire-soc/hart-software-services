@@ -40,8 +40,6 @@ TARGET:=$(RISCV_TARGET)
 
 LINKER_SCRIPT-l2scratch=boards/${BOARD}/hss-l2scratch.ld
 
-CONFIG_PLATFORM_MPFS=y
-PLATFORM_CFLAGS += -DCONFIG_PLATFORM_MPFS=1
 BOARD_DIR=boards/mpfs-icicle-kit-es
 
 INCLUDES += \

@@ -26,7 +26,6 @@ bool HSS_UARTInit(void)
 {
     // initialise debug UART
 
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     MSS_UART_init(&g_mss_uart0_lo, MSS_UART_115200_BAUD,
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
 
@@ -43,9 +42,6 @@ bool HSS_UARTInit(void)
 
     MSS_UART_init(&g_mss_uart4_lo, MSS_UART_115200_BAUD,
         MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
-#else
-#  error Unknown PLATFORM
-#endif
 
     return true;
 }

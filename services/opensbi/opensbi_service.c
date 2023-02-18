@@ -244,15 +244,8 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
 
             // set arg1 (A1) to point to override device tree blob, if provided
 #if IS_ENABLED(CONFIG_PROVIDE_DTB)
-#  if IS_ENABLED(CONFIG_PLATFORM_MPFS)
             extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
             scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
-#  elif IS_ENABLED(CONFIG_PLATFORM_FU540)
-            extern unsigned long _binary_hifive_unleashed_a00_dtb_start;
-            pScratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_hifive_unleashed_a00_dtb_start;
-#  else
-#    error Unknown PLATFORM settings
-#  endif
 #else
             // else use ancilliary data if provided in boot image, assuming it is a DTB
             scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;

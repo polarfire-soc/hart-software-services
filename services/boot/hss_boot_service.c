@@ -53,9 +53,7 @@
 
 #include "hss_atomic.h"
 
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-#  include "mss_sysreg.h"
-#endif
+#include "mss_sysreg.h"
 
 #include "hss_memcpy_via_pdma.h"
 #include "system_startup.h"
@@ -736,11 +734,9 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
     } else {
         // need to free as received, not all at once...
         if (check_for_ipi_acks(pMyMachine)) {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
             // turn appropriate bit on in SYSREGSCB:MSS_STATUS:BOOT_STATUS to indicate it is up
             // note: this bit is a status indicator to SW only, and is not functional/does not have side effects
             mHSS_ReadModWriteRegU32(SYSREGSCB, MSS_STATUS, 0xFFFFu, 1u << (target-1));
-#endif
 
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK\n",
             //    pMyMachine->pMachineName);

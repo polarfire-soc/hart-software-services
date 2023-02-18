@@ -99,9 +99,7 @@ extern const uint64_t hss_init_ncddrhi_start, hss_init_ncddrhi_end;
 #define NCDDRHI_START          (&hss_init_ncddrhi_start)
 #define NCDDRHI_END            (&hss_init_ncddrhi_end)
 
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-#  include "mss_sysreg.h"
-#endif
+#include "mss_sysreg.h"
 
 bool HSS_ZeroDDR(void)
 {
@@ -141,9 +139,7 @@ bool HSS_Init_RWDATA_BSS(void)
     //UART not setup at this point
     //mHSS_DEBUG_PRINTF("Setting up RW Data and BSS sections\n");
 
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     init_memory();
-#endif
 
     return true;
 }

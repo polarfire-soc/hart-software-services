@@ -26,11 +26,9 @@
 #
 # YMODEM Service (NOTE: not a traditional super-loop service)
 
-ifdef CONFIG_SERVICE_YMODEM
-SRCS-$(CONFIG_PLATFORM_MPFS) += \
+SRCS-$(CONFIG_SERVICE_YMODEM) += \
 	services/ymodem/hss_ymodem_loader.c \
 	services/ymodem/ymodem_protocol.c
-endif
 
 INCLUDES +=\
 	-I./services/ymodem \

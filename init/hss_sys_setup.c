@@ -36,17 +36,15 @@
 
 #include "csr_helper.h"
 
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
-#  define RISCV_CSR_ENCODING_H
-#  define RISCV_ENCODING_H
-#  include "mss_sysreg.h"
-#  include "mss_plic.h"
-#  include "mss_util.h"
-#  include "mss_mpu.h"
-#  include "mss_l2_cache.h"
-#  include "nwc/mss_io_config.h"
-#  include "system_startup.h"
-#endif
+#define RISCV_CSR_ENCODING_H
+#define RISCV_ENCODING_H
+#include "mss_sysreg.h"
+#include "mss_plic.h"
+#include "mss_util.h"
+#include "mss_mpu.h"
+#include "mss_l2_cache.h"
+#include "nwc/mss_io_config.h"
+#include "system_startup.h"
 #include "hss_memcpy_via_pdma.h"
 
 #include "mpfs_reg_map.h"
@@ -87,10 +85,8 @@
  */
 bool HSS_Setup_PLIC(void)
 {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     __disable_all_irqs();
     PLIC_init_on_reset();
-#endif
 
     return true;
 }
@@ -108,9 +104,7 @@ bool HSS_Setup_PLIC(void)
  */
 bool HSS_Setup_MPU(void)
 {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     mpu_configure();
-#endif
 
     return true;
 }
@@ -126,9 +120,7 @@ bool HSS_Setup_MPU(void)
  */
 bool HSS_Setup_L2Cache(void)
 {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     config_l2_cache();
-#endif
 
     return true;
 }
@@ -141,7 +133,6 @@ bool HSS_Setup_L2Cache(void)
  */
 bool HSS_Setup_Clocks(void)
 {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     static const uint32_t hss_subblk_clock_Config = 0xFFFFFFFFu;
     const uint32_t hss_soft_reset_Config = SYSREG->SOFT_RESET_CR &
         ~(
@@ -182,7 +173,6 @@ bool HSS_Setup_Clocks(void)
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
 
     SYSREG->FABRIC_RESET_CR = FABRIC_RESET_CR_ENABLE_MASK;
-#endif
 
     return true;
 }
@@ -194,9 +184,7 @@ bool HSS_Setup_Clocks(void)
  */
 bool HSS_Setup_BusErrorUnit(void)
 {
-#if IS_ENABLED(CONFIG_PLATFORM_MPFS)
     (void)init_bus_error_unit();
-#endif
 
     return true;
 }
