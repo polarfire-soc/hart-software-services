@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions
+ * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions
  *
  * SPDX-License-Identifier: MIT
  *
@@ -83,7 +83,7 @@ struct IPI_Data {
 #  define IPI_DATA (*ipi_data)
 #endif
 
-#if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
+#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS) || IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
 __extension__ static const char * const hartName[] = { // MAX_NUM_HARTS
     [ HSS_HART_E51 ]   = "E51",
     [ HSS_HART_U54_1 ] = "U54_1",
@@ -91,7 +91,9 @@ __extension__ static const char * const hartName[] = { // MAX_NUM_HARTS
     [ HSS_HART_U54_3 ] = "U54_3",
     [ HSS_HART_U54_4 ] = "U54_4"
 };
+#endif
 
+#if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
 __extension__ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
     [ IPI_MSG_NO_MESSAGE ]        = "IPI_MSG_NO_MESSAGE",
     [ IPI_MSG_BOOT_REQUEST ]      = "IPI_MSG_BOOT_REQUEST",
@@ -116,28 +118,6 @@ __extension__ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
 
 /////////////////////////////////////////////////////////////////////////////
 
-//
-// @brief Dump IPI Debug Statistics and Counters
-//
-void IPI_DebugDumpStats(void)
-{
-#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS) || IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-    enum HSSHartId myHartId = current_hartid();
-    for (myHartId = HSS_HART_E51; myHartId < HSS_HART_NUM_PEERS; myHartId++) {
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "hartId:           %u\n", myHartId);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 "\n",
-            IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 "\n",
-            IPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 "\n",
-            IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 "\n",
-            IPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
-        mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 "\n\n",
-            IPI_DATA.mpfs_ipi_privateData[myHartId].ipi_sends);
-    }
-#endif
-}
 
 //
 // @brief Given a source hart and target hart, calculate the queue index which
@@ -271,22 +251,12 @@ inline struct IPI_Outbox_Msg *IPI_DirectionToFirstMsgInQueue(enum HSSHartId sour
 // @return bool indicating message was sent okay
 //
 
-bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transaction_id,
-        uint32_t immediate_arg, void const *p_extended_buffer_in_ddr,
-        void const *p_ancilliary_buffer_in_ddr) {
-    bool result = false;
-    uint32_t i = 0u;
-
-    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called with message type of %u to %d\n", message, target);
-
-    // find where to put the message
-    uint32_t index = IPI_CalculateQueueIndex(current_hartid(), target);
+static struct IPI_Outbox_Msg* find_available_slot(uint32_t index)
+{
     struct IPI_Outbox_Msg *pMsg = &(IPI_DATA.ipi_queues[index].msgQ[0]);
     bool space_available = false;
 
-    assert(pMsg != NULL);
-
-    for (i = 0u; i < IPI_MAX_NUM_QUEUE_MESSAGES; i++) {
+    for (uint32_t i = 0u; i < IPI_MAX_NUM_QUEUE_MESSAGES; i++) {
         if (pMsg->msg_type == IPI_MSG_NO_MESSAGE) {
             space_available = true;
             break;
@@ -296,7 +266,25 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
         pMsg++;
     }
 
-    if (space_available) {
+    if (!space_available) {
+        pMsg = NULL;
+    }
+
+    return pMsg;
+}
+
+bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transaction_id,
+        uint32_t immediate_arg, void const *p_extended_buffer_in_ddr,
+        void const *p_ancilliary_buffer_in_ddr) {
+    bool result = false;
+
+    //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called with message type of %u to %d\n", message, target);
+
+    // find where to put the message
+    uint32_t index = IPI_CalculateQueueIndex(current_hartid(), target);
+    struct IPI_Outbox_Msg *pMsg = find_available_slot(index);
+
+    if (pMsg != NULL) {
         pMsg->msg_type = message;
         pMsg->transaction_id = transaction_id;
         pMsg->p_extended_buffer_in_ddr = (void *)p_extended_buffer_in_ddr;
@@ -315,7 +303,8 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
         result = CLINT_Raise_MSIP(target);
 #endif
     } else {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "No space in queue!!!!!!\n");
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "No space in queue [%d->%d]\n", current_hartid(), target);
+        IPI_DebugDumpStats();
     }
 
 #if IS_ENABLED(CONFIG_DEBUG_MSCGEN_IPI)
@@ -445,6 +434,9 @@ bool IPI_ConsumeIntent(enum HSSHartId source, enum IPIMessagesEnum msg_type)
 
             assert(pHandler != NULL);
             IPI_DATA.mpfs_ipi_privateData[current_hartid()].consume_intents++;
+            if (IPI_DATA.ipi_queues[index].count) {
+                IPI_DATA.ipi_queues[index].count--;
+            }
             result = (*pHandler)(pMsg->transaction_id, source,
                 pMsg->immediate_arg, pMsg->p_extended_buffer_in_ddr, pMsg->p_ancilliary_buffer_in_ddr);
 
@@ -652,3 +644,47 @@ enum IPIStatusCode IPI_ACK_IPIHandler(TxId_t transaction_id, enum HSSHartId sour
     return IPI_SUCCESS;
 }
 
+//
+// @brief Dump IPI Debug Statistics and Counters
+//
+void IPI_DebugDumpStats(void)
+{
+#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS) || IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+    enum HSSHartId myHartId = current_hartid();
+    for (myHartId = HSS_HART_E51; myHartId < HSS_HART_NUM_PEERS; myHartId++) {
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "hartId:           %u\n", myHartId);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_allocs:   %" PRIu64 "\n",
+            IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 "\n",
+            IPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 "\n",
+            IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 "\n",
+            IPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
+        mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 "\n\n",
+            IPI_DATA.mpfs_ipi_privateData[myHartId].ipi_sends);
+    }
+#endif
+
+#if IS_ENABLED(CONFIG_DEBUG_IPI_STATS)
+    for (enum HSSHartId source = 0u; source < MAX_NUM_HARTS; source++) {
+        for (enum HSSHartId target = 0u; target < MAX_NUM_HARTS; target++) {
+            if (source == target) { continue; }
+
+            mHSS_DEBUG_PRINTF(LOG_STATUS, "Queue[ %5s => %5s ]: ", hartName[source], hartName[target]);
+            for (size_t j = 0u; j < IPI_MAX_NUM_QUEUE_MESSAGES; j++) {
+                uint32_t index = IPI_CalculateQueueIndex(source, target);
+                char msg_type = (char)IPI_DATA.ipi_queues[index].msgQ[j].msg_type;
+                if (msg_type < 10) {
+                    msg_type += '0';
+                } else {
+                    msg_type += 'A';
+                }
+
+                mHSS_DEBUG_PRINTF_EX("%c", msg_type);
+            }
+            mHSS_DEBUG_PRINTF_EX("\n");
+        }
+    }
+#endif
+}
