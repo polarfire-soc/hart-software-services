@@ -16,7 +16,11 @@
 extern "C" {
 #endif
 
+#ifdef CONFIG_USE_TAMPER
 #define TAMPER_BASE_ADDR                (CONFIG_TAMPER_BASE_ADDRESS)
+#else
+#define TAMPER_BASE_ADDR                (NULL)
+#endif
 #define TAMPER_FLAGS_OFFSET             (0x0u)
 #define TAMPER_RESET_REASON_OFFSET      (0x4u)
 #define TAMPER_VOLT_REG_OFFSET          (0xCu)
