@@ -113,11 +113,11 @@ _start:
         j	.decompress_done
 
 .e51_decompress:
-	li  a0, 1    				// flush default way in case it has already been used
-	call    .flush_early_caching
-	call	.clear_l2lim
-	call	config_l2_cache
 	call	.clear_dtim
+	call	.clear_l2lim
+	li	a0, 1				// flush default way in case it has already been used
+	call    .flush_early_caching
+	call	config_l2_cache
 	call	.clear_l2scratchpad
 	call	init_memory
 	call	HSS_Setup_Clocks
@@ -345,7 +345,7 @@ config_copy:
  */
 
 .clear_l2scratchpad:
-	// Clear the LIM
+	// Clear the L2 Scratchpad
 	//
 	// On reset, the first 15 ways are L2 and the last way is cache
 	// We can initialize all, as cache write through to DDR is blocked
@@ -373,6 +373,7 @@ config_copy:
 	// NOTE: we need to check if we are debugging from LIM,if so do not initialize
 	//
 	la 	a4, __l2lim_start
+	//la	a5, __l2lim_end
 	la	a5, __l2lim_end_max
         j	1f
 .clear_dtim:
