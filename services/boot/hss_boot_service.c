@@ -755,6 +755,9 @@ static void boot_error_handler(struct StateMachine * const pMyMachine)
         "*******************************************************************\n",
         pMyMachine->pMachineName);
 
+    // Set BOOT_FAIL_CR to indicate to the fabric that boot process failed...
+    // SYSREG->BOOT_FAIL_CR = 1;
+
     pMyMachine->state = BOOT_IDLE;
 }
 
@@ -805,6 +808,9 @@ bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
 
             default:
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "invalid hart state %d for u54_%u\n", pMachine->state, i+1u);
+                // try to recover anyway
+                pMachine->state = (stateType_t)BOOT_INITIALIZATION;
+                result = true;
                 break;
             }
         }
