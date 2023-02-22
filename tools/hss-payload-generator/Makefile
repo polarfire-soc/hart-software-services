@@ -54,6 +54,10 @@ CFLAGS= -g3 -ggdb -std=gnu11 -O3 \
 INCLUDES=\
 	-I. \
 	-I../../include \
+	$(HOST_INCLUDES)
+
+LDFLAGS=\
+	$(HOST_LDFLAGS)
 
 LIBS=\
 	-lyaml \
