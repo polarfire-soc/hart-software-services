@@ -33,9 +33,12 @@ INCLUDES +=\
 # Boot Image Signing
 #
 ifdef CONFIG_CRYPTO_SIGNING
-x509-ec-sepc384r1-public.h: $(subst $\",,$(CONFIG_CRYPTO_SIGNING_KEY_PUBLIC))
-	tools/secure-boot/der_to_c_header.py $< x509-ec-secp384r1-public.h
-
+PUBLIC_KEY=$(subst $\",,$(CONFIG_CRYPTO_SIGNING_KEY_PUBLIC))
+ifeq ("$(wildcard $(PUBLIC_KEY))", "")
+$(error "Public key file $(PUBLIC_KEY) specified by CONFIG_CRYPTO_SIGNING_KEY_PUBLIC does not exist")
+endif
+x509-ec-sepc384r1-public.h: $(PUBLIC_KEY)
+	tools/secure-boot/der_to_c_header.py $(PUBLIC_KEY) x509-ec-secp384r1-public.h
 #
 # libecc
 #
