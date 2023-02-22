@@ -43,6 +43,8 @@
 #include "hss_registry.h"
 #include "assert.h"
 
+#include "clocks/hw_mss_clks.h" // LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
+
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
 #    include "usbdmsc_service.h"
 #endif
@@ -283,14 +285,22 @@ static unsigned long int tinyCLI_strtoul_wrapper_(const char *__restrict nptr)
     return strtoul(nptr, NULL, base);
 }
 
+static void output_duration_(char const * const description, const uint32_t val, bool continuation)
+{
+    assert(description);
+    if (val) {
+        mHSS_FANCY_PRINTF_EX("%lu %s%s%s ", val, description, val == 1lu ? "":"s", continuation ? ",":"\n");
+    }
+}
+
 static void tinyCLI_PrintUptime_(void)
 {
     HSSTicks_t timeVal = CSR_GetTime();
 
-    timeVal /= 1000000lu;
+    timeVal /= LIBERO_SETTING_MSS_RTC_TOGGLE_CLK;
 
     uint32_t days = timeVal / (24lu * 3600lu);
-    timeVal = timeVal - (days * (24 * 3600lu));
+    timeVal = timeVal - (days * (24lu * 3600lu));
 
     uint32_t hours = timeVal / 3600lu;
     timeVal = timeVal - (hours * 3600lu);
@@ -299,19 +309,10 @@ static void tinyCLI_PrintUptime_(void)
     uint32_t secs = timeVal - (mins * 60lu);
 
     mHSS_FANCY_PRINTF(LOG_STATUS, "Uptime is ");
-    if (days) {
-        mHSS_FANCY_PRINTF_EX("%lu day%s, ", days, days == 1lu ? "":"s");
-    }
-
-    if (hours) {
-        mHSS_FANCY_PRINTF_EX("%lu hour%s, ", hours, hours == 1lu ? "":"s");
-    }
-
-    if (mins) {
-        mHSS_FANCY_PRINTF_EX("%lu minute%s, ", mins, mins == 1lu ? "":"s");
-    }
-
-    mHSS_FANCY_PRINTF_EX("%lu second%s", secs, secs == 1lu ? "":"s");
+    output_duration_("day", days, true);
+    output_duration_("hour", hours, true);
+    output_duration_("minute", mins, true);
+    output_duration_("second", secs, false);
 }
 
 static void tinyCLI_PrintVersion_(void)

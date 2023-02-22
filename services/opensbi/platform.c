@@ -67,12 +67,10 @@
 #include "mpfs_reg_map.h"
 
 #include "wdog_service.h"
-
+#include "clocks/hw_mss_clks.h"    // LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
 
 #define MPFS_HART_COUNT            5
 #define MPFS_HART_STACK_SIZE       8192
-
-#define MPFS_SYS_CLK               1000000000
 
 #define MPFS_CLINT_ADDR            0x2000000
 
@@ -80,8 +78,8 @@
 #define MPFS_PLIC_NUM_SOURCES      186
 #define MPFS_PLIC_NUM_PRIORITIES   7
 
-#define MPFS_ACLINT_MTIMER_FREQ 1000000
-#define MPFS_ACLINT_MTIMER_ADDR (0x02004000)
+#define MPFS_ACLINT_MTIMER_FREQ    LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
+#define MPFS_ACLINT_MTIMER_ADDR    (0x02004000)
 
 /**
  * PolarFire SoC has 5 HARTs but HART ID 0 doesn't have S mode. enable only
