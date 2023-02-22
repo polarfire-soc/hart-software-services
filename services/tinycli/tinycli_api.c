@@ -16,7 +16,6 @@
 #include "hss_types.h"
 #include "hss_debug.h"
 
-//#include <ctype.h> // tolower()
 #include <string.h> // strcasecmp(), strtok(), strtok_r()
 #include <strings.h>
 #include <stdlib.h>
@@ -73,6 +72,7 @@
 static size_t argc_tokenCount = 0u;
 static char *argv_tokenArray[mMAX_NUM_TOKENS];
 static bool quitFlag = false;
+static size_t tokenId;
 
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
 #  define mNUM_MONITORS 10
@@ -87,75 +87,20 @@ struct tinycli_monitor
 } monitors[mNUM_MONITORS];
 #endif
 
-enum CmdId {
-    CMD_YMODEM,
-    CMD_QUIT,
-    CMD_BOOT,
-    CMD_RESET,
-    CMD_HELP,
-    CMD_VERSION,
-    CMD_UPTIME,
-    CMD_DEBUG,
-#if IS_ENABLED(CONFIG_MEMTEST)
-    CMD_MEMTEST,
-#endif
-    CMD_QSPI,
-    CMD_EMMC,
-    CMD_SDCARD,
-    CMD_MMC,
-#if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
-    CMD_PAYLOAD,
-#endif
-    CMD_SPI,
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
-    CMD_USBDMSC,
-#endif
-#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
-    CMD_SCRUB,
-#endif
-    CMD_INVALID
-};
-
-struct tinycli_key {
+struct tinycli_cmd {
     const int tokenId;
     const char * const name;
     const char * const helpString;
+    void (* const handler)(void);
 };
 
-const struct tinycli_key cmdKeys[] = {
-#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
-    { CMD_YMODEM,  "YMODEM",  "Run YMODEM utility to download an image to DDR." },
-#endif
-    { CMD_QUIT,    "QUIT",    "Quit TinyCLI and return to regular boot process." },
-    { CMD_BOOT,    "BOOT",    "Quit TinyCLI and return to regular boot process." },
-    { CMD_RESET,   "RESET",   "Reset the E51." },
-    { CMD_HELP,    "HELP",    "Display command summary / command help information." },
-    { CMD_VERSION, "VERSION", "Display system version information." },
-    { CMD_UPTIME,  "UPTIME",  "Display uptime information." },
-    { CMD_DEBUG,   "DEBUG",   "Display debug information." },
-#if IS_ENABLED(CONFIG_MEMTEST)
-    { CMD_MEMTEST, "MEMTEST", "Full DDR memory test." },
-#endif
-    { CMD_QSPI,    "QSPI",    "Select boot via QSPI." },
-    { CMD_MMC,     "MMC",     "Select boot via SDCARD with fallback to EMMC." },
-    { CMD_EMMC,    "EMMC",    "Select boot via EMMC." },
-    { CMD_SDCARD,  "SDCARD",  "Select boot via SDCARD." },
-#if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
-    { CMD_PAYLOAD, "PAYLOAD", "Select boot via payload." },
-#endif
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
-    { CMD_USBDMSC, "USBDMSC", "Export eMMC as USBD Mass Storage Class." },
-#endif
-    { CMD_SPI,     "SPI",     "Select boot via SPI." },
-#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
-    { CMD_SCRUB, "SCRUB", "Dump Scrub service stats." },
-#endif
+struct tinycli_toplevel_cmd_safe {
+    const int tokenId;
+    bool warnIfPostInit;
 };
 
-static void tinyCLI_CmdHandler_(int tokenId);
-static bool tinyCLI_NameToKeyIndex_(struct tinycli_key const * const keys, size_t numKeys,
+static bool tinyCLI_NameToCmdIndex_(struct tinycli_cmd const * const pCmds, size_t numCmds,
     char const * const pToken, size_t *pIndex);
-static bool tinyCLI_CmdIdToCommandIndex_(enum CmdId tokenId, size_t * pIndex);
 static void tinyCLI_PrintVersion_(void);
 static void tinyCLI_PrintUptime_(void);
 static void tinyCLI_PrintHelp_(void);
@@ -165,13 +110,20 @@ static void tinyCLI_Reset_(void);
 static void tinyCLI_Boot_List_(void);
 static void tinyCLI_Boot_Select_(void);
 #endif
-static bool tinyCLI_Boot_(void);
+static void tinyCLI_Boot_Info_(void);
+static void tinyCLI_Boot_(void);
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
-static bool tinyCLI_QSPI_Scan_(void);
-static bool tinyCLI_QSPI_Erase_(void);
-static bool tinyCLI_QSPI_(void);
+static void tinyCLI_QSPI_Scan_(void);
+static void tinyCLI_QSPI_Erase_(void);
 #endif
+static void tinyCLI_QSPI_(void);
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
+static void tinyCLI_MonitorHelp_(void)
+static void tinyCLI_MonitorCreate_(void);
+static void tinyCLI_MonitorDestroy_(void);
+static void tinyCLI_MonitorEnable_(void);
+static void tinyCLI_MonitorDisable_(void);
+static void tinyCLI_MonitorList_(void);
 static void tinyCLI_Monitor_(void);
 #endif
 static void tinyCLI_CRC32_(void);
@@ -179,60 +131,200 @@ static void tinyCLI_HexDump_(void);
 #if IS_ENABLED(CONFIG_MEMTEST)
 static void tinyCLI_MemTest_(void);
 #endif
-
-struct tinycli_command {
-    const enum CmdId tokenId;
-    bool warnIfPostInit;
-    void (* const handler)(int);
-};
-
-static struct tinycli_command commands[] = {
+static void tinyCLI_UnsupportedBootMechanism_(char const * const pName);
 #if IS_ENABLED(CONFIG_SERVICE_YMODEM)
-    { CMD_YMODEM,  true,  tinyCLI_CmdHandler_ },
+static void tinyCLI_YModem_(void);
 #endif
-    { CMD_QUIT,    true,  tinyCLI_CmdHandler_ },
-    { CMD_BOOT,    true,  tinyCLI_CmdHandler_ },
-    { CMD_RESET,   true,  tinyCLI_CmdHandler_ },
-    { CMD_HELP,    false, tinyCLI_CmdHandler_ },
-    { CMD_VERSION, false, tinyCLI_CmdHandler_ },
-    { CMD_UPTIME,  false, tinyCLI_CmdHandler_ },
-    { CMD_DEBUG,   false, tinyCLI_CmdHandler_ },
-#if IS_ENABLED(CONFIG_MEMTEST)
-    { CMD_MEMTEST, true,  tinyCLI_CmdHandler_ },
+static void tinyCLI_Scrub_(void);
+static void output_duration_(char const * const description, const uint32_t val, bool continuation);
+static void tinyCLI_DumpStateMachines_(void);
+static void tinyCLI_IPIDumpStats_(void);
+static void tinyCLI_Quit_(void);
+static void tinyCLI_EMMC_(void);
+static void tinyCLI_MMC_(void);
+static void tinyCLI_SDCARD_(void);
+static void tinyCLI_Payload_(void);
+static void tinyCLI_SPI_(void);
+static void tinyCLI_USBDMSC_(void);
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+static void tinyCLI_BEU_(void);
 #endif
-    { CMD_QSPI,    true,  tinyCLI_CmdHandler_ },
-    { CMD_EMMC,    true,  tinyCLI_CmdHandler_ },
-    { CMD_MMC,     true,  tinyCLI_CmdHandler_ },
-    { CMD_SDCARD,  true,  tinyCLI_CmdHandler_ },
-#if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
-    { CMD_PAYLOAD, true,  tinyCLI_CmdHandler_ },
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
+static void tinyCLI_PerfCtrs_(void);
 #endif
-    { CMD_SPI,     true,  tinyCLI_CmdHandler_ },
-#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
-    { CMD_USBDMSC, true,  tinyCLI_CmdHandler_ },
-#endif
-#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
-    { CMD_SCRUB,   false, tinyCLI_CmdHandler_ },
-#endif
-};
+static void tinyCLI_OpenSBI_(void);
+static void tinyCLI_Seg_(void);
+static void tinyCLI_L2Cache_(void);
+static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level);
+static void display_help_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level);
+
 
 static bool postInit = false;
+
+enum CmdId {
+    CMD_YMODEM,
+    CMD_QUIT,
+    CMD_BOOT,
+    CMD_RESET,
+    CMD_HELP,
+    CMD_VERSION,
+    CMD_UPTIME,
+    CMD_DEBUG,
+    CMD_MEMTEST,
+    CMD_QSPI,
+    CMD_EMMC,
+    CMD_SDCARD,
+    CMD_MMC,
+    CMD_PAYLOAD,
+    CMD_SPI,
+    CMD_USBDMSC,
+    CMD_SCRUB,
+    CMD_INVALID,
+
+    CMD_DBG_BEU,
+    CMD_DBG_SM,
+    CMD_DBG_IPI,
+    CMD_DBG_CRC32,
+    CMD_DBG_HEXDUMP,
+    CMD_DBG_MONITOR,
+    CMD_DBG_OPENSBI,
+    CMD_DBG_SEG,
+    CMD_DBG_L2CACHE,
+    CMD_DBG_PERFCTR,
+    CMD_DBG_WDOG,
+
+    CMD_DBG_MONITOR_CREATE,
+    CMD_DBG_MONITOR_DESTROY,
+    CMD_DBG_MONITOR_ENABLE,
+    CMD_DBG_MONITOR_DISABLE,
+    CMD_DBG_MONITOR_LIST,
+
+    CMD_BOOT_INFO,
+    CMD_BOOT_LIST,
+    CMD_BOOT_SELECT,
+
+    CMD_QSPI_ERASE,
+    CMD_QSPI_SCAN,
+};
+
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
+static const struct tinycli_cmd monitorCmds[] = {
+    { CMD_DBG_MONITOR_CREATE,  "CREATE",  "<interval> 0x<start_addr> 0x<length>", tinyCLI_MonitorCreate_ },
+    { CMD_DBG_MONITOR_DESTROY, "DESTROY", "<index> ", tinyCLI_MonitorDestroy_ },
+    { CMD_DBG_MONITOR_ENABLE,  "ENABLE",  "<index> ", tinyCLI_MonitorEnable_ },
+    { CMD_DBG_MONITOR_DISABLE, "DISABLE", "<index> ", tinyCLI_MonitorDisable_ },
+    { CMD_DBG_MONITOR_LIST,    "LIST",    "", tinyCLI_MonitorList_ },
+};
+#endif
+
+static const struct tinycli_cmd debugCmds[] = {
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+    { CMD_DBG_BEU,      "BEU",     "debug Bus Error Unit monitor", tinyCLI_BEU_ },
+#endif
+    { CMD_DBG_SM,       "SM",      "debug state machines", tinyCLI_DumpStateMachines_ },
+    { CMD_DBG_IPI,      "IPI",     "debug HSS IPI Queues", tinyCLI_IPIDumpStats_ },
+    { CMD_DBG_CRC32,    "CRC32",   "calculate CRC32 over memory region", tinyCLI_CRC32_ },
+    { CMD_DBG_HEXDUMP,  "HEXDUMP", "display memory as hex dump", tinyCLI_HexDump_ },
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
+    { CMD_DBG_MONITOR,  "MONITOR", "monitor memory locations periodically", tinyCLI_Monitor_ },
+#endif
+    { CMD_DBG_OPENSBI,  "OPENSBI", "debug OpenSBI state", tinyCLI_OpenSBI_ },
+    { CMD_DBG_SEG,      "SEG",     "display seg registers", tinyCLI_Seg_ },
+    { CMD_DBG_L2CACHE,  "L2CACHE", "display l2cache settings", tinyCLI_L2Cache_ },
+#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
+    { CMD_DBG_PERFCTR , "PERFCTR", "display perf counters", tinyCLI_PerfCtrs_ },
+#endif
+    { CMD_DBG_WDOG ,    "WDOG",    "display watchdog statistics", HSS_Wdog_DumpStats },
+};
+
+static const struct tinycli_cmd bootCmds[] = {
+    { CMD_BOOT_INFO,   "INFO",     "display info about currently registered boot image", tinyCLI_Boot_Info_ },
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+    { CMD_BOOT_LIST,   "LIST",     "list boot partitions", tinyCLI_Boot_List_ },
+    { CMD_BOOT_SELECT, "SELECT",   "select active boot partition", tinyCLI_Boot_Select_ },
+#endif
+};
+
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+static const struct tinycli_cmd qspiCmds[] = {
+    { CMD_QSPI_ERASE,   "ERASE",     "ERASE QSPI Flash", tinyCLI_QSPI_Erase_ },
+    { CMD_QSPI_SCAN,    "SCAN",      "Scan QSPI Flash for bad blocks", tinyCLI_QSPI_Scan_ },
+};
+#endif
+
+static const struct tinycli_cmd toplevelCmds[] = {
+#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
+    { CMD_YMODEM,  "YMODEM",  "Run YMODEM utility to download an image to DDR.", tinyCLI_YModem_ },
+#endif
+    { CMD_QUIT,    "QUIT",    "Quit TinyCLI and return to regular boot process.", tinyCLI_Quit_ },
+    { CMD_BOOT,    "BOOT",    "Quit TinyCLI and return to regular boot process.", tinyCLI_Boot_ },
+    { CMD_RESET,   "RESET",   "Reset PolarFire SoC.", tinyCLI_Reset_ },
+    { CMD_HELP,    "HELP",    "Display command summary / command help information.", tinyCLI_PrintHelp_ },
+    { CMD_VERSION, "VERSION", "Display system version information.", tinyCLI_PrintVersion_ },
+    { CMD_UPTIME,  "UPTIME",  "Display uptime information.", tinyCLI_PrintUptime_ },
+    { CMD_DEBUG,   "DEBUG",   "Display debug information.", tinyCLI_Debug_ },
+#if IS_ENABLED(CONFIG_MEMTEST)
+    { CMD_MEMTEST, "MEMTEST", "Full DDR memory test.", tinyCLI_MemTest_ },
+#endif
+    { CMD_QSPI,    "QSPI",    "Select boot via QSPI.", tinyCLI_QSPI_ },
+    { CMD_EMMC,    "EMMC",    "Select boot via eMMC.", tinyCLI_EMMC_ },
+    { CMD_MMC,     "MMC",     "Select boot via SDCARD/eMMC.", tinyCLI_MMC_ },
+    { CMD_SDCARD,  "SDCARD",  "Select boot via SDCARD.", tinyCLI_SDCARD_ },
+    { CMD_PAYLOAD, "PAYLOAD", "Select boot via payload.", tinyCLI_Payload_ },
+    { CMD_SPI,     "SPI",     "Select boot via SPI.", tinyCLI_SPI_ },
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
+    { CMD_USBDMSC, "USBDMSC", "Export eMMC as USBD Mass Storage Class.", tinyCLI_USBDMSC_ },
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    { CMD_SCRUB,   "SCRUB",   "Dump Scrub service stats.", tinyCLI_Scrub_ },
+#endif
+};
+
+static const struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
+#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
+    { CMD_YMODEM,  true },
+#endif
+    { CMD_QUIT,    true },
+    { CMD_BOOT,    true },
+    { CMD_RESET,   true },
+    { CMD_HELP,    false },
+    { CMD_VERSION, false },
+    { CMD_UPTIME,  false },
+    { CMD_DEBUG,   false },
+#if IS_ENABLED(CONFIG_MEMTEST)
+    { CMD_MEMTEST, true },
+#endif
+    { CMD_QSPI,    true },
+    { CMD_EMMC,    true },
+    { CMD_MMC,     true },
+    { CMD_SDCARD,  true },
+    { CMD_PAYLOAD, true },
+    { CMD_SPI,     true },
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
+    { CMD_USBDMSC, true },
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    { CMD_SCRUB,   true },
+#endif
+};
+
+_Static_assert(ARRAY_SIZE(toplevelCmds) == ARRAY_SIZE(toplevelCmdsSafeAfterBootFlags), "arrays toplevelCmds and topLevelCmdSafeAfterBootFlags need to be same dimension");
 
 
 /***********************************************************************/
 
-static bool tinyCLI_NameToKeyIndex_(struct tinycli_key const * const keys, size_t numKeys,
+static bool tinyCLI_NameToCmdIndex_(struct tinycli_cmd const * const pCmds, size_t numCmds,
     char const * const pToken, size_t *pIndex)
 {
     bool result = false;
     size_t i;
 
-    assert(keys);
+    assert(pCmds);
     assert(pToken);
     assert(pIndex);
 
-    for (i = 0u; i < numKeys; i++) {	// check for full match
-        if (strncasecmp(keys[i].name, pToken, strlen(keys[i].name)) == 0) {
+    for (i = 0u; i < numCmds; i++) {	// check for full match
+        if (strncasecmp(pCmds[i].name, pToken, strlen(pCmds[i].name)) == 0) {
             result = true;
             *pIndex = i;
             break;
@@ -241,8 +333,8 @@ static bool tinyCLI_NameToKeyIndex_(struct tinycli_key const * const keys, size_
 
     if (!result) {			// if no match found, check for partial match
         size_t count = 0u;
-        for (i = 0u; i < numKeys; i++) {
-            if (strncasecmp(keys[i].name, pToken, strlen(pToken)) == 0) {
+        for (i = 0u; i < numCmds; i++) {
+            if (strncasecmp(pCmds[i].name, pToken, strlen(pToken)) == 0) {
                 *pIndex = i;
                 count++;
             }
@@ -250,22 +342,6 @@ static bool tinyCLI_NameToKeyIndex_(struct tinycli_key const * const keys, size_
 
         if (count == 1u) {
             result = true;		// multiple matches => ambiguity
-        }
-    }
-
-    return result;
-}
-
-static bool tinyCLI_CmdIdToCommandIndex_(enum CmdId tokenId, size_t * pIndex)
-{
-    bool result = false;
-    size_t i;
-
-    for (i = 0; i < ARRAY_SIZE(commands); i++) {
-        if (commands[i].tokenId == tokenId) {
-            result = true;
-            *pIndex = i;
-            break;
         }
     }
 
@@ -348,31 +424,21 @@ static void tinyCLI_MemTest_(void)
 
 static void tinyCLI_PrintHelp_(void)
 {
+    bool handled = false;
+
     if (argc_tokenCount > 1u) {
         for (size_t i = 1u; i < argc_tokenCount; ++i)  {
             size_t index;
 
-            if (tinyCLI_NameToKeyIndex_(cmdKeys, ARRAY_SIZE(cmdKeys), argv_tokenArray[i], &index)) {
-                mHSS_FANCY_PRINTF(LOG_NORMAL, "%s: %s\n", cmdKeys[index].name, cmdKeys[index].helpString);
+            if (tinyCLI_NameToCmdIndex_(toplevelCmds, ARRAY_SIZE(toplevelCmds), argv_tokenArray[i], &index)) {
+                mHSS_FANCY_PRINTF(LOG_NORMAL, "%s: %s\n", toplevelCmds[index].name, toplevelCmds[index].helpString);
+                handled = true;
             }
         }
-    } else {
-        mHSS_PUTS("Supported Commands:\n\t");
+    }
 
-        for (size_t i = 0u; i < ARRAY_SIZE(cmdKeys); i++) {
-            size_t index = CMD_INVALID;
-
-            if (tinyCLI_CmdIdToCommandIndex_(cmdKeys[i].tokenId, &index) &&
-                (commands[index].warnIfPostInit)) {
-                HSS_Debug_Highlight(HSS_DEBUG_LOG_WARN);
-            }
-            mHSS_PUTS(cmdKeys[i].name);
-            if ((index != CMD_INVALID) && (commands[index].warnIfPostInit)) {
-                HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
-            }
-            mHSS_PUTC(' ');
-        }
-        mHSS_PUTS("\n");
+    if (!handled) {
+        display_help_(toplevelCmds, ARRAY_SIZE(toplevelCmds), 0u);
     }
 }
 
@@ -403,8 +469,7 @@ static void tinyCLI_L2Cache_(void)
 }
 
 #if IS_ENABLED(CONFIG_SERVICE_BEU)
-static void tinyCLI_BEU_(void)
-{
+static void tinyCLI_BEU_(void) {
     HSS_BEU_DumpStats();
 }
 #endif
@@ -416,125 +481,26 @@ static void tinyCLI_PerfCtrs_(void)
 }
 #endif
 
-static void tinyCLI_Debug_(void)
+
+static void tinyCLI_DumpStateMachines_(void)
 {
-    bool usageError = false;
-    enum DebugKey {
-#if IS_ENABLED(CONFIG_SERVICE_BEU)
-        DBG_BEU,
-#endif
-        DBG_SM,
-        DBG_IPI,
-        DBG_CRC32,
-        DBG_HEXDUMP,
-#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
-        DBG_MONITOR,
-#endif
-        DBG_OPENSBI,
-        DBG_SEG,
-        DBG_L2CACHE,
-#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-        DBG_PERFCTR,
-#endif
-        DBG_WDOG,
-    };
-
-    const struct tinycli_key debugKeys[] = {
-#if IS_ENABLED(CONFIG_SERVICE_BEU)
-        { DBG_BEU,      "BEU",     "debug Bus Error Unit monitor" },
-#endif
-        { DBG_SM,       "SM",      "debug state machines" },
-        { DBG_IPI,      "IPI",     "debug HSS IPI Queues" },
-        { DBG_CRC32,    "CRC32",   "calculate CRC32 over memory region" },
-        { DBG_HEXDUMP,  "HEXDUMP", "display memory as hex dump" },
-#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
-        { DBG_MONITOR,  "MONITOR", "monitor memory locations periodically" },
-#endif
-        { DBG_OPENSBI,  "OPENSBI", "debug OpenSBI state" },
-        { DBG_SEG,      "SEG",     "display seg registers" },
-        { DBG_L2CACHE,  "L2CACHE", "display l2cache settings" },
-#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-        { DBG_PERFCTR , "PERFCTR", "display perf counters" },
-#endif
-        { DBG_WDOG ,    "WDOG",    "display watchdog statistics" },
-    };
-
-    size_t keyIndex;
-    if ((argc_tokenCount > 1u)
-        && (tinyCLI_NameToKeyIndex_(debugKeys, ARRAY_SIZE(debugKeys), argv_tokenArray[1], &keyIndex))) {
-        switch (keyIndex) {
-#if IS_ENABLED(CONFIG_SERVICE_BEU)
-        case DBG_BEU:
-            tinyCLI_BEU_();
-            break;
-#endif
-
-        case DBG_SM:
-            DumpStateMachineStats();
-            break;
-
-        case DBG_IPI:
-            IPI_DebugDumpStats();
-            break;
-
-        case DBG_CRC32:
-            tinyCLI_CRC32_();
-            break;
-
-#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
-        case DBG_MONITOR:
-            tinyCLI_Monitor_();
-            break;
-#endif
-
-        case DBG_OPENSBI:
-	    tinyCLI_OpenSBI_();
-            break;
-
-        case DBG_HEXDUMP:
-            tinyCLI_HexDump_();
-            break;
-
-        case DBG_SEG:
-            tinyCLI_Seg_();
-            break;
-
-        case DBG_L2CACHE:
-            tinyCLI_L2Cache_();
-            break;
-
-#if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
-        case DBG_PERFCTR:
-            tinyCLI_PerfCtrs_();
-            break;
-#endif
-
-        case DBG_WDOG:
-#if IS_ENABLED(CONFIG_SERVICE_WDOG)
-            HSS_Wdog_DumpStats();
-#endif
-            break;
-
-        default:
-            usageError = true;
-            break;
-        }
-    } else {
-        usageError = true;
-    }
-
-    if (usageError) {
-        mHSS_PUTS("Supported options:\n");
-
-        for (size_t i = 0u; i < ARRAY_SIZE(debugKeys); i++) {
-            mHSS_PRINTF("\t%s - %s\n", debugKeys[i].name, debugKeys[i].helpString);
-        }
-    }
+    DumpStateMachineStats();
 }
 
-#if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
+static void tinyCLI_IPIDumpStats_(void)
+{
+    IPI_DebugDumpStats();
+}
+
+static void tinyCLI_Debug_(void)
+{
+    if (!dispatch_command_(debugCmds, ARRAY_SIZE(debugCmds), 1u)) {
+        display_help_(debugCmds, ARRAY_SIZE(debugCmds), 1u);
+    }
+
+}
+
 extern struct HSS_Storage *HSS_BootGetActiveStorage(void);
-#endif
 
 extern struct HSS_BootImage *pBootImage;
 static void tinyCLI_Boot_Info_(void)
@@ -624,274 +590,182 @@ static void tinyCLI_Boot_Select_(void)
 }
 #endif
 
-static bool tinyCLI_Boot_(void)
+static void tinyCLI_Boot_(void)
 {
-    bool result = false;
-    bool usageError = false;
-    enum BootKey {
-        BOOT_INFO,
-        BOOT_LIST,
-        BOOT_SELECT
-    };
-    const struct tinycli_key bootKeys[] = {
-        { BOOT_INFO,   "INFO",     "display info about currently registered boot image" },
-        { BOOT_LIST,   "LIST",     "list boot partitions" },
-        { BOOT_SELECT, "SELECT",   "select active boot partition" },
-    };
-
-    size_t keyIndex;
-    if (argc_tokenCount > 1u) {
-        if (tinyCLI_NameToKeyIndex_(bootKeys, ARRAY_SIZE(bootKeys), argv_tokenArray[1], &keyIndex)) {
-            switch (keyIndex) {
-            case BOOT_INFO:
-                tinyCLI_Boot_Info_();
-                break;
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-            case BOOT_LIST:
-                tinyCLI_Boot_List_();
-                break;
-
-            case BOOT_SELECT:
-                tinyCLI_Boot_Select_();
-                break;
-#endif
-
-            default:
-                usageError = true;
-                break;
-            }
-        } else {
-            usageError = true;
-        }
-    } else {
-        result = true; // boot on its own
-    }
-
-    if (usageError) {
-        mHSS_PUTS("Supported options:\n");
-
-        for (size_t i = 0u; i < ARRAY_SIZE(bootKeys); i++) {
-            mHSS_PRINTF("\t%s - %s\n", bootKeys[i].name, bootKeys[i].helpString);
-        }
-    }
-
-    return result;
+    quitFlag = !dispatch_command_(bootCmds, ARRAY_SIZE(bootCmds), 1u);
 }
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 extern uint32_t Flash_scan_for_bad_blocks(uint16_t* buf);
 extern void Flash_add_entry_to_bb_lut(uint16_t lba, uint16_t pba);
 
-static bool tinyCLI_QSPI_Erase_(void)
+static void tinyCLI_QSPI_Erase_(void)
 {
-    bool result = false;
-
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Erasing QSPI Flash\n");
     HSS_QSPIInit();
     HSS_QSPI_FlashChipErase();
-
-    return result;
 }
 
-static bool tinyCLI_QSPI_Scan_(void)
+static void tinyCLI_QSPI_Scan_(void)
 {
-    bool result = false;
     HSS_QSPIInit();
     HSS_QSPI_BadBlocksInfo();
-
-    return result;
-}
-
-static bool tinyCLI_QSPI_(void)
-{
-    bool result = false;
-
-    bool usageError = false;
-    enum qspiKey {
-        QSPI_ERASE,
-        QSPI_SCAN,
-    };
-    const struct tinycli_key qspiKeys[] = {
-        { QSPI_ERASE,   "ERASE",     "ERASE QSPI Flash" },
-        { QSPI_SCAN,    "SCAN",      "Scan QSPI Flash for bad blocks" },
-    };
-
-    size_t keyIndex;
-    if (argc_tokenCount > 1u) {
-        if (tinyCLI_NameToKeyIndex_(qspiKeys, ARRAY_SIZE(qspiKeys), argv_tokenArray[1], &keyIndex)) {
-            switch (keyIndex) {
-            case QSPI_ERASE:
-                tinyCLI_QSPI_Erase_();
-                break;
-
-            case QSPI_SCAN:
-                tinyCLI_QSPI_Scan_();
-                break;
-
-            default:
-                usageError = true;
-                break;
-            }
-        } else {
-            usageError = true;
-        }
-    } else {
-        HSS_BootSelectQSPI();
-        result = true; // qspi on its own
-    }
-
-    if (usageError) {
-        mHSS_PUTS("Supported options:\n");
-
-        for (size_t i = 0u; i < ARRAY_SIZE(qspiKeys); i++) {
-            mHSS_PRINTF("\t%s - %s\n", qspiKeys[i].name, qspiKeys[i].helpString);
-        }
-    }
-
-    return result;
 }
 #endif
 
+static void tinyCLI_QSPI_(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_QSPI)
+
+    if (argc_tokenCount > 1u) {
+        if (!dispatch_command_(qspiCmds, ARRAY_SIZE(qspiCmds), 1u)) {
+            display_help_(qspiCmds, ARRAY_SIZE(qspiCmds), 1u);
+        }
+    } else {
+        HSS_BootSelectQSPI(); // qspi on its own
+    }
+#else
+    tinyCLI_UnsupportedBootMechanism_("QSPI");
+#endif
+}
 
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
-static void tinyCLI_Monitor_(void)
+static void tinyCLI_MonitorCreate_(void)
 {
     bool usageError = false;
-    enum MonitorKey {
-        MONITOR_CREATE,
-        MONITOR_DESTROY,
-        MONITOR_ENABLE,
-        MONITOR_DISABLE,
-        MONITOR_LIST,
-    };
-    const struct tinycli_key monitorKeys[] = {
-        { MONITOR_CREATE,  "CREATE",  "<interval> 0x<start_addr> 0x<length>" },
-        { MONITOR_DESTROY, "DESTROY", "<index> " },
-        { MONITOR_ENABLE,  "ENABLE",  "<index> " },
-        { MONITOR_DISABLE, "DISABLE", "<index> " },
-        { MONITOR_LIST,    "LIST",    "" },
-    };
 
-    size_t keyIndex;
-    if ((argc_tokenCount > 2)
-        && (tinyCLI_NameToKeyIndex_(monitorKeys, ARRAY_SIZE(monitorKeys), argv_tokenArray[2], &keyIndex))) {
-        switch (keyIndex) {
-        case MONITOR_CREATE:
-            if (argc_tokenCount > 5u) {
-                size_t index;
-                for (index = 0u; index < ARRAY_SIZE(monitors); index++) {
-                    if (!monitors[index].allocated) {
-                        break;
-                    }
-                }
-
-               if (index < ARRAY_SIZE(monitors)) {
-                    monitors[index].allocated = true;
-                    monitors[index].active = false;
-                    monitors[index].interval_sec = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
-                    monitors[index].startAddr = tinyCLI_strtoul_wrapper_(argv_tokenArray[4]);
-                    monitors[index].count = tinyCLI_strtoul_wrapper_(argv_tokenArray[5]);
-                    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Allocated monitor index %lu\n", index);
-                } else {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "All monitors are allocated\n");
-                }
-            } else {
-                usageError = true;
+    if (argc_tokenCount > 5u) {
+        size_t index;
+        for (index = 0u; index < ARRAY_SIZE(monitors); index++) {
+            if (!monitors[index].allocated) {
+                break;
             }
-            break;
+        }
 
-        case MONITOR_DESTROY:
-            if (argc_tokenCount > 3u) {
-                size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
-
-                if (index < ARRAY_SIZE(monitors)) {
-                    if (monitors[index].allocated) {
-                        monitors[index].allocated = false;
-                        monitors[index].active = false;
-                        monitors[index].interval_sec = 0u;
-                        monitors[index].startAddr = 0u;
-                        monitors[index].count = 0u;
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Destroyed monitor index %lu\n", index);
-                    } else {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
-                    }
-                } else {
-                    usageError = true;
-                }
-            } else {
-                usageError = true;
-            }
-            break;
-
-        case MONITOR_ENABLE:
-            if (argc_tokenCount > 3u) {
-                size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
-
-                if (index < ARRAY_SIZE(monitors)) {
-                    if (monitors[index].allocated) {
-                        monitors[index].active = monitors[index].allocated;
-                        monitors[index].time = HSS_GetTime();
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Enabled monitor index %lu\n", index);
-                    } else {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
-                    }
-                } else {
-                    usageError = true;
-                }
-            } else {
-                usageError = true;
-            }
-            break;
-
-        case MONITOR_DISABLE:
-            if (argc_tokenCount > 3u) {
-                size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
-
-                if (index < ARRAY_SIZE(monitors)) {
-                    if (monitors[index].allocated) {
-                        monitors[index].active = false;
-                        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Disabled monitor index %lu\n", index);
-                    } else {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
-                    }
-                } else {
-                    usageError = true;
-                }
-            } else {
-                usageError = true;
-            }
-            break;
-
-        case MONITOR_LIST:
-            mHSS_PUTS(" Index Active Allocated Interval       Start_Addr    Count\n"
-                      "===========================================================\n");
-
-            for (size_t index = 0; index < ARRAY_SIZE(monitors);  ++index) {
-                mHSS_PRINTF(" % 5lu % 6d % 9d % 8lu %16x %8x\n",
-                    index,
-                    monitors[index].active,
-                    monitors[index].allocated,
-                    monitors[index].interval_sec,
-                    monitors[index].startAddr,
-                    monitors[index].count);
-            }
-            break;
-
-        default:
-            usageError = true;
-            break;
+       if (index < ARRAY_SIZE(monitors)) {
+            monitors[index].allocated = true;
+            monitors[index].active = false;
+            monitors[index].interval_sec = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
+            monitors[index].startAddr = tinyCLI_strtoul_wrapper_(argv_tokenArray[4]);
+            monitors[index].count = tinyCLI_strtoul_wrapper_(argv_tokenArray[5]);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Allocated monitor index %lu\n", index);
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "All monitors are allocated\n");
         }
     } else {
         usageError = true;
     }
 
     if (usageError) {
-        mHSS_PUTS("Usage:\n");
+        display_help_(monitorCmds, ARRAY_SIZE(monitorCmds), 2u);
+    }
+}
 
-        for (size_t i = 0u; i < ARRAY_SIZE(monitorKeys); i++) {
-            mHSS_PRINTF("\tDEBUG MONITOR %s - %s\n",
-                monitorKeys[i].name, monitorKeys[i].helpString);
+static void tinyCLI_MonitorDestroy_(void)
+{
+    bool usageError = false;
+
+    if (argc_tokenCount > 3u) {
+        size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
+
+        if (index < ARRAY_SIZE(monitors)) {
+            if (monitors[index].allocated) {
+                monitors[index].allocated = false;
+                monitors[index].active = false;
+                monitors[index].interval_sec = 0u;
+                monitors[index].startAddr = 0u;
+                monitors[index].count = 0u;
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Destroyed monitor index %lu\n", index);
+            } else {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
+            }
+        } else {
+            usageError = true;
         }
+    } else {
+        usageError = true;
+    }
+
+    if (usageError) {
+        display_help_(monitorCmds, ARRAY_SIZE(monitorCmds), 2u);
+    }
+}
+
+static void tinyCLI_MonitorEnable_(void)
+{
+    bool usageError = false;
+
+    if (argc_tokenCount > 3u) {
+        size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
+
+        if (index < ARRAY_SIZE(monitors)) {
+            if (monitors[index].allocated) {
+                monitors[index].active = monitors[index].allocated;
+                monitors[index].time = HSS_GetTime();
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Enabled monitor index %lu\n", index);
+            } else {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
+            }
+        } else {
+            usageError = true;
+        }
+    } else {
+        usageError = true;
+    }
+
+    if (usageError) {
+        display_help_(monitorCmds, ARRAY_SIZE(monitorCmds), 2u);
+    }
+}
+
+static void tinyCLI_MonitorDisable_(void)
+{
+    bool usageError = false;
+
+    if (argc_tokenCount > 3u) {
+        size_t index = tinyCLI_strtoul_wrapper_(argv_tokenArray[3]);
+
+        if (index < ARRAY_SIZE(monitors)) {
+            if (monitors[index].allocated) {
+                monitors[index].active = false;
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "Disabled monitor index %lu\n", index);
+            } else {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "Monitor index %lu not allocated\n", index);
+            }
+        } else {
+            usageError = true;
+        }
+    } else {
+        usageError = true;
+    }
+
+    if (usageError) {
+        tinyCLI_MonitorHelp_();
+        display_help_(monitorCmds, ARRAY_SIZE(monitorCmds), 2u);
+    }
+}
+
+static void tinyCLI_MonitorList_(void)
+{
+    mHSS_PUTS(" Index Active Allocated Interval       Start_Addr    Count\n"
+              "===========================================================\n");
+
+    for (size_t index = 0; index < ARRAY_SIZE(monitors);  ++index) {
+        mHSS_PRINTF(" % 5lu % 6d % 9d % 8lu %16x %8x\n",
+            index,
+            monitors[index].active,
+            monitors[index].allocated,
+            monitors[index].interval_sec,
+            monitors[index].startAddr,
+            monitors[index].count);
+    }
+    break;
+}
+
+static void tinyCLI_Monitor_(void)
+{
+    if (!dispatch_command_(monitorCmds, ARRAY_SIZE(monitorCmds), 2u)) {
+        display_help_(monitorCmds, ARRAY_SIZE(monitorCmds), 2u);
     }
 }
 #endif
@@ -919,7 +793,6 @@ static void tinyCLI_HexDump_(void)
 {
     static size_t hexdump_count = 256u;
     static uintptr_t hexdump_startAddr = 0u;
-
 
     if (argc_tokenCount == 2u) {
         // repeating hexdump command with no args => keep going with
@@ -953,126 +826,77 @@ static void tinyCLI_UnsupportedBootMechanism_(char const * const pName)
     HSS_BootListStorageProviders();
 }
 
-static void tinyCLI_CmdHandler_(int tokenId)
+#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
+static void tinyCLI_YModem_(void)
 {
-#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     void hss_loader_ymodem_loop(void);
-#endif
-    void _start(void);
-
-    size_t index;
-    switch (tokenId) {
-    case CMD_HELP:
-        tinyCLI_PrintHelp_();
-        break;
-
-    case CMD_VERSION:
-        tinyCLI_PrintVersion_();
-        break;
-
-    case CMD_UPTIME:
-        tinyCLI_PrintUptime_();
-        break;
-
-    case CMD_DEBUG:
-        tinyCLI_Debug_();
-        break;
-
-#if IS_ENABLED(CONFIG_SERVICE_YMODEM)
-    case CMD_YMODEM:
-        hss_loader_ymodem_loop();
-        break;
+    hss_loader_ymodem_loop();
+}
 #endif
 
-    case CMD_RESET:
-        tinyCLI_Reset_();
-        break;
+static void tinyCLI_Scrub_(void)
+{
+    scrub_dump_stats();
+}
 
-    case CMD_QUIT:
-        quitFlag = true;
-        break;
+static void tinyCLI_Quit_(void)
+{
+    quitFlag = true;
+}
 
-    case CMD_BOOT:
-        quitFlag = tinyCLI_Boot_();
-        break;
-
-#if IS_ENABLED(CONFIG_MEMTEST)
-    case CMD_MEMTEST:
-        tinyCLI_MemTest_();
-        break;
-#endif
-
-    case CMD_QSPI:
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-        tinyCLI_QSPI_();
-#else
-        tinyCLI_UnsupportedBootMechanism_("QSPI");
-#endif
-        break;
-
+static void tinyCLI_EMMC_(void)
+{
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
-    case CMD_EMMC:
-	HSS_BootSelectEMMC();
-        break;
-
-    case CMD_MMC:
-        HSS_BootSelectMMC();
-        break;
-
-    case CMD_SDCARD:
-        HSS_BootSelectSDCARD();
-        break;
-
+    HSS_BootSelectEMMC();
 #else
-    case CMD_EMMC:
-        __attribute__((fallthrough)); // deliberate fallthrough
-    case CMD_MMC:
-        __attribute__((fallthrough)); // deliberate fallthrough
-    case CMD_SDCARD:
-        tinyCLI_UnsupportedBootMechanism_("eMMC/SDCard");
-        break;
+    tinyCLI_UnsupportedBootMechanism_("eMMC");
 #endif
+}
 
+static void tinyCLI_MMC_(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+    HSS_BootSelectMMC();
+#else
+    tinyCLI_UnsupportedBootMechanism_("eMMC/SDCard");
+#endif
+}
+
+static void tinyCLI_SDCARD_(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+    HSS_BootSelectSDCARD();
+#else
+    tinyCLI_UnsupportedBootMechanism_("SDCard");
+#endif
+}
+
+static void tinyCLI_Payload_(void)
+{
 #if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
-    case CMD_PAYLOAD:
-        HSS_BootSelectPayload();
-        break;
-#endif
-
-    case CMD_SPI:
-#if defined(CONFIG_SERVICE_SPI)
-        HSS_BootSelectSPI();
+    HSS_BootSelectPayload();
 #else
-        tinyCLI_UnsupportedBootMechanism_("SPI");
+    tinyCLI_UnsupportedBootMechanism_("Payload");
 #endif
-        break;
+}
+
+static void tinyCLI_SPI_(void)
+{
+#if defined(CONFIG_SERVICE_SPI)
+    HSS_BootSelectSPI();
+#else
+    tinyCLI_UnsupportedBootMechanism_("SPI");
+#endif
+}
 
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
-    case CMD_USBDMSC:
-        {
-            USBDMSC_Init();
-            USBDMSC_Start();
-            HSS_TinyCLI_WaitForUSBMSCDDone();
-        }
-        break;
-#endif
-
-#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
-    case CMD_SCRUB:
-	scrub_dump_stats();
-        break;
-#endif
-
-    default:
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command %d (%lu tokens)\n", tokenId, argc_tokenCount);
-        for (index = 1u; index < argc_tokenCount; index++) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s\n", argv_tokenArray[index]);
-        }
-        break;
-    }
-
-    mHSS_PUTS("\n");
+static void tinyCLI_USBDMSC_(void)
+{
+    USBDMSC_Init();
+    USBDMSC_Start();
+    HSS_TinyCLI_WaitForUSBMSCDDone();
 }
+#endif
 
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
 static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen);
@@ -1111,24 +935,65 @@ size_t HSS_TinyCLI_ParseIntoTokens(char *pBuffer)
 
 void HSS_TinyCLI_Execute(void)
 {
-    size_t keyIndex, cmdIndex;
-    bool matchFoundFlag =
-        tinyCLI_NameToKeyIndex_(cmdKeys, ARRAY_SIZE(cmdKeys), argv_tokenArray[0], &keyIndex)
-        && tinyCLI_CmdIdToCommandIndex_(cmdKeys[keyIndex].tokenId, &cmdIndex);
-
-    if (matchFoundFlag) {
-        if (commands[cmdIndex].warnIfPostInit && postInit) {
-            mHSS_DEBUG_PRINTF(LOG_WARN,
-                "Command %s may cause problems post boot.\n"
-                "Please type it again if you definitely want to execute it"
-                "\n\n", cmdKeys[keyIndex].name);
-            commands[cmdIndex].warnIfPostInit = false;
-        } else {
-            commands[cmdIndex].handler(commands[cmdIndex].tokenId);
+    if (!dispatch_command_(toplevelCmds, ARRAY_SIZE(toplevelCmds), 0u)) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command >>%s<< (%lu tokens)\n", argv_tokenArray[0], argc_tokenCount);
+        for (int index = 1u; index < argc_tokenCount; index++) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Argument: %s\n", argv_tokenArray[index]);
         }
-    } else {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Unknown command >>%s<<.\n\n", argv_tokenArray[0]);
+        mHSS_PUTS("\n");
     }
+}
+
+static void display_help_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level)
+{
+    assert(pCmds);
+
+    mHSS_PRINTF("Supported %scommands:\n", level ? "sub":"");
+
+    for (size_t i = 0u; i < arraySize; i++) {
+        if ((level == 0u) && (toplevelCmdsSafeAfterBootFlags[i].warnIfPostInit)) {
+            HSS_Debug_Highlight(HSS_DEBUG_LOG_WARN);
+        }
+        mHSS_PUTS(pCmds[i].name);
+        HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+        mHSS_PUTC(' ');
+        //mHSS_PRINTF(" - %s\n", pCmds[i].helpString);
+    }
+
+    mHSS_PUTS("\n");
+}
+
+static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level)
+{
+    bool handled = false;
+    size_t cmdIndex;
+
+    assert(pCmds);
+
+    if (argc_tokenCount > level) {
+        bool matchFoundFlag = tinyCLI_NameToCmdIndex_(pCmds, arraySize, argv_tokenArray[level], &cmdIndex);
+
+        if (matchFoundFlag) {
+            if (level == 0u) { // toplevel
+                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && postInit) {
+                    mHSS_DEBUG_PRINTF(LOG_WARN,
+                        "Command %s may cause problems post boot.\n"
+                        "Please type it again if you definitely want to execute it"
+                        "\n\n", pCmds[cmdIndex].name);
+                    matchFoundFlag = false;
+                } else {
+                    tokenId = pCmds[cmdIndex].tokenId;
+                }
+            }
+
+            if (matchFoundFlag && (pCmds[cmdIndex].handler)) {
+                pCmds[cmdIndex].handler();
+                handled = true;
+            }
+        }
+    }
+
+    return handled;
 }
 
 bool HSS_TinyCLI_IndicatePostInit(void)
