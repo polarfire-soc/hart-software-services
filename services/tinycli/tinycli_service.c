@@ -119,7 +119,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
 
     static bool escapeActive = false;
 
-    if (0 != MSS_UART_get_rx(&g_mss_uart0_lo, cBuf, 1)) {
+    if (uart_getchar(cBuf, 0, false)) {
 	if (escapeActive) {
 		switch (cBuf[0]) {
 		case '[':
@@ -128,11 +128,11 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
 
                 case 'A': // up arrow
                     readStringLen = strlen(myBuffer);
-                    MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\r", 1);
-                    mHSS_PUTS(lineHeader);
+                    uart_putc(HSS_HART_E51, '\r');
+                    uart_putstring(HSS_HART_E51, (char *)lineHeader);
                     if (readStringLen) {
                         memcpy(myBuffer, myPrevBuffer, readStringLen);
-                        MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)myBuffer, readStringLen);
+                        uart_putstring(HSS_HART_E51, (char *)myBuffer);
                     } else {
                         myBuffer[0] = '\0';
                     }
@@ -150,14 +150,14 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
                         if (myBuffer[readStringLen] == 0) {
                             myBuffer[readStringLen] = ' ';
                         }
-                        MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[C", 4u);
+                        uart_putstring(HSS_HART_E51, (char *)"\033[C");
                     }
                     return;
 
                 case 'D': // left arrow
                     if (readStringLen) {
                         readStringLen--;
-                        MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[D", 4u);
+                        uart_putstring(HSS_HART_E51, (char *)"\033[D");
                     }
 		    escapeActive = false;
                     return;
@@ -174,7 +174,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
         case '\r':
             __attribute__((fallthrough)); // deliberate fallthrough
         case '\n':
-            MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+            uart_putc(HSS_HART_E51, cBuf[0]);
             if (readStringLen < bufferLen) {
                 myBuffer[readStringLen] = '\0';
             }
@@ -182,7 +182,6 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
                 memcpy(myPrevBuffer, myBuffer, readStringLen+1);
             } else {
                 // if just hit enter, as a convenience, reuse last command (a la GDB)
-		//mHSS_DEBUG_PRINTF(LOG_WARN, "Convenience: copying >>%s<< into myBuffer\n", myPrevBuffer);
 		readStringLen = strlen(myPrevBuffer);
                 memcpy(myBuffer, myPrevBuffer, readStringLen+1);
             }
@@ -192,7 +191,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
         case 0x7Fu: // delete
             if (readStringLen) {
                 readStringLen--;
-                MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[D \033[D", 7u);
+                uart_putstring(HSS_HART_E51, (char *)"\033[D \033[D");
                 myBuffer[readStringLen] = 0;
             }
             break;
@@ -200,22 +199,22 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
         case 0x08u: // backspace - ^H
             if (readStringLen) {
                 readStringLen--;
-                MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)" \033[D", 4u);
+                uart_putstring(HSS_HART_E51, (char *)"\033[D");
                 myBuffer[readStringLen] = 0;
             }
             break;
 
         case 0x01u: // ^A
             readStringLen = 0;
-            MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\r", 1);
+            uart_putc(HSS_HART_E51, '\r');
             mHSS_PUTS(lineHeader);
             break;
 
         case 0x05u: // ^E
             readStringLen = strlen(myBuffer);
-            MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\r", 1);
-            mHSS_PUTS(lineHeader);
-            MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)myBuffer, readStringLen);
+            uart_putc(HSS_HART_E51, '\r');
+            uart_putstring(HSS_HART_E51, (char *)lineHeader);
+            uart_putstring(HSS_HART_E51, (char *)myBuffer);
             break;
 
         case 0x04u: // ^D
@@ -235,7 +234,7 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
 
         default:
             if (readStringLen < bufferLen) {
-                MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+                uart_putc(HSS_HART_E51, cBuf[0]);
                 myBuffer[readStringLen] = cBuf[0];
                 readStringLen++;
             }
@@ -249,7 +248,7 @@ static void tinycli_readline_onExit(struct StateMachine * const pMyMachine)
     (void)pMyMachine;
 
     const char crlf[] = "\n";
-    MSS_UART_polled_tx_string(&g_mss_uart0_lo, (const uint8_t *)crlf);
+    uart_putstring(HSS_HART_E51, (char *)crlf);
 
     if (readStringLen > 0) {
     } else {
@@ -291,7 +290,7 @@ static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine)
 
     done = !USBDMSC_IsActive();
 
-    if (!done && (0 != MSS_UART_get_rx(&g_mss_uart0_lo, cBuf, 1))) {
+    if (!done && (uart_getchar(cBuf, 0, false))) {
         done = (cBuf[0] == '\003') || (cBuf[0] == '\033');
     }
 

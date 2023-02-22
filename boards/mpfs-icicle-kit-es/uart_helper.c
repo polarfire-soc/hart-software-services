@@ -48,13 +48,18 @@ static inline mss_uart_instance_t *get_uart_instance(int hartid)
     return pUart;
 }
 
+void *uart_get_instance(int hartid)
+{
+    return get_uart_instance(hartid);
+}
+
 int uart_putstring(int hartid, char *p)
 {
     const uint32_t len = (uint32_t)strlen(p);
 
     mss_uart_instance_t *pUart = get_uart_instance(hartid);
 
-    while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
+    //while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
 
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)p);
     // TODO: if hartId is zero (i.e., E51), replace this with non-blocking
@@ -71,7 +76,7 @@ void uart_putc(int hartid, const char ch)
 
     mss_uart_instance_t *pUart = get_uart_instance(hartid);
 
-    while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
+    //while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
 
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)string);
 }
@@ -85,25 +90,27 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
     memset(myBuffer, 0, bufferLen);
 
+    mss_uart_instance_t *pUart = get_uart_instance(HSS_HART_E51);
+
     uint8_t cBuf[1];
     while (!finished) {
-        while (0 == MSS_UART_get_rx(&g_mss_uart0_lo, cBuf, 1));
+        while (0 == MSS_UART_get_rx(pUart, cBuf, 1));
 
         switch (cBuf[0]) {
         case '\r':
-            MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+            MSS_UART_polled_tx(pUart, cBuf, 1u);
             finished = true;
             break;
 
         case '\n':
-            MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+            MSS_UART_polled_tx(pUart, cBuf, 1u);
             finished = true;
             break;
 
         case 0x7Fu: // delete
             if (result) {
                 result--;
-                MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)"\033[D \033[D", 7u);
+                MSS_UART_polled_tx(pUart, (uint8_t const *)"\033[D \033[D", 7u);
                 myBuffer[result] = 0;
             }
             break;
@@ -111,7 +118,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
         case 0x08u: // backspace - ^H
             if (result) {
                 result--;
-                MSS_UART_polled_tx(&g_mss_uart0_lo, (uint8_t const *)" \033[D", 4u);
+                MSS_UART_polled_tx(pUart, (uint8_t const *)" \033[D", 4u);
                 myBuffer[result] = 0;
             }
             break;
@@ -138,7 +145,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
         default:
             if (result < bufferLen) {
-                MSS_UART_polled_tx(&g_mss_uart0_lo, cBuf, 1u);
+                MSS_UART_polled_tx(pUart, cBuf, 1u);
                 myBuffer[result] = cBuf[0];
                 result++;
             }
@@ -147,7 +154,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
     }
 
     const char crlf[] = "\n";
-    MSS_UART_polled_tx_string(&g_mss_uart0_lo, (const uint8_t *)crlf);
+    MSS_UART_polled_tx_string(pUart, (const uint8_t *)crlf);
 
     if (result > 0) {
         *pBuffer = myBuffer;
@@ -172,11 +179,13 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
 
     const HSSTicks_t timeout_ticks = timeout_sec * TICKS_PER_SEC;
 
+    mss_uart_instance_t *pUart = get_uart_instance(HSS_HART_E51);
+
     while (!done) {
-        size_t received = MSS_UART_get_rx(&g_mss_uart0_lo, rx_buff, 1u);
+        size_t received = MSS_UART_get_rx(pUart, rx_buff, 1u);
         if (0u != received) {
             done = true;
-            if (MSS_UART_NO_ERROR == MSS_UART_get_rx_status(&g_mss_uart0_lo)) {
+            if (MSS_UART_NO_ERROR == MSS_UART_get_rx_status(pUart)) {
                 *pbuf = rx_buff[0];
                 result = true;
                 break;
@@ -187,7 +196,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
 
         if (do_sec_tick && HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
             const uint8_t dot='.';
-            MSS_UART_polled_tx(&g_mss_uart0_lo, &dot, 1);
+            MSS_UART_polled_tx(pUart, &dot, 1);
             last_sec_time = HSS_GetTime();
         }
 
