@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2023.02
+
+### Added
+
+ * HSS: moved default payload.bin destination in DDR to section now reserved in dtbs
+
+ * HSS: mpfs-hal: updated mpfs-hal to v2.2.100
+
+ * HSS: watchdog: support for rebooting individual AMP contexts
+
+ * HSS: reboot: configurable support for cold reboot on fault
+
+ * HSS: sbi: fake mvendorid/marchid/mimpid (to allow Linux driver quirks)
+
+ * HSS: tinycli: allow selection of eMMC, SDCARD, or SDCARD to eMMC as boot medium
+
+ * HSS: beu: errors now logged to HSS console when detected
+
+### Changed
+
+ * HSS: memtest: use common routine to interrupt memory test
+
+ * HSS: uart: add hook to control UART assigned per hart
+
+ * HSS: tinycli: refactor to use command command dispatcher
+
+ * HSS: build: give more meaningful errors if files missing for builds
+
+### Fixed
+
+ * HSS: reboot: back-to-back reboots would eventually fill queues
+
+ * HSS: envm-wrapper: improvements to avoid cache bugs on startup
+
+ * HSS: scrub: fix bug in calculating end of range
+
 ## 2022.09
 
 ### Added

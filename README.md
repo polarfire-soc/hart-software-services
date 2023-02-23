@@ -89,7 +89,7 @@ First, ensure that the environment variable `$SC_INSTALL_DIR` is set to the loca
 
 For building on Linux from the command line, configure the path appropriately. For example, the following will add the SoftConsole provided Python and RISC-V compiler toolchain to the path:
 
-    $ export PATH=$PATH:$SC_INSTALL_DIR/python/bin:$SC_INSTALL_DIR/riscv-unknown-elf-gcc/bin
+    $ export PATH=$PATH:$SC_INSTALL_DIR/python3/bin:$SC_INSTALL_DIR/riscv-unknown-elf-gcc/bin
 
 Next, set the environment variable `$FPGENPROG` to the location of the fpgenprog tool installed by Libero -- this is used to program the eNVM ('make program') and also to generate hex files suitable for programming by Libero, or inclusion in the fabric design with Libero. For example, assuming that Libero is installed at `/usr/local/microsemi/Libero_SoC_v2021.2/`:
 
@@ -135,7 +135,7 @@ First, ensure that the `%SC_INSTALL_DIR%` environment variable is correctly set 
 
 For building on Windows from the command line, you must configure the path appropriately to add Python, GNU build tools, and the RISC-V compiler toolchain. For example:
 
-    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\python;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin
+    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin
 
 Ensure the `%SC_INSTALL_DIR%` variable correctly matches your system.
 
