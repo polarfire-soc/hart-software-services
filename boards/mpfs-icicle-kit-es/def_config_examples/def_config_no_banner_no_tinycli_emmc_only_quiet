@@ -77,19 +77,7 @@ CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS=256
 CONFIG_SERVICE_SGDMA=y
 # CONFIG_SERVICE_SPI is not set
 # CONFIG_SERVICE_TINYCLI is not set
-
-#
-# Tiny Command Line Interface
-#
-# end of Tiny Command Line Interface
-
 # CONFIG_SERVICE_UART is not set
-
-#
-# USB Device Mass Storage Class
-#
-# end of USB Device Mass Storage Class
-
 CONFIG_SERVICE_WDOG=y
 
 #
@@ -111,14 +99,23 @@ CONFIG_SERVICE_WDOG_ENABLE_E51=y
 # Miscellaneous
 #
 CONFIG_USE_PCIE=y
+# CONFIG_UART_SURRENDER is not set
 CONFIG_OPENSBI=y
 CONFIG_USE_IHC=y
+
+#
+# Tamper
+#
+# CONFIG_USE_TAMPER is not set
+# end of Tamper
+
 CONFIG_ALLOW_COLDREBOOT=y
 
 #
 # Cold Reboot
 #
 CONFIG_ALLOW_COLDREBOOT_ALWAYS=y
+# CONFIG_ALLOW_COLDREBOOT_ON_OPENSBI_FAULT is not set
 # end of Cold Reboot
 # end of Miscellaneous
 
@@ -180,6 +177,7 @@ CONFIG_COMPRESSION_MINIZ=y
 # CONFIG_DEBUG_IPI_STATS is not set
 # CONFIG_DEBUG_CHUNK_DOWNLOADS is not set
 # CONFIG_DEBUG_MSCGEN_IPI is not set
+# CONFIG_DEBUG_RESET_REASON is not set
 # end of Debug Options
 
 #
