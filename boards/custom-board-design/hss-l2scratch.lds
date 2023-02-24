@@ -75,7 +75,7 @@ OUTPUT_ARCH( "riscv" )
  * LIBERO_SETTING_RESET_VECTOR_HART0 etc in <hw_memory.h>
  *
  * When debugging a bare metal program that is run out of reset from envm, a linker
- * script will be used whereby the progdtim will run from LIM instead of envm.
+ * script will be used whereby the program will run from LIM instead of envm.
  * In this case, set the reset vector in the linker script to 0x0800_0000.
  * This means you are not continually programming the envm each time you load a
  * program and there is no limitation with hardware break points whn debugging.
@@ -131,7 +131,7 @@ SECTIONS
 
     PROVIDE(__ddrhi_start      = ORIGIN(ddrhi));
     PROVIDE(__ddrhi_end        = ORIGIN(ddrhi) + LENGTH(ddrhi));
-    pROVIDE(__ddrhi_max_end    = ORIGIN(ddrhi) + LENGTH(ncddrhi));
+    PROVIDE(__ddrhi_max_end    = ORIGIN(ddrhi) + LENGTH(ncddrhi));
 
     PROVIDE(__ncddrhi_start    = ORIGIN(ncddrhi));
     PROVIDE(__ncddrhi_end      = ORIGIN(ncddrhi) + LENGTH(ncddrhi));
