@@ -7,7 +7,8 @@ config SERVICE_OPENSBI
 		If you do not know what to do here, say Y.
 
 config SERVICE_OPENSBI_IHC
-	def_bool y
+	bool "OpenSBI IHC ecall support"
+	default y
 	depends on OPENSBI && USE_IHC
 	help
                 This feature enables support for IHC ecall service.
@@ -15,7 +16,8 @@ config SERVICE_OPENSBI_IHC
 		If you do not know what to do here, say Y.
 
 config SERVICE_OPENSBI_RPROC
-	def_bool y
+	bool "Remote Proc ecall service support"
+	default y
 	depends on SERVICE_OPENSBI_IHC
 	help
                 This feature enables support for Remote Proc ecall service.
