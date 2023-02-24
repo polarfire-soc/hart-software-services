@@ -135,7 +135,9 @@ static void tinyCLI_UnsupportedBootMechanism_(char const * const pName);
 #if IS_ENABLED(CONFIG_SERVICE_YMODEM)
 static void tinyCLI_YModem_(void);
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
 static void tinyCLI_Scrub_(void);
+#endif
 static void output_duration_(char const * const description, const uint32_t val, bool continuation);
 static void tinyCLI_DumpStateMachines_(void);
 static void tinyCLI_IPIDumpStats_(void);
@@ -834,10 +836,12 @@ static void tinyCLI_YModem_(void)
 }
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
 static void tinyCLI_Scrub_(void)
 {
     scrub_dump_stats();
 }
+#endif
 
 static void tinyCLI_Quit_(void)
 {
