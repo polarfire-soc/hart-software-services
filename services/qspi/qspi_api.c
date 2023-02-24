@@ -276,6 +276,9 @@ static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
 bool HSS_QSPIInit(void)
 {
     if (!qspiInitialized) {
+        extern void clear_bootup_cache_ways(void);
+        clear_bootup_cache_ways();
+
         /* read and output Flash ID as a sanity test */
         (void)mss_config_clk_rst(MSS_PERIPH_QSPIXIP, (uint8_t) 0u, PERIPHERAL_ON);
 
