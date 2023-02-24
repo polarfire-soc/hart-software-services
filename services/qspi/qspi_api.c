@@ -350,17 +350,17 @@ bool HSS_QSPIInit(void)
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pLogicalBlockDesc: %p\n", pLogicalBlockDesc);
             // mHSS_DEBUG_PRINTF(LOG_NORMAL, "pCacheDataBuffer: %p\n", pCacheDataBuffer);
 
-                //
-                // check for bad blocks and reduce the number of blocks accordingly...
-                // our caches and logical block descriptors above may now be slightly too large, but this
-                // is of no consequence
+            //
+            // check for bad blocks and reduce the number of blocks accordingly...
+            // our caches and logical block descriptors above may now be slightly too large, but this
+            // is of no consequence
 
-                build_bad_block_map_();
-                blockCount -= numBadBlocks; // adjust block count to take account of bad blocks
-                pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
-                dieSize = blockSize * blockCount;
+            build_bad_block_map_();
+            blockCount -= numBadBlocks; // adjust block count to take account of bad blocks
+            pageCount = qspiFlashes[qspiIndex].pagesPerBlock * blockCount;
+            dieSize = blockSize * blockCount;
 
-                // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u\n", blockCount);
+            // mHSS_DEBUG_PRINTF(LOG_NORMAL, "blockCount (after bad blocks): %u\n", blockCount);
 
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initialized Flash\n");
             qspiInitialized = true;
