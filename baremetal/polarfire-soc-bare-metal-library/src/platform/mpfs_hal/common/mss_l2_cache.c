@@ -46,6 +46,42 @@ __attribute__((weak)) uint64_t end_l2_scratchpad_address(void)
 }
 
 /***************************************************************************//**
+ * See hw_l2_scratch.h for details of how to use this function.
+ */
+__attribute__((weak)) uint32_t num_cache_ways(void)
+{
+   static_assert(LIBERO_SETTING_WAY_ENABLE >
+                 LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS,
+                 "Invalid way configuration");
+   return (uint64_t)((LIBERO_SETTING_WAY_ENABLE + 1U) -
+                     LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS);
+}
+
+/***************************************************************************//**
+ * See hw_l2_scratch.h for details of how to use this function.
+ */
+__attribute__((weak)) uint32_t my_num_cache_ways(void)
+{
+    uint32_t num_ways = 0U;
+    uint32_t way_enable;
+    uint32_t bit_index;
+
+    //todo: return for my hart, assuming e51 here
+    way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_E51_DCACHE;
+    bit_index = 0U;
+
+    while(bit_index < 16U)
+    {
+       if( way_enable & (1U<<bit_index))
+       {
+           num_ways++;
+       }
+       bit_index++;
+    }
+    return (uint64_t)(num_ways);
+}
+
+/***************************************************************************//**
  * See mss_uart.h for details of how to use this function.
  */
 __attribute__((weak)) void config_l2_cache(void)

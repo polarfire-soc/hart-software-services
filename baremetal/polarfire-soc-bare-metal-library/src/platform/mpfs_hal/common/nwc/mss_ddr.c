@@ -4377,6 +4377,13 @@ static void init_ddrc(void)
 /**
  * setup_ddr_segments(void)
  * setup segment registers- translated DDR address as user requires
+ *
+ * This should only be called by the boot-loader
+ *
+ * Assumption: We are calling this during early boot.
+ * We have complete control of the PDMA.
+ * Only the PDMS and the hart calling this function have written to the DDR
+ * at this point.
  */
 void setup_ddr_segments(SEG_SETUP option)
 {
@@ -4388,6 +4395,14 @@ void setup_ddr_segments(SEG_SETUP option)
         SEG[1].u[3].raw = (INIT_SETTING_SEG1_3 & 0x7FFFUL);
         SEG[1].u[4].raw = (INIT_SETTING_SEG1_4 & 0x7FFFUL);
         SEG[1].u[5].raw = (INIT_SETTING_SEG1_5 & 0x7FFFUL);
+        /*
+         * disable ddr blocker
+         * Is cleared at reset. When written to '1' disables the blocker function
+         * allowing the L2 cache controller to access the DDRC. Once written to '1'
+         * the register cannot be written to 0, only an MSS reset will clear the
+         * register
+         */
+        SEG[0].u[7].raw = 0x01U;
     }
     else
     {
@@ -4397,15 +4412,49 @@ void setup_ddr_segments(SEG_SETUP option)
         SEG[1].u[3].raw = (LIBERO_SETTING_SEG1_3 & 0x7FFFUL);
         SEG[1].u[4].raw = (LIBERO_SETTING_SEG1_4 & 0x7FFFUL);
         SEG[1].u[5].raw = (LIBERO_SETTING_SEG1_5 & 0x7FFFUL);
+        /*
+         * disable ddr blocker
+         * Is cleared at reset. When written to '1' disables the blocker function
+         * allowing the L2 cache controller to access the DDRC. Once written to '1'
+         * the register cannot be written to 0, only an MSS reset will clear the
+         * register
+         */
+        SEG[0].u[7].raw = 0x01U;
+        /*
+         * Clear the cache. Cache may have residue of writes related to the previous
+         * seg setup. These can endup being written back to DDR, so make sure cache
+         * is flushed. The cache is flushed by reading 2MB from cached backed memory
+         * We need to read from each master that has accessesed the cache, as all
+         * masters may not have access to all the cache ways.
+         * When this function is being called, it is fare to assume only this hart
+         * and the PDMA has accessed the cache.
+         * We also assume this is in the bootloader and we have sole access to the
+         * PDMA
+         */
+        clear_bootup_cache_ways();
     }
-    /*
-     * disable ddr blocker
-     * Is cleared at reset. When written to '1' disables the blocker function
-     * allowing the L2 cache controller to access the DDRC. Once written to '1'
-     * the register cannot be written to 0, only an MSS reset will clear the
-     * register
-     */
-    SEG[0].u[7].raw = 0x01U;
+}
+
+/**
+ * Clear cache ways used buring boot.
+ * These are the ways associated with the PDMA and the current hart being run
+ *
+ * Assumption: We are calling this during early boot.
+ * We have complete control of the PDMA.
+ * Only the PDMA and the hart calling this function have written to the DDR
+ * at this point.
+ */
+__attribute__((weak)) void clear_bootup_cache_ways(void)
+{
+    // ASSERT(my_num_cache_ways() == num_cache_ways());
+
+    /* clear using pdma routine, uses the 4 channels */
+    load_ddr_pattern(LIBERO_SETTING_DDR_32_CACHE, TWO_MBYTES*4, DDR_INIT_FILL,
+                     0U);
+    /* clear using my d-cache ways */
+    fill_cache_new_seg_address((void *)BASE_ADDRESS_CACHED_32_DDR,
+                               (void *)(BASE_ADDRESS_CACHED_32_DDR +
+                                        TWO_MBYTES));
 }
 
 /**

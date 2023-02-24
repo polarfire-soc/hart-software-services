@@ -185,4 +185,51 @@ config_64_copy:
 2:
     ret
 
+ /***********************************************************************************
+ *
+ * fill_cache_new_seg_address and flush
+ */
+    .equ    L2_CCACHE_ADDR, 0x02010000
+    .equ    FLUSH64_OFFSET, 0x200
+    //
+    // We want to flush anything that may be cached
+    // with previous seg settings
+    //
+    // The cache block is 64-bytes wide, and there are 4 banks * 512 sets * 16
+    // ways.
+    // We just write to the DDR cache backed address passed by the caller
+    // Once start and end address range covers the size of the cache, the
+    // previous contents of cache will be overwritten.
+    //
+    // fill_cache_new_seg_address
+    //  a0 = dest
+    //  a1 = dest end address
+    .globl  fill_cache_new_seg_address
+    .type   fill_cache_new_seg_address @function
+fill_cache_new_seg_address:
+    mv  t1,a0
+    mv  t2,a1
+    mv  t3,a0
+
+.preload_cache_with_known_addrs:
+    sd  x0, 0(t1)
+    ld  t4, 0(t1)
+    addi    t1, t1, 64
+    blt t1, t2, .preload_cache_with_known_addrs
+
+    //
+    // Now that the cache is filled with known addresses, we can simply flush
+    // each known address to end up with an empty cache.
+    // There is no requirement to clear the cache, but we will as a belt and
+    // braces excercise before we continue with the boot process
+    //
+    li  t1, L2_CCACHE_ADDR
+.flush_known_addrs_from_cache:
+    sd  t3, FLUSH64_OFFSET(t1)      // write address to 0x02010200 (FLUSH64)
+    addi    t3, t3, 64
+    blt t3, t2, .flush_known_addrs_from_cache
+
+.early_exit:
+    ret
+
 

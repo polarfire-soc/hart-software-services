@@ -858,6 +858,10 @@ typedef enum DDR_MEMORY_ACCESS_
     /* RESERVED                          [15:16] RW value= 0x0 */
     /* LOCKED                            [31:1]  RW value= 0x0 */
 
+#ifndef TWO_MBYTES
+#define TWO_MBYTES  0x200000
+#endif
+
 /***************************************************************************//**
 
  */
@@ -1216,6 +1220,9 @@ setup_ddr_segments
 (
     SEG_SETUP option
 );
+
+char * fill_cache_new_seg_address(void *dest, void *dest_end);
+void clear_bootup_cache_ways(void);
 
 
 #ifdef __cplusplus

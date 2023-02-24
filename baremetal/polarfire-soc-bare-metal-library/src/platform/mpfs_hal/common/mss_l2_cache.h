@@ -524,8 +524,8 @@ typedef struct {
 
 
 /***************************************************************************//**
-  The end_l2_scratchpad_address() function is used to return the end address of the
-  initialised scratchpad. It is used in the startup code.
+  The end_l2_scratchpad_address() function is used to return the end address of
+  the initialised scratchpad. It is used in the startup code.
 
   @return
     This end address of the allocated scratchpad.
@@ -554,7 +554,7 @@ uint64_t end_l2_scratchpad_address(void);
   @code
         // When called from assembly
         call    config_l2_cache
-        call    end_l2_cache_address  # end address returned in a0
+        call    end_l2_scratchpad_address  # end address returned in a0
         call    .clear_scratchpad
   @endcode
  */
@@ -568,11 +568,14 @@ void config_l2_cache(void);
   @code
         // When called from assembly
         call    config_l2_cache
-        call    end_l2_cache_address  # end address returned in a0
+        call    end_l2_scratchpad_address  # end address returned in a0
         call    .clear_scratchpad
   @endcode
  */
 uint8_t check_num_scratch_ways(uint64_t *start, uint64_t *end);
+
+uint32_t num_cache_ways(void);
+uint32_t my_num_cache_ways(void);
 
 #ifdef __cplusplus
 }
