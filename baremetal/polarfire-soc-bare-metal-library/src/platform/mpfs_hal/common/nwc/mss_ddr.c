@@ -2092,6 +2092,7 @@ static uint32_t ddr_setup(void)
                  * Configure Segments- address mapping,  CFG0/CFG1
                  */
                 setup_ddr_segments(LIBERO_SEG_SETUP);
+                clear_bootup_cache_ways();
             }
             ret_status |= DDR_SETUP_DONE;
             ddr_training_state = DDR_TRAINING_FINISHED;
@@ -4431,7 +4432,6 @@ void setup_ddr_segments(SEG_SETUP option)
          * We also assume this is in the bootloader and we have sole access to the
          * PDMA
          */
-        clear_bootup_cache_ways();
     }
 }
 
