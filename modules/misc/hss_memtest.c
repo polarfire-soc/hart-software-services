@@ -218,6 +218,7 @@ do_return:
 
 #include "ddr_service.h"
 
+extern void clear_bootup_cache_ways(void);
 bool HSS_MemTestDDRFast(void)
 {
     bool result = true;
@@ -244,6 +245,8 @@ bool HSS_MemTestDDRFast(void)
     }
     HSS_PerfCtr_Lap(perf_ctr_index_mem64);
 
+    clear_bootup_cache_ways();
+
     return result;
 }
 
@@ -258,6 +261,8 @@ bool HSS_MemTestDDRFull(void)
         }
     }
 
+    clear_bootup_cache_ways();
+
     return result;
 }
 
@@ -271,6 +276,8 @@ bool HSS_MemTestDDR_Ex(volatile uint64_t *baseAddr, size_t numBytes)
             //mHSS_FANCY_PRINTF(LOG_ERROR, "FAILED!\n");
         result = false;
     }
+
+    clear_bootup_cache_ways();
 
     return result;
 }
