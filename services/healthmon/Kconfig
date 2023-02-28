@@ -1,0 +1,7 @@
+config SERVICE_HEALTHMON
+	bool "Health Monitoring support"
+	default n
+	help
+		This feature enables support for delegated Health Monitoring.
+
+		If you do not know what to do here, say Y.

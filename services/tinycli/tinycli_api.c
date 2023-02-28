@@ -60,6 +60,10 @@
 #    include "beu_service.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_HEALTHMON)
+#    include "healthmon_service.h"
+#endif
+
 #if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
 #    include "hss_boot_secure.h"
 #endif
@@ -151,6 +155,9 @@ static void tinyCLI_USBDMSC_(void);
 #if IS_ENABLED(CONFIG_SERVICE_BEU)
 static void tinyCLI_BEU_(void);
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_HEALTHMON)
+static void tinyCLI_HEALTHMON_(void);
+#endif
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
 static void tinyCLI_PerfCtrs_(void);
 #endif
@@ -184,6 +191,7 @@ enum CmdId {
     CMD_INVALID,
 
     CMD_DBG_BEU,
+    CMD_DBG_HEALTHMON,
     CMD_DBG_SM,
     CMD_DBG_IPI,
     CMD_DBG_CRC32,
@@ -222,6 +230,9 @@ static const struct tinycli_cmd monitorCmds[] = {
 static const struct tinycli_cmd debugCmds[] = {
 #if IS_ENABLED(CONFIG_SERVICE_BEU)
     { CMD_DBG_BEU,      "BEU",     "debug Bus Error Unit monitor", tinyCLI_BEU_ },
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_HEALTHMON)
+    { CMD_DBG_HEALTHMON, "HEALTHMON", "debug health monitor", tinyCLI_HEALTHMON_ },
 #endif
     { CMD_DBG_SM,       "SM",      "debug state machines", tinyCLI_DumpStateMachines_ },
     { CMD_DBG_IPI,      "IPI",     "debug HSS IPI Queues", tinyCLI_IPIDumpStats_ },
@@ -471,8 +482,16 @@ static void tinyCLI_L2Cache_(void)
 }
 
 #if IS_ENABLED(CONFIG_SERVICE_BEU)
-static void tinyCLI_BEU_(void) {
+static void tinyCLI_BEU_(void)
+{
     HSS_BEU_DumpStats();
+}
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_HEALTHMON)
+static void tinyCLI_HEALTHMON_(void)
+{
+    HSS_Health_DumpStats();
 }
 #endif
 
