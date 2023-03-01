@@ -77,17 +77,17 @@ static void scrub_init_handler(struct StateMachine * const pMyMachine)
 }
 
 /////////////////
-extern const uint64_t __l2lim_start,         __l2lim_end;
-extern const uint64_t __l2_start, __l2_end;
-extern const uint64_t __ddr_start,           __ddr_end;
-extern const uint64_t __ddrhi_start,         __ddrhi_end;
-extern const uint64_t __ncddrhi_start,       __ncddrhi_end;
-extern const uint64_t __dtim_start,          __dtim_end;
-extern const uint64_t __e51itim_start,       __e51itim_end;
-extern const uint64_t __u54_1_itim_start,    __u54_1_itim_end;
-extern const uint64_t __u54_2_itim_start,    __u54_2_itim_end;
-extern const uint64_t __u54_3_itim_start,    __u54_3_itim_end;
-extern const uint64_t __u54_4_itim_start,    __u54_4_itim_end;
+extern const uint64_t __l2lim_start,      __l2lim_end;
+extern const uint64_t __l2_start,         __l2_end;
+extern const uint64_t __ddr_start,        __ddr_end;
+extern const uint64_t __ddrhi_start,      __ddrhi_end;
+extern const uint64_t __ncddrhi_start,    __ncddrhi_end;
+extern const uint64_t __dtim_start,       __dtim_end;
+extern const uint64_t __e51itim_start,    __e51itim_end;
+extern const uint64_t __u54_1_itim_start, __u54_1_itim_end;
+extern const uint64_t __u54_2_itim_start, __u54_2_itim_end;
+extern const uint64_t __u54_3_itim_start, __u54_3_itim_end;
+extern const uint64_t __u54_4_itim_start, __u54_4_itim_end;
 
 const struct {
 	uintptr_t baseAddr;
