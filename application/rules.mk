@@ -62,7 +62,7 @@ CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 CORE_CFLAGS+=-g3 -DDEBUG -pipe -grecord-gcc-switches
 #CORE_CFLAGS+=-pipe
 
-VENDOR_STRING=$(shell git describe --tags)
+VENDOR_STRING=$(shell git describe --tags 2> /dev/null || echo "unknown")
 CORE_CFLAGS+=-DVENDOR_STRING="$(VENDOR_STRING)"
 
 # Warning / Code Quality
