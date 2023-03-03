@@ -11,9 +11,9 @@
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_string.h>
 
-static inline char const *sbi_platform_feature_id2string(unsigned long feature)
+static inline char *sbi_platform_feature_id2string(unsigned long feature)
 {
-	char const *fstr = NULL;
+	char *fstr = NULL;
 
 	if (!feature)
 		return NULL;
@@ -33,7 +33,7 @@ void sbi_platform_get_features_str(const struct sbi_platform *plat,
 				   char *features_str, int nfstr)
 {
 	unsigned long features, feat = 1UL;
-	char const *temp;
+	char *temp;
 	int offset = 0;
 
 	if (!plat || !features_str || !nfstr)

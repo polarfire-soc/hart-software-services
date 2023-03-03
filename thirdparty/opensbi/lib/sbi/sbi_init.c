@@ -18,7 +18,7 @@
 #include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_hsm.h>
 #include <sbi/sbi_ipi.h>
-#include <sbi/sbi_init.h>
+#include <sbi/sbi_irqchip.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_pmu.h>
 #include <sbi/sbi_system.h>
@@ -26,7 +26,6 @@
 #include <sbi/sbi_timer.h>
 #include <sbi/sbi_tlb.h>
 #include <sbi/sbi_version.h>
-#include <assert.h>
 
 #define BANNER                                              \
 	"   ____                    _____ ____ _____\n"     \
@@ -64,6 +63,7 @@ static void sbi_boot_print_banner(struct sbi_scratch *scratch)
 static void sbi_boot_print_general(struct sbi_scratch *scratch)
 {
 	char str[128];
+	const struct sbi_pmu_device *pdev;
 	const struct sbi_hsm_device *hdev;
 	const struct sbi_ipi_device *idev;
 	const struct sbi_timer_device *tdev;
@@ -94,6 +94,9 @@ static void sbi_boot_print_general(struct sbi_scratch *scratch)
 	hdev = sbi_hsm_get_device();
 	sbi_printf("Platform HSM Device       : %s\n",
 		   (hdev) ? hdev->name : "---");
+	pdev = sbi_pmu_get_device();
+	sbi_printf("Platform PMU Device       : %s\n",
+		   (pdev) ? pdev->name : "---");
 	srdev = sbi_system_reset_get_device(SBI_SRST_RESET_TYPE_COLD_REBOOT, 0);
 	sbi_printf("Platform Reboot Device    : %s\n",
 		   (srdev) ? srdev->name : "---");
@@ -140,10 +143,12 @@ static void sbi_boot_print_hart(struct sbi_scratch *scratch, u32 hartid)
 	/* Boot HART details */
 	sbi_printf("Boot HART ID              : %u\n", hartid);
 	sbi_printf("Boot HART Domain          : %s\n", dom->name);
+	sbi_hart_get_priv_version_str(scratch, str, sizeof(str));
+	sbi_printf("Boot HART Priv Version    : %s\n", str);
 	misa_string(xlen, str, sizeof(str));
-	sbi_printf("Boot HART ISA             : %s\n", str);
-	sbi_hart_get_features_str(scratch, str, sizeof(str));
-	sbi_printf("Boot HART Features        : %s\n", str);
+	sbi_printf("Boot HART Base ISA        : %s\n", str);
+	sbi_hart_get_extensions_str(scratch, str, sizeof(str));
+	sbi_printf("Boot HART ISA Extensions  : %s\n", str);
 	sbi_printf("Boot HART PMP Count       : %d\n",
 		   sbi_hart_pmp_count(scratch));
 	sbi_printf("Boot HART PMP Granularity : %lu\n",
@@ -160,7 +165,6 @@ static struct sbi_hartmask coldboot_wait_hmask = { 0 };
 
 static unsigned long coldboot_done;
 
-#include "u54_state.h"
 static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 {
 	unsigned long saved_mie, cmip;
@@ -168,8 +172,8 @@ static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	/* Save MIE CSR */
 	saved_mie = csr_read(CSR_MIE);
 
-	/* Set MSIE bit to receive IPI */
-	csr_set(CSR_MIE, MIP_MSIP);
+	/* Set MSIE and MEIE bits to receive IPI */
+	csr_set(CSR_MIE, MIP_MSIP | MIP_MEIP);
 
 	/* Acquire coldboot lock */
 	spin_lock(&coldboot_lock);
@@ -185,7 +189,7 @@ static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		do {
 			wfi();
 			cmip = csr_read(CSR_MIP);
-		 } while (!(cmip & MIP_MSIP));
+		 } while (!(cmip & (MIP_MSIP | MIP_MEIP)));
 	};
 
 	/* Acquire coldboot lock */
@@ -208,7 +212,6 @@ static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	 * Also, the sbi_platform_ipi_init() called from sbi_ipi_init()
 	 * will automatically clear IPI for current HART.
 	 */
-        HSS_U54_SetState(HSS_State_SBIWaitForColdboot);
 }
 
 static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
@@ -232,7 +235,6 @@ static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
 
 static unsigned long init_count_offset;
 
-#pragma GCC optimize("O0")
 static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 {
 	int rc;
@@ -275,9 +277,9 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 
 	sbi_boot_print_banner(scratch);
 
-	rc = sbi_platform_irqchip_init(plat, TRUE);
+	rc = sbi_irqchip_init(scratch, TRUE);
 	if (rc) {
-		sbi_printf("%s: platform irqchip init failed (error %d)\n",
+		sbi_printf("%s: irqchip init failed (error %d)\n",
 			   __func__, rc);
 		sbi_hart_hang();
 	}
@@ -348,7 +350,6 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	init_count = sbi_scratch_offset_ptr(scratch, init_count_offset);
 	(*init_count)++;
 
-        HSS_U54_SetState(HSS_State_Running);
 	sbi_hsm_prepare_next_jump(scratch, hartid);
 	sbi_hart_switch_mode(hartid, scratch->next_arg1, scratch->next_addr,
 			     scratch->next_mode, FALSE);
@@ -379,7 +380,7 @@ static void init_warm_startup(struct sbi_scratch *scratch, u32 hartid)
 	if (rc)
 		sbi_hart_hang();
 
-	rc = sbi_platform_irqchip_init(plat, FALSE);
+	rc = sbi_irqchip_init(scratch, FALSE);
 	if (rc)
 		sbi_hart_hang();
 
@@ -441,7 +442,6 @@ static void __noreturn init_warmboot(struct sbi_scratch *scratch, u32 hartid)
 	else
 		init_warm_startup(scratch, hartid);
 
-        HSS_U54_SetState(HSS_State_Running);
 	sbi_hart_switch_mode(hartid, scratch->next_arg1,
 			     scratch->next_addr,
 			     scratch->next_mode, FALSE);
@@ -498,52 +498,21 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 	 * HARTs which satisfy above condition.
 	 */
 
-	bool mpfs_is_last_hart_ready(void);
-	if (next_mode_supported
-		// we need to avoid a race at startup, as we have sequenced harts serially from E51
-		// rather than in parallel from power-up .. so only the last booting hart gets to
-		// coldboot ...
-		&& mpfs_is_last_hart_ready()
-		&& atomic_xchg(&coldboot_lottery, 1) == 0)
+	if (next_mode_supported && atomic_xchg(&coldboot_lottery, 1) == 0)
 		coldboot = TRUE;
 
-	if (coldboot) {
+	/*
+	 * Do platform specific nascent (very early) initialization so
+	 * that platform can initialize platform specific per-HART CSRs
+	 * or per-HART devices.
+	 */
+	if (sbi_platform_nascent_init(plat))
+		sbi_hart_hang();
+
+	if (coldboot)
 		init_coldboot(scratch, hartid);
-	} else {
-		if (atomic_read(&coldboot_lottery)) {
-			// we've booted before if I'm the boot hart but I'm doing a warm boot ...
-			// so we need to potentially clean-up the state of the boot hart to ensure that
-			// we don't end up deadlocked on restart with all harts waiting for someone to
-			// unlock them...
-			struct sbi_domain *dom = sbi_hartid_to_domain(hartid);
-
-			// assert if boot HART not possible for this domain
-			assert(sbi_hartmask_test_hart(hartid, dom->possible_harts));
-			// assert if boot HART assigned to different domain
-			assert(sbi_hartmask_test_hart(hartid, &dom->assigned_harts));
-
-			if (hartid == dom->boot_hartid) {
-				// if I'm the designated driver, I'm taking the keys...
-				while (!mpfs_is_last_hart_ready()) {
-					asm("wfi");
-				}
-
-				// start me up...
-				if (sbi_hsm_hart_get_state(dom, hartid) != SBI_HSM_STATE_START_PENDING) {
-					//sbi_printf("%s: Attempting warm boot, hart is in state %d\n",
-					//	__func__, sbi_hsm_hart_get_state(dom, hartid));
-
-					int rc = sbi_hsm_hart_start(scratch, NULL, hartid,
-						dom->next_addr, dom->next_mode, dom->next_arg1);
-
-					if (rc)
-						sbi_hart_hang();
-				}
-			}
-		}
-
+	else
 		init_warmboot(scratch, hartid);
-	}
 }
 
 unsigned long sbi_init_count(u32 hartid)
@@ -588,7 +557,7 @@ void __noreturn sbi_exit(struct sbi_scratch *scratch)
 
 	sbi_ipi_exit(scratch);
 
-	sbi_platform_irqchip_exit(plat);
+	sbi_irqchip_exit(scratch);
 
 	sbi_platform_final_exit(plat);
 

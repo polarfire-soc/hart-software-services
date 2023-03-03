@@ -225,12 +225,6 @@ static void tlb_entry_process(struct sbi_tlb_info *tinfo)
 			continue;
 
 		rtlb_sync = sbi_scratch_offset_ptr(rscratch, tlb_sync_off);
-
-		// is this a logic bug? if  rtlb_sync is already 1, this will hang
-		// forever... also, why the while() loop? that is only going
-		// to mask any races in the design...
-		//
-		// suspect the issue might be in sbi_tlb_update_cb()
 		while (atomic_raw_xchg_ulong(rtlb_sync, 1)) ;
 	}
 }
@@ -326,8 +320,6 @@ static int tlb_update_cb(void *in, void *data)
 	struct sbi_tlb_info *next;
 	int ret = SBI_FIFO_UNCHANGED;
 
-	// EXPERIMENTAL: determine if this code is causing a race under load
-#if 0
 	if (!in || !data)
 		return ret;
 
@@ -342,12 +334,6 @@ static int tlb_update_cb(void *in, void *data)
 		   curr->local_fn == sbi_tlb_local_sfence_vma) {
 		ret = tlb_range_check(curr, next);
 	}
-#else
-	(void)in;
-	(void)data;
-	(void)curr;
-	(void)next;
-#endif
 
 	return ret;
 }

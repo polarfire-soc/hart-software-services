@@ -9,8 +9,6 @@
  *   Atish Patra <atish.patra@wdc.com>
  */
 
-#include <sbi/sbi_math.h> /* include prototype for log2roundup */
-
 unsigned long log2roundup(unsigned long x)
 {
 	unsigned long ret = 0;
