@@ -115,6 +115,14 @@ Once configured, to build, run `make`:
 
 In the `Default` subdirectory, the standard build will create `hss-envm.elf` and various binary formats (`hss-envm.hex` and `hss-envm.bin`).  Also generated are `output-envm.map`, which is a mapfile for the build, and  `hss-envm.sym`, which is a list of symbols.  (The name `Default` is required by SoftConsole for programming purposes.)
 
+Once built, program the HSS to the board:
+
+    $ make program
+
+Note: For the PolarFire SoC Video Kit, the DIE argument must be set to MPFS250T to match the device die.
+
+    $ make program DIE=MPFS250T
+
 A variety of alternative build options can be seen by running `make help`:
 
     $ make help
