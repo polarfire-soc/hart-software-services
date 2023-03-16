@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 /*
  * fdt_fixup.h - Flat Device Tree manipulation helper routines
- * Implement platform specific DT fixups on top of libfdt. 
+ * Implement platform specific DT fixups on top of libfdt.
  *
  * Copyright (C) 2020 Bin Meng <bmeng.cn@gmail.com>
  */

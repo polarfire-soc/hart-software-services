@@ -23,3 +23,62 @@ config SERVICE_OPENSBI_RPROC
                 This feature enables support for Remote Proc ecall service.
                 
 		If you do not know what to do here, say Y.
+
+config OPENSBI_SRC_DIR
+	string
+	option env="OPENSBI_SRC_DIR"
+source "$(OPENSBI_SRC_DIR)/lib/sbi/Kconfig"
+
+config FDT_IPI
+	def_bool y
+
+config FDT_IPI_MSWI
+	def_bool y
+
+config FDT_IPI_PLICSW
+	def_bool y
+
+config FDT_IRQCHIP
+	def_bool y
+
+config FDT_IRQCHIP_PLIC
+	def_bool y
+
+config FDT_RESET
+	def_bool y
+
+config FDT_SERIAL
+	def_bool y
+
+config FDT_SERIAL_UART8250
+	def_bool y
+
+config FDT_TIMER
+	def_bool y
+
+config FDT_TIMER_MTIMER
+	def_bool y
+
+config SBI_ECALL_TIME
+	def_bool y
+
+config SBI_ECALL_RFENCE
+	def_bool y
+
+config SBI_ECALL_IPI
+	def_bool y
+
+config SBI_ECALL_HSM
+	def_bool y
+
+config SBI_ECALL_SRST
+	def_bool y
+
+config SBI_ECALL_PMU
+	def_bool n
+
+config SBI_ECALL_LEGACY
+	def_bool y
+
+config SBI_ECALL_VENDOR
+	def_bool y

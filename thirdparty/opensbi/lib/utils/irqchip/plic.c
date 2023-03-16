@@ -59,7 +59,8 @@ static u32 plic_get_thresh(const struct plic_data *plic, u32 cntxid)
 	return readl(plic_thresh);
 }
 
-static void plic_set_thresh(const struct plic_data *plic, u32 cntxid, u32 val)
+/*static*/ void plic_set_thresh(const struct plic_data *plic, u32 cntxid, u32 val);
+/*static*/ void plic_set_thresh(const struct plic_data *plic, u32 cntxid, u32 val)
 {
 	volatile void *plic_thresh;
 
@@ -80,7 +81,8 @@ static u32 plic_get_ie(const struct plic_data *plic, u32 cntxid,
 	return readl(plic_ie);
 }
 
-static void plic_set_ie(const struct plic_data *plic, u32 cntxid,
+/*static*/ void plic_set_ie(const struct plic_data *plic, u32 cntxid, u32 word_index, u32 val);
+/*static*/ void plic_set_ie(const struct plic_data *plic, u32 cntxid,
 			u32 word_index, u32 val)
 {
 	volatile void *plic_ie;

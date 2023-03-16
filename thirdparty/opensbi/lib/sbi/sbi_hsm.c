@@ -254,10 +254,12 @@ int sbi_hsm_hart_start(struct sbi_scratch *scratch,
 	unsigned int hstate;
 	struct sbi_scratch *rscratch;
 	struct sbi_hsm_data *hdata;
-
+	// On MPFS, we allow start mode to be M, even if it overwrites OpenSBI setup...
+#if 0
 	/* For now, we only allow start mode to be S-mode or U-mode. */
 	if (smode != PRV_S && smode != PRV_U)
 		return SBI_EINVAL;
+#endif
 	if (dom && !sbi_domain_is_assigned_hart(dom, hartid))
 		return SBI_EINVAL;
 	if (dom && !sbi_domain_check_addr(dom, saddr, smode,

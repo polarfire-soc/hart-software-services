@@ -284,6 +284,7 @@ static int mpfs_irqchip_init(bool cold_boot)
         //
         // we'll do it ourselves to customize behavior..
         //const int m_cntx_id =  (hartid) ? (2 * hartid - 1) : 0;
+
         const int s_cntx_id =  (hartid) ? (2 * hartid) : -1;
         struct plic_data * const plic = &plicInfo;
         size_t i, ie_words;
@@ -301,6 +302,9 @@ static int mpfs_irqchip_init(bool cold_boot)
             //        plic_set_ie(plic, m_cntx_id, i, 0);
             //    }
             //}
+
+            extern void plic_set_ie(const struct plic_data *plic, u32 cntxid, u32 word_index, u32 val);
+            extern void plic_set_thresh(const struct plic_data *plic, u32 cntxid, u32 val);
 
             /* By default, disable all IRQs for S-mode of target HART */
             if (s_cntx_id > -1) {

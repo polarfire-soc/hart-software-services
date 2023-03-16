@@ -54,13 +54,17 @@ static int sbi_ecall_base_handler(unsigned long extid, unsigned long funcid,
 		*out_val = OPENSBI_VERSION;
 		break;
 	case SBI_EXT_BASE_GET_MVENDORID:
-		*out_val = csr_read(CSR_MVENDORID);
+		//*out_val = csr_read(CSR_MVENDORID);
+#define MICROCHIP_FPGA_BU_JEDEC_ID  0x1CF // Microchip FPGA BU => JEDEC Id: Bank 2, 0x67 (GateField)
+		*out_val = MICROCHIP_FPGA_BU_JEDEC_ID;
 		break;
 	case SBI_EXT_BASE_GET_MARCHID:
-		*out_val = csr_read(CSR_MARCHID);
+		//*out_val = csr_read(CSR_MARCHID);
+		*out_val = 1u; // E3/S5/U54-Series Processor
 		break;
 	case SBI_EXT_BASE_GET_MIMPID:
-		*out_val = csr_read(CSR_MIMPID);
+		//*out_val = csr_read(CSR_MIMPID);
+		*out_val = 0u; // pre 19.02 core generator
 		break;
 	case SBI_EXT_BASE_PROBE_EXT:
 		ret = sbi_ecall_base_probe(regs->a0, out_val);

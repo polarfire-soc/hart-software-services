@@ -13,6 +13,7 @@
 #include <sbi/sbi_error.h>
 #include <sbi/sbi_pmu.h>
 #include <sbi_utils/fdt/fdt_helper.h>
+#include <sbi_utils/fdt/fdt_pmu.h>
 
 #define FDT_PMU_HW_EVENT_MAX (SBI_PMU_HW_EVENT_MAX * 2)
 

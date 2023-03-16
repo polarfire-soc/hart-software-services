@@ -282,6 +282,9 @@ static int sanitize_domain(const struct sbi_platform *plat,
 	 * be started at boot-time by sbi_domain_finalize().
 	 */
 
+	/* For PolarFire SoC, we explicitly allow next mode to be M-mode,
+	 * so disabling the OpenSBI check here ... */
+#if 0
 	/*
 	 * Check next mode
 	 *
@@ -294,6 +297,7 @@ static int sanitize_domain(const struct sbi_platform *plat,
 			   __func__, dom->name, dom->next_mode);
 		return SBI_EINVAL;
 	}
+#endif
 
 	/* Check next address and next mode*/
 	if (!sbi_domain_check_addr(dom, dom->next_addr, dom->next_mode,

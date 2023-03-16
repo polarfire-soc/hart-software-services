@@ -283,7 +283,7 @@ unsigned int sbi_hart_mhpm_bits(struct sbi_scratch *scratch)
 	return hfeatures->mhpm_bits;
 }
 
-int sbi_hart_pmp_configure(struct sbi_scratch *scratch)
+__attribute__((weak)) int sbi_hart_pmp_configure(struct sbi_scratch *scratch)
 {
 	struct sbi_domain_memregion *reg;
 	struct sbi_domain *dom = sbi_domain_thishart_ptr();
@@ -357,7 +357,7 @@ int sbi_hart_priv_version(struct sbi_scratch *scratch)
 void sbi_hart_get_priv_version_str(struct sbi_scratch *scratch,
 				   char *version_str, int nvstr)
 {
-	char *temp;
+	char const *temp;
 	struct sbi_hart_features *hfeatures =
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 
@@ -426,9 +426,9 @@ bool sbi_hart_has_extension(struct sbi_scratch *scratch,
 		return false;
 }
 
-static inline char *sbi_hart_extension_id2string(int ext)
+static inline char const *sbi_hart_extension_id2string(int ext)
 {
-	char *estr = NULL;
+	char const *estr = NULL;
 
 	switch (ext) {
 	case SBI_HART_EXT_SSCOFPMF:
@@ -468,7 +468,7 @@ void sbi_hart_get_extensions_str(struct sbi_scratch *scratch,
 	struct sbi_hart_features *hfeatures =
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 	int offset = 0, ext = 0;
-	char *temp;
+	char const *temp;
 
 	if (!extensions_str || nestr <= 0)
 		return;
@@ -722,6 +722,7 @@ int sbi_hart_reinit(struct sbi_scratch *scratch)
 	return 0;
 }
 
+#include "u54_state.h"
 int sbi_hart_init(struct sbi_scratch *scratch, bool cold_boot)
 {
 	int rc;
@@ -740,11 +741,13 @@ int sbi_hart_init(struct sbi_scratch *scratch, bool cold_boot)
 	if (rc)
 		return rc;
 
+	HSS_U54_SetState(HSS_State_SBIHartInit);
 	return sbi_hart_reinit(scratch);
 }
 
 void __attribute__((noreturn)) sbi_hart_hang(void)
 {
+	HSS_U54_SetState(HSS_State_Fatal);
 	while (1)
 		wfi();
 	__builtin_unreachable();
