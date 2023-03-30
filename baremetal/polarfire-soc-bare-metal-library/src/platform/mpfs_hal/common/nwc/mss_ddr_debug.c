@@ -668,15 +668,14 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
 /**
  * Load a pattern to DDR
  */
-void load_ddr_pattern(uint64_t base, uint64_t size, uint32_t pattern_type, \
-        volatile uint8_t pattern_offset)
+void load_ddr_pattern(volatile PATTERN_TEST_PARAMS *pattern_test)
 {
     int alive = 0;
     uint32_t *pattern;
-    volatile uint32_t pattern_size;
-    uint8_t *p_ddr = (uint8_t *)base;
+    uint32_t pattern_size;
+    uint8_t *p_ddr = (uint8_t *)pattern_test->base;
 
-    if (pattern_type == DDR_TEST_FILL)
+    if (pattern_test->pattern_type == DDR_TEST_FILL)
     {
         pattern = (uint32_t *)ddr_test_pattern;
         pattern_size = sizeof(ddr_test_pattern);
@@ -687,14 +686,19 @@ void load_ddr_pattern(uint64_t base, uint64_t size, uint32_t pattern_type, \
         pattern_size = sizeof(ddr_init_pattern);
     }
 
-    uint32_t pattern_length = (uint32_t)(pattern_size - pattern_offset) ;
+    uint32_t pattern_length = (uint32_t)(pattern_size - pattern_test->pattern_offset) ;
 
 #ifdef DEBUG_DDR_INIT
-    uprint(g_debug_uart, (const char*)(const uint8_t*)"\r\nLoading test pattern\r\n");
-    uprint32(g_debug_uart, (const char*)(const uint8_t*)"\r\npattern_length = \r\n",pattern_length);
+    uprint(g_debug_uart, (const char*)(const uint8_t*)\
+            "\r\nLoading test pattern\r\n");
+    uprint64(g_debug_uart, (const char*)(const uint8_t*)\
+            "\r\npattern size = ",pattern_test->size);
+    uprint32(g_debug_uart, (const char*)(const uint8_t*)\
+            "\r\npattern offset = ",pattern_test->pattern_offset);
 #endif
 
-    while(((uint64_t)p_ddr + pattern_length) <=  (base + size))
+    while(((uint64_t)p_ddr + pattern_length) <\
+            (pattern_test->base + pattern_test->size))
     {
 
         switch ( ((uint64_t)p_ddr)%8U )
@@ -702,22 +706,26 @@ void load_ddr_pattern(uint64_t base, uint64_t size, uint32_t pattern_type, \
             case 0:
             case 4:
                 pdma_transfer_complete(PDMA_CHANNEL0_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL0_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern,\
+                        pattern_length, PDMA_CHANNEL0_BASE_ADDRESS);
                 break;
             case 1:
             case 5:
                 pdma_transfer_complete(PDMA_CHANNEL1_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL1_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern,\
+                        pattern_length, PDMA_CHANNEL1_BASE_ADDRESS);
                 break;
             case 2:
             case 6:
                 pdma_transfer_complete(PDMA_CHANNEL2_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL2_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern,\
+                        pattern_length, PDMA_CHANNEL2_BASE_ADDRESS);
                 break;
             case 3:
             case 7:
                 pdma_transfer_complete(PDMA_CHANNEL3_BASE_ADDRESS);
-                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern, pattern_length, PDMA_CHANNEL3_BASE_ADDRESS);
+                pdma_transfer((uint64_t)p_ddr, (uint64_t)pattern,\
+                        pattern_length, PDMA_CHANNEL3_BASE_ADDRESS);
                 break;
         }
 
@@ -776,7 +784,7 @@ static void load_test_buffers(uint32_t * p_cached_ddr, uint32_t * p_not_cached_d
  * @param size
  * @return returns 1 if compare fails
  */
-uint32_t test_ddr(uint32_t no_of_iterations, uint32_t size)
+uint32_t test_ddr(uint32_t no_of_iterations, volatile PATTERN_TEST_PARAMS *pattern_test)
 {
     uint32_t pattern_length = sizeof(ddr_test_pattern) - (3 * sizeof(uint32_t));
     uint32_t * p_ddr_cached = (uint32_t *)BASE_ADDRESS_CACHED_32_DDR;
@@ -821,7 +829,7 @@ uint32_t test_ddr(uint32_t no_of_iterations, uint32_t size)
             return error;
         }
 
-        if (((uint64_t)p_ddr_cached + ( 2 * pattern_length)) <  (LIBERO_SETTING_DDR_32_CACHE + size))
+        if (((uint64_t)p_ddr_cached + ( 2 * pattern_length)) <  (LIBERO_SETTING_DDR_32_CACHE + pattern_test->size))
         {
             p_ddr_cached += (pattern_length / sizeof(uint32_t));
             p_ddr_noncached += (pattern_length / sizeof(uint32_t));

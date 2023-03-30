@@ -17,7 +17,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "mpfs_hal/mss_hal.h"
-#include "simulation.h"
 
 #ifdef  MPFS_HAL_HW_CONFIG
 

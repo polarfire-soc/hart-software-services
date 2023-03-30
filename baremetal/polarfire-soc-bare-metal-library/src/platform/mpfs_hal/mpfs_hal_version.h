@@ -41,7 +41,7 @@ extern "C" {
 
 #define MPFS_HAL_VERSION_MAJOR 2
 #define MPFS_HAL_VERSION_MINOR 2
-#define MPFS_HAL_VERSION_PATCH 102
+#define MPFS_HAL_VERSION_PATCH 104
 
 #ifdef __cplusplus
 }

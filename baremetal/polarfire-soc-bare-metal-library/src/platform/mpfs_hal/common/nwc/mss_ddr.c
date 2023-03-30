@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -13,28 +13,40 @@
  * @brief DDR related code
  *
  */
-//#define PRINT_CA_VREF_WINDOW "1"
+/* #define PRINT_CA_VREF_WINDOW "1" */
 #define MOVE_CK
 #define MANUAL_ADDCMD_TRAINIG
-//#define FABRIC_NOISE_TEST
+/* #define FABRIC_NOISE_TEST */
 #include <string.h>
 #include <stdio.h>
 #include "mpfs_hal/mss_hal.h"
 #include "mss_nwc_init.h"
 #ifdef DDR_SUPPORT
 #include "mss_ddr_debug.h"
-#include "simulation.h"
 #ifdef FABRIC_NOISE_TEST
-#include "drivers/mss_gpio/mss_gpio.h"
+#include "drivers/mss/mss_gpio/mss_gpio.h"
 #endif
 
 /*******************************************************************************
  * Local Defines
  */
 /* This string is updated if any change to ddr driver */
-#define DDR_DRIVER_VERSION_STRING   "0.4.019"
+#define DDR_DRIVER_VERSION_STRING   "0.4.023"
 const char DDR_DRIVER_VERSION[] = DDR_DRIVER_VERSION_STRING;
 /* Version     |  Comment                                                     */
+/* 0.4.023     |  Changed default ADDCMD CLK push order for DDR4 to 0,45,90   */
+/* 0.4.022     |  Tidied comments and simulation reference- no code change    */
+/* 0.4.021     |  Added options to increase post training tests during        */
+/*             |  verification. The following defines can be added to         */
+/*             |  mss_sw_config.h during verification of a new hardware       */
+/*             |  design to overwrite the default values:                     */
+/*             |  (#define PATTERN_TEST_NUM_PATTERN_IN_CACHE_READS  2U)       */
+/*             |  (#define PATTERN_TEST_NUM_OFFSET_INCS             16U)      */
+/*             |  (#define PATTERN_TEST_SIZE                0x40000000U)      */
+/* 0.4.020     |  Added user option to turn on clk push during addcmd         */
+/*             |  training for DDR4 and lpddr3. The following define enables: */
+/*             |  (#define LIBERO_SETTING_USE_CK_PUSH_DDR4_LPDDR3    1U)      */
+/*             |  It is enabled by default                                    */
 /* 0.4.019     |  Added full memory initalization function                    */
 /* 0.4.018     |  Corrected error introduced for DDR3 in 0.4.14               */
 /* 0.4.017     |  made SW_TRAING_BCLK_SCLK_OFFSET seperate for each mem type  */
@@ -206,8 +218,10 @@ static void config_ddr_io_pull_up_downs_rpc_bits(DDR_TYPE ddr_type);
 static uint8_t ddr_manual_addcmd_refclk_offset(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index);
 #endif
 static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t retry_count, uint8_t *refclk_offset);
+#if (LIBERO_SETTING_USE_CK_PUSH_DDR4_LPDDR3 == 0U)
 static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t *bclk_phase, uint32_t *bclk90_phase, uint32_t *refclk_phase );
-static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t retry_count, uint32_t *bclk_phase, uint32_t *bclk90_phase, uint32_t *refclk_phase, uint8_t *refclk_offset);
+#endif
+static void address_cmd_training_with_ck_push(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t retry_count, uint32_t *bclk_phase, uint32_t *bclk90_phase, uint32_t *refclk_phase, uint8_t *refclk_offset);
 
 /*******************************************************************************
  * External function declarations
@@ -222,7 +236,7 @@ void debug_read_ddrcfg(void);
 #ifdef FABRIC_NOISE_TEST
 uint32_t fabric_noise_en = 1;
 uint32_t fabric_noise_en_log = 1;
-uint32_t num_of_noise_blocks_en = 3; /* do not set less than 1 */
+uint32_t num_of_noise_blocks_en = 4; /* do not set less than 1 */
 uint32_t noise_ena = 0x0;
 #endif
 
@@ -249,8 +263,7 @@ uint32_t  ddr_state_machine(DDR_SS_COMMAND command)
     {
         ddr_state = DDR_STATE_INIT;
     }
-    SIM_FEEDBACK0(100U + ddr_state);
-    SIM_FEEDBACK1(ddr_state);
+
     switch (ddr_state)
     {
         default:
@@ -271,10 +284,8 @@ uint32_t  ddr_state_machine(DDR_SS_COMMAND command)
              * 1. Periodically check DDR access
              * 2. Run any tests, as directed
              */
-//            return_status = ddr_monitor();
             break;
     }
-    SIM_FEEDBACK1(0xFF000000UL + return_status);
     return (return_status);
 }
 
@@ -314,11 +325,9 @@ static uint32_t ddr_setup(void)
     uint32_t ret_status = 0U;
     uint8_t number_of_lanes_to_calibrate;
     uint64_t mem_size;
+    volatile PATTERN_TEST_PARAMS pattern_test;
 
     ddr_type = LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_MASK;
-
-    SIM_FEEDBACK0(200U + ddr_training_state);
-    SIM_FEEDBACK1(0U);
 
     switch (ddr_training_state)
     {
@@ -671,10 +680,8 @@ static uint32_t ddr_setup(void)
                 //ALISTER 7/16/21
                 DDRCFG->MC_BASE2.INIT_AUTOINIT_DISABLE.INIT_AUTOINIT_DISABLE=0x1;
             }
-            DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  =\
-                                                                                0x00000000U;
-            DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  =\
-                                                                                0x00000001U;
+            DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N = 0x00000000U;
+            DDRCFG->MC_BASE2.CTRLR_SOFT_RESET_N.CTRLR_SOFT_RESET_N  = 0x00000001U;
 #endif      /* !SOFT_RESET_PRE_TAG_172 */
 #else
             /* Disable CKE */
@@ -692,7 +699,7 @@ static uint32_t ddr_setup(void)
             delay(DELAY_CYCLES_50_MICRO);
 
             /* reset pin is bit [1] */
-            CFG_DDR_SGMII_PHY->training_reset.training_reset    = 0x00000002U;
+            CFG_DDR_SGMII_PHY->training_reset.training_reset = 0x00000002U;
 
 #endif
             ddr_training_state = DDR_TRAINING_ROTATE_CLK;
@@ -928,12 +935,12 @@ static uint32_t ddr_setup(void)
                         CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000001U;
                         for (uint32_t ca_indly=0;ca_indly < 30; ca_indly=ca_indly+5)
                         {
-                            CFG_DDR_SGMII_PHY->rpc145.rpc145 = ca_indly;//TEMPORARY
-                            CFG_DDR_SGMII_PHY->rpc147.rpc147 = ca_indly;//TEMPORARY
+                            CFG_DDR_SGMII_PHY->rpc145.rpc145 = ca_indly;/* TEMPORARY */
+                            CFG_DDR_SGMII_PHY->rpc147.rpc147 = ca_indly;/* TEMPORARY */
                             uint32_t break_loop=1;
                             uint32_t in_window=0;
                             vref_answer=128;
-                        for (uint32_t vref=5;vref <30;vref++) //begin vref training
+                        for (uint32_t vref=5;vref <30;vref++) /* begin vref training */
                         {
                             uint32_t transition_a5_max=0;
                             uint32_t transition_a5_min=128;
@@ -947,7 +954,7 @@ static uint32_t ddr_setup(void)
                             }
 
                             IOSCB_BANKCONT_DDR->soft_reset = 0U;  /* DPC_BITS   NV_MAP  reset */
-                            //SET VREF HERE
+                            /* SET VREF HERE */
                             delay(DELAY_CYCLES_500_NS);
                             dpc_bits_new=( CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS & 0xFFFC0FFF ) | (vref <<12) | (0x1<<18);
                             CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS=dpc_bits_new;
@@ -955,28 +962,22 @@ static uint32_t ddr_setup(void)
                             IOSCB_BANKCONT_DDR->soft_reset = 1U;  /* DPC_BITS   NV_MAP  reset */
                             delay(DELAY_CYCLES_500_NS);
 
-
-                             //ADDCMD Training improvement , adds delay on A9 loopback path - Suggested by Alister
-                             //CFG_DDR_SGMII_PHY->rpc145.rpc145 = 0x8U;
-
                             uint32_t deltat = 128UL;
-
                             for (uint32_t j = 0; j<20 ; j++)
                             {
 
-                                //LOAD INDLY
+                                /* LOAD INDLY */
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                                //LOAD OUTDLY
+                                /* LOAD OUTDLY */
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
                                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                               // rx_a5_last=0x0;
                                 rx_a5_last=0xF;
                                 transition_a5=0;
                                 deltat=128;
@@ -991,34 +992,31 @@ static uint32_t ddr_setup(void)
                                     rx_a5 = (CFG_DDR_SGMII_PHY->expert_addcmd_ln_readback.expert_addcmd_ln_readback & 0x0300) >> 8;
 
                                     if (transition_a5 != 0){
-                                       if (((i - transition_a5) > 8) ){ //was 8 ////////////
+                                       if (((i - transition_a5) > 8) ){
                                            break;
                                        }
                                     }
 
                                     if (transition_a5 ==0) {
-                                         // if ( ((rx_a5 ^ rx_a5_last) & (~rx_a5) )  ){
                                          if ( ((rx_a5 ^ rx_a5_last) & rx_a5 )  ){
                                              transition_a5 = i;
                                          }
                                          else{
-                                         rx_a5_last=rx_a5;
+                                             rx_a5_last=rx_a5;
                                          }
                                      }
                                      else {
-                                         if ((i - transition_a5) == 4)  //was 4 ////////////
-                                             //if (rx_a5!=rx_a5_last) //IF rx_ca not stable after 4 increments, set transition detected to 0 (false transition)
-                                            // if(!((rx_a5 ^ rx_a5_last) & (~rx_a5) ))
+                                         if ((i - transition_a5) == 4)
                                              if(!((rx_a5 ^ rx_a5_last) & rx_a5 ))
                                              {
-                                                 transition_a5=0; //Continue looking for transition
+                                                 transition_a5=0; /* Continue looking for transition */
                                                  rx_a5_last=rx_a5;
                                              }
                                      }
 
 
 
-                                }//delay loop ends here
+                                }/* delay loop ends here */
                                 if (transition_a5 !=0)
                                 {
                                     if (transition_a5 > transition_a5_max)
@@ -1031,7 +1029,7 @@ static uint32_t ddr_setup(void)
                                         transition_a5_min = transition_a5;
                                     }
                                 }
-                            }//Sample loop ends here
+                            } /* Sample loop ends here */
                             range_a5=transition_a5_max-transition_a5_min;
                             if (transition_a5_min < 10){
                                 break_loop=0;
@@ -1040,7 +1038,6 @@ static uint32_t ddr_setup(void)
 
                             if (range_a5 <=5)
                             {
-                                //(min(transition_a5_min - transition_a5_min_last,transition_a5_min_last-transition_a5_min) <=4))
                                 if (transition_a5_min > transition_a5_min_last)
                                 {
                                     deltat=transition_a5_min-transition_a5_min_last;
@@ -1072,9 +1069,9 @@ static uint32_t ddr_setup(void)
 #endif
                             if(vref_answer==128)
                             {
-                                if ((in_window &0x3)==0x3) //ALISTER CHANGE 2/17/2021
+                                if ((in_window &0x3)==0x3)
                                 {
-                                    vref_answer=vref; //ALISTER CHANGE
+                                    vref_answer=vref;
 #ifndef PRINT_CA_VREF_WINDOW
                                     break;
 #endif
@@ -1120,11 +1117,21 @@ static uint32_t ddr_setup(void)
 
                     if ((ddr_type == DDR3)||(ddr_type == DDR3L))
                     {
-                        ddr3_address_cmd_training(ddr_type, &refclk_sweep_index, retry_count, &bclk_phase, &bclk90_phase, &refclk_phase, &refclk_offset );
+                        address_cmd_training_with_ck_push(ddr_type,\
+                            &refclk_sweep_index, retry_count, &bclk_phase,\
+                                &bclk90_phase, &refclk_phase, &refclk_offset );
                     }
                     else if (ddr_type != LPDDR4)
                     {
-                        non_lpddr4_address_cmd_training(ddr_type, &refclk_sweep_index, &bclk_phase, &bclk90_phase, &refclk_phase);
+#if (LIBERO_SETTING_USE_CK_PUSH_DDR4_LPDDR3 == 1U)
+                        address_cmd_training_with_ck_push(ddr_type,\
+                            &refclk_sweep_index, retry_count, &bclk_phase,\
+                                &bclk90_phase, &refclk_phase, &refclk_offset );
+#else
+                        non_lpddr4_address_cmd_training(ddr_type,\
+                            &refclk_sweep_index, &bclk_phase, &bclk90_phase,\
+                                &refclk_phase);
+#endif
                     }   /* END MANUAL BCLKSCLK TRAINING */
                     else /* LPDDR4 */
                     {
@@ -1151,7 +1158,7 @@ static uint32_t ddr_setup(void)
                     IOSCB_BANKCONT_DDR->soft_reset = 1U;  /* DPC_BITS   NV_MAP  reset */
                     delay(DELAY_CYCLES_500_NS);
                     /* SET CA DRV BACK TO CONFIGURED VALUE */
-                    CFG_DDR_SGMII_PHY->rpc1_DRV.rpc1_DRV=ca_drv; //return ca_drv to original value
+                    CFG_DDR_SGMII_PHY->rpc1_DRV.rpc1_DRV=ca_drv; /* return ca_drv to original value */
                     ddr_training_state = DDR_TRAINING_IP_SM_START;
                 }
             }
@@ -1285,7 +1292,7 @@ static uint32_t ddr_setup(void)
             }
             break;
         case DDR_TRAINING_IP_SM_WRLVL:
-            //END VREFTRN
+            /* END VREFTRN */
             if(LIBERO_SETTING_TRAINING_SKIP_SETTING & WRLVL_BIT)
             {
                 timeout = 0xFFFF;
@@ -1350,11 +1357,8 @@ static uint32_t ddr_setup(void)
                  for (lane_sel=0U; lane_sel< \
                             LIBERO_SETTING_DATA_LANES_USED; lane_sel++)
                  {
-                     SIM_FEEDBACK1(1000U);
                      delay(10U);
-                     SIM_FEEDBACK1(1001U);
-                     CFG_DDR_SGMII_PHY->lane_select.lane_select =\
-                             lane_sel;
+                     CFG_DDR_SGMII_PHY->lane_select.lane_select = lane_sel;
                      delay(10U);
                      /*
                       * verify cmd address results
@@ -1451,7 +1455,8 @@ static uint32_t ddr_setup(void)
 #define DCT_EXTRA_CHECKS
 #ifdef DCT_EXTRA_CHECKS
                      uint32_t temp = 0U, gt_clk_sel = (CFG_DDR_SGMII_PHY->gt_clk_sel.gt_clk_sel & 3U);
-                     if(((CFG_DDR_SGMII_PHY->gt_txdly.gt_txdly)&0xFFU) == 0U) // Gate training tx_dly check: AL
+                     /* Gate training tx_dly check: */
+                     if(((CFG_DDR_SGMII_PHY->gt_txdly.gt_txdly)&0xFFU) == 0U)
                      {
                          temp++;
                          if(gt_clk_sel == 0)
@@ -1511,7 +1516,6 @@ static uint32_t ddr_setup(void)
 #endif
                  if(t_status == 0U)
                  {
-                     SIM_FEEDBACK1(21U);
                      /*
                       * We can now set vref on the memory
                       * mode register for lpddr4
@@ -1529,7 +1533,6 @@ static uint32_t ddr_setup(void)
                  }
                  else /* fail, try again */
                  {
-                     SIM_FEEDBACK1(20U);
                      ddr_training_state = DDR_TRAINING_FAIL_SM_VERIFY;
                  }
              }
@@ -1601,21 +1604,19 @@ static uint32_t ddr_setup(void)
                     uint32_t dly_firstpass=0xFF;
                     uint32_t dly_right_edge=20U;
                     uint32_t pass=0U;
-                    for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++) //load DQ
+                    for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++) /* load DQ */
                     {
                         load_dq(lane);
                     }
 
                     delay(DELAY_CYCLES_50_MICRO);
                     for (uint32_t dq_dly=0U;dq_dly < 20U ; dq_dly=dq_dly+1U){
-                        CFG_DDR_SGMII_PHY->rpc220.rpc220 = dq_dly; //set DQ load value
-                        for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++) //load DQ
+                        CFG_DDR_SGMII_PHY->rpc220.rpc220 = dq_dly; /* set DQ load value */
+                        for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++) /* load DQ */
                         {
                             load_dq(lane);
                         }
-                        SIM_FEEDBACK1(1U);
-
-                         delay(DELAY_CYCLES_50_MICRO);
+                        delay(DELAY_CYCLES_50_MICRO);
                         pass =\
                             write_calibration_using_mtc(\
                                                   number_of_lanes_to_calibrate);
@@ -1654,11 +1655,10 @@ static uint32_t ddr_setup(void)
 #ifdef DEBUG_DDR_INIT
                         (void)uprint32(g_debug_uart, "\n\r    dq_dly_answer ",\
                                 CFG_DDR_SGMII_PHY->rpc220.rpc220);
-                        //(void)uprint32(g_debug_uart, "    vrefdq_answer ", (vref_firstpass + vref_right_edge)/2);
                         (void)uprint32(g_debug_uart, "    wr calib result ",\
                                 calib_data.write_cal.lane_calib_result);
 #endif
-                        for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++) //load DQ
+                        for(lane = 0U; lane < number_of_lanes_to_calibrate; lane++) /* load DQ */
                         {
                             load_dq(lane);
                         }
@@ -1683,7 +1683,6 @@ static uint32_t ddr_setup(void)
                 }
                 else
                 {
-                    SIM_FEEDBACK1(2U);
                     error =\
                       write_calibration_using_mtc(number_of_lanes_to_calibrate);
                 }
@@ -1691,8 +1690,7 @@ static uint32_t ddr_setup(void)
                 if(error)
                 {
                     ddr_error_count++;
-                    SIM_FEEDBACK1(106U);
-                }
+                 }
             }
 
             if(error == 0U)
@@ -1862,7 +1860,7 @@ static uint32_t ddr_setup(void)
 #ifdef SKIP_VERIFY_PATTERN_IN_CACHE
                 ddr_training_state = DDR_FULL_32BIT_WRC_CHECK;
 #else
-                ddr_training_state = DDR_LOAD_PATTERN_TO_CACHE;
+                ddr_training_state = DDR_LOAD_PATTERN_TO_CACHE_SETUP;
 #endif
             }
             else
@@ -1870,10 +1868,17 @@ static uint32_t ddr_setup(void)
                 ddr_training_state = DDR_TRAINING_FAIL_32BIT_CACHE_CHECK;
             }
             break;
+        case DDR_LOAD_PATTERN_TO_CACHE_SETUP:
+            pattern_test.base = LIBERO_SETTING_DDR_32_CACHE;
+            pattern_test.size = PATTERN_TEST_SIZE;
+            pattern_test.pattern_type = DDR_TEST_FILL;
+            pattern_test.pattern_offset = PATTERN_TEST_START_OFFSET;
+            pattern_test.num_offsets_to_try = PATTERN_TEST_NUM_OFFSET_INCS;
+            pattern_test.offset_cnt = 0U;
+            ddr_training_state = DDR_LOAD_PATTERN_TO_CACHE;
+            break;
         case DDR_LOAD_PATTERN_TO_CACHE:
-            load_ddr_pattern(LIBERO_SETTING_DDR_32_CACHE,\
-                    SIZE_OF_PATTERN_TEST*2, DDR_TEST_FILL,\
-                        SIZE_OF_PATTERN_OFFSET);
+            load_ddr_pattern(&pattern_test);
             if(error == 0U)
             {
                 ddr_training_state = DDR_VERIFY_PATTERN_IN_CACHE;
@@ -1884,22 +1889,22 @@ static uint32_t ddr_setup(void)
             }
             break;
         case DDR_VERIFY_PATTERN_IN_CACHE:
-            error = test_ddr(NO_PATTERN_IN_CACHE_READS, SIZE_OF_PATTERN_TEST);
+            error = test_ddr(PATTERN_TEST_NUM_PATTERN_IN_CACHE_READS, &pattern_test);
 #if ((LIBERO_FAST_START & 0x04) == 0U)
-            error = error | test_ddr(NO_PATTERN_IN_CACHE_READS, SIZE_OF_PATTERN_TEST);
-            error = error | test_ddr(NO_PATTERN_IN_CACHE_READS, SIZE_OF_PATTERN_TEST);
+            error = error | test_ddr(PATTERN_TEST_NUM_PATTERN_IN_CACHE_READS, &pattern_test);
+            error = error | test_ddr(PATTERN_TEST_NUM_PATTERN_IN_CACHE_READS, &pattern_test);
 #endif
             if(error == 0U)
             {
-#ifdef DEBUG_DDR_INIT
-                (void)uprint32(g_debug_uart, "\n\r\n\r wr write latency ",\
-                        DDRCFG->DFI.CFG_DFI_T_PHY_WRLAT.CFG_DFI_T_PHY_WRLAT);
-#if (TUNE_RPC_166_VALUE == 1)
-                (void)uprint32(g_debug_uart, "\n\r rpc_166_fifo_offset: ",\
-                        rpc_166_fifo_offset);
-#endif
-#endif
-                ddr_training_state = DDR_FULL_32BIT_WRC_CHECK;
+                if(++pattern_test.offset_cnt < pattern_test.num_offsets_to_try)
+                {
+                    pattern_test.pattern_offset++;
+                    ddr_training_state = DDR_LOAD_PATTERN_TO_CACHE;
+                }
+                else
+                {
+                    ddr_training_state = DDR_FULL_32BIT_WRC_CHECK;
+                }
             }
             else
             {
@@ -1932,7 +1937,6 @@ static uint32_t ddr_setup(void)
                 CFG_DDR_SGMII_PHY->rpc166.rpc166 = rpc_166_fifo_offset;
 
                 /* PAUSE to reset fifo (loads new RXPTR value).*/
-                //CFG_DDR_SGMII_PHY->expert_dfi_status_override_to_shim.expert_dfi_status_override_to_shim = 0x07U;
                 CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x1U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_pause.expert_dlycnt_pause =\
                 0x0000003EU ;
@@ -1940,7 +1944,7 @@ static uint32_t ddr_setup(void)
                 0x00000000U;
                 CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x8U;
                 delay(DELAY_CYCLES_50_MICRO);
-                //END PAUSE
+                /* END PAUSE */
 #else
                 if(num_rpc_166_retires < NUM_RPC_166_VALUES)
                 {
@@ -1966,6 +1970,14 @@ static uint32_t ddr_setup(void)
             }
             break;
         case DDR_FULL_32BIT_WRC_CHECK:
+#ifdef DEBUG_DDR_INIT
+            (void)uprint32(g_debug_uart, "\n\r\n\r wr write latency ",\
+                DDRCFG->DFI.CFG_DFI_T_PHY_WRLAT.CFG_DFI_T_PHY_WRLAT);
+#if (TUNE_RPC_166_VALUE == 1)
+            (void)uprint32(g_debug_uart, "\n\r rpc_166_fifo_offset: ",\
+                rpc_166_fifo_offset);
+#endif
+#endif
             if(error == 0U)
             {
                 ddr_training_state = DDR_FULL_64BIT_NC_CHECK;
@@ -2050,8 +2062,12 @@ static uint32_t ddr_setup(void)
             {
                 mem_size = LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_1 +\
                         (LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_0 + 1U);
-                load_ddr_pattern(LIBERO_SETTING_DDR_64_NON_CACHE, mem_size,\
-                        DDR_INIT_FILL, 0U);
+                pattern_test.base = LIBERO_SETTING_DDR_64_NON_CACHE;
+                pattern_test.size = mem_size;
+                pattern_test.pattern_type = DDR_INIT_FILL;
+                pattern_test.pattern_offset = 0U;
+
+                load_ddr_pattern(&pattern_test);
             }
 #else
             mem_size = LIBERO_SETTING_CFG_AXI_END_ADDRESS_AXI2_1 +\
@@ -2092,6 +2108,17 @@ static uint32_t ddr_setup(void)
                  * Configure Segments- address mapping,  CFG0/CFG1
                  */
                 setup_ddr_segments(LIBERO_SEG_SETUP);
+                /*
+                 * Clear the cache. Cache may have residue of writes related to the previous
+                 * seg setup. These can endup being written back to DDR, so make sure cache
+                 * is flushed. The cache is flushed by reading 2MB from cached backed memory
+                 * We need to read from each master that has accessed the cache, as all
+                 * masters may not have access to all the cache ways.
+                 * When this function is being called, it is fair to assume only this hart
+                 * and the PDMA has accessed the cache.
+                 * We also assume this is in the bootloader and we have sole access to the
+                 * PDMA
+                 */
                 clear_bootup_cache_ways();
             }
             ret_status |= DDR_SETUP_DONE;
@@ -2638,40 +2665,34 @@ static uint8_t memory_tests(void)
     uint64_t shift_walking_one = 4U;
     uint64_t start_address = 0x0000000000000000U;
     uint8_t error = 0U;
-    SIM_FEEDBACK1(199U);
     /*
      * Verify seg1 reg 2, datapath through AXI4 switch
      */
     while(shift_walking_one <= 28U) /* 28 => 1G, as 2**28 == 256K and this is
                                       mult by (4 lanes) */
     {
-        SIM_FEEDBACK1(shift_walking_one);
         start_address = (uint64_t)(BASE_ADDRESS_NON_CACHED_32_DDR + (0x1U<<shift_walking_one));
         error = rw_sanity_chk((uint64_t *)start_address , (uint32_t)0x5U);
 
         if(error)
         {
             ddr_error_count++;
-            SIM_FEEDBACK1(200U);
         }
         shift_walking_one++;
     }
-    SIM_FEEDBACK1(500U);
     /*
      * Verify seg1 reg 3, datapath through AXI4 switch
      */
     shift_walking_one = 4U;
-    while(shift_walking_one <= 28U) //28 => 1G
+    while(shift_walking_one <= 28U) /* 28 => 1G */
     {
-        SIM_FEEDBACK1(shift_walking_one);
         start_address = (uint64_t)(BASE_ADDRESS_NON_CACHED_64_DDR + (0x1U<<shift_walking_one));
         error = rw_sanity_chk((uint64_t *)start_address , (uint32_t)0x5U);
 
         if(error)
         {
             ddr_error_count++;
-            SIM_FEEDBACK1(208U);
-        }
+         }
 
         /* check upper bound */
         if(shift_walking_one >= 4U)
@@ -2683,7 +2704,6 @@ static uint8_t memory_tests(void)
             if(error)
             {
                 ddr_error_count++;
-                SIM_FEEDBACK1(201U);
             }
         }
 
@@ -2692,19 +2712,16 @@ static uint8_t memory_tests(void)
     /*
      * Verify mtc
      */
-    SIM_FEEDBACK1(600U);
     shift_walking_one = 4U;
-    while(shift_walking_one <= 28U) //28 => 1G
+    while(shift_walking_one <= 28U) /* 28 => 1G */
     {
-        SIM_FEEDBACK1(shift_walking_one);
         start_address = (uint64_t)(0x1U<<shift_walking_one);
         error = mtc_sanity_check(start_address);
 
         if(error)
         {
             ddr_error_count++;
-            SIM_FEEDBACK1(203U);
-        }
+         }
 
         /* check upper bound */
         if(shift_walking_one >= 4U)
@@ -2716,8 +2733,7 @@ static uint8_t memory_tests(void)
              if(error)
              {
                  ddr_error_count++;
-                 SIM_FEEDBACK1(204U);
-             }
+              }
         }
         shift_walking_one++;
     }
@@ -2725,43 +2741,19 @@ static uint8_t memory_tests(void)
     /*
      * Verify seg0 reg 0, datapath through cache
      */
-    SIM_FEEDBACK1(700U);
     shift_walking_one = 4U;
-    while(shift_walking_one <= 27U) //28 => 1G
+    while(shift_walking_one <= 27U) /* 28 => 1G */
     {
-        SIM_FEEDBACK1(shift_walking_one);
         start_address = (uint64_t)(0x80000000U + (0x1U<<shift_walking_one));
         error = rw_sanity_chk((uint64_t *)start_address , (uint32_t)0x5U);
 
         if(error)
         {
             ddr_error_count++;
-            SIM_FEEDBACK1(206U);
-        }
+         }
         shift_walking_one++;
     }
 
-    /*
-     * Verify seg0 reg 1, datapath through cache,
-     */
-#if 0 /* issue with cache setup for 64 address width, need to checkout */
-    SIM_FEEDBACK1(800U);
-    shift_walking_one = 4U;
-    while(shift_walking_one <= 28U)  //28 => 1G (0x10000000(address) * 4 (32bits wide))
-    {
-        SIM_FEEDBACK1(shift_walking_one);
-        start_address = (uint64_t)(0x1000000000U + (0x1U<<shift_walking_one));
-        error = rw_sanity_chk((uint64_t *)start_address , (uint32_t)0x5U);
-
-        if(error)
-        {
-            ddr_error_count++;
-            SIM_FEEDBACK1(207U);
-        }
-    }
-#endif
-
-    SIM_FEEDBACK1(299U);
     return (error);
 }
 #endif
@@ -2859,7 +2851,7 @@ static uint8_t mtc_sanity_check(uint64_t start_address)
  */
 static void load_dq(uint8_t lane)
 {
-    //set dyn_ovr_dlycnt_dq_load* = 0
+    /* set dyn_ovr_dlycnt_dq_load* = 0 */
     if(lane < 4U)
     {
         CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg0.expert_dlycnt_move_reg0 = 0U;
@@ -2870,11 +2862,11 @@ static void load_dq(uint8_t lane)
             (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1\
                                                 & (uint32_t)~0x0FU);
     }
-    //set expert_dfi_status_override_to_shim = 0x7
+    /* set expert_dfi_status_override_to_shim = 0x7 */
     CFG_DDR_SGMII_PHY->expert_dfi_status_override_to_shim.expert_dfi_status_override_to_shim = 0x07U;
-    //set expert_mode_en = 0x21
+    /* set expert_mode_en = 0x21 */
     CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x21U;
-    //set dyn_ovr_dlycnt_dq_load* = 1
+    /* set dyn_ovr_dlycnt_dq_load* = 1 */
     if(lane < 4U)
     {
         CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg0.expert_dlycnt_load_reg0 =\
@@ -2885,7 +2877,7 @@ static void load_dq(uint8_t lane)
         CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 |=\
                 0x0FU;
     }
-    //set dyn_ovr_dlycnt_dq_load* = 0
+    /* set dyn_ovr_dlycnt_dq_load* = 0 */
     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg0.expert_dlycnt_load_reg0 = 0U;
     if(lane < 4U)
     {
@@ -2897,7 +2889,7 @@ static void load_dq(uint8_t lane)
             (CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1\
                                                              & (uint32_t)~0x0FU);
     }
-    //set expert_mode_en = 0x8
+    /* set expert_mode_en = 0x8 */
     CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x8U;
 }
 
@@ -2919,7 +2911,7 @@ static void load_dq(uint8_t lane)
 #ifdef SW_CONFIG_LPDDR_WR_CALIB_FN
 static void increment_dq(uint8_t lane, uint32_t move_count)
 {
-    //set dyn_ovr_dlycnt_dq_move* = 0
+    /* set dyn_ovr_dlycnt_dq_move* = 0 */
     if(lane < 4U)
     {
         CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg0.expert_dlycnt_move_reg0 = 0U;
@@ -2930,7 +2922,7 @@ static void increment_dq(uint8_t lane, uint32_t move_count)
            (CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1\
                    & ~0x0FU);
     }
-    //set dyn_ovr_dlycnt_dq_direction* = 1
+    /* set dyn_ovr_dlycnt_dq_direction* = 1 */
     if(lane < 4U)
     {
         CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg0.expert_dlycnt_direction_reg0\
@@ -2949,7 +2941,7 @@ static void increment_dq(uint8_t lane, uint32_t move_count)
     move_count = move_count + move_count + move_count;
     while(move_count)
     {
-        //   set dyn_ovr_dlycnt_dq_move* = 1
+        /*    set dyn_ovr_dlycnt_dq_move* = 1 */
         if(lane < 4U)
         {
             CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg0.expert_dlycnt_move_reg0\
@@ -2960,7 +2952,7 @@ static void increment_dq(uint8_t lane, uint32_t move_count)
             CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1\
                 |= 0x0FU;
         }
-        //   set dyn_ovr_dlycnt_dq_move* = 0
+        /*    set dyn_ovr_dlycnt_dq_move* = 0 */
         CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg0.expert_dlycnt_move_reg0 = 0U;
         if(lane < 4U)
         {
@@ -3007,10 +2999,6 @@ static void set_write_calib(uint8_t user_lanes)
      * register
      */
     CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000008U;
-
-    SIM_FEEDBACK1(0xFF000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lane_calib_result);
-    SIM_FEEDBACK1(0xFF000000);
 
     /* set the calibrated value */
     CFG_DDR_SGMII_PHY->expert_wrcalib.expert_wrcalib =\
@@ -3153,8 +3141,7 @@ static uint8_t \
                 if(result == 0U) /* if true, we are good for all lanes, can stop
                                     looking */
                 {
-                    SIM_FEEDBACK1(0xF7000000);
-                    break;
+                     break;
                 }
             }
             else
@@ -3168,24 +3155,9 @@ static uint8_t \
         } /* end laneToTest */
         if(result == 0U) /* if true, we are good for all lanes, can stop */
         {                /* looking */
-            SIM_FEEDBACK1(0xF8000000);
             break;
         }
     }  /* end cal_data */
-
-    SIM_FEEDBACK1(0x01000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lower[0]);
-    SIM_FEEDBACK1(0x02000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lower[1]);
-    SIM_FEEDBACK1(0x03000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lower[2]);
-    SIM_FEEDBACK1(0x04000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lower[3]);
-    SIM_FEEDBACK1(0x05000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lower[4]);
-    SIM_FEEDBACK1(0x06000000);
-    SIM_FEEDBACK1(calib_data.write_cal.lower[5]);
-    SIM_FEEDBACK1(0x07000000);
 
     /* if calibration successful, calculate and set the value */
     if(result == 0U)
@@ -3194,9 +3166,6 @@ static uint8_t \
         set_write_calib(number_of_lanes_to_calibrate);
     }
 
-    SIM_FEEDBACK1(0x08000000);
-    SIM_FEEDBACK1(result);
-    SIM_FEEDBACK1(0x08000000);
     return (uint8_t)result;
 }
 
@@ -3215,7 +3184,6 @@ static uint8_t mode_register_write(uint32_t MR_ADDR, uint32_t MR_DATA)
     /*
     *
     */
-    //DDRCFG->MC_BASE2.INIT_MRR_MODE.INIT_MRR_MODE        = 0x01;
     DDRCFG->MC_BASE2.INIT_MR_ADDR.INIT_MR_ADDR          = MR_ADDR ;
     /*
     * next:
@@ -4396,14 +4364,6 @@ void setup_ddr_segments(SEG_SETUP option)
         SEG[1].u[3].raw = (INIT_SETTING_SEG1_3 & 0x7FFFUL);
         SEG[1].u[4].raw = (INIT_SETTING_SEG1_4 & 0x7FFFUL);
         SEG[1].u[5].raw = (INIT_SETTING_SEG1_5 & 0x7FFFUL);
-        /*
-         * disable ddr blocker
-         * Is cleared at reset. When written to '1' disables the blocker function
-         * allowing the L2 cache controller to access the DDRC. Once written to '1'
-         * the register cannot be written to 0, only an MSS reset will clear the
-         * register
-         */
-        SEG[0].u[7].raw = 0x01U;
     }
     else
     {
@@ -4413,26 +4373,15 @@ void setup_ddr_segments(SEG_SETUP option)
         SEG[1].u[3].raw = (LIBERO_SETTING_SEG1_3 & 0x7FFFUL);
         SEG[1].u[4].raw = (LIBERO_SETTING_SEG1_4 & 0x7FFFUL);
         SEG[1].u[5].raw = (LIBERO_SETTING_SEG1_5 & 0x7FFFUL);
-        /*
-         * disable ddr blocker
-         * Is cleared at reset. When written to '1' disables the blocker function
-         * allowing the L2 cache controller to access the DDRC. Once written to '1'
-         * the register cannot be written to 0, only an MSS reset will clear the
-         * register
-         */
-        SEG[0].u[7].raw = 0x01U;
-        /*
-         * Clear the cache. Cache may have residue of writes related to the previous
-         * seg setup. These can endup being written back to DDR, so make sure cache
-         * is flushed. The cache is flushed by reading 2MB from cached backed memory
-         * We need to read from each master that has accessesed the cache, as all
-         * masters may not have access to all the cache ways.
-         * When this function is being called, it is fare to assume only this hart
-         * and the PDMA has accessed the cache.
-         * We also assume this is in the bootloader and we have sole access to the
-         * PDMA
-         */
     }
+    /*
+     * disable ddr blocker
+     * Is cleared at reset. When written to '1' disables the blocker function
+     * allowing the L2 cache controller to access the DDRC. Once written to '1'
+     * the register cannot be written to 0, only an MSS reset will clear the
+     * register
+     */
+    SEG[0].u[7].raw = 0x01U;
 }
 
 /**
@@ -4446,11 +4395,16 @@ void setup_ddr_segments(SEG_SETUP option)
  */
 __attribute__((weak)) void clear_bootup_cache_ways(void)
 {
-    // ASSERT(my_num_cache_ways() == num_cache_ways());
+    volatile PATTERN_TEST_PARAMS pattern_test;
 
     /* clear using pdma routine, uses the 4 channels */
-    load_ddr_pattern(LIBERO_SETTING_DDR_32_CACHE, TWO_MBYTES*4, DDR_INIT_FILL,
-                     0U);
+    pattern_test.base = LIBERO_SETTING_DDR_32_CACHE;
+    pattern_test.size = TWO_MBYTES*4;
+    pattern_test.pattern_type = DDR_INIT_FILL;
+    pattern_test.pattern_offset = 0U;
+
+    load_ddr_pattern(&pattern_test);
+
     /* clear using my d-cache ways */
     fill_cache_new_seg_address((void *)BASE_ADDRESS_CACHED_32_DDR,
                                (void *)(BASE_ADDRESS_CACHED_32_DDR +
@@ -4905,8 +4859,6 @@ static uint8_t ddr_manual_addcmd_refclk_offset(DDR_TYPE ddr_type, uint8_t * refc
 }
 #endif
 
-
-//ALISTER 7/16/21
 static uint32_t mode_register_masked_write(uint32_t address)
 {
     DDRCFG->MC_BASE2.INIT_CS.INIT_CS = 0x1;
@@ -4977,6 +4929,42 @@ static uint32_t zq_cal(void)
 }
 #endif
 
+uint32_t ddr_add_cmd_inc_feq[]={\
+        ADD_CMD_INC_FREQ_DDR3,\
+        ADD_CMD_INC_FREQ_DDR3L,\
+        ADD_CMD_INC_FREQ_DDR4,\
+        ADD_CMD_INC_FREQ_LPDDR3,\
+        ADD_CMD_INC_FREQ_LPDDR4 };
+
+uint32_t ddr_add_cmd_trans_a5_threshold[]={\
+        ADD_CMD_TRANS_A5_THRES_DDR3,\
+        ADD_CMD_TRANS_A5_THRES_DDR3L,\
+        ADD_CMD_TRANS_A5_THRES_DDR4,\
+        ADD_CMD_TRANS_A5_THRES_LPDDR3,\
+        ADD_CMD_TRANS_A5_THRES_LPDDR4 };
+
+uint32_t add_cmd_move_order_0_deg[]={\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_DDR3,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_DDR3L,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_DDR4,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_LPDDR3,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_LPDDR4 };
+
+uint32_t add_cmd_move_order_45_deg[]={\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_DDR3,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_DDR3L,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_DDR4,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_LPDDR3,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_LPDDR4 };
+
+uint32_t add_cmd_move_order_90_deg[]={\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_DDR3,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_DDR3L,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_DDR4,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_LPDDR3,\
+        LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_LPDDR4 };
+
+
 /**
  * LPDDR4 traing exclusive
  * @param ddr_type
@@ -4984,9 +4972,8 @@ static uint32_t zq_cal(void)
  */
 static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t retry_count, uint8_t *refclk_offset)
 {
-    //ALISTER 7/16/2021
     DDRCFG->MC_BASE2.INIT_CS.INIT_CS = 0x1;
-    DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;   //moved up from below jan7th
+    DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;
     delay(DELAY_CYCLES_5_MICRO);
     DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x1;
 
@@ -5036,7 +5023,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
 #endif
 
     DDRCFG->MC_BASE2.INIT_CS.INIT_CS = 0x1;
-    DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;   //moved up from below jan7th
+    DDRCFG->MC_BASE2.INIT_DISABLE_CKE.INIT_DISABLE_CKE = 0x1;
     delay(DELAY_CYCLES_5_MICRO);
     DDRCFG->MC_BASE2.INIT_FORCE_RESET.INIT_FORCE_RESET = 0x1;
 
@@ -5097,12 +5084,12 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
         CFG_DDR_SGMII_PHY->expert_dfi_status_override_to_shim.expert_dfi_status_override_to_shim = 0x00000000U;
         for (uint32_t ca_indly=0;ca_indly < 30; ca_indly=ca_indly+5)
         {
-            CFG_DDR_SGMII_PHY->rpc145.rpc145 = ca_indly;//TEMPORARY
-            CFG_DDR_SGMII_PHY->rpc147.rpc147 = ca_indly;//TEMPORARY
+            CFG_DDR_SGMII_PHY->rpc145.rpc145 = ca_indly;/* TEMPORARY */
+            CFG_DDR_SGMII_PHY->rpc147.rpc147 = ca_indly;/* TEMPORARY */
             uint32_t break_loop=1;
             uint32_t in_window=0;
             vref_answer=128;
-            for (uint32_t vref=5;vref <30;vref++) //begin vref training
+            for (uint32_t vref=5;vref <30;vref++) /* begin vref training */
             {
                 uint32_t transition_a5_max=0;
                 uint32_t transition_a5_min=128;
@@ -5116,7 +5103,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                 }
 
                 IOSCB_BANKCONT_DDR->soft_reset = 0U;  /* DPC_BITS   NV_MAP  reset */
-                //SET VREF HERE
+                /* SET VREF HERE */
                 delay(DELAY_CYCLES_500_NS);
                 dpc_bits_new=( CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS & 0xFFFC0FFF ) | (vref <<12) | (0x1<<18);
                 CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS=dpc_bits_new;
@@ -5127,20 +5114,18 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                 uint32_t deltat = 128UL;
                 for (uint32_t j = 0; j<20 ; j++)
                 {
-
-                    //LOAD INDLY
+                    /* LOAD INDLY */
                     CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
                     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
                     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                    //LOAD OUTDLY
+                    /* LOAD OUTDLY */
                     CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
                     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
                     CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                    // rx_a5_last=0x0;
                     rx_a5_last=0xF;
                     transition_a5=0;
                     deltat=128;
@@ -5155,7 +5140,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                         rx_a5 = (CFG_DDR_SGMII_PHY->expert_addcmd_ln_readback.expert_addcmd_ln_readback & 0x0300) >> 8;
 
                         if (transition_a5 != 0){
-                           if (((i - transition_a5) > 8) ){ //was 8 ////////////
+                           if (((i - transition_a5) > 8) ){
                                break;
                            }
                         }
@@ -5169,14 +5154,14 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                              }
                          }
                          else {
-                             if ((i - transition_a5) == 4)  //was 4 ////////////
+                             if ((i - transition_a5) == 4)
                                  if(!((rx_a5 ^ rx_a5_last) & rx_a5 ))
                                  {
-                                     transition_a5=0; //Continue looking for transition
+                                     transition_a5=0; /* Continue looking for transition */
                                      rx_a5_last=rx_a5;
                                  }
                          }
-                    }//delay loop ends here
+                    }/* delay loop ends here */
                     if (transition_a5 !=0)
                     {
                         if (transition_a5 > transition_a5_max)
@@ -5189,14 +5174,13 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                             transition_a5_min = transition_a5;
                         }
                     }
-                }//Sample loop ends here
+                }/* Sample loop ends here */
                 range_a5=transition_a5_max-transition_a5_min;
                 if (transition_a5_min < 10){
                     break_loop=0;
                 }
                 if (range_a5 <=5)
                 {
-                    //(min(transition_a5_min - transition_a5_min_last,transition_a5_min_last-transition_a5_min) <=4))
                     if (transition_a5_min > transition_a5_min_last)
                     {
                         deltat=transition_a5_min-transition_a5_min_last;
@@ -5228,9 +5212,9 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
 #endif
                 if(vref_answer==128)
                 {
-                    if ((in_window &0x3)==0x3) //ALISTER CHANGE 2/17/2021
+                    if ((in_window &0x3)==0x3)
                     {
-                        vref_answer=vref; //ALISTER CHANGE
+                        vref_answer=vref;
 #ifndef PRINT_CA_VREF_WINDOW
                         break;
 #endif
@@ -5284,8 +5268,8 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
         uint32_t bclk90_phase=MSS_SCB_DDR_PLL->PLL_PHADJ & 0x3800;
         uint32_t refclk_phase;
 
-        //ALISTER 1/12/2022 SWEEPING CK OFFSET BEFORE CHANING refclk_offset
-        if ((retry_count % 6) == 0){
+        /* SWEEPING CK OFFSET BEFORE CHANING refclk_offset */
+        if ((retry_count % ddr_add_cmd_inc_feq[ddr_type]) == 0){
             *refclk_offset = ddr_manual_addcmd_refclk_offset(ddr_type, refclk_sweep_index);
         }
 
@@ -5293,13 +5277,13 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
         while(a5_offset_status != DDR_ADD_CMD_A5_OFFSET_PASS)
         {
             a5_offset_status = DDR_ADD_CMD_A5_OFFSET_PASS;
-            //ADDCMD Training improvement , adds delay on DDR clock loopback path
+            /* ADDCMD Training improvement , adds delay on DDR clock loopback path */
             CFG_DDR_SGMII_PHY->rpc147.rpc147 = init_del_offset + rpc147_offset;
 
-            //ADDCMD Training improvement , adds delay on A9 loopback path
+            /* ADDCMD Training improvement , adds delay on A9 loopback path */
             CFG_DDR_SGMII_PHY->rpc145.rpc145 = init_del_offset + rpc145_offset;
 
-            CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000023U; //ENABLE DLY Control & PLL Control
+            CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000023U; /* ENABLE DLY Control & PLL Control */
 
             uint32_t rx_a5;
             uint32_t rx_a5_last;
@@ -5316,15 +5300,15 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
             uint32_t transition_a5_max = 0U;
 
             for (j = 0U; j<16U ; j++)
-            { //Increase J loop to increase number of samples on transition_a5 (for noisy CA in LPDDR4)
-                //LOAD INDLY
+            { /* Increase J loop to increase number of samples on transition_a5 (for noisy CA in LPDDR4) */
+                /* LOAD INDLY */
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
 
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                //LOAD OUTDLY
+                /* LOAD OUTDLY */
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
@@ -5355,22 +5339,21 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                     {
                        if (((i - transition_a5) > 8U) && ((i - transition_ck) > 8U))
                        {
-                           //break;
                            transitions_found = 1U;
                        }
                     }
 
                     if (transition_ck == 0U) {
-                         if (rx_ck_last != 0x5U)  //IF EDGE DETECTED
+                         if (rx_ck_last != 0x5U)  /* IF EDGE DETECTED */
                              if (rx_ck == 0x5U)
-                                 transition_ck=i; //SET TRANSITION DETECTED AT I
+                                 transition_ck=i; /* SET TRANSITION DETECTED AT I */
                          rx_ck_last=rx_ck;
                      }
                      else {
                          if ( (i - transition_ck ) == 4U)
-                             if (rx_ck != rx_ck_last) //IF rx_ck not stable after 4 increments, set transition detected to 0 (false transition)
+                             if (rx_ck != rx_ck_last) /* IF rx_ck not stable after 4 increments, set transition detected to 0 (false transition) */
                              {
-                                 transition_ck = 0U;    //Continue looking for transition
+                                 transition_ck = 0U;    /* Continue looking for transition */
                                  rx_ck_last=rx_ck;
                              }
                      }
@@ -5388,7 +5371,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                          {
                              if(!((rx_a5 ^ rx_a5_last) & rx_a5 ))
                              {
-                                 transition_a5=0; //Continue looking for transition
+                                 transition_a5=0; /* Continue looking for transition */
                                  rx_a5_last=rx_a5;
                              }
                          }
@@ -5441,7 +5424,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
             uint32_t min_refclkp1=0x8U;
             uint32_t min_refclkp2=0x8U;
 
-            if(transition_a5_max < TRANSITION_A5_THRESHOLD)
+            if(transition_a5_max < ddr_add_cmd_trans_a5_threshold[ddr_type])
             {
                 a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL;
             }
@@ -5457,7 +5440,6 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
             {
 
                 if (difference[k] < min_diff){
-                    //updated on Jan10
                     min_refclk=k;
                     min_refclkp1=(k+1)&0x7UL;
                     min_refclkp2=(k+2)&0x7UL;
@@ -5476,28 +5458,26 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                 a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL;
             }
             if (min_refclk==0x8U)
-            {   //If ADDCMD training fails due to extremely low frequency, use PLL to provide offset.
+            {   /* If ADDCMD training fails due to extremely low frequency, use PLL to provide offset. */
                 a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL_LOW_FREQ;
             }
 #ifdef MOVE_CK
-            if ((retry_count%3) == LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_ZERO){ //toggles between minimum CA delay and second smallest every 4 retrains.
-                //min_diff=second_diff;
+            /* toggles between minimum CA delay and second smallest every 4 retrains. */
+            if ((retry_count%3) == add_cmd_move_order_0_deg[ddr_type]){
                 min_diffp1=min_diff;
-                //min_refclk=(min_refclk-0x1UL)&&(0x7UL);
                 min_refclk=(min_refclk-0x1UL)&(0x7UL);
 #ifdef DEBUG_DDR_INIT
                 (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 0 degrees", 0x0UL);
 #endif
             }
-            else if ((retry_count%3) == LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_ONE){
+            else if ((retry_count%3) == add_cmd_move_order_45_deg[ddr_type]){
 #ifdef DEBUG_DDR_INIT
                 (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 45 degrees", 0x0UL);
 #endif
             }
-            else if ((retry_count%3) == LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_TWO){ //toggles between minimum CA delay and second smallest every 4 retrains.
-                //min_diff=second_diff;
+            else if ((retry_count%3) == add_cmd_move_order_90_deg[ddr_type]){
+                /* toggles between minimum CA delay and second smallest every 4 retrains. */
                 min_diffp1=min_diffp2;
-                //min_refclk=(min_refclk-0x1UL)&&(0x7UL);
                 min_refclk=min_refclkp1;
 #ifdef DEBUG_DDR_INIT
                 (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 90 degrees", 0x0UL);
@@ -5510,13 +5490,13 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                 MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | bclk_phase | bclk90_phase | refclk_phase);
                 MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00000003UL | bclk_phase | bclk90_phase | refclk_phase);
                 MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | bclk_phase | bclk90_phase | refclk_phase);
-                //LOAD INDLY
+                /* LOAD INDLY */
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                //LOAD OUTDLY
+                /* LOAD OUTDLY */
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
@@ -5528,7 +5508,7 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                     CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = 0x0U;
                 }
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
-                CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000000U; //DISABLE DLY Control & PLL Control
+                CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000000U; /* DISABLE DLY Control & PLL Control */
 #ifdef DEBUG_DDR_INIT
                 (void)uprint32(g_debug_uart, "\n\r  MANUAL ADDCMD TRAINING Results:\r\n          PLL OFFSET:  ",min_refclk);
                 (void)uprint32(g_debug_uart, "\n\r          transition_a5_max:  ", transition_a5_max);
@@ -5542,7 +5522,8 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                 {
                     if(init_del_offset < 0xFFU )
                     {
-                        init_del_offset = init_del_offset + (transition_a5_max) + 5U; //if transition_a5 too low, increase indly offset on CK and CA and retrain
+                        /* if transition_a5 too low, increase indly offset on CK and CA and retrain */
+                        init_del_offset = init_del_offset + (transition_a5_max) + 5U;
                     }
                     else
                     {
@@ -5550,13 +5531,13 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
                     }
                  }
             } /* end of for (j = 0U; j<16U ; j++) */
-        }   // while(a5_offset_status != DDR_ADD_CMD_A5_OFFSET_PASS)
-    } //END MANUAL ADDCMD TRAINING
+        }   /*  while(a5_offset_status != DDR_ADD_CMD_A5_OFFSET_PASS) */
+    } /* END MANUAL ADDCMD TRAINING */
 
     CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x0000008U;
     CFG_DDR_SGMII_PHY->expert_dfi_status_override_to_shim.expert_dfi_status_override_to_shim = 0x00000000U;
 
-    //POST_INITIALIZATION
+    /* POST_INITIALIZATION */
     CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x9U;
     CFG_DDR_SGMII_PHY->expert_dlycnt_pause.expert_dlycnt_pause = 0x0000003FU ;
     CFG_DDR_SGMII_PHY->expert_dlycnt_pause.expert_dlycnt_pause = 0x00000000U;
@@ -5613,14 +5594,15 @@ static void lpddr4_manual_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_ind
  * @param bclk90_phase
  * @param refclk_phase
  */
+#if (LIBERO_SETTING_USE_CK_PUSH_DDR4_LPDDR3 == 0U)
 static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t *bclk_phase, uint32_t *bclk90_phase, uint32_t *refclk_phase )
 {
     /* Begin MANUAL ADDCMD TRAINING */
     uint8_t refclk_offset;
     uint32_t init_del_offset = 0x8U;
     uint32_t a5_offset_status;
-    uint32_t rpc147_offset = 0x2U; //4  //0
-    uint32_t rpc145_offset = 0x0U; //0  //4
+    uint32_t rpc147_offset = 0x2U;
+    uint32_t rpc145_offset = 0x0U;
 
     refclk_offset = ddr_manual_addcmd_refclk_offset(ddr_type, refclk_sweep_index);
     a5_offset_status = DDR_ADD_CMD_A5_OFFSET_FAIL;
@@ -5628,13 +5610,13 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
     {
         a5_offset_status = DDR_ADD_CMD_A5_OFFSET_PASS;
 
-        //ADDCMD Training improvement , adds delay on DDR clock loopback path - Suggested by Alister
+        /* ADDCMD Training improvement , adds delay on DDR clock loopback path */
         CFG_DDR_SGMII_PHY->rpc147.rpc147 = init_del_offset + rpc147_offset;
 
-        //ADDCMD Training improvement , adds delay on A9 loopback path - Suggested by Alister
+        /* ADDCMD Training improvement , adds delay on A9 loopback path */
         CFG_DDR_SGMII_PHY->rpc145.rpc145 = init_del_offset + rpc145_offset;
 
-        CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000003U; //ENABLE DLY Control & PLL Control
+        CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000003U; /* ENABLE DLY Control & PLL Control */
 
         uint32_t rx_a5;
         uint32_t rx_a5_last;
@@ -5651,14 +5633,14 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
         uint32_t transition_a5_max = 0U;
 
         for (j = 0U; j<16U ; j++)
-        {   //Increase J loop to increase number of samples on transition_a5 (for noisy CA in LPDDR4)
-            //LOAD INDLY
+        {   /* Increase J loop to increase number of samples on transition_a5 (for noisy CA in LPDDR4) */
+            /* LOAD INDLY */
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-            //LOAD OUTDLY
+            /* LOAD OUTDLY */
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
@@ -5689,22 +5671,22 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
                 {
                    if (((i - transition_a5) > 8U) && ((i - transition_ck) > 8U))
                    {
-                          //break;
                        transitions_found = 1U;
                    }
                 }
 
                 if (transition_ck == 0U) {
-                     if (rx_ck_last != 0x5U)  //IF EDGE DETECTED
+                     if (rx_ck_last != 0x5U)  /* IF EDGE DETECTED */
                          if (rx_ck == 0x5U)
-                             transition_ck=i; //SET TRANSITION DETECTED AT I
+                             transition_ck=i; /* SET TRANSITION DETECTED AT I */
                      rx_ck_last=rx_ck;
                  }
                  else {
                      if ( (i - transition_ck ) == 4U)
-                         if (rx_ck != rx_ck_last) //IF rx_ck not stable after 4 increments, set transition detected to 0 (false transition)
+                         /* IF rx_ck not stable after 4 increments, set transition detected to 0 (false transition) */
+                         if (rx_ck != rx_ck_last)
                          {
-                             transition_ck = 0U;    //Continue looking for transition
+                             transition_ck = 0U;  /* Continue looking for transition */
                              rx_ck_last=rx_ck;
                          }
                  }
@@ -5721,7 +5703,7 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
                      if ((i - transition_a5) == 4U)
                          if(!((rx_a5 ^ rx_a5_last) & rx_a5 ))
                          {
-                             transition_a5=0; //Continue looking for transition
+                             transition_a5=0; /* Continue looking for transition */
                              rx_a5_last=rx_a5;
                          }
                  }
@@ -5794,7 +5776,7 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
             a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL;
         }
         if (min_refclk==0x8U)
-        {   //If ADDCMD training fails due to extremely low frequency, use PLL to provide offset.
+        {   /* If ADDCMD training fails due to extremely low frequency, use PLL to provide offset. */
             a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL_LOW_FREQ;
         }
         if(a5_offset_status == DDR_ADD_CMD_A5_OFFSET_PASS)
@@ -5803,13 +5785,13 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
             MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | *bclk_phase | *bclk90_phase | *refclk_phase);
             MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00000003UL | *bclk_phase | *bclk90_phase | *refclk_phase);
             MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | *bclk_phase | *bclk90_phase | *refclk_phase);
-            //LOAD INDLY
+            /* LOAD INDLY */
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-            //LOAD OUTDLY
+            /* LOAD OUTDLY */
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
@@ -5821,7 +5803,7 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
                 CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = 0x0U;
             }
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
-            CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000000U; //DISABLE DLY Control & PLL Control
+            CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000000U; /* DISABLE DLY Control & PLL Control */
 #ifdef DEBUG_DDR_INIT
             (void)uprint32(g_debug_uart, "\n\r  MANUAL ADDCMD TRAINING Results:\r\n          PLL OFFSET:  ",min_refclk);
             (void)uprint32(g_debug_uart, "\n\r          transition_a5_max:  ", transition_a5_max);
@@ -5834,7 +5816,7 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
             {
                 if(init_del_offset < 0xFFU )
                 {
-                    //if transition_a5 too low, increase indly offset on CK and CA and retrain
+                    /* if transition_a5 too low, increase indly offset on CK and CA and retrain */
                     init_del_offset = init_del_offset + (transition_a5_max) + 5U;
                 }
                 else
@@ -5845,11 +5827,11 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
         }
     }
 }   /* END MANUAL BCLKSCLK TRAINING */
-
+#endif
 
 /**
- * ddr3_address_cmd_training()
- * @param ddr_type DDR3
+ * address_cmd_training_with_ck_push()
+ * @param ddr_type DDR3, DDR4 and LPDDR3
  * @param refclk_sweep_index
  * @param retry_count
  * @param bclk_phase
@@ -5857,15 +5839,15 @@ static void non_lpddr4_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_
  * @param refclk_phase
  * @param refclk_offset
  */
-static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t retry_count, uint32_t *bclk_phase, uint32_t *bclk90_phase, uint32_t *refclk_phase, uint8_t *refclk_offset )
+static void address_cmd_training_with_ck_push(DDR_TYPE ddr_type, uint8_t * refclk_sweep_index, uint32_t retry_count, uint32_t *bclk_phase, uint32_t *bclk90_phase, uint32_t *refclk_phase, uint8_t *refclk_offset )
 {
     /* Begin MANUAL ADDCMD TRAINING */
     uint32_t init_del_offset = 0x8U;
     uint32_t a5_offset_status;
-    uint32_t rpc147_offset = 0x2U; //4  //0   input delays, cmd and clk
-    uint32_t rpc145_offset = 0x0U; //0  //4
+    uint32_t rpc147_offset = 0x2U; /* input delays, cmd and clk */
+    uint32_t rpc145_offset = 0x0U;
 
-    if( (retry_count%3)==0)
+    if( (retry_count % ddr_add_cmd_inc_feq[ddr_type])==0)
     {
          *refclk_offset = ddr_manual_addcmd_refclk_offset(ddr_type, refclk_sweep_index);
     }
@@ -5878,11 +5860,11 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
     while(a5_offset_status != DDR_ADD_CMD_A5_OFFSET_PASS)
     {
         a5_offset_status = DDR_ADD_CMD_A5_OFFSET_PASS;
-        //ADDCMD Training improvement , adds delay on DDR clock loopback path
+        /* ADDCMD Training improvement , adds delay on DDR clock loopback path */
         CFG_DDR_SGMII_PHY->rpc147.rpc147 = init_del_offset + rpc147_offset;
-        //ADDCMD Training improvement , adds delay on A9 loopback path
+        /* ADDCMD Training improvement , adds delay on A9 loopback path */
         CFG_DDR_SGMII_PHY->rpc145.rpc145 = init_del_offset + rpc145_offset;
-        CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000003U; //ENABLE DLY Control & PLL Control
+        CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000003U; /* ENABLE DLY Control & PLL Control */
 
         uint32_t rx_a5;
         uint32_t rx_a5_last;
@@ -5898,14 +5880,14 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
         uint32_t transition_a5_max = 0U;
 
         for (j = 0U; j<16U ; j++)
-        {   //Increase J loop to increase number of samples on transition_a5 (for noisy CA in LPDDR4)
-            //LOAD INDLY
+        {   /* Increase J loop to increase number of samples on transition_a5 (for noisy CA in LPDDR4) */
+            /* LOAD INDLY */
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-            //LOAD OUTDLY
+            /* LOAD OUTDLY */
             CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
             CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
@@ -5936,22 +5918,22 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
                     {
                        if (((i - transition_a5) > 8U) && ((i - transition_ck) > 8U))
                        {
-                           //break;
                            transitions_found = 1U;
                        }
                     }
 
                     if (transition_ck == 0U) {
-                         if (rx_ck_last != 0x5U)  //IF EDGE DETECTED
+                         if (rx_ck_last != 0x5U)  /* IF EDGE DETECTED */
                              if (rx_ck == 0x5U)
-                                 transition_ck=i; //SET TRANSITION DETECTED AT I
+                                 transition_ck=i; /* SET TRANSITION DETECTED AT I */
                          rx_ck_last=rx_ck;
                      }
                      else {
                          if ( (i - transition_ck ) == 4U)
-                             if (rx_ck != rx_ck_last) //IF rx_ck not stable after 4 increments, set transition detected to 0 (false transition)
+                             /* IF rx_ck not stable after 4 increments, set transition detected to 0 (false transition) */
+                             if (rx_ck != rx_ck_last)
                              {
-                                 transition_ck = 0U;    //Continue looking for transition
+                                 transition_ck = 0U;    /* Continue looking for transition */
                                  rx_ck_last=rx_ck;
                              }
                      }
@@ -5968,7 +5950,7 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
                          if ((i - transition_a5) == 4U)
                              if(!((rx_a5 ^ rx_a5_last) & rx_a5 ))
                              {
-                                 transition_a5=0; //Continue looking for transition
+                                 transition_a5=0; /* Continue looking for transition */
                                  rx_a5_last=rx_a5;
                              }
                      }
@@ -6023,7 +6005,7 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
             uint32_t third_refclk=0x8U;
 
 #endif
-            if(transition_a5_max < TRANSITION_A5_THRESHOLD)
+            if(transition_a5_max < ddr_add_cmd_trans_a5_threshold[ddr_type])
             {
                 a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL;
             }
@@ -6040,7 +6022,7 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
              {
                 uint32_t k=7-l;
                 if (difference[k] < min_diff){
-                    //ALISTER ADDED TO MOVE CK without changing CK/CA offset
+                    /* MOVE CK without changing CK/CA offset */
 #ifdef MOVE_CK
                     second_refclk=(k+1)&0x7UL;
                     second_diff=difference[second_refclk];
@@ -6057,26 +6039,40 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
 #endif
             }
 #ifdef MOVE_CK
-            if (((retry_count)%3) == 0x1){
+            if (((retry_count)%3) == add_cmd_move_order_45_deg[ddr_type])
+            {
                 min_diff=second_diff;
                 min_refclk=second_refclk;
 #ifdef DEBUG_DDR_INIT
-                (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 45 degrees", 0x0UL);
+                (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 45 degrees",\
+                    add_cmd_move_order_45_deg[ddr_type]);
 #endif
-            } else if (((retry_count )%3) == 0x2){
+            }
+            else if (((retry_count )%3) == add_cmd_move_order_90_deg[ddr_type])
+            {
                 min_diff=third_diff;
                 min_refclk=third_refclk;
 #ifdef DEBUG_DDR_INIT
-                (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 90 degrees", 0x0UL);
+                (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 90 degrees",\
+                    add_cmd_move_order_90_deg[ddr_type]);
 #endif
             }
+#ifdef DEBUG_DDR_INIT
+            else if (((retry_count )%3) == add_cmd_move_order_0_deg[ddr_type])
+            {
+
+                (void)uprint32(g_debug_uart, "\n\r   CK_PUSH = 0 degrees",\
+                        add_cmd_move_order_0_deg[ddr_type]);
+            }
 #endif
+#endif /* MOVE_CK */
+
             if(min_diff == 0xFFU)
             {
                 a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL;
             }
             if (min_refclk==0x8U)
-            {   //If ADDCMD training fails due to extremely low frequency, use PLL to provide offset.
+            {   /* If ADDCMD training fails due to extremely low frequency, use PLL to provide offset. */
                 a5_offset_status |= DDR_ADD_CMD_A5_OFFSET_FAIL_LOW_FREQ;
             }
             if(a5_offset_status == DDR_ADD_CMD_A5_OFFSET_PASS)
@@ -6085,13 +6081,13 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
                 MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | *bclk_phase | *bclk90_phase | *refclk_phase);
                 MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00000003UL | *bclk_phase | *bclk90_phase | *refclk_phase);
                 MSS_SCB_DDR_PLL->PLL_PHADJ      = (0x00004003UL | *bclk_phase | *bclk90_phase | *refclk_phase);
-                //LOAD INDLY
+                /* LOAD INDLY */
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
 
-                //LOAD OUTDLY
+                /* LOAD OUTDLY */
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x180000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x000000U;
                 CFG_DDR_SGMII_PHY->expert_dlycnt_load_reg1.expert_dlycnt_load_reg1 = 0x180000U;
@@ -6103,7 +6099,7 @@ static void ddr3_address_cmd_training(DDR_TYPE ddr_type, uint8_t * refclk_sweep_
                     CFG_DDR_SGMII_PHY->expert_dlycnt_move_reg1.expert_dlycnt_move_reg1 = 0x0U;
                 }
                 CFG_DDR_SGMII_PHY->expert_dlycnt_direction_reg1.expert_dlycnt_direction_reg1 = 0x000000U;
-                CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000000U; //DISABLE DLY Control & PLL Control
+                CFG_DDR_SGMII_PHY->expert_mode_en.expert_mode_en = 0x00000000U; /* DISABLE DLY Control & PLL Control */
 #ifdef DEBUG_DDR_INIT
                 (void)uprint32(g_debug_uart, "\n\r  MANUAL ADDCMD TRAINING Results:\r\n          PLL OFFSET:  ",min_refclk);
                 (void)uprint32(g_debug_uart, "\n\r          transition_a5_max:  ", transition_a5_max);
