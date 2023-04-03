@@ -21,6 +21,7 @@
 #include "csr_helper.h"
 #include "u54_state.h"
 #include "wdog_service.h"
+#include "reboot_service.h"
 
 static enum HSSHartState_t hartStates[HSS_HART_NUM_PEERS] = { 0u, };
 
@@ -107,12 +108,12 @@ void HSS_U54_SetState_Ex(int hartId, int state)
         break;
     }
 
-#if IS_ENABLED(CONFIG_SERVICE_WDOG) && IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ON_OPENSBI_FAULT)
+#if IS_ENABLED(CONFIG_SERVICE_REBOOT) && IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ON_OPENSBI_FAULT)
     if (state == HSS_State_Fatal) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "***** u54_%d State Change to [%s] => forcing reboot *****",
             hartId, HSS_U54_GetStateName(HSS_State_Fatal));
         HSS_SpinDelay_Secs(CONFIG_COLDREBOOT_ON_OPENSBI_FAULT_DELAY);
-        HSS_Wdog_Reboot(HSS_HART_ALL);
+        HSS_reboot_cold(HSS_HART_ALL);
     }
 #endif
 }

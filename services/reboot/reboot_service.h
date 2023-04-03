@@ -1,8 +1,8 @@
-#ifndef HSS_WDOG_SERVICE_H
-#define HSS_WDOG_SERVICE_H
+#ifndef HSS_REBOOT_SERVICE_H
+#define HSS_REBOOT_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2023 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,14 +25,14 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Virtual Watchdog Service
+ * Hart Software Services - Reboot Service
  *
  */
 
 
 /*!
- * \file Watchdog Driver State Machine
- * \brief Virtualised Watchdog Service
+ * \file Reboot Handling
+ * \brief Handling of reboot requests
  */
 
 #ifdef __cplusplus
@@ -44,12 +44,8 @@ extern "C" {
 #include "ssmb_ipi.h"
 #include "mpfs_reg_map.h"
 
-void HSS_Wdog_MonitorHart(enum HSSHartId target);
-void HSS_Wdog_DumpStats(void);
-void HSS_Wdog_Init_Time(enum HSSHartId hart_id);
-
-
-extern struct StateMachine wdog_service;
+void HSS_reboot(u32 wdog_status);
+void HSS_reboot_cold(enum HSSHartId target);
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 #
 # MPFS HSS Embedded Software
 #
-# Copyright 2019-2021 Microchip Corporation.
+# Copyright 2023 Microchip Corporation.
 #
 # SPDX-License-Identifier: MIT
 #
@@ -24,24 +24,12 @@
 # IN THE SOFTWARE.
 #
 #
-# Services
+# U54 Reboot Service
 
-include services/beu/Makefile
-include services/boot/Makefile
-include services/crypto/Makefile
-include services/ddr/Makefile
-include services/goto/Makefile
-include services/ipi_poll/Makefile
-include services/mmc/Makefile
-include services/opensbi/Makefile
-include services/powermode/Makefile
-include services/qspi/Makefile
-include services/reboot/Makefile
-include services/scrub/Makefile
-include services/sgdma/Makefile
-include services/spi/Makefile
-include services/tinycli/Makefile
-include services/uart/Makefile
-include services/usbdmsc/Makefile
-include services/wdog/Makefile
-include services/ymodem/Makefile
+SRCS-$(CONFIG_SERVICE_REBOOT) += \
+	services/reboot/reboot_service.c \
+
+INCLUDES +=\
+	-I./services/reboot \
+
+services/reboot/reboot_service.o: CFLAGS=$(CFLAGS_GCCEXT)

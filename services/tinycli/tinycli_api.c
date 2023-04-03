@@ -35,6 +35,7 @@
 #include "uart_helper.h"
 #include "ddr_service.h"
 #include "csr_helper.h"
+#include "reboot_service.h"
 #include "wdog_service.h"
 #include "hss_perfctr.h"
 #include "u54_state.h"
@@ -446,8 +447,8 @@ static void tinyCLI_PrintHelp_(void)
 
 static void tinyCLI_Reset_(void)
 {
-#if IS_ENABLED(CONFIG_SERVICE_WDOG)
-    HSS_Wdog_Reboot(HSS_HART_ALL);
+#if IS_ENABLED(CONFIG_SERVICE_REBOOT)
+    HSS_reboot_cold(HSS_HART_ALL);
 #endif
 }
 
