@@ -30,8 +30,11 @@
 
 #include "mss_watchdog.h"
 #include "mss_sysreg.h"
+#include "mss_sys_services.h"
 
 #include "mpfs_fabric_reg_map.h"
+
+#define AUTO_UPGRADE_IMAGE_INDEX 1u
 
 static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
 {
@@ -45,8 +48,48 @@ static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
     while (1) { asm("wfi"); }
 }
 
+static int HSS_reboot_auto_upgrade(void)
+{
+    uint16_t ret;
+
+    // the ISR is set to NULL, as interrupt mode is broken (doesn't interrupt if
+    // the service fails), and therefore we must use polling mode. Polling mode
+    // should be the default, but set it explicitly just in case!
+    MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+
+    // the image must be authenticated before attempting Auto Upgrade, as
+    // invalid images may cause the system controller to hang
+    ret = MSS_SYS_authenticate_iap_image(AUTO_UPGRADE_IMAGE_INDEX);
+    if (ret) {
+        if (ret == 24) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL,
+                              "reboot: Auto Upgrade image is not an upgrade: %d\n", ret);
+        } else {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: No valid Auto Upgrade image found: %d\n", ret);
+        }
+
+        return ret;
+    }
+
+    // for Auto Update, only the 0th argument is used
+    ret = MSS_SYS_execute_iap(MSS_SYS_IAP_AUTOUPDATE_CMD, 0, 0);
+    if (!ret) {
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Upgrade in progress\n");
+        while (1) { ; }
+    }
+
+    mHSS_DEBUG_PRINTF(LOG_ERROR, "reboot: Auto Upgrade failed: %d\n", ret);
+
+    return ret;
+}
+
 static void HSS_reboot_cold_all(void)
 {
+    if (IS_ENABLED(CONFIG_COLDREBOOT_TRY_AUTO_UPGRADE)) {
+        if(HSS_reboot_auto_upgrade())
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Using fallback reboot provider\n");
+    }
+
     if (IS_ENABLED(CONFIG_COLDREBOOT_FULL_FPGA_RESET)) {
         // Writing a 1 to the reset register of the tamper macro triggers a
         // full reset of the FPGA.
@@ -83,6 +126,7 @@ void HSS_reboot_cold(enum HSSHartId target)
         HSS_reboot_cold_all();
 
         while (1) { ; }
+
         break;
 
     default:
