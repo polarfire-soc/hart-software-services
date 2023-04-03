@@ -15,6 +15,7 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_state_machine.h"
+#include "ddr_service.h"
 #include "hss_progress.h"
 #include "hss_debug.h"
 
@@ -329,9 +330,7 @@ bool HSS_QSPIInit(void)
             //   * a set of logical block descriptors;
             //   * a data cache the same size as the QSPI Flash device
             //
-            extern const uint64_t __ddr_start;
-#define DDR_START              (&__ddr_start)
-            uint8_t *pU8Buffer = (uint8_t *)DDR_START; // start of cached DDR, as good a place as any
+            uint8_t *pU8Buffer = HSS_DDR_GetStart();
             pLogicalToPhysicalMap = (uint16_t *)pU8Buffer;
             memset(pLogicalToPhysicalMap, 0, (sizeof(*pLogicalToPhysicalMap) * blockCount));
             pU8Buffer += (sizeof(*pLogicalToPhysicalMap) * blockCount);

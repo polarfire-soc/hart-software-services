@@ -31,6 +31,7 @@ include services/boot/Makefile
 include services/crypto/Makefile
 include services/ddr/Makefile
 include services/goto/Makefile
+include services/healthmon/Makefile
 include services/ipi_poll/Makefile
 include services/mmc/Makefile
 include services/opensbi/Makefile
