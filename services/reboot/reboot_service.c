@@ -180,11 +180,16 @@ void HSS_reboot(uint32_t wdog_status)
                     continue;
 
             mHSS_DEBUG_PRINTF_EX("[u54_%d] ", peer);
-#if IS_ENABLED(CONFIG_SERVICE_BOOT)
-            // Restart core using SRST mechanism
-            IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL);
-            HSS_Wdog_Init_Time(peer);
-            HSS_SpinDelay_MilliSecs(50u);
+
+#if         IS_ENABLED(CONFIG_SERVICE_BOOT)
+                // Restart core using SRST mechanism
+                IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL);
+                HSS_Wdog_Init_Time(peer);
+                HSS_SpinDelay_MilliSecs(50u);
+#else
+                mHSS_DEBUG_PRINTF(LOG_ERROR,
+                                  "reboot: warm reboot requested without SERVICE_BOOT enabled\n");
+                assert(1 == 0);
 #endif
         }
         mHSS_DEBUG_PUTS("\n");
