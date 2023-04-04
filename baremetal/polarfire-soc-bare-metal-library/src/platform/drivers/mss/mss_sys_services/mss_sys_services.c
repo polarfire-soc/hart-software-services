@@ -919,13 +919,6 @@ MSS_SYS_authenticate_iap_image
 {
     uint16_t status = MSS_SYS_PARAM_ERR;
 
-    ASSERT(!(spi_idx == 1u));
-
-    if (spi_idx == 1u)
-    {
-        return status;
-    }
-
     if (MSS_SYS_SERVICE_INTERRUPT_MODE == g_service_mode)
     {
         status = execute_ss_interrupt_mode(
