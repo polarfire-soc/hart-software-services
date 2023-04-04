@@ -21,11 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * PolarFire SoC micro processor subsystem system services bare metal driver
+ * PolarFire SoC Microprocessor Subsystem(MSS) system services bare metal driver
  * implementation.
- *
- * SVN $Revision$
- * SVN $Date$
  */
 
 /*=========================================================================*//**
@@ -94,17 +91,15 @@
     -  MSS_SYS_read_digest()
     -  MSS_SYS_query_security()
     -  MSS_SYS_read_debug_info()
-    -  MSS_SYS_read_envm_param()
+    -  MSS_SYS_read_envm_parameter()
 
   -----------------------------------------------------------------------------
   Design Services
   -----------------------------------------------------------------------------
-  The PolarFire SoC system service driver can be used to execute UIC script and
-  perform bitstream authentication using the following functions.
-    -  MSS_SYS_execute_UIC_script_service()
-    -  MSS_SYS_UIC_bitstream_authenticate_service()
-    -  MSS_SYS_bitstream_authenticate_service()
-    -  MSS_SYS_IAP_image_authenticate_service()
+  The PolarFire SoC system service driver can be used to perform bitstream
+  authentication using the following functions.
+    -  MSS_SYS_authenticate_bitstream()
+    -  MSS_SYS_authenticate_iap_image()
 
   -----------------------------------------------------------------------------
   Data Security Services
@@ -122,44 +117,49 @@
   -----------------------------------------------------------------------------
   The PolarFire SoC System Service driver can be used to execute fabric services
   using the following functions:
-    -  MSS_SYS_digest_check_service()
-    -  MSS_SYS_iap_service()
+    -  MSS_SYS_digest_check()
+    -  MSS_SYS_execute_iap()
 
   -----------------------------------------------------------------------------
   MSS Services
   -----------------------------------------------------------------------------
   The PolarFire SoC System Service driver can be used to execute MSS services
   using following functions:
-    -  MSS_SYS_spi_copy_service()
-    -  MSS_SYS_probe_read_debug_service()
-    -  MSS_SYS_probe_write_debug_service()
-    -  MSS_SYS_live_probe_debug_service()
-    -  MSS_SYS_MEM_select_debug_service()
-    -  MSS_SYS_MEM_read_debug_service()
-    -  MSS_SYS_MEM_write_debug_service()
-    -  MSS_SYS_apb_read_service()
-    -  MSS_SYS_apb_write_debug_service()
-    -  MSS_SYS_debug_snapshot_service()
-    -  MSS_SYS_generate_otp_service()
-    -  MSS_SYS_match_otp_service()
-    -  MSS_SYS_unlock_debug_passcode_service()
-    -  MSS_SYS_one_way_passcode_service()
-    -  MSS_SYS_terminate_debug_service()
+    -  MSS_SYS_spi_copy()
+    -  MSS_SYS_debug_read_probe()
+    -  MSS_SYS_debug_write_probe()
+    -  MSS_SYS_debug_live_probe()
+    -  MSS_SYS_debug_select_mem()
+    -  MSS_SYS_debug_read_mem()
+    -  MSS_SYS_debug_write_mem()
+    -  MSS_SYS_debug_read_apb()
+    -  MSS_SYS_debug_write_apb()
+    -  MSS_SYS_debug_fabric_snapshot()
+    -  MSS_SYS_otp_generate()
+    -  MSS_SYS_otp_match()
+    -  MSS_SYS_unlock_debug_passcode()
+    -  MSS_SYS_one_way_passcode()
+    -  MSS_SYS_debug_terminate()
 
   -----------------------------------------------------------------------------
-  Mode of operation and status response
+  Modes of operation
   -----------------------------------------------------------------------------
   The PolarFire SoC MSS system service driver can be configured to execute
-  service in interrupt mode or polling mode. User need to select the mode of
+  service in interrupt mode or polling mode. Users need to select the mode of
   operation by configuring the driver with appropriate service mode macros as a
-  parameter to MSS_SYS_select_service_mode() function. For interrupt mode, the
-  calling service function exits after requesting the system service with a
-  success return value. The actual response from the system controller will only
-  be available after the interrupt occurs. Use the MSS_SYS_read_response()
-  function to read the service response and the status response code.
-  For Polling mode, the calling service function exits only after the
-  completion of the service, the return value in this case will indicate the
-  service response code received from the system controller.
+  parameter to MSS_SYS_select_service_mode() function.
+  In interrupt mode, the function will be non-blocking and the calling service
+  function exits after requesting the system service with a success return value.
+  The actual response from the system controller will only be available after 
+  the interrupt occurs. Use the MSS_SYS_read_response() function to read the 
+  service response and the status response code.
+  In Polling mode, the function call will be blocking until the service completes
+  and the calling service function exits only after the completion of the service. 
+  The return value in this case will indicate the service response code received 
+  from the system controller.
+  -----------------------------------------------------------------------------
+  Status response
+  -----------------------------------------------------------------------------
   All the service execution functions return the 16-bit status returned by
   system controller on executing the given service. A zero value indicates the
   successful execution of that service. A non-zero value indicates an error code
@@ -168,7 +168,16 @@
   service the function will exit with the MSS_SYS_BUSY return value. The error
   codes are different for each service. See individual function descriptions to
   know the meaning of the error code for each service.
- */
+
+  -----------------------------------------------------------------------------
+  Reference document
+  -----------------------------------------------------------------------------
+  The function descriptions in this file will mainly focus on details required
+  by the user to use the APIs provided by this driver to execute the services.
+  To know the complete details of the system services, please refer to the
+  PolarFire® FPGA and PolarFire SoC FPGA System Services document. Link below:
+  https://onlinedocs.microchip.com/pr/GUID-1409CF11-8EF9-4C24-A94E-70979A688632-en-US-3/index.html
+*/
 
 #ifndef MSS_SYS_SERVICES_H_
 #define MSS_SYS_SERVICES_H_
@@ -189,14 +198,14 @@ extern "C" {
   request. These status codes are used across all types of services. The
   following table lists the system service driver generic constants.
 
-  MSS_SYS_SUCCESS
+  ## MSS_SYS_SUCCESS
     System service executed successfully.
 
-  MSS_SYS_BUSY
+  ## MSS_SYS_BUSY
     system controller is busy executing system service which was initiated using
     its AMBA interface.
 
-  MSS_SYS_PARAM_ERR
+  ## MSS_SYS_PARAM_ERR
     System service cannot be executed as one or more parameters are not as
     expected by this driver.
 
@@ -209,18 +218,18 @@ extern "C" {
   System service execution mode macros
   ============================
 
-  The following defines are used to select whether to execute services in
-  interrupt mode or polling mode.
- */
+  The following defines are used in MSS_SYS_service_mode() function to select
+  whether to execute services in interrupt mode or polling mode.
 
-/* Parameter used in MSS_SYS_service_mode() function
- * to execute the services in interrupt mode
+  ## MSS_SYS_SERVICE_INTERRUPT_MODE
+     Parameter used in MSS_SYS_service_mode() function to execute the services in
+     interrupt mode
+
+  ## MSS_SYS_SERVICE_POLLING_MODE
+     Parameter used in MSS_SYS_service_mode() function to execute the services in
+     polling mode
  */
 #define MSS_SYS_SERVICE_INTERRUPT_MODE                          1u
-
-/* Parameter used in MSS_SYS_service_mode() function
- * to execute the services in polling mode
- */
 #define MSS_SYS_SERVICE_POLLING_MODE                            0u
 
 /*-------------------------------------------------------------------------*//**
@@ -231,15 +240,15 @@ extern "C" {
 */
 
 /*-------------------------------------------------------------------------*//**
-  Device Certificate Service error codes
+  ## Device Certificate Service error codes
 
-  MSS_SYS_DCF_DEVICE_MISMATCH
+  ### MSS_SYS_DCF_DEVICE_MISMATCH
     Public key or FSN do not match device
 
-  MSS_SYS_DCF_INVALID_SIGNATURE
+  ### MSS_SYS_DCF_INVALID_SIGNATURE
     Certificate signature is invalid
 
-  MSS_SYS_DCF_SYSTEM_ERROR
+  ### MSS_SYS_DCF_SYSTEM_ERROR
     PUF or storage failure
 */
 #define MSS_SYS_DCF_DEVICE_MISMATCH                            1u
@@ -247,178 +256,123 @@ extern "C" {
 #define MSS_SYS_DCF_SYSTEM_ERROR                               3u
 
 /*------------------------------------------------------------------------*//**
-  Read ENVM parameters service error codes
+  ## Read ENVM parameters service error codes
 
-  MSS_SYS_ENVM_DIGEST_ERROR
+  ### MSS_SYS_ENVM_DIGEST_ERROR
   Page digest mismatches. Parameter values still returned
-   */
+*/
 #define MSS_SYS_ENVM_DIGEST_ERROR                              1u
 
 /*-------------------------------------------------------------------------*//**
-  Execute UIC script and UIC bitstream authentication error codes
+  ## Bitstream Authentication and IAP Bitstream Authentication Error Codes
 
-  EXECUTE_UIC_SPI_MAX_FRAME_ERR
-    Maximum number for Frames have been exceeded during SPI UIC execution
-
-  EXECUTE_UIC_POLL_TIMEOUT
-    Timeout occurred during the Poll instruction.
-
-  EXECUTE_UIC_SPI_AUTHEN_ERR
-    Authentication error occurred during UIC SPI Authenticated mode
-
-  EXECUTE_UIC_SPI_DECRYPT_ERR
-    Decryption error occurred during UIC SPI Authenticated mode
-
-  EXECUTE_UIC_SPI_NOTMASTER_ERR
-    SPI isn't set as the master
-
-  EXECUTE_UIC_FABRIC_APB_ERR
-    A Fabric APB Error was detected during UIC execution
-
-  EXECUTE_UIC_SCB_ERR
-    A SCB Error was detected during UIC execution
-
-  EXECUTE_UIC_PNVM_ENCRYPT_ERR
-    An Encrypted SNVM page was detected during UIC execution
-
-  EXECUTE_UIC_ADDR_OUTOFRANGE_ERR
-    An illegal script address was detected during UIC execution
-
-  EXECUTE_UIC_JUMP_MAX_ERR
-    The maximum number of Jump executions was exceeded. Current max is 1000.
-
-  EXECUTE_UIC_UNEXPECTED_FORMAT_ERR
-    Fields within the instruction that were expected to be all 0 were not.
-
-  EXECUTE_UIC_SCRIPT_TIMEOUT_ERR
-    UIC Script took longer than the specified UIC_SCRIPT_TIMEOUT
-    parameter (in seconds)
-
-*/
-#define  MSS_SYS_EXECUTE_UIC_SUCCESS                            0u
-#define  MSS_SYS_EXECUTE_UIC_SPI_MAX_FRAME_ERR                  1u
-#define  MSS_SYS_EXECUTE_UIC_POLL_TIMEOUT                       2u
-#define  MSS_SYS_EXECUTE_UIC_SPI_AUTHEN_ERR                     3u
-#define  MSS_SYS_EXECUTE_UIC_SPI_DECRYPT_ERR                    4u
-#define  MSS_SYS_EXECUTE_UIC_SPI_NOTMASTER_ERR                  5u
-#define  MSS_SYS_EXECUTE_UIC_FABRIC_APB_ERR                     6u
-#define  MSS_SYS_EXECUTE_UIC_SCB_ERR                            7u
-#define  MSS_SYS_EXECUTE_UIC_PNVM_ENCRYPT_ERR                   8u
-#define  MSS_SYS_EXECUTE_UIC_ADDR_OUTOFRANGE_ERR                9u
-#define  MSS_SYS_EXECUTE_UIC_JUMP_MAX_ERR                       10u
-#define  MSS_SYS_EXECUTE_UIC_UNEXPECTED_FORMAT_ERR              11u
-#define  MSS_SYS_EXECUTE_UIC_SCRIPT_TIMEOUT_ERR                 12u
-
-/*-------------------------------------------------------------------------*//**
-  bitstream authentication and IAP bitstream authentication error codes
-
-  BSTREAM_AUTH_CHAINING_MISMATCH_ERR
+  ### BSTREAM_AUTH_CHAINING_MISMATCH_ERR
     Validator or hash chaining mismatch. Incorrectly constructed bitstream or
     wrong key used.
 
-  BSTREAM_AUTH_UNEXPECTED_DATA_ERR
+  ### BSTREAM_AUTH_UNEXPECTED_DATA_ERR
     Unexpected data received.
     Additional data received after end of EOB component
 
-  BSTREAM_AUTH_INVALID_ENCRY_KEY_ERR
+  ### BSTREAM_AUTH_INVALID_ENCRY_KEY_ERR
     Invalid/corrupt encryption key.
     The requested key mode is disabled or the key could not be read/reconstructed
 
-  BSTREAM_AUTH_INVALID_HEADER_ERR
+  ### BSTREAM_AUTH_INVALID_HEADER_ERR
     Invalid component header
 
-  BSTREAM_AUTH_BACK_LEVEL_NOT_SATISFIED_ERR
+  ### BSTREAM_AUTH_BACK_LEVEL_NOT_SATISFIED_ERR
     Back level not satisfied
 
-  BSTREAM_AUTH_ILLEGAL_BITSTREAM_MODE_ERR
+  ### BSTREAM_AUTH_ILLEGAL_BITSTREAM_MODE_ERR
     Illegal bitstream mode.
     Requested bitstream mode is disabled by user security
 
-  BSTREAM_AUTH_DNS_BINDING_MISMATCH_ERR
+  ### BSTREAM_AUTH_DNS_BINDING_MISMATCH_ERR
     DSN binding mismatch
 
-  BSTREAM_AUTH_ILLEGAL_COMPONENT_SEQUENCE_ERR
+  ### BSTREAM_AUTH_ILLEGAL_COMPONENT_SEQUENCE_ERR
     Illegal component sequence
 
-  BSTREAM_AUTH_INSUFF_DEVICE_CAPAB_ERR
+  ### BSTREAM_AUTH_INSUFF_DEVICE_CAPAB_ERR
     Insufficient device capabilities
 
-  BSTREAM_AUTH_INCORRECT_DEVICEID_ERR
+  ### BSTREAM_AUTH_INCORRECT_DEVICEID_ERR
     Incorrect DEVICEID
 
-  BSTREAM_AUTH_PROTOCOL_VERSION_ERR
+  ### BSTREAM_AUTH_PROTOCOL_VERSION_ERR
     Unsupported bitstream protocol version (regeneration required)
 
-  BSTREAM_AUTH_VERIFY_ERR
+  ### BSTREAM_AUTH_VERIFY_ERR
     Verify not permitted on this bitstream
 
-  BSTREAM_AUTH_INVALID_DEV_CERT_ERR
+  ### BSTREAM_AUTH_INVALID_DEV_CERT_ERR
     Invalid Device Certificate.
     Device SCAC is invalid or not present
 
-  BSTREAM_AUTH_INVALID_DIB_ERR
+  ### BSTREAM_AUTH_INVALID_DIB_ERR
     Invalid DIB
 
-  BSTREAM_AUTH_SPI_NOT_MASTER_ERR
+  ### BSTREAM_AUTH_SPI_NOT_MASTER_ERR
     Device not in SPI Master Mode.
     Error may occur only when bitstream is executed through IAP mode
 
-  BSTREAM_AUTH_AUTOIAP_NO_VALID_IMAGE_ERR
+  ### BSTREAM_AUTH_AUTOIAP_NO_VALID_IMAGE_ERR
     No valid images found.
     Error may occur when bitstream is executed through Auto Update mode.
     Occurs when No valid image pointers are found.
 
-  BSTREAM_AUTH_INDEXIAP_NO_VALID_IMAGE_ERR
+  ### BSTREAM_AUTH_INDEXIAP_NO_VALID_IMAGE_ERR
     No valid images found.
     Error may occur when bitstream is executed through IAP mode via Index Mode.
     Occurs when No valid image pointers are found.
 
-  BSTREAM_AUTH_NEWER_DESIGN_VERSION_ERR
+  ### BSTREAM_AUTH_NEWER_DESIGN_VERSION_ERR
     Programmed design version is newer than AutoUpdate image found.
     Error may occur when bitstream is executed through Auto Update mode
 
-  BSTREAM_AUTH_INVALID_IMAGE_ERR
+  ### BSTREAM_AUTH_INVALID_IMAGE_ERR
     Selected image was invalid and no recovery was performed due to valid design
     in device.
     Error may occur only when bitstream is executed through Auto Update or IAP
     mode (This error is here for completeness but only can be observed by
     running the READ_DEBUG_INFO instruction and looking at IAP Error code field)
 
-  BSTREAM_AUTH_IMAGE_PROGRAM_FAILED_ERR
+  ### BSTREAM_AUTH_IMAGE_PROGRAM_FAILED_ERR
     Selected and Recovery image failed to program.
     Error may occur only when bitstream is executed through Auto Update or
     IAP mode
     (This error is here for completeness but only can be observed by running the
     READ_DEBUG_INFO instruction and looking at IAP Error code field)
 
-  BSTREAM_AUTH_ABORT_ERR
+  ### BSTREAM_AUTH_ABORT_ERR
     Abort.
     Non-bitstream instruction executed during bitstream loading.
 
-  BSTREAM_AUTH_NVMVERIFY_ERR
+  ### BSTREAM_AUTH_NVMVERIFY_ERR
     Fabric/UFS verification failed (min or weak limit)
 
-  BSTREAM_AUTH_PROTECTED_ERR
+  ### BSTREAM_AUTH_PROTECTED_ERR
     Device security prevented modification of non-volatile memory
 
-  BSTREAM_AUTH_NOTENA
+  ### BSTREAM_AUTH_NOTENA
     Programming mode not enabled
 
-  BSTREAM_AUTH_PNVMVERIFY
+  ### BSTREAM_AUTH_PNVMVERIFY
     pNVM verify operation failed
 
-  BSTREAM_AUTH_SYSTEM
+  ### BSTREAM_AUTH_SYSTEM
     System hardware error (PUF or DRBG)
 
-  BSTREAM_AUTH_BADCOMPONENT
+  ### BSTREAM_AUTH_BADCOMPONENT
     An internal error was detected in a component payload
 
-  BSTREAM_AUTH_HVPROGERR
+  ### BSTREAM_AUTH_HVPROGERR
     HV programming subsystem failure (pump failure)
 
-  BSTREAM_AUTH_HVSTATE
+  ### BSTREAM_AUTH_HVSTATE
     HV programming subsystem in unexpected state (internal error)
-  */
+*/
 #define MSS_SYS_BSTREAM_AUTH_CHAINING_MISMATCH_ERR                1u
 #define MSS_SYS_BSTREAM_AUTH_UNEXPECTED_DATA_ERR                  2u
 #define MSS_SYS_BSTREAM_AUTH_INVALID_ENCRY_KEY_ERR                3u
@@ -451,15 +405,15 @@ extern "C" {
 #define MSS_SYS_BSTREAM_AUTH_HVSTATE                              135u
 
 /*-------------------------------------------------------------------------*//**
- Digital Signature Service error code
+ ## Digital Signature Service error code
 
-  DIGITAL_SIGNATURE_FEK_FAILURE_ERROR
+  ### DIGITAL_SIGNATURE_FEK_FAILURE_ERROR
     Error retrieving FEK
 
-  DIGITAL_SIGNATURE_DRBG_ERROR
+  ### DIGITAL_SIGNATURE_DRBG_ERROR
     Failed to generate nonce
 
-  DIGITAL_SIGNATURE_ECDSA_ERROR
+  ### DIGITAL_SIGNATURE_ECDSA_ERROR
     ECDSA failed
 */
 #define MSS_SYS_DIGITAL_SIGNATURE_FEK_FAILURE_ERROR             0x01u
@@ -467,18 +421,18 @@ extern "C" {
 #define MSS_SYS_DIGITAL_SIGNATURE_ECDSA_ERROR                   0x03u
 
 /*-------------------------------------------------------------------------*//**
-  Secure NVM write error codes
+  ## Secure NVM write error codes
 
-  SNVM_WRITE_INVALID_SNVMADDR
+  ### SNVM_WRITE_INVALID_SNVMADDR
     Illegal page address
 
-  SNVM_WRITE_FAILURE
+  ### SNVM_WRITE_FAILURE
     PNVM program/verify failed
 
-  SNVM_WRITE_SYSTEM_ERROR
+  ### SNVM_WRITE_SYSTEM_ERROR
     PUF or storage failure
 
-  SNVM_WRITE_NOT_PERMITTED
+  ### SNVM_WRITE_NOT_PERMITTED
     Write is not permitted
 */
 #define MSS_SYS_SNVM_WRITE_INVALID_SNVMADDR                     1u
@@ -487,15 +441,15 @@ extern "C" {
 #define MSS_SYS_SNVM_WRITE_NOT_PERMITTED                        4u
 
 /*-------------------------------------------------------------------------*//**
-  Secure NVM read error codes
+  ## Secure NVM read error codes
 
-  SNVM_READ_INVALID_SNVMADDR
+  ### SNVM_READ_INVALID_SNVMADDR
     Illegal page address
 
-  SNVM_READ_AUTHENTICATION_FAILURE
+  ### SNVM_READ_AUTHENTICATION_FAILURE
     Storage corrupt or incorrect USK
 
-  SNVM_READ_SYSTEM_ERROR
+  ### SNVM_READ_SYSTEM_ERROR
     PUF or storage failure
 */
 #define MSS_SYS_SNVM_READ_INVALID_SNVMADDR                      1u
@@ -503,49 +457,49 @@ extern "C" {
 #define MSS_SYS_SNVM_READ_SYSTEM_ERROR                          3u
 
 /*-------------------------------------------------------------------------*//**
-   PUF emulation service error codes
+   ## PUF emulation service error codes
 
-    MSS_SYS_PUF_EMU_INTERNAL_ERR
+   ### MSS_SYS_PUF_EMU_INTERNAL_ERR
        Internal error
  */
 #define MSS_SYS_PUF_EMU_INTERNAL_ERR                            1u
 
 /*-------------------------------------------------------------------------*//**
-  Nonce Service Error Codes
+  ## Nonce Service Error Codes
 
-  MSS_SYS_NONCE_PUK_FETCH_ERROR
+  ### MSS_SYS_NONCE_PUK_FETCH_ERROR
     Error fetching PUK
 
-  MSS_SYS_NONCE_SEED_GEN_ERROR
+  ### MSS_SYS_NONCE_SEED_GEN_ERROR
     Error generating seed
 */
 #define MSS_SYS_NONCE_PUK_FETCH_ERROR                          1u
 #define MSS_SYS_NONCE_SEED_GEN_ERROR                           2u
 
 /*-------------------------------------------------------------------------*//**
-  Digest Check service error code
+  ## Digest Check service error code
 
-  MSS_SYS_DIGEST_CHECK_DIGESTERR
+  ### MSS_SYS_DIGEST_CHECK_DIGESTERR
     Digest mismatch occurred
 */
 #define MSS_SYS_DIGEST_CHECK_DIGESTERR                            1u
 
 /*-------------------------------------------------------------------------*//**
-  SPI COPY SERVICE error codes
+  ## SPI COPY SERVICE error codes
 
-  MSS_SYS_SPI_MASTER_MODE_ERR
+  ### MSS_SYS_SPI_MASTER_MODE_ERR
     Device is not configured for master mode
 
-  MSS_SYS_SPI_AXI_ERR
+  ### MSS_SYS_SPI_AXI_ERR
     AXI error
 */
 #define MSS_SYS_SPI_MASTER_MODE_ERR                               1u
 #define MSS_SYS_SPI_AXI_ERR                                       2u
 
 /*-------------------------------------------------------------------------*//**
-  Probe services error codes
+  ## Probe services error codes
 
-  MSS_SYS_PROBE_SECERR
+  ### MSS_SYS_PROBE_SECERR
   The operation was blocked by device security.  This will occur if the
   permanent debug lock UP_DEBUG is set or the user software debug lock
   SWL_DEBUG is active or the device is in the virgin state. No data is read
@@ -554,17 +508,17 @@ extern "C" {
 #define MSS_SYS_PROBE_SECERR                                      1u
 
 /*-------------------------------------------------------------------------*//**
-  MEM Services error codes
+  ## MEM Services error codes
 
-  MSS_SYS_MEM_SECERR
+  ### MSS_SYS_MEM_SECERR
   The operation was blocked by device security.
   This will occur if the permanent debug lock UP_DEBUG is set or the user
   software debug lock SWL_DEBUG is active or the device is in the virgin state.
 
-  MSS_SYS_MEM_TIMEOUTERR
+  ### MSS_SYS_MEM_TIMEOUTERR
   Timeout occurred.
 
-  MSS_SYS_MEM_LOCKERR
+  ### MSS_SYS_MEM_LOCKERR
   Target memory failed to lock
 */
 #define MSS_SYS_MEM_SECERR                                        1u
@@ -572,18 +526,18 @@ extern "C" {
 #define MSS_SYS_MEM_LOCKERR                                       3u
 
 /*-------------------------------------------------------------------------*//**
-  APB services error codes
+  ## APB services error codes
 
-  MSS_SYS_APB_SECERR
+  ### MSS_SYS_APB_SECERR
   The operation was blocked by device security.
   This will occur if the permanent debug lock UP_DEBUG is set or the user
   software debug lock SWL_DEBUG is active or the device is in the virgin state.
 
-  MSS_SYS_APB_SLVERR
+  ### MSS_SYS_APB_SLVERR
   The addressed fabric APB peripheral generated a SLVERR response to the bus
   transaction.
 
-  MSS_SYS_APB_TIMEOUT
+  ### MSS_SYS_APB_TIMEOUT
   The addressed fabric APB peripheral failed to respond before the user-defined
   APB timeout or the fabric power is not on.
 */
@@ -592,54 +546,54 @@ extern "C" {
 #define MSS_SYS_APB_TIMEOUT                                       3u
 
 /*-------------------------------------------------------------------------*//**
-  Debug snapshot service error codes
+  ## Debug snapshot service error codes
 
-   MSS_SYS_DEBUG_SNAPSHOT_SECERR
+   ### MSS_SYS_DEBUG_SNAPSHOT_SECERR
    The operation was blocked by device security.
    This will occur if the permanent debug lock UP_DEBUG is set or the user
    software debug lock SWL_DEBUG is active or the device is in the virgin state.
 
-   MSS_SYS_DEBUG_SNAPSHOT_BUSERR
+   ### MSS_SYS_DEBUG_SNAPSHOT_BUSERR
    A bus error occurred and the snapshot was aborted.  This may occur if:
-       *   the fabric power is off, or
-       *   the fabric APB slave flagged an error, or
-       *   the fabric APB slave was too slow to assert PREADY
+       •   the fabric power is off, or
+       •   the fabric APB slave flagged an error, or
+       •   the fabric APB slave was too slow to assert PREADY
 */
 #define MSS_SYS_DEBUG_SNAPSHOT_SECERR                             1u
 #define MSS_SYS_DEBUG_SNAPSHOT_BUSERR                             2u
 
 /*-------------------------------------------------------------------------*//**
-  GENERATE OTP SERVICE
+  ## GENERATE OTP SERVICE
 
-  MSS_SYS_SECERR
+  ### MSS_SYS_SECERR
   Operation is blocked by device security
 
-  MSS_SYS_PROTOCOLERR
+  ### MSS_SYS_PROTOCOLERR
   Invalid key provided
 */
 #define MSS_SYS_GENERATE_OTP_SECERR                               1u
 #define MSS_SYS_GENERATE_OTP_PROTOCOLERR                          2u
 
 /*-------------------------------------------------------------------------*//**
-  MATCH OTP SERVICE
+  ## MATCH OTP SERVICE
 
-  MSS_SYS_PROTOCOLERR
+  ### MSS_SYS_PROTOCOLERR
   Keymode not supported.
 
-  MSS_SYS_MATCH_OTP_MISMATCHERR
+  ### MSS_SYS_MATCH_OTP_MISMATCHERR
   Calculated validator mismatch.
 */
 #define MSS_SYS_MATCH_OTP_PROTOCOLERR                             1u
 #define MSS_SYS_MATCH_OTP_MISMATCHERR                             2u
 
 /*-------------------------------------------------------------------------*//**
-  Unlock debug passcode service error codes
+  ## Unlock debug passcode service error codes
 
-  MSS_SYS_UNLOCK_DEBUG_PASSCODE_SECERR
+  ### MSS_SYS_UNLOCK_DEBUG_PASSCODE_SECERR
   The operation was blocked by device security.
   Occurs if the lock UL_PLAINTEXT is active or the permanent lock UP_DPK is set.
 
-  MSS_SYS_UNLOCK_DEBUG_PASSCODE_ERR
+  ### MSS_SYS_UNLOCK_DEBUG_PASSCODE_ERR
   If the unlock operation fails for any reason then the tamper event
   PASSCODE_FAIL is generated and all unlocked passcodes are re-locked.
 */
@@ -647,9 +601,9 @@ extern "C" {
 #define MSS_SYS_UNLOCK_DEBUG_PASSCODE_ERR                        2u
 
 /*-------------------------------------------------------------------------*//**
-  One way passcode service error codes
+  ## One way passcode service error codes
 
-  MSS_SYS_OWP_OWPERR
+  ### MSS_SYS_OWP_OWPERR
   If the unlock operation fails for any reason then the tamper event
   PASSCODE_FAIL is generated and all unlocked passcodes are re-locked.
 */
@@ -659,54 +613,55 @@ extern "C" {
   System service response data length
   ============================
 
+
   The following constants can be used to indicate the length of the data that
   is written into the mailbox by the system controller in response to the
   service being requested.
 
-  MSS_SYS_NO_RESPONSE_LEN
+  ## MSS_SYS_NO_RESPONSE_LEN
     This constant is used to indicate that system controller does not return any
     mailbox data for the service which is being requested
 
-  MSS_SYS_SERIAL_NUMBER_RESP_LEN
+  ## MSS_SYS_SERIAL_NUMBER_RESP_LEN
     Response length serial number service
 
-  MSS_SYS_USERCODE_RESP_LEN
+  ## MSS_SYS_USERCODE_RESP_LEN
     Response length for Usercode service
 
-  MSS_SYS_DESIGN_INFO_RESP_LEN
+  ## MSS_SYS_DESIGN_INFO_RESP_LEN
     Response length for Design info service
 
-  MSS_SYS_DEVICE_CERTIFICATE_RESP_LEN
+  ## MSS_SYS_DEVICE_CERTIFICATE_RESP_LEN
     Response length for Device certificate service
 
-  MSS_SYS_READ_DIGEST_RESP_LEN
+  ## MSS_SYS_READ_DIGEST_RESP_LEN
     Response length Read digest service
 
-  MSS_SYS_QUERY_SECURITY_RESP_LEN
+  ## MSS_SYS_QUERY_SECURITY_RESP_LEN
     Response length Query security service
 
-  MSS_SYS_READ_DEBUG_INFO_RESP_LEN
+  ## MSS_SYS_READ_DEBUG_INFO_RESP_LEN
     Response length Read debug info service
 
-  MSS_SYS_NONCE_SERVICE_RESP_LEN
+  ## MSS_SYS_NONCE_SERVICE_RESP_LEN
     Response length Nonce service
 
-  MSS_SYS_READ_ENVM_PARAM_RESP_LEN
+  ## MSS_SYS_READ_ENVM_PARAM_RESP_LEN
     Response length Read eNVM parameters service
 
-  MSS_SYS_PROBE_READ_SERVICE_RESP_LEN
+  ## MSS_SYS_PROBE_READ_SERVICE_RESP_LEN
     Response length Probe read service
 
-  MSS_SYS_GENERATE_OTP_RESP_LEN
+  ## MSS_SYS_GENERATE_OTP_RESP_LEN
     Response length Generate OTP service
 
-  MSS_SYS_PUF_EMULATION_SERVICE_RESP_LEN
+  ## MSS_SYS_PUF_EMULATION_SERVICE_RESP_LEN
     Response length PUF emulation service
 
-  MSS_SYS_DIGITAL_SIGNATURE_RAW_FORMAT_RESP_SIZE
+  ## MSS_SYS_DIGITAL_SIGNATURE_RAW_FORMAT_RESP_SIZE
     Response length for digital signature service raw format
 
-  MSS_SYS_DIGITAL_SIGNATURE_DER_FORMAT_RESP_SIZE
+  ## MSS_SYS_DIGITAL_SIGNATURE_DER_FORMAT_RESP_SIZE
     Response length for digital signature service DER format
 */
 #define MSS_SYS_NO_RESPONSE_LEN                                 0u
@@ -714,7 +669,7 @@ extern "C" {
 #define MSS_SYS_USERCODE_RESP_LEN                               4u
 #define MSS_SYS_DESIGN_INFO_RESP_LEN                            36u
 #define MSS_SYS_DEVICE_CERTIFICATE_RESP_LEN                     1024u
-#define MSS_SYS_READ_DIGEST_RESP_LEN                            544u
+#define MSS_SYS_READ_DIGEST_RESP_LEN                            576u
 #define MSS_SYS_QUERY_SECURITY_RESP_LEN                         33u
 #define MSS_SYS_READ_DEBUG_INFO_RESP_LEN                        94u
 #define MSS_SYS_NONCE_SERVICE_RESP_LEN                          32u
@@ -740,6 +695,7 @@ extern "C" {
 /*-------------------------------------------------------------------------*//**
   Device and design information services request command opcodes
  */
+ /// @cond private
 #define MSS_SYS_SERIAL_NUMBER_REQUEST_CMD                       0x00u
 #define MSS_SYS_USERCODE_REQUEST_CMD                            0x01u
 #define MSS_SYS_DESIGN_INFO_REQUEST_CMD                         0x02u
@@ -754,8 +710,6 @@ extern "C" {
 */
 #define MSS_SYS_BITSTREAM_AUTHENTICATE_CMD                      0x23u
 #define MSS_SYS_IAP_BITSTREAM_AUTHENTICATE_CMD                  0x22u
-#define MSS_SYS_UIC_EXECUTE_SCRIPT_CMD                          0x24u
-#define MSS_SYS_UIC_BITSTREAM_AUTHENTICATE_CMD                  0x25u
 
 /*-------------------------------------------------------------------------*//**
   Data security services request command opcodes
@@ -822,8 +776,6 @@ extern "C" {
 #define MSS_SYS_NON_AUTHENTICATED_TEXT_DATA_LEN                 256u
 
 #define MSS_SYS_SECURE_NVM_READ_DATA_LEN                        16u
-#define MSS_SYS_EXECUTE_UIC_SCRIPT_DATA_LEN                     8u
-#define MSS_SYS_UIC_BITSTREAM_AUTHENTICATE_DATA_LEN             4u
 #define MSS_SYS_BITSTREAM_AUTHENTICATE_DATA_LEN                 4u
 #define MSS_SYS_DIGEST_CHECK_DATA_LEN                           4u
 #define MSS_SYS_IAP_SERVICE_DATA_LEN                            4u
@@ -928,25 +880,6 @@ extern "C" {
 /*-------------------------------------------------------------------------*//**
  * Options for system services
 */
-/*Execute UIC script source peripheral options
-
-  UIC_SOURCE_PERIPH_UPROM
-    Execute UIC from uPROM
-
-  UIC_SOURCE_PERIPH_NONAUTHEN_SPIFLASH
-    Execute UIC from SPI flash (Not Authenticated)
-
-  UIC_SOURCE_PERIPH_SNVM
-    Execute UIC from sNVM
-
-  UIC_SOURCE_PERIPH_AUTHEN_SPIFLASH
-    Execute UIC from SPI flash (Authenticated)
-*/
-#define MSS_SYS_UIC_SOURCE_PERIPH_UPROM                         0x01u
-#define MSS_SYS_UIC_SOURCE_PERIPH_NONAUTHEN_SPIFLASH            0x02u
-#define MSS_SYS_UIC_SOURCE_PERIPH_SNVM                          0x03u
-#define MSS_SYS_UIC_SOURCE_PERIPH_AUTHEN_SPIFLASH               0x06u
-
 /*   Permitted key modes for one way Pass-code service
  *   *NS -- Not Supported
  */
@@ -961,7 +894,7 @@ extern "C" {
 #define KM_FACTORY_EC_E                                         0x09u/*NS*/
 #define KM_USER_EC                                              0x12u/*NS*/
 #define KM_USER_EC_E                                            0x13u/*NS*/
-
+/// @endcond
 /*-------------------------------------------------------------------------*//**
   Callback function handler
   The callback handler is used by the application to indicate the user about
@@ -979,13 +912,13 @@ typedef void (*mss_sys_service_handler_t)(void);
   execution of system service in interrupt mode only. For polling mode call to
   MSS_SYS_read_response is not required, as the drive performs the response
   read operation.
-  @param
+  @param void
          This function does not have any parameters.
   @return
          This function returns the status code returned by the system controller
          for requested service.
 
-  Example:
+  @example
   @code
        status = MSS_SYS_read_response();
 
@@ -1017,7 +950,7 @@ MSS_SYS_read_response
   @return
         This function does not return any value.
 
-  Example:
+  @example
   @code
        MSS_SYS_service_mode(MSS_SYS_SERVICE_POLLING_MODE,
                             mss_sys_service_interrupt_handler);
@@ -1031,20 +964,16 @@ MSS_SYS_select_service_mode
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_get_serial_number() function fetches the 128-bit Device Serial
-  Number (DSN). This function is non-blocking in the interrupt mode , in that,
-  it will exit immediately after requesting the service. In polling mode, it
-  becomes a blocking function. It will block until the the service is completed
-  and a response is received from the system controller.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_get_serial_number() function is used to execute the device serial
+  number service.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param p_serial_number
                     The p_serial_number parameter is a pointer to a buffer
-                    in which the data returned by system controller will be
-                    copied.
+                    in which the 128-bit data returned by system controller will
+                    be stored.
 
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -1057,11 +986,6 @@ MSS_SYS_select_service_mode
                     This function returns the status code returned by the
                     system controller for this service. A '0' status code means
                     that the service was executed successfully.
-
-                      | STATUS | Description    | Note                        |
-                      |--------|----------------|-----------------------------|
-                      | 0      | Success        |                             |
-                      | 1      | Error          | DSN could not be read       |
 */
 uint16_t
 MSS_SYS_get_serial_number
@@ -1073,15 +997,14 @@ MSS_SYS_get_serial_number
 /*-------------------------------------------------------------------------*//**
   The function MSS_SYS_get_user_code() is used to execute "USERCODE" system
   service.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param p_user_code
                     The p_user_code parameter is a pointer to a buffer
-                    in which the data returned by system controller will be
-                    copied.
+                    in which the 32-bit data returned by system controller will
+                    be stored.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1090,21 +1013,9 @@ MSS_SYS_get_serial_number
                     mean that the data access area for this service, in the
                     mailbox starts from 11th word (offset 10).
   @return
-                    This function returns a value to indicate whether the
-                    service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    | STATUS | Description Note |
-                    |--------|------------------|
-                    |     0  | Success          |
+                    This function returns the status code returned by the
+                    system controller for this service. A '0' status code means
+                    that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_get_user_code
@@ -1116,23 +1027,17 @@ MSS_SYS_get_user_code
 /*-------------------------------------------------------------------------*//**
   The function MSS_SYS_get_design_info() is used to execute "Get Design Info"
   system service.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
 
-  @param p_design_info   The p_design_info parameter is a pointer to a buffer
-                         in which the data returned by system controller will be
-                         copied. Total size of debug information is 76 bytes.
-                         Below listed fields in the 76 bytes information are
-                         "reserved bytes". They do not represent meaningful
-                         information and can be ignored.
-                            From offset 3 (size 1)
-                            From offset 18 (size 1)
-                            From offset 37 (size 4)
-                            From offset 42 (size 2)
-                            From offset 50 (size 2)
-                            From offset 65 (size 7)
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  @param p_design_info
+                     The p_design_info parameter is a pointer to a buffer
+                     in which the data returned by system controller will be
+                     copied. Total size of debug information is 36 bytes.
+                     The data from the system controller includes the 256-bit
+                     user-defined design ID, 16-bit design version and 16-bit
+                     design back level.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1143,20 +1048,7 @@ MSS_SYS_get_user_code
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                       | STATUS | Description Note |
-                       |--------|------------------|
-                       |     0  | Success          |
-
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_get_design_info
@@ -1169,9 +1061,13 @@ MSS_SYS_get_design_info
   The function MSS_SYS_get_device_certificate() is used to execute "Get Device
   Certificate" system service.
 
-  @param p_device_certificate The p_device_certificate parameter is a pointer
-                              to a buffer in which the data returned by the
-                              system controller will be copied.
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  @param p_device_certificate
+                    The p_device_certificate parameter is a pointer to a buffer
+                    in which the data returned by the system controller will be
+                    stored.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1182,23 +1078,11 @@ MSS_SYS_get_design_info
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-     |STATUS    | Description       |  Note
-     |----------|-------------------|------------------------------------------
-     |   0      | Success           |Certificate is valid & consistent with
-     |          |                   |device
-     |   1      | Signature invalid |Certificate signature is invalid
-     |   2      | Device mismatch   |Public key or FSN do not match device
-     |   3      | System error      |PUF or storage failure
+                    Please refer to the document link provided in the theory of
+                    operation section to know more about the service and service
+                    response
 */
 uint16_t
 MSS_SYS_get_device_certificate
@@ -1210,14 +1094,14 @@ MSS_SYS_get_device_certificate
 /*-------------------------------------------------------------------------*//**
   The function MSS_SYS_read_digest() is used to execute "Read Digest" system
   service.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
 
-  @param p_digest      The p_digest parameter is a pointer to a buffer
-                       in which the data returned by system controller will be
-                       copied.
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  @param p_digest
+                    The p_digest parameter is a pointer to a buffer
+                    in which the data returned by system controller will be
+                    copied.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1228,19 +1112,7 @@ MSS_SYS_get_device_certificate
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                       | STATUS | Description Note |
-                       |--------|------------------|
-                       |     0  | Success          |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_read_digest
@@ -1252,14 +1124,14 @@ MSS_SYS_read_digest
 /*-------------------------------------------------------------------------*//**
   The function MSS_SYS_query_security() is used to execute "Query Security"
   system service.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
 
-  @param p_security_locks The p_security_locks parameter is a pointer to a buffer
-                          in which the data returned by system controller will be
-                          copied.
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  @param p_security_locks
+                    The p_security_locks parameter is a pointer to a buffer
+                    in which the data returned by system controller will be
+                    copied.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1270,19 +1142,7 @@ MSS_SYS_read_digest
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                       | STATUS | Description Note |
-                       |--------|------------------|
-                       |     0  | Success          |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_query_security
@@ -1294,14 +1154,14 @@ MSS_SYS_query_security
 /*-------------------------------------------------------------------------*//**
   The function MSS_SYS_read_debug_info() is used to execute "Read Debug info"
   system service.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
 
-  @param p_debug_info  The p_debug_info parameter is a pointer to a buffer
-                       in which the data returned by system controller will be
-                       copied.
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  @param p_debug_info
+                    The p_debug_info parameter is a pointer to a buffer
+                    in which the data returned by system controller will be
+                    copied.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1312,19 +1172,7 @@ MSS_SYS_query_security
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                       | STATUS | Description Note |
-                       |--------|------------------|
-                       |     0  | Success          |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_read_debug_info
@@ -1336,10 +1184,9 @@ MSS_SYS_read_debug_info
 /*-------------------------------------------------------------------------*//**
   The function MSS_SYS_read_envm_parameter() is used to retrieve all parameters
   needed for eNVM operation and programming.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param p_envm_param
                     The p_envm_param parameter specifies the the user buffer
@@ -1355,162 +1202,12 @@ MSS_SYS_read_debug_info
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS  | Description    |  Note                          |
-                    |--------|----------------|--------------------------------|
-                    |   0    |   Success      |                                |
-                    |   1    |   Digest Error |Page digest mismatches.         |
-                    |        |                |Parameter values still returned.|
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_read_envm_parameter
 (
     uint8_t * p_envm_param,
-    uint16_t mb_offset
-);
-
-/*-------------------------------------------------------------------------*//**
-  The MSS_SYS_execute_uic_script() function is used to execute UCI script
-  service. This service allows the user to invoke a UIC script stored in any of
-  the available non-volatile memory sources.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
-
-  @param src_periph_type
-                    The src_periph_type parameter specifies the type of
-                    non-volatile memory in which the UIC script is stored.
-                    Below is the list of all available peripheral options.
-
-                           SRC        Location
-                           0           Reserved
-                           1           PROM
-                           2           SPI flash (Not Authenticated)
-                           3           SNVM
-                           4           Reserved
-                           5           Reserved
-                           6           SPI flash (Authenticated)
-                           7           Reserved
-  @param periph_address
-                    The periph_address parameter specifies the address within the
-                    selected non-volatile memory where the UIC script is stored.
-                    The address format is different for different peripherals.
-                    Below is the list of peripherals and corresponding addresses.
-
-                    uPROM memory --  IP Segment/Block Address
-                    SNVM memory  --  SNVM Module number.
-                    SPI FLash (Authenticated or NonAuthenticated) - 24 or 32 bit
-                                                                    address.
-
-                    This function will adjust the provided value to fit into the
-                    format expected by system controller.
-  @param mb_offset
-                    The mb_offset parameter specifies the offset from the start
-                    of mailbox where the data related to this service is
-                    available. All accesses to the mailbox are of word length
-                    (4 bytes). A value 10 (decimal) of this parameter would
-                    mean that the data access area for this service, in the
-                    mailbox starts from 11th word (offset 10).
-  @return
-                    This function returns a value to indicate whether the
-                    service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                   | STATUS  |  Description                    |
-                   |---------|---------------------------------|
-                   |   0     |  Successful completion          |
-                   |   1     |  SPI Max Frame Error            |
-                   |   2     |  Poll Time out                  |
-                   |   3     |  SPI Authentication Error       |
-                   |   4     |  SPI Decryption Error           |
-                   |   5     |  SPI Not Master Error           |
-                   |   6     |  Fabric APB Error               |
-                   |   7     |  SCB Error                      |
-                   |   8     |  PNVM Encrypted Error           |
-                   |   9     |  Address out of Range Error     |
-                   |   10    |  Jump Max Error                 |
-                   |   11    |  Unexpected Format Error        |
-                   |   12    |  Script Time out Error          |
-*/
-uint16_t
-MSS_SYS_execute_uic_script
-(
-        uint8_t src_periph_type,
-        uint32_t periph_address,
-        uint16_t mb_offset
-);
-
-/*-------------------------------------------------------------------------*//**
-  The MSS_SYS_authenticate_uic_bitstream() function is used to authenticate
-  the UIC Bitstream which is located in SPI through a system service routine.
-  This service is applicable to UIC scripts stored in SPI Flash memory only.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
-
-  @param spi_flash_address
-               The spi_flash_address parameter specifies the address within
-               SPI Flash memory where the UIC script is stored.
-  @param mb_offset
-                    The mb_offset parameter specifies the offset from the start
-                    of mailbox where the data related to this service is
-                    available. All accesses to the mailbox are of word length
-                    (4 bytes). A value 10 (decimal) of this parameter would
-                    mean that the data access area for this service, in the
-                    mailbox starts from 11th word (offset 10).
-  @return
-                    This function returns a value to indicate whether the
-                    service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                   | STATUS  |  Description                    |
-                   |---------|---------------------------------|
-                   |   0     |  Successful completion          |
-                   |   1     |  SPI Max Frame Error            |
-                   |   2     |  Poll Time out                  |
-                   |   3     |  SPI Authentication Error       |
-                   |   4     |  SPI Decryption Error           |
-                   |   5     |  SPI Not Master Error           |
-                   |   6     |  Fabric APB Error               |
-                   |   7     |  SCB Error                      |
-                   |   8     |  PNVM Encrypted Error           |
-                   |   9     |  Address out of Range Error     |
-                   |   10    |  Jump Max Error                 |
-                   |   11    |  Unexpected Format Error        |
-                   |   12    |  Script Time out Error          |
-
-*/
-uint16_t
-MSS_SYS_authenticate_uic_bitstream
-(
-    uint32_t spi_flash_address,
     uint16_t mb_offset
 );
 
@@ -1522,10 +1219,9 @@ MSS_SYS_authenticate_uic_bitstream
   need to invoke recovery procedures if the bitstream is invalid.
 
   This service is applicable to bitstreams stored in SPI Flash memory only.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param spi_flash_address
                     The spi_flash_address parameter specifies the address within
@@ -1540,52 +1236,10 @@ MSS_SYS_authenticate_uic_bitstream
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    | STATUS   |     Description                               |
-                    |----------|-----------------------------------------------|
-                    |   0      |  No error                                     |
-                    |   1      |  Validator or hash chaining mismatch          |
-                    |   2      |  Unexpected data received                     |
-                    |   3      |  Invalid/corrupt encryption key               |
-                    |   4      |  Invalid component header                     |
-                    |   5      |  Back level not satisfied                     |
-                    |   6      |  Illegal bitstream mode                       |
-                    |   7      |  DSN binding mismatch                         |
-                    |   8      |  Illegal component sequence                   |
-                    |   9      |  Insufficient device capabilities             |
-                    |   10     |  Incorrect DEVICEID                           |
-                    |   11     |  Unsupported bitstream protocol version       |
-                    |          |  (regeneration required)                      |
-                    |   12     |  Verify not permitted on this bitstream       |
-                    |   13     |  Invalid Device Certificate                   |
-                    |   14     |  Invalid DIB                                  |
-                    |   21     |  Device not in SPI Master Mode                |
-                    |   22     |  No valid images found                        |
-                    |   23     |  No valid images found                        |
-                    |   24     |  Programmed design version is newer than Auto |
-                    |          |  Update image found                           |
-                    |   25     |  Reserved                                     |
-                    |   26     |  Selected image was invalid and no recovery   |
-                    |          |  was performed due to valid design in device  |
-                    |   27     |  Selected and Recovery image failed to program|
-                    |   127    |  Abort                                        |
-                    |   128    |  NVMVERIFY                                    |
-                    |   129    |  PROTECTED                                    |
-                    |   130    |  NOTENA                                       |
-                    |   131    |  PNVMVERIFY                                   |
-                    |   132    |  SYSTEM                                       |
-                    |   133    |  BADCOMPONENT                                 |
-                    |   134    |  HVPROGERR                                    |
-                    |   135    |  HVSTATE                                      |
+                    indicates that the service was executed successfully.
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_authenticate_bitstream
@@ -1602,60 +1256,27 @@ MSS_SYS_authenticate_bitstream
   image is guaranteed to be valid when used by an IAP function.
 
   This service is applicable to bitstreams stored in SPI Flash memory only.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param spi_idx
-                    The spi_idx parameter specifies the index in the SPI directory to
-                    be used where the IAP bit-stream is stored.
+                    The spi_idx parameter specifies the index in the SPI
+                    directory to be used where the IAP bit-stream is stored.
 
                     Note: To support recovery SPI_IDX=1 should be an empty slot
                     and the recovery image should be located in SPI_IDX=0. Since
-                    SPI_IDX=1 should be an empty slot it shouldn't be passed into
+                    SPI_IDX=1 should be an empty slot it shouldn’t be passed into
                     the system service.
   @return
-                   The MSS_SYS_authenticate_iap_image function returns
-                   one of following status codes. The status code indicates
-                   the success/failure status of the service execution.
+                   The MSS_SYS_authenticate_iap_image function returns a value
+                   to indicate whether the service was executed successfully or
+                   not. A zero value indicates that the service was executed
+                   successfully.
 
-                    | STATUS   |     Description                               |
-                    |----------|-----------------------------------------------|
-                    |   0      |  No error                                     |
-                    |   1      |  Validator or hash chaining mismatch          |
-                    |   2      |  Unexpected data received                     |
-                    |   3      |  Invalid/corrupt encryption key               |
-                    |   4      |  Invalid component header                     |
-                    |   5      |  Back level not satisfied                     |
-                    |   6      |  Illegal bitstream mode                       |
-                    |   7      |  DSN binding mismatch                         |
-                    |   8      |  Illegal component sequence                   |
-                    |   9      |  Insufficient device capabilities             |
-                    |   10     |  Incorrect DEVICEID                           |
-                    |   11     |  Unsupported bitstream protocol version       |
-                    |          |  (regeneration required)                      |
-                    |   12     |  Verify not permitted on this bitstream       |
-                    |   13     |  Invalid Device Certificate                   |
-                    |   14     |  Invalid DIB                                  |
-                    |   21     |  Device not in SPI Master Mode                |
-                    |   22     |  No valid images found                        |
-                    |   23     |  No valid images found                        |
-                    |   24     |  Programmed design version is newer than Auto |
-                    |          |  Update image found                           |
-                    |   25     |  Reserved                                     |
-                    |   26     |  Selected image was invalid and no recovery   |
-                    |          |  was performed due to valid design in device  |
-                    |   27     |  Selected and Recovery image failed to program|
-                    |   127    |  Abort                                        |
-                    |   128    |  NVMVERIFY                                    |
-                    |   129    |  PROTECTED                                    |
-                    |   130    |  NOTENA                                       |
-                    |   131    |  PNVMVERIFY                                   |
-                    |   132    |  SYSTEM                                       |
-                    |   133    |  BADCOMPONENT                                 |
-                    |   134    |  HVPROGERR                                    |
-                    |   135    |  HVSTATE                                      |
+                   Please refer to theory of operation -> status response and
+                   reference documents section for more information about the
+                   service.
 */
 uint16_t
 MSS_SYS_authenticate_iap_image
@@ -1667,10 +1288,9 @@ MSS_SYS_authenticate_iap_image
   The MSS_SYS_puf_emulation_service() function accept a challenge comprising a
   8-bit optype and 128-bit challenge and return a 256-bit response unique to
   the given challenge and the device.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param p_challenge
                     The p_challenge parameter specifies the 128-bit challenge
@@ -1694,21 +1314,12 @@ MSS_SYS_authenticate_iap_image
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                    |STATUS  | Description
-                    |--------|-----------------|
-                    |   0    |   SUCCESS       |
-                    |   1    |   INTERNAL ERROR|
-                    |        |                 |
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
+
 */
 uint16_t
 MSS_SYS_puf_emulation_service
@@ -1722,14 +1333,13 @@ MSS_SYS_puf_emulation_service
 /*-------------------------------------------------------------------------*//**
   The MSS_SYS_digital_signature_service() function is used to generate P-384
   ECDSA signature based on SHA384 hash value.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param p_hash
                     The p_hash parameter is a pointer to the buffer which
-                    contain the 48 bytes SH384 Hash value(input value).
+                    contain the 48 bytes SHA384 Hash value(input value).
   @param format
                     The format parameter specifies the output format of
                     generated SIGNATURE field. The different types of output
@@ -1739,7 +1349,7 @@ MSS_SYS_puf_emulation_service
   @param p_response
                     The p_response parameter is a pointer to a buffer which
                     contain the generated ECDSA signature. The field may be
-                    96 bytes or 104 bytes depend upon the output format.
+                    96 bytes or 104 bytes depending upon the output format.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -1750,23 +1360,11 @@ MSS_SYS_puf_emulation_service
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                    |STATUS | Description                          |
-                    |-------|--------------------------------------|
-                    |  0    | Success                              |
-                    |  1    | FEK Failure Error retrieving FEK     |
-                    |  2    | DRBG Error  Failed to generate nonce |
-                    |  3    | ECDSA Error ECDSA failed             |
-
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_digital_signature_service
@@ -1783,10 +1381,9 @@ MSS_SYS_digital_signature_service
    -  Non-authenticated plaintext,
    -  Authenticated plaintext
    -  Authenticated ciphertext
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param format
                     The format parameter specifies the format used to write
@@ -1821,25 +1418,11 @@ MSS_SYS_digital_signature_service
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                    | STATUS | Description Note                                |
-                    |--------|-------------------------------------------------|
-                    |   0    |  Success                                        |
-                    |   1    |  Invalid SNVMADDR    Illegal page address       |
-                    |   2    |  Write failure   PNVM program/verify failed     |
-                    |   3    |  System error    PUF or storage failure         |
-                    |   4    |  Write Not Permitted ROMFLAG is set             |
-                    |   5    |  Access failure  Write Access from either Fabric|
-                    |        |  or MSS was blocked (PolarFire SoC only)        |
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_secure_nvm_write
@@ -1855,10 +1438,9 @@ MSS_SYS_secure_nvm_write
   The MSS_SYS_secure_nvm_read() function is used to read data present in sNVM
   region. User should provide USK key, if the data was programmed using
   authentication.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param snvm_module
                     The snvm_module parameter specifies the sNVM module
@@ -1894,25 +1476,7 @@ MSS_SYS_secure_nvm_write
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    | STATUS | Description Note                                |
-                    |--------|-------------------------------------------------|
-                    |   0    |  Success                                        |
-                    |   1    |  Invalid SNVMADDR    Illegal page address       |
-                    |   2    |  Write failure   PNVM program/verify failed     |
-                    |   3    |  System error    PUF or storage failure         |
-                    |   4    |  Write Not Permitted ROMFLAG is set             |
-                    |   5    |  Access failure  Write Access from either Fabric|
-                    |        |  or MSS was blocked (PolarFire SoC only)        |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_secure_nvm_read
@@ -1929,6 +1493,9 @@ MSS_SYS_secure_nvm_read
   The function MSS_SYS_nonce_service() is used to issue "Nonce Service" system
   service to the system controller.
 
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
   @param p_nonce
                     The p_nonce parameter is a pointer to a buffer
                     in which the data returned by system controller will be
@@ -1943,12 +1510,6 @@ MSS_SYS_secure_nvm_read
   @return           This function returns the status code returned by the
                     system controller for this service. A '0' status code means
                     that the service was executed successfully.
-
-                   | STATUS     | Description                              |
-                   |------------|------------------------------------------|
-                   |  0         |  Success completion (exit)               |
-                   |  1         |  Error fetching PUK                      |
-                   |  2         |  Error generating seed                   |
 */
 uint16_t
 MSS_SYS_nonce_service
@@ -1962,37 +1523,60 @@ MSS_SYS_nonce_service
   digests of selected non-volatile memories.
 
   This service is applicable to bitstream stored in SPI Flash memory only.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Information : parameter options
+  | Options[i]  |    Description                              |
+  |-------------|---------------------------------------------|
+  |   0x01      |   Fabric digest                             |
+  |   0x02      |   Fabric Configuration (CC) segment         |
+  |   0x04      |   ROM digest in SNVM segment                |
+  |   0x08      |   UL segment                                |
+  |   0x10      |   UKDIGEST0 in User Key segment             |
+  |   0x20      |   UKDIGEST1 in User Key segment             |
+  |   0x40      |   UKDIGEST2 in User Key segment (UPK1)      |
+  |   0x80      |   UKDIGEST3 in User Key segment (UK1)       |
+  |   0x100     |   UKDIGEST4 in User Key segment (DPK)       |
+  |   0x200     |   UKDIGEST5 in User Key segment (UPK2)      |
+  |   0x400     |   UKDIGEST6 in User Key segment (UK2)       |
+  |   0x800     |   UFS Permanent lock (UPERM) segment        |
+  |   0x1000    |   Factory and Factory Key Segments.         |
+  |   0x2000    |   UKDIGEST7 in User Key segment (HWM)       |
+  |   0x4000    |   ENVMDIGEST                                |
+  |   0x8000    |   UKDIGEST8 for MSS Boot Info               |
+  |   0x10000   |   SNVM_RW_ACCESS_MAP Digest                 |
+  |   0x20000   |   SBIC revocation digest                    |
+
+  Information : parameter digesterr 
+  | DIGESTERR[i]|    Description                              |
+  |-------------|---------------------------------------------|
+  |   0x01      |   Fabric digest                             |
+  |   0x02      |   Fabric Configuration (CC) segment         |
+  |   0x04      |   ROM digest in SNVM segment                |
+  |   0x08      |   UL segment                                |
+  |   0x10      |   UKDIGEST0 in User Key segment             |
+  |   0x20      |   UKDIGEST1 in User Key segment             |
+  |   0x40      |   UKDIGEST2 in User Key segment (UPK1)      |
+  |   0x80      |   UKDIGEST3 in User Key segment (UK1)       |
+  |   0x100     |   UKDIGEST4 in User Key segment (DPK)       |
+  |   0x200     |   UKDIGEST5 in User Key segment (UPK2)      |
+  |   0x400     |   UKDIGEST6 in User Key segment (UK2)       |
+  |   0x800     |   UFS Permanent lock (UPERM) segment        |
+  |   0x1000    |   Factory and Factory Key Segments.         |
+  |   0x2000    |   UKDIGEST7 in User Key segment (HWM)       |
+  |   0x4000    |   ENVMDIGEST                                |
+  |   0x8000    |   UKDIGEST8 for MSS Boot Info               |
+  |   0x10000   |   SNVM_RW_ACCESS_MAP Digest                 |
+  |   0x20000   |   SBIC revocation digest                    |
 
   @param options
                The options parameter specifies the digest check options which
                indicate the area on which the digest check should be performed.
                Below is the list of options. You can OR these options to indicate
-               to perform digest check on multiple segments.
-
-                  | Options[i]  |    Description                              |
-                  |-------------|---------------------------------------------|
-                  |   0x01      |   Fabric digest                             |
-                  |   0x02      |   Fabric Configuration (CC) segment         |
-                  |   0x04      |   ROM digest in SNVM segment                |
-                  |   0x08      |   UL segment                                |
-                  |   0x10      |   UKDIGEST0 in User Key segment             |
-                  |   0x20      |   UKDIGEST1 in User Key segment             |
-                  |   0x40      |   UKDIGEST2 in User Key segment (UPK1)      |
-                  |   0x80      |   UKDIGEST3 in User Key segment (UK1)       |
-                  |   0x100     |   UKDIGEST4 in User Key segment (DPK)       |
-                  |   0x200     |   UKDIGEST5 in User Key segment (UPK2)      |
-                  |   0x400     |   UKDIGEST6 in User Key segment (UK2)       |
-                  |   0x800     |   UFS Permanent lock (UPERM) segment        |
-                  |   0x1000    |   Factory and Factory Key Segments.         |
-                  |   0x2000    |   UKDIGEST7 in User Key segment (HWM)       |
-                  |   0x4000    |   ENVMDIGEST                                |
-                  |   0x8000    |   UKDIGEST8 for MSS Boot Info               |
-                  |   0x10000   |   SNVM_RW_ACCESS_MAP Digest                 |
-                  |   0x20000   |   SBIC revocation digest                    |
+               to perform digest check on multiple segments. Please refer 
+               function description for more information of options parameter.
 
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -2003,45 +1587,13 @@ MSS_SYS_nonce_service
                     mailbox starts from 11th word (offset 10).
   @param digesterr
                     The digesterr parameter specifies the set bit in case of
-                    DIGESTERR.
+                    DIGESTERR. Please refer function description for more 
+                    information of digesterr parameter.
 
-                  | DIGESTERR[i]|    Description                              |
-                  |-------------|---------------------------------------------|
-                  |   0x01      |   Fabric digest                             |
-                  |   0x02      |   Fabric Configuration (CC) segment         |
-                  |   0x04      |   ROM digest in SNVM segment                |
-                  |   0x08      |   UL segment                                |
-                  |   0x10      |   UKDIGEST0 in User Key segment             |
-                  |   0x20      |   UKDIGEST1 in User Key segment             |
-                  |   0x40      |   UKDIGEST2 in User Key segment (UPK1)      |
-                  |   0x80      |   UKDIGEST3 in User Key segment (UK1)       |
-                  |   0x100     |   UKDIGEST4 in User Key segment (DPK)       |
-                  |   0x200     |   UKDIGEST5 in User Key segment (UPK2)      |
-                  |   0x400     |   UKDIGEST6 in User Key segment (UK2)       |
-                  |   0x800     |   UFS Permanent lock (UPERM) segment        |
-                  |   0x1000    |   Factory and Factory Key Segments.         |
-                  |   0x2000    |   UKDIGEST7 in User Key segment (HWM)       |
-                  |   0x4000    |   ENVMDIGEST                                |
-                  |   0x8000    |   UKDIGEST8 for MSS Boot Info               |
-                  |   0x10000   |   SNVM_RW_ACCESS_MAP Digest                 |
-                  |   0x20000   |   SBIC revocation digest                    |
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                | STATUS DIGESTERR[i] | Description                            |
-                |---------------------|----------------------------------------|
-                |      1 or 0         |1 is returned if any of DIGESTERR bits  |
-                |                     |are set                                 |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_digest_check
@@ -2061,105 +1613,84 @@ MSS_SYS_digest_check
   Another option for IAP is to perform the auto-update sequence. In this case
   the newest image of the first two images in the SPI directory is chosen to be
   programmed.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Information : parameter iap_cmd 
+  |     iap_cmd                 |  Description                     |
+  |-----------------------------|----------------------------------|
+  | IAP_PROGRAM_BY_SPIIDX_CMD   |  IAP program.                    |
+  | IAP_VERIFY_BY_SPIIDX_CMD    |  Fabric Configuration (CC) segment|
+  | IAP_PROGRAM_BY_SPIADDR_CMD  |  ROM digest in SNVM segment      |
+  | IAP_VERIFY_BY_SPIADDR_CMD   |  UL segment                      |
+  | IAP_AUTOUPDATE_CMD          |  UKDIGEST0 in User Key segment   |
+
+  Information : parameter spiaddr 
+  |         iap_cmd              |        spiaddr                 |
+  |------------------------------|--------------------------------|
+  | IAP_PROGRAM_BY_SPIIDX_CMD    |Index in the SPI directory.     |
+  | IAP_VERIFY_BY_SPIIDX_CMD     |Index in the SPI directory.     |
+  | IAP_PROGRAM_BY_SPIADDR_CMD   |SPI address in the SPI Flash memory
+  | IAP_VERIFY_BY_SPIADDR_CMD    |SPI address in the SPI Flash memory
+  | IAP_AUTOUPDATE_CMD           |spiaddr is ignored as No index  |
+  |                               address required for this com
+  Note: For the IAP services with command IAP_PROGRAM_BY_SPIIDX_CMD
+       and IAP_VERIFY_BY_SPIIDX_CMD To support recovery SPI_IDX = 1
+       should be an empty slot and the recovery image should be
+       located in SPI_IDX = 0. Since SPI_IDX = 1 should be an empty
+       slot it shouldn’t be passed into the system service.
 
   @param iap_cmd
                The iap_cmd parameter specifies the specific IAP command which
                depends upon VERIFY or PROGRAM modes and the SPI address method.
-
-                   iap_cmd                 Description
-             IAP_PROGRAM_BY_SPIIDX_CMD     IAP program.
-             IAP_VERIFY_BY_SPIIDX_CMD      Fabric Configuration (CC) segment
-             IAP_PROGRAM_BY_SPIADDR_CMD    ROM digest in SNVM segment
-             IAP_VERIFY_BY_SPIADDR_CMD     UL segment
-             IAP_AUTOUPDATE_CMD            UKDIGEST0 in User Key segment
+               Please refer function description for more information of 
+               iap_cmd parameter.
   @param spiaddr
                The spiaddr parameter specifies the either the either the index
                in the SPI directory or the SPI address in the SPI Flash memory.
                Below is the list of the possible meaning of spiaddr parameter
-               in accordance with the iap_cmd parameter.
-
-                       iap_cmd                         spiaddr
-               IAP_PROGRAM_BY_SPIIDX_CMD       Index in the SPI directory.
-               IAP_VERIFY_BY_SPIIDX_CMD        Index in the SPI directory.
-               IAP_PROGRAM_BY_SPIADDR_CMD      SPI address in the SPI Flash memory
-               IAP_VERIFY_BY_SPIADDR_CMD       SPI address in the SPI Flash memory
-               IAP_AUTOUPDATE_CMD              spiaddr is ignored as No index/
-                                               address required for this command.
-
-   Note: For the IAP services with command IAP_PROGRAM_BY_SPIIDX_CMD and
-         IAP_VERIFY_BY_SPIIDX_CMD To support recovery SPI_IDX=1 should be an
-         empty slot and the recovery image should be located in SPI_IDX=0.
-         Since SPI_IDX=1 should be an empty slot it shouldn't be passed into
-         the system service.
+               in accordance with the iap_cmd parameter. Please refer function 
+               description for more information of spiaddr parameter.
+  @param mb_offset
+                    The mb_offset parameter specifies the offset from the start
+                    of mailbox where the data related to this service is
+                    available. All accesses to the mailbox are of word length
+                    (4 bytes). A value 10 (decimal) of this parameter would
+                    mean that the data access area for this service, in the
+                    mailbox starts from 11th word (offset 10).
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                    | STATUS   |     Description                               |
-                    |----------|-----------------------------------------------|
-                    |   0      |  No error                                     |
-                    |   1      |  Validator or hash chaining mismatch          |
-                    |   2      |  Unexpected data received                     |
-                    |   3      |  Invalid/corrupt encryption key               |
-                    |   4      |  Invalid component header                     |
-                    |   5      |  Back level not satisfied                     |
-                    |   6      |  Illegal bitstream mode                       |
-                    |   7      |  DSN binding mismatch                         |
-                    |   8      |  Illegal component sequence                   |
-                    |   9      |  Insufficient device capabilities             |
-                    |   10     |  Incorrect DEVICEID                           |
-                    |   11     |  Unsupported bitstream protocol version       |
-                    |          |  (regeneration required)                      |
-                    |   12     |  Verify not permitted on this bitstream       |
-                    |   13     |  Invalid Device Certificate                   |
-                    |   14     |  Invalid DIB                                  |
-                    |   21     |  Device not in SPI Master Mode                |
-                    |   22     |  No valid images found                        |
-                    |   23     |  No valid images found                        |
-                    |   24     |  Programmed design version is newer than Auto |
-                    |          |  Update image found                           |
-                    |   25     |  Reserved                                     |
-                    |   26     |  Selected image was invalid and no recovery   |
-                    |          |  was performed due to valid design in device  |
-                    |   27     |  Selected and Recovery image failed to program|
-                    |   127    |  Abort                                        |
-                    |   128    |  NVMVERIFY                                    |
-                    |   129    |  PROTECTED                                    |
-                    |   130    |  NOTENA                                       |
-                    |   131    |  PNVMVERIFY                                   |
-                    |   132    |  SYSTEM                                       |
-                    |   133    |  BADCOMPONENT                                 |
-                    |   134    |  HVPROGERR                                    |
-                    |   135    |  HVSTATE                                      |
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_execute_iap
 (
     uint8_t iap_cmd,
-    uint32_t spiaddr
+    uint32_t spiaddr,
+    uint16_t mb_offset
 );
 
 /*-------------------------------------------------------------------------*//**
   The MSS_SYS_spi_copy() function allows data to be copied from the system
   controller SPI flash to MSS memory. The SPI SCK frequency is specified by a
-  user-defined option allowing for a maximum SCK frequency of 80MHz.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  user-defined option with valid values shown in parameter description.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Information : parameter options
+  |options |Clock     |
+  |--------|----------|
+  | 1      | 40MHz    |
+  | 2      | 20MHz    |
+  | 3      | 13.33MHz |
+  7:2 RESERVED        Reserved for future use
 
   @param mss_dest_addr
                     The 64-bit mss_dest_addr parameter specifies the destination
@@ -2172,15 +1703,10 @@ MSS_SYS_execute_iap
                     The n_bytes parameter specifies the number of bytes to
                     transfer.
   @param options
-                    The 8 bit options parameter specifies the SPI clk
-                    divider configuration.
-
-                    OPTIONS[i]  Name    Description
-                    1:0         CLKDIV  SPI clock divider configuration.
-                                        0=80MHz, 1=40MHz,
-                                        2=20MHz, 3=13.33MHz
-
-                    7:2 RESERVED        Reserved for future use
+                    The 8 bit options parameter specifies the clock frequency
+                    used for the SPI transfers.
+                    Please refer function description for more information 
+                    of options parameter.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -2191,21 +1717,7 @@ MSS_SYS_execute_iap
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS    |Description                                  |
-                    |----------|---------------------------------------------|
-                    |   0      | Success                                     |
-                    |   1      | Device not configured for master mode       |
-                    |   2      | AXI Error                                   |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_spi_copy
@@ -2220,10 +1732,9 @@ MSS_SYS_spi_copy
 /*-------------------------------------------------------------------------*//**
   The MSS_SYS_debug_read_probe() function will read the content of a
   probe module (59 x 18b words).
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   Note: The IPROWADDR & IPSEGADDR addresses are not incremented as the
         associated address space is not contiguous. If PRBADDR is 63 it will
@@ -2253,21 +1764,7 @@ MSS_SYS_spi_copy
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS   | Description   |                               |
-                    |---------|---------------|-------------------------------|
-                    |  0      | Success       |                               |
-                    |  1      | SECERR        | The operation was blocked by  |
-                    |         |               | device security.              |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_read_probe
@@ -2280,12 +1777,12 @@ MSS_SYS_debug_read_probe
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_write_probe() function will writes up to 18 bits of
-  data to selected probe address.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_write_probe() function will issue the probe write debug
+  service to the system controller. It service will writes up to 18 bits of data
+  to selected probe address.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param prb_addr
                     The prb_addr parameter specifies the probe address.
@@ -2303,7 +1800,7 @@ MSS_SYS_debug_read_probe
   @param pwdata
                     The pwdata parameter specifies the value to be written on
                     selected probe registers.
-                    Example: If PWMASK[i] is '1' then probe register i will
+                    Example: If PWMASK[i] is ‘1’ then probe register i will
                     be written to the value specified by PWDATA[i].
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -2315,21 +1812,7 @@ MSS_SYS_debug_read_probe
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS   | Description   |                               |
-                    |---------|---------------|-------------------------------|
-                    |  0      | Success       |                               |
-                    |  1      | SECERR        | The operation was blocked by  |
-                    |         |               | device security.              |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_write_probe
@@ -2343,26 +1826,24 @@ MSS_SYS_debug_write_probe
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_live_probe() function will configures channel a or
-  b of the live probe system.  A live probe is enabled by writing a local
-  address register within one of the probe segment modules. Each probe segment
-  module generates its own local channel a live probe outputs which are
-  combined by OR chains to generate a chip-level live probe channel a signal.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_live_probe() function will issue the 'Live Probe Debug Service'
+  to the system controller. This service will configures channel 'a' or
+  'b' of the live probe system.
 
-  Note: - When configuring channel a, channel b is not affected and vice versa.
-        - Live probes are intentionally not cleared by JTAG reset.
-          They remain in effect until either manually disabled or the device is
-          reset.
+  Note:
+   - When configuring channel 'a', channel 'b' is not affected and vice versa.
+   - Live probes are intentionally not cleared by JTAG reset.
+     They remain in effect until either manually disabled or the device is
+     reset.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param x_addr
-                    The parameter x_addr specifies the x co-ordinate within
+                    The parameter x_addr specifies the x coordinate within
                     target probe module.
   @param y_addr
-                    The parameter y_addr specifies the y co-ordinate within
+                    The parameter y_addr specifies the y coordinate within
                     the target probe module.
   @param ipseg_addr
                     The ipseg_addr parameter specifies the probe segment
@@ -2372,15 +1853,17 @@ MSS_SYS_debug_write_probe
                     ipseg_addr and iprow_addr parameters specifies the target
                     address of probe module.
   @param clear
-                    The clear parameter is used to clear the configurations of
-                    local channels a or b. If CLEAR is '1', all local channel
-                    x (the applicable channel a or b) configurations are
-                    cleared before applying the new configuration
+                    The clear parameter(of size 1-bit) is used to clear the
+                    configurations of local channels a or b. If CLEAR is ‘1’,
+                    all local channel x (the applicable channel a or b)
+                    configurations are cleared before applying the new
+                    configuration
   @param ioen
-                    The ioen parameter is used to activate the probe output
-                    pad. If IOEN is '1' then the corresponding live probe
-                    output pad is activated.  Note that setting IOEN to '0'
-                    does not disable the internal live probe configuration.
+                    The ioen parameter(of size 1-bit) is used to activate
+                    the probe output pad. If IOEN is ‘1’ then the corresponding
+                    live probe output pad is activated.  Note that setting IOEN
+                    to ‘0’ does not disable the internal live probe
+                    configuration.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
                     of mailbox where the data related to this service is
@@ -2396,21 +1879,7 @@ MSS_SYS_debug_write_probe
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS   | Description   |                               |
-                    |---------|---------------|-------------------------------|
-                    |  0      | Success       |                               |
-                    |  1      | SECERR        | The operation was blocked by  |
-                    |         |               | device security.              |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_live_probe
@@ -2426,16 +1895,24 @@ MSS_SYS_debug_live_probe
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_select_mem() function will specifies a target
-  fabric memory to be accessed by the MEM read & MEM write services.
-  A handshake mechanism is used to request access to the target memory.  The
-  memory lock may be acquired immediately allowing multiple read/write
-  operations to be performed as one logical transaction or the lock may be
-  acquired and released by individual read/write operations.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_select_mem() function will issues the MEM Select Debug Service.
+  This service will specify a target fabric memory to be accessed by the MEM
+  read & MEM write services.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Information : parameter memtype 
+  | MEMTYPE| Peripheral | MEMSIZE(words)| Access Width |
+  |--------|------------|---------------|--------------|
+  |     0  | LSRAM x1   | 16384         |     1        |
+  |     1  | LSRAM x2   | 8192          |     2        |
+  |     2  | LSRAM x5   | 4096          |     5        |
+  |     3  | LSRAM x10  | 2048          |     10       |
+  |     4  | LSRAM x20  | 1024          |     20       |
+  |     5  | µRAM       | 64            |     12       |
+  |     6  | µPROM      | 256           |     9        |
+  |     7  | LSRAM x20  | 1024          |     20       |
 
   @param ipblk_addr
                     The ipblk_addr parameter specifies the block address of
@@ -2449,16 +1926,9 @@ MSS_SYS_debug_live_probe
   @param memtype
                     The memtype parameter specifies the type of fabric
                     memory to be used for MEM read and write services.
+                    Please refer function description for more information 
+                    of memtype parameter.
 
-                    MEMTYPE Peripheral  MEMSIZE(words) Access Width
-                         0   LSRAM x1    16384              1
-                         1   LSRAM x2    8192               2
-                         2   LSRAM x5    4096               5
-                         3   LSRAM x10   2048               10
-                         4   LSRAM x20   1024               20
-                         5   uRAM        64                 12
-                         6   uPROM       256                9
-                         7   LSRAM x20   1024               20
   @param memlock_mode
                     The memlock_mode parameter specifies the the memory
                     lock states for supported MEMLOCKMODE values.
@@ -2478,23 +1948,7 @@ MSS_SYS_debug_live_probe
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS   | Description   |                               |
-                    |---------|---------------|-------------------------------|
-                    |  0      | Success       |                               |
-                    |  1      | SECERR        | The operation was blocked by  |
-                    |         |               | device security.              |
-                    |  2      | TIMEOUTERR    | Timeout occurred.             |
-                    |  3      | LOCKERR       | Target memory failed to lock  |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_select_mem
@@ -2509,15 +1963,12 @@ MSS_SYS_debug_select_mem
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_read_mem() function provides an interface to read
-  data from the memory peripheral that is specified. A handshake mechanism is
-  used to request access to the target memory.  The memory lock may be acquired
-  immediately allowing multiple read/write operations to be performed as one
-  logical transaction.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_read_mem() function issues the MEM Read Debug Service to the
+  system controller. This service provides an interface to read data from the
+  memory peripheral that is specified.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param mem_addr
                     The mem_addr parameter sets the target address within the
@@ -2540,23 +1991,7 @@ MSS_SYS_debug_select_mem
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS   | Description   |                               |
-                    |---------|---------------|-------------------------------|
-                    |  0      | Success       |                               |
-                    |  1      | SECERR        | The operation was blocked by  |
-                    |         |               | device security.              |
-                    |  2      | TIMEOUTERR    | Timeout occurred.             |
-                    |  3      | LOCKERR       | Target memory failed to lock  |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_read_mem
@@ -2568,15 +2003,12 @@ MSS_SYS_debug_read_mem
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_write_mem() function provides an interface to write
-  data from the memory peripheral that is specified. A handshake mechanism is
-  used to request access to the target memory.  The memory lock may be acquired
-  immediately allowing multiple read/write operations to be performed as one
-  logical transaction.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_write_mem() function issues the MEM Write Debug Service to
+  the system controller. This service provides an interface to write data from
+  the memory peripheral that is specified.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param mem_addr
                     The mem_addr parameter sets the target address within the
@@ -2599,23 +2031,7 @@ MSS_SYS_debug_read_mem
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS   | Description   |                               |
-                    |---------|---------------|-------------------------------|
-                    |  0      | Success       |                               |
-                    |  1      | SECERR        | The operation was blocked by  |
-                    |         |               | device security.              |
-                    |  2      | TIMEOUTERR    | Timeout occurred.             |
-                    |  3      | LOCKERR       | Target memory failed to lock  |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_write_mem
@@ -2627,17 +2043,17 @@ MSS_SYS_debug_write_mem
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_read_apb() function reads a specified number of bytes
-  from the fabric APB bus to the specified MSS RAM area. The operation makes
-  the required number of read transactions using the selected transaction size,
-  APBDWSIZE.
-  The addressed fabric peripheral may generate an error or fail to respond
-  within a user-defined window, in which case any subsequent transfers are
-  aborted and corresponding error flags are returned.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_read_apb() function issues the APB Read Debug Service to the
+  system controller. This service will read a specified number of bytes from
+  the fabric APB bus to the specified MSS RAM area.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Note: This service will return only the status of service execution. Actual
+  data read by the system controller will be available at the specified MSS RAM
+  area. It is expected that the application code should perform read operation
+  to the specified MSS RAM area after successful execution of the service.
 
   @param apb_addr
                     The apb_addr parameter specifies the target address and
@@ -2664,28 +2080,11 @@ MSS_SYS_debug_write_mem
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                  | STATUS  | Description|                                     |
-                  |---------|------------|-------------------------------------|
-                  | 0       | Success    |                                     |
-                  | 1       | SECERR     | The operation was blocked by device |
-                  |         |            | security.                           |
-                  | 2       | SLVERR     | The addressed fabric APB peripheral |
-                  |         |            | generated a SLVERR response to the  |
-                  |         |            | bus transaction.                    |
-                  | 3       | TIMEOUT    | The addressed fabric APB peripheral |
-                  |         |            | failed to respond before the        |
-                  |         |            | user-defined APB timeout or the     |
-                  |         |            | fabric power is not on.             |
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_debug_read_apb
@@ -2698,14 +2097,12 @@ MSS_SYS_debug_read_apb
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_write_apb() function writes bytes of data to the
-  current fabric APB address as specified by APBADDR.  The addressed fabric
-  peripheral may generate an error or fail to respond within a user-defined
-  window, in which case the corresponding error flags are returned.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_write_apb() function will issue the APB Write Debug Service.
+  This service will write bytes of data to the current fabric APB address as
+  specified by APBADDR.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param apb_addr
                     The apb_addr parameter specifies the target address and
@@ -2732,28 +2129,7 @@ MSS_SYS_debug_read_apb
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                  | STATUS  | Description|                                     |
-                  |---------|------------|-------------------------------------|
-                  | 0       | Success    |                                     |
-                  | 1       | SECERR     | The operation was blocked by device |
-                  |         |            | security.                           |
-                  | 2       | SLVERR     | The addressed fabric APB peripheral |
-                  |         |            | generated a SLVERR response to the  |
-                  |         |            | bus transaction.                    |
-                  | 3       | TIMEOUT    | The addressed fabric APB peripheral |
-                  |         |            | failed to respond before the        |
-                  |         |            | user-defined APB timeout or the     |
-                  |         |            | fabric power is not on.             |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_write_apb
@@ -2766,23 +2142,23 @@ MSS_SYS_debug_write_apb
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_fabric_snapshot() function will service generates a
-  snapshot of the volatile fabric content. Data is read from each LSRAM, uRAM
-  and probe module and copied to the fabric APB debug port.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_fabric_snapshot() will issue the Debug Snapshot Service to
+  the system controller. This service generates a snapshot of the volatile
+  fabric content. Data is read from each LSRAM, µRAM and probe module and copied
+  to the fabric APB debug port.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param port_addr
                     The port_addr parameter sets the address of the APB port
                     to be used for bulk access debug instructions which are
-                    used in conjunction with Microsemi fabric debug IP.
+                    used in conjunction with Microchip fabric debug IP.
                     The debug port is a single location on the fabric APB
                     bus through which debug data is streamed.
   @param apb_fast_write
                     The apb_fast_write parameter specifies whether to use
-                    the fast apb protocol. If apb_fast_write is '1' then,
+                    the fast apb protocol. If apb_fast_write is ‘1’ then,
                     during write transfers, the fast APB protocol is used
                     and the address range is limited to port_addr[15:2]  and
                     port_addr[28:16] is ignored.
@@ -2796,23 +2172,7 @@ MSS_SYS_debug_write_apb
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                  | STATUS  | Description|                                     |
-                  |---------|------------|-------------------------------------|
-                  | 0       | Success    |                                     |
-                  | 1       | SECERR     | The operation was blocked by device |
-                  |         |            | security.                           |
-                  | 2       | BUSERR     | Bus error occurred and the snapshot |
-                  |         |            |  was aborted.                     |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_fabric_snapshot
@@ -2823,15 +2183,20 @@ MSS_SYS_debug_fabric_snapshot
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_otp_generate() function is used to set up the device to
-  The receive a one-time passcode.  A 128-bit nonce, NFPGA, is generated and
-  The stored in volatile memory for later use in the rest of the protocol.
-  The A 128-bit user nonce, NUSER, is supplied by the user.
-  This service only unlocks the software debug lock SWL_DEBUG.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_otp_generate() function will issue the Generate OTP Service to the
+  system controller. This service used to set up the device to receive a
+  one-time passcode.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Information : parameter keymode 
+  Supported values for KEYMODE are shown
+  |PCTYPE| KEYMODE|  Key Mode      | KROOT |  Note              |
+  |------|--------|----------------|-------|--------------------|
+  |  1   |   3    |  KM_USER_KEY1  |  UK1  |  User key 1        |
+  |  1   |   4    |  KM_USER_KEY2  |  UK2  |  User key 2        |
+  |  1   |   7    | KM_FACTORY_KEY |  DFK  |FK diversified by UID|
 
   @param keymode
                    keymode parameter specifies the key mode to be used to
@@ -2839,12 +2204,8 @@ MSS_SYS_debug_fabric_snapshot
                    The KEYMODE parameter is not checked for validity until the
                    MATCH OTP service is executed.  Both PCTYPE and KEYMODE are
                    stored in volatile memory for use by the MATCH OTP service.
-
-                   Supported values for KEYMODE are shown below.
-                   PCTYPE  KEYMODE  Key Mode       KROOT   Note
-                     1       3      KM_USER_KEY1    UK1    User key 1
-                     1       4      KM_USER_KEY2    UK2    User key 2
-                     1       7      KM_FACTORY_KEY  DFK    FK diversified by UID
+                   Please refer function description for more information of 
+                   keymode parameter.
   @param n_user
                    The n_user parameter specifies the user nonce, is supplied
                    by the user.
@@ -2866,30 +2227,7 @@ MSS_SYS_debug_fabric_snapshot
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    If any part of the service fails, then all unlocked
-                    passcodes are re-locked and the tamper event
-                    PASSCODE_FAIL is generated.
-
-                  | STATUS  | Description|                                     |
-                  |---------|------------|-------------------------------------|
-                  | 0       | Success    |                                     |
-                  | 1       | SECERR     | The operation was blocked by device |
-                  |         |            | security.                           |
-                  | 2       | PROTOCOLERR| If an invalid key mode is specified |
-                  |         |            | fails then the returned nonce is    |
-                  |         |            | 0^128, the protocol is aborted and  |
-                  |         |            | the tamper event PASSCODE_FAIL is   |
-                  |         |            | generated.                          |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_otp_generate
@@ -2902,13 +2240,13 @@ MSS_SYS_otp_generate
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_otp_match() function is the second part of the one-time
-  passcode protocol.  Before using this service the GENERATE OTP service must
-  first be used to obtain a nonce, NFPGA, from the device.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_otp_match() function will issue the Match OTP Service to the
+  system controller. This service is the second part of the one-time
+  passcode protocol. Before using this service the GENERATE OTP service must
+  first be used to obtain a nonce, NFPGA from the device.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param user_id
                     The UID parameter is only used if the KEYMODE used for
@@ -2933,21 +2271,7 @@ MSS_SYS_otp_generate
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                    |STATUS|   Description   |
-                    |------|-----------------|
-                    |  0   |   Success       |
-                    |  1   |   PROTOCOLERR   |
-                    |  2   |   MISMATCHERR   |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_otp_match
@@ -2960,13 +2284,13 @@ MSS_SYS_otp_match
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_unlock_debug_passcode() function will Attempt to match
+  The MSS_SYS_unlock_debug_passcode() will issue the Unlock Debug Passcode
+  Service to the system controller. This service will Attempt to match
   the user debug pass code using the key loaded into the mailbox.  If the match
   is successful the software debug lock SWL_DEBUG is temporarily inactive.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
 
   @param cmd_data
                     The parameter cmd_data specifies the device's debug
@@ -2985,27 +2309,11 @@ MSS_SYS_otp_match
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                  | STATUS  | Description|                                     |
-                  |---------|------------|-------------------------------------|
-                  | 0       | Success    |                                     |
-                  | 1       | SECERR     | The operation was blocked by device |
-                  |         |            | security.                           |
-                  | 2       | PROTOCOLERR| If the unlock operation fail for any|
-                  |         |            | reason, then the tamper event       |
-                  |         |            | PASSCODE_FAIL is generated.         |
-
-  If any part of the service fails, then all unlocked passcodes are re-locked
-  and the tamper event PASSCODE_FAIL is generated.
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_unlock_debug_passcode
@@ -3019,43 +2327,38 @@ MSS_SYS_unlock_debug_passcode
   The MSS_SYS_one_way_passcode() function is used to provide a
   mechanism for overriding the software debug lock  SWL_DEBUG without requiring
   any interaction with an external intelligence.
-  The following conditions must be met for the OWP to proceed and write the
-  payload HWM to the device:
-    *   HWM stored in the device must be valid
-    *   OWP passcode matches
-    *   Payload HWM is greater than the HWM stored in the device
-  After HWM is written the OWP is successful and SWL_DEBUG is unlocked.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+
+  Please refer to theory of operation -> reference documents section for more 
+  information about the service.
+
+  Information : parameter keymode 
+  | KEYID|     Key Mode       |   Permitted |
+  |------|--------------------|-------------|
+  |    0 |  KM_INIT_FACTORY   |      No     |
+  |    1 |  KM_ZERO_RECOVERY  |      No     |
+  |    2 |  KM_DEFAULT_KEY    |      Yes    |
+  |    3 |  KM_USER_KEY1      |      Yes    |
+  |    4 |  KM_USER_KEY2      |      Yes    |
+  |    5 |      -             |             |
+  |    6 |  KM_AUTH_CODE      |      No     |
+  |    7 |  KM_FACTORY_KEY    |      Yes    |
+  |    8 |  KM_FACTORY_EC     |      No     |
+  |    9 |  KM_FACTORY_EC_E   |      No     |
+  |   10 |      -             |             |
+  |   11 |      -             |             |
+  |   12 |  KM_USER_EC        |      No     |
+  |   13 |  KM_USER_EC_E      |      No     |
+  |   14 |      -             |             |
+  |   15 |      -             |             |
 
   @param msg_id
                     The msg_id parameter stores the value of message ID.
   @param validator
                     The 256-bit validator parameter store the validator key.
   @param keymode
-                    The Keymode parameter specifies the permitted keymodes for
-                    OWP service.
-
-                     KEYID     Key Mode            Permitted
-                        0   KM_INIT_FACTORY         No
-                        1   KM_ZERO_RECOVERY        No
-                        2   KM_DEFAULT_KEY          Yes
-                        3   KM_USER_KEY1            Yes
-                        4   KM_USER_KEY2            Yes
-                        5       -
-                        6   KM_AUTH_CODE            No
-                        7   KM_FACTORY_KEY          Yes
-                        8   KM_FACTORY_EC           No
-                        9   KM_FACTORY_EC_E         No
-                        10      -
-                        11      -
-                        12  KM_USER_EC              No
-                        13  KM_USER_EC_E            No
-                        14      -
-                        15      -
-
+                    The keymode parameter specifies the permitted keymodes for
+                    OWP service. Please refer function description for more 
+                    information of keymode parameter.
   @param dsn
                     The dsn parameter stores the value of device serial number.
   @param hash
@@ -3079,49 +2382,27 @@ MSS_SYS_unlock_debug_passcode
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
+                    indicates that the service was executed successfully.
 
-                  | STATUS  | Description|                                     |
-                  |---------|------------|-------------------------------------|
-                  | 0       | Success    |                                     |
-                  | 1       | OWPERR     | If the unlock operation fail for any|
-                  |         |            | reason, then the tamper event       |
-                  |         |            | PASSCODE_FAIL is generated.         |
-
-  If any part of the service fails, then all unlocked passcodes are re-locked
-  and the tamper event PASSCODE_FAIL is generated.
+                    Please refer to theory of operation -> status response and
+                    reference documents section for more information about the
+                    service.
 */
 uint16_t
 MSS_SYS_one_way_passcode
 (
-    uint8_t* msg_id,
-    uint8_t* validator,
-    uint8_t keymode,
-    uint8_t* dsn,
-    uint8_t* hash,
-    uint8_t* plaintext_passcode,
-    uint8_t* hwm,
+    uint8_t *msg_id,
+    uint8_t *validator,
+    uint8_t *header,
+    uint8_t *payload,
+    uint8_t *tnext,
     uint16_t mb_offset,
     uint16_t resp_offset
 );
 
 /*-------------------------------------------------------------------------*//**
-  The MSS_SYS_debug_terminate() function will terminate the debug
-  session. Its purpose is to re-lock all the software based debug locks
-  (SWL_DEBUG) if needed and to release any memories previously locked using
-  the MEM Select Debug Service.
-  This function is non-blocking in the interrupt mode , in that, it will exit
-  immediately after requesting the service. In polling mode, it becomes a
-  blocking function. It will block until the the service is completed and a
-  response is received from the system controller.
+  The MSS_SYS_debug_terminate() function will issue the Terminate Debug Service
+  to the system controller. This service will terminate the debug session.
 
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -3137,19 +2418,7 @@ MSS_SYS_one_way_passcode
   @return
                     This function returns a value to indicate whether the
                     service was executed successfully or not. A zero value
-                    indicates that the service was executed successfully. A
-                    non-zero value can indicate that either the driver was not
-                    able to kick-start the service or that the driver was able
-                    to kick-start the service and receive a status response code
-                    from the system controller.
-                    See theory of operations section for detailed information
-                    about the return status.
-                    The following table lists the service status code from
-                    system controller.
-
-                     |STATUS |  Description |
-                     |-------|--------------|
-                     | 0     |  Success     |
+                    indicates that the service was executed successfully.
 */
 uint16_t
 MSS_SYS_debug_terminate
