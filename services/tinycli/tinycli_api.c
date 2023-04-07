@@ -249,7 +249,9 @@ static const struct tinycli_cmd debugCmds[] = {
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
     { CMD_DBG_PERFCTR , "PERFCTR", "display perf counters", tinyCLI_PerfCtrs_ },
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
     { CMD_DBG_WDOG ,    "WDOG",    "display watchdog statistics", HSS_Wdog_DumpStats },
+#endif
 };
 
 static const struct tinycli_cmd bootCmds[] = {
