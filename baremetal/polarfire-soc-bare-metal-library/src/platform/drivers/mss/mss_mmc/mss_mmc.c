@@ -784,6 +784,7 @@ mss_mmc_status_t MSS_MMC_single_block_read(uint32_t src_addr, uint32_t * dst_add
                 * Ensure no error fields in Card Status register are set and that
                 * the device is idle before this function returns.
                 */
+                mmc_delay(MASK_8BIT);
                 mMMC_ARM_TIMEOUT(mmc_spin_timeout);
                 do
                 {
