@@ -132,8 +132,16 @@ SOC_CONFIG_FILES =  \
 	$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart4.h \
 	$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
 
+ifeq ($(origin CONFIG_SOC_FPGA_DESIGN_XML), undefined)
+else
+SOC_FPGA_DESIGN_XML_FILE= $(subst $\",,$(CONFIG_SOC_FPGA_DESIGN_XML))
+ifeq ("$(wildcard $(SOC_FPGA_DESIGN_XML_FILE))", "")
+$(error "XML file $(CONFIG_SOC_FPGA_DESIGN_XML) specified by CONFIG_SOC_FPGA_DESIGN_XML does not exist")
+endif
+endif
+
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(subst $\",,$(CONFIG_SOC_FPGA_DESIGN_XML))
+$(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
 	@$(ECHO) " MPFSCFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
 
