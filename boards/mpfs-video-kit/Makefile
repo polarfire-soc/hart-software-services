@@ -27,9 +27,6 @@
 # Defines target-specific build-rules variables, extra sources and include paths
 #
 
-#
-# Confusingly, the CONFIG_MODULE_VIDEO_KIT is platform MPFS
-#
 $(info mpfs-video-kit selected)
 
 BINDIR=Default
@@ -65,21 +62,17 @@ $(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 
 ################################################################################################
 #
-# Extra hardware dependency rules for YMODEM
+# Extra hardware dependency rules for QSPI
 #
 
 INCLUDES += \
 	-Ibaremetal/ \
-
-EXTRA_SRCS-$(CONFIG_SERVICE_YMODEM) += \
-	baremetal/drivers/mss_envm/mss_envm.c
 
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
 
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
 baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
-baremetal/drivers/mss_envm/mss_envm.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 ################################################################################################
 #

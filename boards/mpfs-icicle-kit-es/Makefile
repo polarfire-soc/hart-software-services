@@ -1,7 +1,7 @@
 #
 # MPFS HSS Embedded Software
 #
-# Copyright 2019-2021 Microchip Corporation.
+# Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
 #
 # SPDX-License-Identifier: MIT
 #
@@ -27,9 +27,6 @@
 # Defines target-specific build-rules variables, extra sources and include paths
 #
 
-#
-# Confusingly, the MPFS-ICICLE-KIT-ES is platform MPFS
-#
 $(info mpfs-icicle-kit-es selected)
 
 BINDIR=Default
@@ -76,6 +73,7 @@ INCLUDES += \
 
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
+
 baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
 endif
 
