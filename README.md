@@ -167,4 +167,4 @@ The `modules/debug/` subdirectory contains code to enable a number of debug feat
 
 Function profiling allows capturing of the time spent in each C function (through the use of `__cyg_profile_func_enter` and `__cyg_profile_func_exit`. This information can be logged to the serial console through calling the `dump_profile()` function at an appropriate time, depending on what is being debugged.
 
-**NOTE:** *by default, this function is not called, even with profiling enabled.*
+**NOTE:** *by default, this function is called in `application/hart0/hss_state_machine.c` on long loops, and periodically if `CONFIG_DEBUG_LOOP_TIMES` is enabled.

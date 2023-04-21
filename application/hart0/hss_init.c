@@ -90,8 +90,9 @@ extern const uint64_t _hss_start;
 //
 //  #define DDRHI_START                (&__ddrhi_start)
 asm(".align 3\n"
-    "hss_init_ddrhi_start: .quad (__ddrhi_start)\n");
-asm(".align 3\n"
+    ".globl hss_init_ddrhi_start\n"
+    ".globl hss_init_ddrhi_end\n\t"
+    "hss_init_ddrhi_start: .quad (__ddrhi_start)\n\t"
     "hss_init_ddrhi_end: .quad (__ddrhi_max_end)\n");
 
 extern const uint64_t hss_init_ddrhi_start, hss_init_ddrhi_end;
