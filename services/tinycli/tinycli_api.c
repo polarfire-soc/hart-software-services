@@ -110,12 +110,14 @@ static void tinyCLI_PrintUptime_(void);
 static void tinyCLI_PrintHelp_(void);
 static void tinyCLI_Debug_(void);
 static void tinyCLI_Reset_(void);
-#if IS_ENABLED(CONFIG_SERVICE_MMC) && IS_ENABLED(CONFIG_SERVICE_BOOT)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
 static void tinyCLI_Boot_List_(void);
 static void tinyCLI_Boot_Select_(void);
 #endif
 static void tinyCLI_Boot_Info_(void);
 static void tinyCLI_Boot_(void);
+#endif
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 static void tinyCLI_QSPI_Scan_(void);
 static void tinyCLI_QSPI_Erase_(void);
@@ -254,6 +256,7 @@ static const struct tinycli_cmd debugCmds[] = {
 #endif
 };
 
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 static const struct tinycli_cmd bootCmds[] = {
     { CMD_BOOT_INFO,   "INFO",     "display info about currently registered boot image", tinyCLI_Boot_Info_ },
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
@@ -261,6 +264,7 @@ static const struct tinycli_cmd bootCmds[] = {
     { CMD_BOOT_SELECT, "SELECT",   "select active boot partition", tinyCLI_Boot_Select_ },
 #endif
 };
+#endif
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 static const struct tinycli_cmd qspiCmds[] = {
@@ -274,7 +278,9 @@ static const struct tinycli_cmd toplevelCmds[] = {
     { CMD_YMODEM,  "YMODEM",  "Run YMODEM utility to download an image to DDR.", tinyCLI_YModem_ },
 #endif
     { CMD_QUIT,    "QUIT",    "Quit TinyCLI and return to regular boot process.", tinyCLI_Quit_ },
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
     { CMD_BOOT,    "BOOT",    "Quit TinyCLI and return to regular boot process.", tinyCLI_Boot_ },
+#endif
     { CMD_RESET,   "RESET",   "Reset PolarFire SoC.", tinyCLI_Reset_ },
     { CMD_HELP,    "HELP",    "Display command summary / command help information.", tinyCLI_PrintHelp_ },
     { CMD_VERSION, "VERSION", "Display system version information.", tinyCLI_PrintVersion_ },
@@ -302,7 +308,9 @@ static const struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] =
     { CMD_YMODEM,  true },
 #endif
     { CMD_QUIT,    true },
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
     { CMD_BOOT,    true },
+#endif
     { CMD_RESET,   true },
     { CMD_HELP,    false },
     { CMD_VERSION, false },
@@ -526,6 +534,7 @@ static void tinyCLI_Debug_(void)
 }
 
 extern struct HSS_Storage *HSS_BootGetActiveStorage(void);
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 
 extern struct HSS_BootImage *pBootImage;
 static void tinyCLI_Boot_Info_(void)
@@ -619,6 +628,8 @@ static void tinyCLI_Boot_(void)
 {
     quitFlag = !dispatch_command_(bootCmds, ARRAY_SIZE(bootCmds), 1u);
 }
+
+#endif
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 extern uint32_t Flash_scan_for_bad_blocks(uint16_t* buf);
