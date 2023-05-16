@@ -18,11 +18,11 @@
 
 #include <assert.h>
 
-struct Node {
+struct ProfileNode {
     void *pFunc;
     uint64_t entryTime;
     uint64_t timeCount;
-} functionNode[CONFIG_DEBUG_PROFILING_MAX_NUM_FUNCTIONS] = { 0 };
+} profileStats[CONFIG_DEBUG_PROFILING_MAX_NUM_FUNCTIONS] = { 0 };
 size_t allocationCount = 0u;
 
 void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFunc, void *pCaller)
@@ -33,27 +33,27 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_enter (void *pFu
     if (myHartId != 0) { return; }
 
     assert(pFunc != NULL);
-    struct Node *pNode = NULL;
+    struct ProfileNode *pProfileNode = NULL;
 
     size_t i;
     for (i = 0u; i < allocationCount; i++) {
-        if (functionNode[i].pFunc == pFunc) {
-            pNode = &(functionNode[i]);
+        if (profileStats[i].pFunc == pFunc) {
+            pProfileNode = &(profileStats[i]);
             break;
         }
     }
 
-    if (!pNode) {
-        if (allocationCount < ARRAY_SIZE(functionNode)) {
-            pNode = &(functionNode[allocationCount]);
+    if (!pProfileNode) {
+        if (allocationCount < ARRAY_SIZE(profileStats)) {
+            pProfileNode = &(profileStats[allocationCount]);
             allocationCount++;
-            pNode->pFunc = pFunc;
-            pNode->timeCount = 0lu;
+            pProfileNode->pFunc = pFunc;
+            pProfileNode->timeCount = 0lu;
         }
     }
 
-    if (pNode) {
-        pNode->entryTime = CSR_GetTickCount();
+    if (pProfileNode) {
+        pProfileNode->entryTime = CSR_GetTickCount();
     }
 
     return;
@@ -70,8 +70,8 @@ void __attribute__((no_instrument_function)) __cyg_profile_func_exit (void *pFun
 
     size_t i;
     for (i = 0u; i < allocationCount; i++) {
-        if (functionNode[i].pFunc == pFunc) {
-            functionNode[i].timeCount += (CSR_GetTickCount() - functionNode[i].entryTime);
+        if (profileStats[i].pFunc == pFunc) {
+            profileStats[i].timeCount += (CSR_GetTickCount() - profileStats[i].entryTime);
             break;
         }
     }
@@ -86,7 +86,7 @@ void __attribute__((no_instrument_function)) HSS_Profile_DumpAll(void)
     mHSS_DEBUG_PRINTF_EX("# Profile Information Dump\n# FuncPtr, TickCount\n");
     size_t i;
     for (i = 0u; i < allocationCount; i++) {
-        mHSS_DEBUG_PRINTF_EX("%p, %lu\n", functionNode[i].pFunc, functionNode[i].timeCount);
+        mHSS_DEBUG_PRINTF_EX("%p, %lu\n", profileStats[i].pFunc, profileStats[i].timeCount);
     }
 }
 
