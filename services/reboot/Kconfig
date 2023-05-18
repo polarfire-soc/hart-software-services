@@ -1,0 +1,4 @@
+config SERVICE_REBOOT
+	bool
+	default SERVICE_WDOG
+	depends on SERVICE_WDOG

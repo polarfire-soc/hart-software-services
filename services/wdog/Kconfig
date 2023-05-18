@@ -1,6 +1,7 @@
 config SERVICE_WDOG
 	bool "Virtual Watchdog support"
 	default y
+	select SERVICE_REBOOT
 	help
                 This feature enables support for E51-delegated virtual watchdog monitoring of the
                 U54 application harts.

@@ -66,7 +66,7 @@
 
 #include "mpfs_reg_map.h"
 
-#include "wdog_service.h"
+#include "reboot_service.h"
 #include "clocks/hw_mss_clks.h"    // LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
 
 #define MPFS_HART_COUNT            5
@@ -571,8 +571,8 @@ static int mpfs_hart_stop(void)
 #if IS_ENABLED(CONFIG_ALLOW_COLDREBOOT)
         case SBI_SRST_RESET_TYPE_COLD_REBOOT:
             if (IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ALWAYS) || hart_ledger[hartid].allow_cold_reboot) {
-#  if IS_ENABLED(CONFIG_SERVICE_WDOG)
-                HSS_Wdog_Reboot(HSS_HART_ALL);
+#  if IS_ENABLED(CONFIG_SERVICE_REBOOT)
+                HSS_reboot_cold(HSS_HART_ALL);
 #endif
             } else {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d not permitted to cold reboot\n", hartid);
