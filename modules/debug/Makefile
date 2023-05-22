@@ -36,7 +36,8 @@ EXTRA_SRCS-$(CONFIG_DEBUG_PROFILING_SUPPORT) += \
 
 OPT-$(CONFIG_DEBUG_PROFILING_SUPPORT) += \
 	-finstrument-functions \
-	-finstrument-functions-exclude-function-list=g5soc_init_mutex,ee_printf,CSR_GetHartId,CSR_GetTime,ee_vsprintf,uart_send_string_mmuart_ex,g5soc_release_mutex,take_loop,CSR_GetTickCount,ee_puts
+        -finstrument-functions-exclude-file-list=application/crt.S \
+	-finstrument-functions-exclude-function-list=CSR_GetHartId,CSR_GetTime,CSR_GetTickCount,sbi_trap_handler,sbi_trap_error,_trap_handler,_trap_handler_all_mode,_trap_handler_m_mode,_trap_handler_s_mode,HSS_GetTime,__sbi_expected_trap,__sbi_expected_trap_hext,hart_detect_features,sbi_hart_expected_trap_addr,__check_csr
 
 INCLUDES +=\
 	-Imodules/debug/ \

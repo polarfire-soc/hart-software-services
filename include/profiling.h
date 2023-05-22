@@ -45,7 +45,7 @@ extern "C" {
 
 void __cyg_profile_func_enter (void *pFunc, void *pCaller) __attribute__((no_instrument_function));
 void __cyg_profile_func_exit (void *pFunc, void *pCaller) __attribute__((no_instrument_function));
-void dump_profile(void) __attribute__((no_instrument_function));
+void HSS_Profile_DumpAll(void) __attribute__((no_instrument_function));
 
 #ifdef __cplusplus
 }

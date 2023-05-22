@@ -37,6 +37,7 @@
 #include "csr_helper.h"
 #include "wdog_service.h"
 #include "hss_perfctr.h"
+#include "profiling.h"
 #include "u54_state.h"
 
 #include "hss_registry.h"
@@ -163,6 +164,9 @@ static void tinyCLI_HEALTHMON_(void);
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
 static void tinyCLI_PerfCtrs_(void);
 #endif
+#if IS_ENABLED(CONFIG_DEBUG_PROFILING_SUPPORT)
+static void tinyCLI_ProfileCtrs_(void);
+#endif
 static void tinyCLI_OpenSBI_(void);
 static void tinyCLI_Seg_(void);
 static void tinyCLI_L2Cache_(void);
@@ -248,6 +252,9 @@ static const struct tinycli_cmd debugCmds[] = {
     { CMD_DBG_L2CACHE,  "L2CACHE", "display l2cache settings", tinyCLI_L2Cache_ },
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
     { CMD_DBG_PERFCTR , "PERFCTR", "display perf counters", tinyCLI_PerfCtrs_ },
+#endif
+#if IS_ENABLED(CONFIG_DEBUG_PROFILING_SUPPORT)
+    { CMD_DBG_PERFCTR , "PROFILE", "display profiling counters", tinyCLI_ProfileCtrs_ },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_WDOG)
     { CMD_DBG_WDOG ,    "WDOG",    "display watchdog statistics", HSS_Wdog_DumpStats },
@@ -506,6 +513,12 @@ static void tinyCLI_PerfCtrs_(void)
 }
 #endif
 
+#if IS_ENABLED(CONFIG_DEBUG_PROFILING_SUPPORT)
+static void tinyCLI_ProfileCtrs_(void)
+{
+    HSS_Profile_DumpAll();
+}
+#endif
 
 static void tinyCLI_DumpStateMachines_(void)
 {

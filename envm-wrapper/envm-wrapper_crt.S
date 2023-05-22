@@ -148,6 +148,10 @@ _start:
 	la	a0, g_mss_uart0_lo
 	call	MSS_UART_init
 
+	// it might look redundant, but we explicitly restore a0 here, in case the
+	// previous call to MSS_UART_init clobbers it (which can be the case
+	// depending on compiler options/optimization levels etc.)
+	la	a0, g_mss_uart0_lo
 	la	a1, decomp_msg
 	call	MSS_UART_polled_tx_string
 #endif
