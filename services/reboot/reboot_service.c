@@ -34,7 +34,8 @@
 
 #include "mpfs_fabric_reg_map.h"
 
-#define AUTO_UPGRADE_IMAGE_INDEX 1u
+#define AUTO_UPGRADE_IMAGE_INDEX        1u
+#define AUTO_UPGRADE_ERR_SAME_VERSION   24u
 
 static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
 {
@@ -61,24 +62,29 @@ static int HSS_reboot_auto_upgrade(void)
     // invalid images may cause the system controller to hang
     ret = MSS_SYS_authenticate_iap_image(AUTO_UPGRADE_IMAGE_INDEX);
     if (ret) {
-        if (ret == 24) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL,
-                              "reboot: Auto Upgrade image is not an upgrade: %d\n", ret);
-        } else {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: No valid Auto Upgrade image found: %d\n", ret);
-        }
-
-        return ret;
+        goto out_err;
     }
 
     // for Auto Update, only the 0th argument is used
     ret = MSS_SYS_execute_iap(MSS_SYS_IAP_AUTOUPDATE_CMD, 0, 0);
-    if (!ret) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Upgrade in progress\n");
-        while (1) { ; }
+    if (ret) {
+        goto out_err;
     }
 
-    mHSS_DEBUG_PRINTF(LOG_ERROR, "reboot: Auto Upgrade failed: %d\n", ret);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Upgrade in progress\n");
+    while (1) { ; }
+
+out_err:
+    switch(ret) {
+    case AUTO_UPGRADE_ERR_SAME_VERSION:
+        mHSS_DEBUG_PRINTF(LOG_NORMAL,
+                          "reboot: Auto Upgrade image is not an upgrade: %d\n", ret);
+        break;
+
+    default:
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: No valid Auto Upgrade image found: %d\n", ret);
+        break;
+    }
 
     return ret;
 }
