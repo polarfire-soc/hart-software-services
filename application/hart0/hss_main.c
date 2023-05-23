@@ -74,11 +74,11 @@ int main(int argc, char **argv)
     (void)argc; // unused
     (void)argv; // unused
 
-    HSS_Init();
-
     if (current_hartid() != 0) {
         sbi_hart_hang();
     }
+
+    HSS_Init();
 
     hss_main();
 
