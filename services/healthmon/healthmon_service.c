@@ -74,6 +74,7 @@ enum CheckTypeEnum
     ABOVE_OR_BELOW_THRESHOLD,
     EQUAL_TO_VALUE,
     NOT_EQUAL_TO_VALUE,
+    CHANGED_SINCE_LAST,
 };
 
 char const * const checkName[] = {
@@ -82,6 +83,7 @@ char const * const checkName[] = {
     "n/a",
     "equal to",
     "not equal to",
+    "changed since last read",
 };
 
 
@@ -103,26 +105,57 @@ static const struct HealthMonitor
     uint32_t throttleScale; // times 1sec, to throttle console messages
 } monitors[] =
 {
-    { "IOSCB_PLL_MSS:PLL_CTRL",		0x3E001004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 1u },
-    { "IOSCB_PLL_DDR:PLL_CTRL",		0x3E010004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 1u },
-    { "IOSCB_PLL_SGMII:PLL_CTRL",	0x3E001004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 1u },
-    //{ "IOSCB_PLL:pll_se_0:PLL_CTRL",	0x38010004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
-    //{ "IOSCB_PLL:pll_se_1:PLL_CTRL",	0x38020004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
-    //{ "IOSCB_PLL:pll_ne_0:PLL_CTRL",	0x38040004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
-    //{ "IOSCB_PLL:pll_ne_1:PLL_CTRL",	0x38080004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
-    { "IOSCB_PLL:pll_nw_0:PLL_CTRL",	0x38100004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 1u },
-    //{ "IOSCB_PLL:pll_nw_1:PLL_CTRL",	0x38200004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
-    //{ "IOSCB_PLL:pll_sw_0:PLL_CTRL",	0x38400004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
-    //{ "IOSCB_PLL:pll_sw_1:PLL_CTRL",	0x38800004, NOT_EQUAL_TO_VALUE, 1u, 0u, 25u, 0x1u, nop_trigger, 5u },
+    { "IOSCB_PLL_MSS:PLL_CTRL",		0x3E001004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 1u },
+    { "IOSCB_PLL_DDR:PLL_CTRL",		0x3E010004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 1u },
+    { "IOSCB_PLL_SGMII:PLL_CTRL",	0x3E001004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 1u },
+    { "IOSCB_PLL:pll_nw_0:PLL_CTRL",	0x38100004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 1u },
+    //{ "IOSCB_PLL:pll_se_0:PLL_CTRL",	0x38010004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+    //{ "IOSCB_PLL:pll_se_1:PLL_CTRL",	0x38020004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+    //{ "IOSCB_PLL:pll_ne_0:PLL_CTRL",	0x38040004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+    //{ "IOSCB_PLL:pll_ne_1:PLL_CTRL",	0x38080004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+    //{ "IOSCB_PLL:pll_nw_1:PLL_CTRL",	0x38200004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+    //{ "IOSCB_PLL:pll_sw_0:PLL_CTRL",	0x38400004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+    //{ "IOSCB_PLL:pll_sw_1:PLL_CTRL",	0x38800004, NOT_EQUAL_TO_VALUE, 1u,      0u, 25u, 1u,       nop_trigger, 5u },
+
+    { "SYSREG:BOOT_FAIL_CR",            0x20002014, NOT_EQUAL_TO_VALUE, 0u,      0u, 0u,  1u,       nop_trigger, 5u },
+    { "SYSREG:DEVICE_STATUS",           0x20002024, NOT_EQUAL_TO_VALUE, 0x1F09u, 0u, 0u,  0x1FFF,   nop_trigger, 5u },
+    { "SYSREG:MPU_VIOLATION_SR",        0x200020F0, NOT_EQUAL_TO_VALUE, 0u,      0u, 0u,  1u,       nop_trigger, 5u },
+    { "SYSREG:EDAC_SR",                 0x20002100, NOT_EQUAL_TO_VALUE, 0u,      0u, 0u,  0x3FFF,   nop_trigger, 5u },
+
+    { "SYSREG:EDAC_CNT_MMC",            0x20002108, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+    { "SYSREG:EDAC_CNT_DDRC",           0x2000210C, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+    { "SYSREG:EDAC_CNT_MAC0",           0x20002110, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+    { "SYSREG:EDAC_CNT_MAC1",           0x20002114, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+    { "SYSREG:EDAC_CNT_USB",            0x20002118, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+    { "SYSREG:EDAC_CNT_CAN0",           0x2000211c, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+    { "SYSREG:EDAC_CNT_CAN1",           0x20002120, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1F,     nop_trigger, 5u },
+
+    { "SYSREG:MAINTENANCE_INT_SR",      0x20002148, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1FFFFF, nop_trigger, 5u },// [20:0] == some cleared by writing 1, some y writing to PLL_STATUS
+    { "SYSREG:PLL_STATUS_SR",           0x2000214c, NOT_EQUAL_TO_VALUE, 0x707u,  0u, 0u,  0x7FF,    nop_trigger, 5u },
+    { "SYSREG:MISC_SR",                 0x20002154, NOT_EQUAL_TO_VALUE, 0u,      0u, 0u,  2u,       nop_trigger, 5u },
+    { "SYSREG:DLL_STATUS_SR",           0x2000215c, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0x1FFFFF, nop_trigger, 5u },
+
+    { "IOSCBCFG:STATUS",                0x37080004, NOT_EQUAL_TO_VALUE, 0u,      0u, 0u,  0xEu,     nop_trigger, 5u },// [3:1] => scb_buserr, timeout, scb_error
+
+    // unknown what the following should be...
+    { "IOSCB_PLL:pll_se_0:PLL_CTRL",	0x38010004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+    { "IOSCB_PLL:pll_se_1:PLL_CTRL",	0x38020004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+    { "IOSCB_PLL:pll_ne_0:PLL_CTRL",	0x38040004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+    { "IOSCB_PLL:pll_ne_1:PLL_CTRL",	0x38080004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+    { "IOSCB_PLL:pll_nw_1:PLL_CTRL",	0x38200004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+    { "IOSCB_PLL:pll_sw_0:PLL_CTRL",	0x38400004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+    { "IOSCB_PLL:pll_sw_1:PLL_CTRL",	0x38800004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
 };
 
 static struct HealthMonitor_Status
 {
     HSSTicks_t throttle_startTime;
+    uint32_t lastValue;
     size_t count;
+    bool initialized;
 } monitor_status[ARRAY_SIZE(monitors)] =
 {
-   { 0u, 0u }
+   { 0u, 0u, 0u, false }
 };
 // --------------------------------------------------------------------------------------------------
 // Handlers for each state in the state machine
@@ -139,11 +172,11 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
 
     // general health monitoring...
     {
-        bool triggered = false;
 
         for (size_t i = 0u; i < ARRAY_SIZE(monitors); i++) {
             uint32_t value = *(uint32_t volatile *)(monitors[i].pAddr);
             enum CheckTypeEnum checkType = monitors[i].checkType;
+            bool triggered = false;
 
             if (monitors[i].shift) { value = value >> monitors[i].shift; }
             if (monitors[i].mask) { value = value & monitors[i].mask; }
@@ -175,6 +208,17 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                 if (value != monitors[i].maxValue) { triggered = true; }
                 break;
 
+            case CHANGED_SINCE_LAST:
+                if (monitor_status[i].initialized) {
+                    if (value != monitor_status[i].lastValue) {
+                        triggered = true;
+                    }
+                } else {
+                    monitor_status[i].initialized = true;
+                }
+                monitor_status[i].lastValue = value;
+                break;
+
             default:
                 // unexpected check type
                 break;
@@ -184,9 +228,14 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                 monitor_status[i].count++;
 
                 if (HSS_Timer_IsElapsed(monitor_status[i].throttle_startTime, monitors[i].throttleScale * ONE_SEC)) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s %s %" PRIu64 " (%" PRIu64 ")\n",
-                        monitors[i].pName, checkName[monitors[i].checkType],
-                        monitors[i].maxValue, value);
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s %s ",
+                        monitors[i].pName, checkName[monitors[i].checkType]);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    if (checkType != CHANGED_SINCE_LAST) {
+                        mHSS_DEBUG_PRINTF_EX("0x%x ", monitors[i].maxValue);
+                    }
+                    mHSS_DEBUG_PRINTF_EX("(0x%x)\n", value);
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
 
                     if (monitors[i].triggerCallback) {
                         monitors[i].triggerCallback(monitors[i].pAddr);
@@ -216,13 +265,13 @@ void HSS_Health_DumpStats(void)
 
         switch (monitors[i].checkType) {
         case BELOW_THRESHOLD:
-            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s %u",
+            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s 0x%x",
                 monitors[i].pName, checkName[monitors[i].checkType],
                 monitors[i].minValue);
             break;
 
         case ABOVE_OR_BELOW_THRESHOLD:
-            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s %u <=> %u",
+            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s 0x%x <=> 0x%x",
                 monitors[i].pName, checkName[monitors[i].checkType],
                 monitors[i].minValue, monitors[i].maxValue);
             break;
@@ -231,9 +280,14 @@ void HSS_Health_DumpStats(void)
             __attribute__((fallthrough)); // deliberate fallthrough
         case EQUAL_TO_VALUE:
         case NOT_EQUAL_TO_VALUE:
-            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s %u",
+            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s 0x%x",
                 monitors[i].pName, checkName[monitors[i].checkType],
                 monitors[i].maxValue);
+            break;
+
+        case CHANGED_SINCE_LAST:
+            sbi_snprintf(tmp_buffer, ARRAY_SIZE(tmp_buffer), "%s => %s",
+                monitors[i].pName, checkName[monitors[i].checkType]);
             break;
 
         default:
