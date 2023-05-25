@@ -91,7 +91,7 @@ __attribute__((weak)) int memcmp(const void * restrict s1, const void * restrict
 }
 
 
-__attribute__((weak)) void *memset(void *dest, int c, size_t n)
+__attribute__((weak)) __attribute__((used)) void *memset(void *dest, int c, size_t n)
 {
 #ifndef CONFIG_OPENSBI
     char *cDest = (char*)dest;
