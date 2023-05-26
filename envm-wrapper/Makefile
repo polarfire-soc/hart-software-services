@@ -67,10 +67,10 @@ thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TI
 envm-wrapper/envm-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 define common-boot-mode-programmer
-	-$(RM) -r $(BINDIR)/bootmode1
+	-$(RM) -r $(BINDIR)/bootmode$(BOOTMODE)
 	[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
 	[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
-	$(MPFS_BOOTMODE_PROGRAMMER) --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(1) $(2)
+	$(MPFS_BOOTMODE_PROGRAMMER) --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(BOOTMODE_ARGS) $(1) $(2)
 endef
 
 
@@ -88,7 +88,7 @@ $(TARGET-envm-wrapper): $(COMPRESSED_TARGET) $(OBJS-envm-wrapper)
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@$(ECHO) " HEX       `basename $@ .elf`.hex";
 	$(call common-boot-mode-programmer,--dryrun,`basename $@`)
-	@$(CP) $(BINDIR)/bootmode1/hss-envm-wrapper-bm1-p0.hex $(BINDIR)/`basename $@ .elf`.${BOARD}.hex
+	@$(CP) $(BINDIR)/bootmode$(BOOTMODE)/hss-envm-wrapper-bm$(BOOTMODE)-p0.hex $(BINDIR)/`basename $@ .elf`.${BOARD}.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm-wrapper) 2>/dev/null
 
 $(COMPRESSED_TARGET): $(BINDIR)/$(TARGET-l2scratch:.elf=.bin) $(COMPRESS)
