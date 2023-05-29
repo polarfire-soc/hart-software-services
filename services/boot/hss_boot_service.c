@@ -328,6 +328,7 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
 {
     if (pBootImage) {
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot\n", pMyMachine->pMachineName);
+        SYSREG->BOOT_FAIL_CR = 0;
 
         pMyMachine->startTime = HSS_GetTime();
         struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
@@ -756,7 +757,7 @@ static void boot_error_handler(struct StateMachine * const pMyMachine)
         pMyMachine->pMachineName);
 
     // Set BOOT_FAIL_CR to indicate to the fabric that boot process failed...
-    // SYSREG->BOOT_FAIL_CR = 1;
+    SYSREG->BOOT_FAIL_CR = 1;
 
     pMyMachine->state = BOOT_IDLE;
 }

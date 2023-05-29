@@ -45,10 +45,14 @@ extern "C" {
 #    ifndef PRIu64
 #        define PRIu64 "llu"
 #    endif
+#    ifndef PRIx64
+#        define PRIx64 "llx"
+#    endif
 #else
 #  define __PRI64_PREFIX	"l"
 #  define __PRIPTR_PREFIX	"l"
 #  define PRIu64		__PRI64_PREFIX "u"
+#  define PRIx64		__PRI64_PREFIX "x"
 #endif
 
 #include "hss_clock.h"
