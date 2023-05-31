@@ -330,7 +330,7 @@ bool HSS_QSPIInit(void)
             //   * a set of logical block descriptors;
             //   * a data cache the same size as the QSPI Flash device
             //
-            uint8_t *pU8Buffer = HSS_DDR_GetStart();
+            uint8_t *pU8Buffer = (uint8_t*)HSS_DDR_GetStart();
             pLogicalToPhysicalMap = (uint16_t *)pU8Buffer;
             memset(pLogicalToPhysicalMap, 0, (sizeof(*pLogicalToPhysicalMap) * blockCount));
             pU8Buffer += (sizeof(*pLogicalToPhysicalMap) * blockCount);
