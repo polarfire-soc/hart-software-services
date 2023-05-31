@@ -34,8 +34,8 @@
 
 #include "mpfs_fabric_reg_map.h"
 
-#define AUTO_UPGRADE_IMAGE_INDEX        1u
-#define AUTO_UPGRADE_ERR_SAME_VERSION   24u
+#define AUTO_UPDATE_IMAGE_INDEX        1u
+#define AUTO_UPDATE_ERR_SAME_VERSION   24u
 
 static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
 {
@@ -49,7 +49,7 @@ static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
     while (1) { asm("wfi"); }
 }
 
-static int HSS_reboot_auto_upgrade(void)
+static int HSS_reboot_auto_update(void)
 {
     uint16_t ret;
 
@@ -58,9 +58,9 @@ static int HSS_reboot_auto_upgrade(void)
     // should be the default, but set it explicitly just in case!
     MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
 
-    // the image must be authenticated before attempting Auto Upgrade, as
+    // the image must be authenticated before attempting Auto Update, as
     // invalid images may cause the system controller to hang
-    ret = MSS_SYS_authenticate_iap_image(AUTO_UPGRADE_IMAGE_INDEX);
+    ret = MSS_SYS_authenticate_iap_image(AUTO_UPDATE_IMAGE_INDEX);
     if (ret) {
         goto out_err;
     }
@@ -71,18 +71,18 @@ static int HSS_reboot_auto_upgrade(void)
         goto out_err;
     }
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Upgrade in progress\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Update in progress\n");
     while (1) { ; }
 
 out_err:
     switch(ret) {
-    case AUTO_UPGRADE_ERR_SAME_VERSION:
+    case AUTO_UPDATE_ERR_SAME_VERSION:
         mHSS_DEBUG_PRINTF(LOG_NORMAL,
-                          "reboot: Auto Upgrade image is not an upgrade: %d\n", ret);
+                          "reboot: Auto Update image is not an update: %d\n", ret);
         break;
 
     default:
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: No valid Auto Upgrade image found: %d\n", ret);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: No valid Auto Update image found: %d\n", ret);
         break;
     }
 
@@ -91,8 +91,8 @@ out_err:
 
 static void HSS_reboot_cold_all(void)
 {
-    if (IS_ENABLED(CONFIG_COLDREBOOT_TRY_AUTO_UPGRADE)) {
-        if(HSS_reboot_auto_upgrade())
+    if (IS_ENABLED(CONFIG_COLDREBOOT_TRY_AUTO_UPDATE)) {
+        if(HSS_reboot_auto_update())
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Using fallback reboot provider\n");
     }
 
