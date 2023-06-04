@@ -176,8 +176,6 @@ static void tinyCLI_L2Cache_(void);
 static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level);
 static void display_help_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level);
 
-static bool postInit = false;
-
 enum CmdId {
     CMD_YMODEM,
     CMD_QUIT,
@@ -310,7 +308,7 @@ static const struct tinycli_cmd toplevelCmds[] = {
 #endif
 };
 
-static const struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
+static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
 #if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     { CMD_YMODEM,  true },
 #endif
@@ -1026,12 +1024,13 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
 
         if (matchFoundFlag) {
             if (level == 0u) { // toplevel
-                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && HSS_TinyCLI_IsPostInit()) {
+                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && HSS_BootInit_IsPostInit()) {
                     mHSS_DEBUG_PRINTF(LOG_WARN,
                         "Command %s may cause problems post boot.\n"
                         "Please type it again if you definitely want to execute it"
                         "\n\n", pCmds[cmdIndex].name);
                     matchFoundFlag = false;
+                    toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit = false; // disarming warning
                 } else {
                     tokenId = pCmds[cmdIndex].tokenId;
                 }
@@ -1045,16 +1044,6 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
     }
 
     return handled;
-}
-
-void HSS_TinyCLI_IndicatePostInit(void)
-{
-    postInit = true;
-}
-
-bool HSS_TinyCLI_IsPostInit(void)
-{
-    return postInit;
 }
 
 bool HSS_TinyCLI_Parser(void)

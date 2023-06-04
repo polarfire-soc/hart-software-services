@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 bool HSS_BootInit(void);
-bool HSS_BootInit_IndicatePostInit(void);
+void HSS_BootInit_IndicatePostInit(void);
 bool HSS_BootInit_IsPostInit(void);
 
 void HSS_BootSelectQSPI(void);

@@ -278,9 +278,6 @@ void HSS_Init(void)
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Boot_RestartCore(HSS_HART_ALL);
     HSS_BootInit_IndicatePostInit();
-#  if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-    HSS_TinyCLI_IndicatePostInit();
-#  endif
 #  if IS_ENABLED(CONFIG_UART_SURRENDER)
 #    if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
     HSS_TinyCLI_SurrenderUART();

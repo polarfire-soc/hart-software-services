@@ -215,10 +215,9 @@ bool HSS_BootInit(void)
 }
 
 static bool postInit = false;
-bool HSS_BootInit_IndicatePostInit(void)
+void HSS_BootInit_IndicatePostInit(void)
 {
     postInit = true;
-    return postInit;
 }
 
 bool HSS_BootInit_IsPostInit(void)
