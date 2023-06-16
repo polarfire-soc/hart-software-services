@@ -1,6 +1,7 @@
 menu "General Configuration Options"
 
 menu "Miscellaneous"
+
 config USE_PCIE
 	bool "Setup PCIe"
 	default y
@@ -8,19 +9,6 @@ config USE_PCIE
 		Setup the PCIe prior to application load
 
 		If you don't know what to do here, say Y.
-
-config UART_SURRENDER
-	bool "HSS UART Surrender"
-	depends on OPENSBI && !SERVICE_TINYCLI_REGISTER
-        default n
-	help
-		If enabled, this feature "surrenders" MMUART0 after boot.  After this point,
-		HSS status messages will no longer be sent out MMUART0
-
-		This feature is not compatible with SERVICE_TINYCLI_REGISTER. If you want the
-		HSS to surrender MMUART0 UART after boot, do not enable SERVICE_TINYCLI_REGISTER.
-
-		If you do not know what to do here, say N.
 
 config OPENSBI
 	def_bool y
@@ -34,6 +22,27 @@ config USE_IHC
 	default y
 	help
 		Enable MiV Inter-Hart Communication (IHC)
+
+menu "Serial Port"
+config UART_SURRENDER
+	bool "HSS UART Surrender"
+	depends on OPENSBI && !SERVICE_TINYCLI_REGISTER
+        default n
+	help
+		If enabled, this feature "surrenders" MMUART0 after boot.  After this point,
+		HSS status messages will no longer be sent out MMUART0
+
+		This feature is not compatible with SERVICE_TINYCLI_REGISTER. If you want the
+		HSS to surrender MMUART0 UART after boot, do not enable SERVICE_TINYCLI_REGISTER.
+
+		If you do not know what to do here, say N.
+
+config UART_POST_BOOT
+    int "MMUART for HSS to use after booting"
+    default 0
+    range 0 4
+
+endmenu
 
 menu "Tamper"
 
@@ -118,7 +127,7 @@ config COLDREBOOT_TRY_AUTO_UPDATE
 config ALLOW_COLDREBOOT_ON_OPENSBI_FAULT
 	bool "Trigger a cold reboot on OpenSBI fault"
 	default n
-	depends on ALLOW_COLDREBOOT
+	depends on ALLOW_COLDREBOOT && OPENSBI
 	help
 		If enabled, this feature globally allows all contexts to issue a
 		cold reboot on encountering an OpenSBI fault condition.
@@ -154,7 +163,7 @@ config PROVIDE_DTB
 		If you don't know what to do here, say Y.
 
 config DEFAULT_DEVICE_TREE
-	string "hifive-unleashed-a00-freedom-u540.dtb"
+	string "microchip-mpfs-icicle-kit.dtb"
 	depends on PROVIDE_DTB
 	help
 		This option specifies the default Device Tree to be used.

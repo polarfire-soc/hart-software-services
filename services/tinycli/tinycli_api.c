@@ -176,7 +176,6 @@ static void tinyCLI_L2Cache_(void);
 static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level);
 static void display_help_(struct tinycli_cmd const * const pCmds, size_t arraySize, uint8_t level);
 
-
 static bool postInit = false;
 
 enum CmdId {
@@ -1027,7 +1026,7 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
 
         if (matchFoundFlag) {
             if (level == 0u) { // toplevel
-                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && postInit) {
+                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && HSS_TinyCLI_IsPostInit()) {
                     mHSS_DEBUG_PRINTF(LOG_WARN,
                         "Command %s may cause problems post boot.\n"
                         "Please type it again if you definitely want to execute it"
@@ -1048,9 +1047,13 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
     return handled;
 }
 
-bool HSS_TinyCLI_IndicatePostInit(void)
+void HSS_TinyCLI_IndicatePostInit(void)
 {
     postInit = true;
+}
+
+bool HSS_TinyCLI_IsPostInit(void)
+{
     return postInit;
 }
 

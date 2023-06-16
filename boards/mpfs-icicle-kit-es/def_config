@@ -148,6 +148,12 @@ CONFIG_OPENSBI=y
 CONFIG_USE_IHC=y
 
 #
+# Serial Port
+#
+CONFIG_UART_POST_BOOT=0
+# end of Serial Port
+
+#
 # Tamper
 #
 # CONFIG_USE_TAMPER is not set

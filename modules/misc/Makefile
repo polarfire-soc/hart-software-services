@@ -35,6 +35,7 @@ EXTRA_SRCS-y += \
         modules/misc/hss_memcpy_via_pdma.c \
         modules/misc/hss_progress.c \
         modules/misc/device_serial_number.c \
+        modules/misc/uart_helper.c \
 
 #        modules/misc/ee_printf.c \
 #        modules/misc/vsnprintf.c \
@@ -57,3 +58,4 @@ modules/misc/ee_printf.o: CFLAGS=$(CFLAGS_GCCEXT)
 modules/misc/csr_helper.o: CFLAGS=$(CFLAGS_GCCEXT)
 modules/misc/hss_memcpy_via_pdma.o: CFLAGS=$(CFLAGS_GCCEXT)
 modules/misc/stack_guard.o: CFLAGS=$(CFLAGS_GCCEXT)
+modules/misc/uart_helper.o: CFLAGS=$(CFLAGS_GCCEXT)

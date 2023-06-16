@@ -3,8 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * Implementation of uart_putstring/g().
- * This is function is intended to be used from ee_printf().
+ * global list of uart devices
  */
 
 #include "config.h"
@@ -18,48 +17,30 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "hss_boot_init.h"
 #include "uart_helper.h"
 
-static inline mss_uart_instance_t *get_uart_instance(int hartid)
-{
-    mss_uart_instance_t *pUart;
+#include "fpga_design_config/fpga_design_config.h"
 
-    switch (hartid) {
-    default:
-        pUart = &g_mss_uart0_lo;
-        break;
-    case HSS_HART_E51:
-        pUart = &g_mss_uart0_lo;
-        break;
-    case HSS_HART_U54_1:
-        pUart = &g_mss_uart1_lo;
-        break;
-    case HSS_HART_U54_2:
-        pUart = &g_mss_uart2_lo;
-        break;
-    case HSS_HART_U54_3:
-        pUart = &g_mss_uart3_lo;
-        break;
-    case HSS_HART_U54_4:
-        pUart = &g_mss_uart4_lo;
-        break;
-    }
+#define mUART_DEV(x) ( LIBERO_SETTING_APBBUS_CR & (1u << x) ? &g_mss_uart##x##_hi : &g_mss_uart##x##_lo )
 
-    return pUart;
-}
+// UART devices list
+mss_uart_instance_t * const pUartDeviceList[] = {
+    mUART_DEV(0),
+    mUART_DEV(1),
+    mUART_DEV(2),
+    mUART_DEV(3),
+    mUART_DEV(4),
+};
 
-void *uart_get_instance(int hartid)
-{
-    return get_uart_instance(hartid);
-}
 
 int uart_putstring(int hartid, char *p)
 {
     const uint32_t len = (uint32_t)strlen(p);
 
-    mss_uart_instance_t *pUart = get_uart_instance(hartid);
+    mss_uart_instance_t *pUart = HSS_UART_GetInstance(hartid);
 
-    //while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
+    while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
 
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)p);
     // TODO: if hartId is zero (i.e., E51), replace this with non-blocking
@@ -74,9 +55,9 @@ void uart_putc(int hartid, const char ch)
     string[0] = (uint8_t)ch;
     string[1] = 0u;
 
-    mss_uart_instance_t *pUart = get_uart_instance(hartid);
+    mss_uart_instance_t *pUart = HSS_UART_GetInstance(hartid);
 
-    //while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
+    while (!(MSS_UART_TEMT & MSS_UART_get_tx_status(pUart))) { ; }
 
     MSS_UART_polled_tx_string(pUart, (const uint8_t *)string);
 }
@@ -90,7 +71,7 @@ ssize_t uart_getline(char **pBuffer, size_t *pBufLen)
 
     memset(myBuffer, 0, bufferLen);
 
-    mss_uart_instance_t *pUart = get_uart_instance(HSS_HART_E51);
+    mss_uart_instance_t *pUart = HSS_UART_GetInstance(HSS_HART_E51);
 
     uint8_t cBuf[1];
     while (!finished) {
@@ -179,7 +160,7 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
 
     const HSSTicks_t timeout_ticks = timeout_sec * TICKS_PER_SEC;
 
-    mss_uart_instance_t *pUart = get_uart_instance(HSS_HART_E51);
+    mss_uart_instance_t *pUart = HSS_UART_GetInstance(HSS_HART_E51);
 
     while (!done) {
         size_t received = MSS_UART_get_rx(pUart, rx_buff, 1u);

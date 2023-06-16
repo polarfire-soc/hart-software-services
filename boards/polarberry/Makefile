@@ -47,7 +47,7 @@ INCLUDES += \
 
 EXTRA_SRCS-y += \
 	$(BOARD_DIR)/hss_uart_init.c \
-        $(BOARD_DIR)/uart_helper.c \
+        $(BOARD_DIR)/uart_device_list.c \
         $(BOARD_DIR)/hss_board_init.c \
 
 EXTRA_SRCS-$(CONFIG_USE_LOGO) += \

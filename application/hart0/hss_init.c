@@ -31,12 +31,14 @@
 #include "csr_helper.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
+#  include "hss_boot_init.h"
 #  include "hss_boot_service.h"
 #endif
 
 #if IS_ENABLED(CONFIG_OPENSBI)
 #  include "sbi/riscv_asm.h"
 #  include "sbi/sbi_version.h"
+#  include "opensbi_service.h"
 #endif
 
 #include "hss_sys_setup.h"
@@ -275,13 +277,17 @@ void HSS_Init(void)
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Boot_RestartCore(HSS_HART_ALL);
-
-#    if IS_ENABLED(CONFIG_UART_SURRENDER)
-#        if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+    HSS_BootInit_IndicatePostInit();
+#  if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+    HSS_TinyCLI_IndicatePostInit();
+#  endif
+#  if IS_ENABLED(CONFIG_UART_SURRENDER)
+#    if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
     HSS_TinyCLI_SurrenderUART();
-#        endif
-    void uart_surrender(void);
-    uart_surrender();
 #    endif
+#    if IS_ENABLED(CONFIG_OPENSBI)
+    mpfs_uart_surrender();
+#    endif
+#  endif
 #endif
 }

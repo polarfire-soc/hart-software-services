@@ -214,8 +214,7 @@ static bool console_initialized = false;
 #if IS_ENABLED(CONFIG_UART_SURRENDER)
 static bool uart_surrendered_flag = false;
 
-void uart_surrender(void);
-void uart_surrender(void)
+void mpfs_uart_surrender(void)
 {
     uart_surrendered_flag = true;
 }

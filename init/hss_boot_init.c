@@ -214,6 +214,19 @@ bool HSS_BootInit(void)
     return result;
 }
 
+static bool postInit = false;
+bool HSS_BootInit_IndicatePostInit(void)
+{
+    postInit = true;
+    return postInit;
+}
+
+bool HSS_BootInit_IsPostInit(void)
+{
+    return postInit;
+}
+
+
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
 bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t const bootImageFunction)
 {
