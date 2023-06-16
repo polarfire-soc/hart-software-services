@@ -95,19 +95,19 @@ config COLDREBOOT_FULL_FPGA_RESET
 	help
 		If enabled, this feature allows the HSS to do a full reset of
 		the FPGA when a cold reboot is requested. Either this, or
-		TRY_AUTO_UPGRADE is required to initiate an Auto-Update at
+		TRY_AUTO_UPDATE is required to initiate an Auto-Update at
 		runtime but should be disabled otherwise.
 		Ensure the "TAMPER_BASE_ADDRESS" is set to match the address of
 		the tamper macro in your FPGA design.
 
 		If you do not know what to do here, say N.
 
-config COLDREBOOT_TRY_AUTO_UPGRADE
-	bool "Attempt Auto Upgrade when cold reboot is requested"
+config COLDREBOOT_TRY_AUTO_UPDATE
+	bool "Attempt Auto Update when cold reboot is requested"
 	default n
 	depends on ALLOW_COLDREBOOT
 	help
-		If enabled, this feature allows the HSS attempt Auto Upgrade
+		If enabled, this feature allows the HSS attempt Auto Update
 		when a cold reboot is requested. Either this, or
 		FULL_FPGA_RESET is required to initiate an Auto-Update at
 		runtime but should be disabled otherwise. If the attempt fails,
