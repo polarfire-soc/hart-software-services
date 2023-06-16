@@ -45,8 +45,9 @@ extern "C" {
 #include "mpfs_reg_map.h"
 
 void HSS_Wdog_MonitorHart(enum HSSHartId target);
-void HSS_Wdog_Reboot(enum HSSHartId target);
 void HSS_Wdog_DumpStats(void);
+void HSS_Wdog_Init_Time(enum HSSHartId hart_id);
+
 
 extern struct StateMachine wdog_service;
 

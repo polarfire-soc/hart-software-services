@@ -4,7 +4,7 @@
       <design_name>MSS_VIDEO_KIT</design_name>
       <mpfs_part_no>MPFS250TS</mpfs_part_no>
       <mpfs_package>FCG1152</mpfs_package>
-      <creation_date_time>03-02-2023_12:55:15</creation_date_time>
+      <creation_date_time>03-30-2023_13:08:54</creation_date_time>
       <xml_format_version>0.6.5</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -2358,7 +2358,7 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000004" description="Cached access at 0x10_0000_000" name="SEG0_1">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7002</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7000</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
@@ -2403,22 +2403,22 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x0</field>
           </register>
           <register address="0x00000008" description="Non-Cached access at 0x00_c000_0000" name="SEG1_2">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7FB8</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7F40</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000012" description="Non-Cached access at 0x14_0000_0000" name="SEG1_3">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x0</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x6C00</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000016" description="Non-Cached WCB access at 0x00_d000_0000" name="SEG1_4">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7FA8</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7F30</field>
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000020" description="Non-Cached WCB  0x18_0000_0000" name="SEG1_5">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x0</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x6800</field>
             <field Type="RW" name="RESERVED" offset="15" width="6">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>

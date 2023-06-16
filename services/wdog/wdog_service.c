@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -20,9 +20,9 @@
 
 #include <assert.h>
 
-#include "wdog_service.h"
-#include "hss_boot_service.h"
 #include "opensbi_service.h"
+#include "reboot_service.h"
+#include "wdog_service.h"
 
 #include "sbi/riscv_encoding.h"
 #include "sbi/sbi_ecall_interface.h"
@@ -31,19 +31,7 @@
 #include "mss_watchdog.h"
 #include "mss_sysreg.h"
 
-#include "mpfs_fabric_reg_map.h"
-
-static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
-{
-    register uintptr_t a7 asm ("a7") = SBI_EXT_SRST;
-    register uintptr_t a6 asm ("a6") = SBI_EXT_SRST_RESET;
-    register uintptr_t a0 asm ("a0") = SBI_SRST_RESET_TYPE_WARM_REBOOT;
-    register uintptr_t a1 asm ("a1") = SBI_SRST_RESET_REASON_NONE;
-    asm volatile ("ecall" : "+r" (a0), "+r" (a1) : "r" (a6), "r" (a7) : "memory");
-
-    csr_write(CSR_MIE, MIP_MSIP);
-    while (1) { asm("wfi"); }
-}
+#include "mpfs_reg_map.h"
 
 static void wdog_init_handler(struct StateMachine * const pMyMachine);
 static void wdog_idle_handler(struct StateMachine * const pMyMachine);
@@ -112,25 +100,30 @@ static void wdog_init_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
+inline void HSS_Wdog_Init_Time(enum HSSHartId hart_id)
+{
+    wdogInitTime[hart_id] = HSS_GetTime();
+}
+
 static void wdog_idle_handler(struct StateMachine * const pMyMachine)
 {
     (void) pMyMachine;
 
     if (hartBitmask.uint) {
         if (hartBitmask.s.u54_1) {
-            wdogInitTime[HSS_HART_U54_1] = HSS_GetTime();
+            HSS_Wdog_Init_Time(HSS_HART_U54_1);
         }
 
         if (hartBitmask.s.u54_2) {
-            wdogInitTime[HSS_HART_U54_2] = HSS_GetTime();
+            HSS_Wdog_Init_Time(HSS_HART_U54_2);
         }
 
         if (hartBitmask.s.u54_3) {
-            wdogInitTime[HSS_HART_U54_3] = HSS_GetTime();
+            HSS_Wdog_Init_Time(HSS_HART_U54_3);
         }
 
         if (hartBitmask.s.u54_4) {
-            wdogInitTime[HSS_HART_U54_4] = HSS_GetTime();
+            HSS_Wdog_Init_Time(HSS_HART_U54_4);
         }
 
         //mHSS_DEBUG_PRINTF("watchdog bitmask is 0x%x\n", hartBitmask.uint);
@@ -172,60 +165,8 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
     wdog_status = (wdog_status >> 4) & mHSS_BITMASK_ALL_U54; // move bits[8:4] to [4:0]
     wdog_status &= hartBitmask.uint;
 
-    if (wdog_status) {
-#if IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ALWAYS)
-        HSS_Wdog_Reboot(HSS_HART_ALL);
-#else
-        uint32_t restart_mask = 0u;
-
-        // watchdog timer has triggered for a monitored hart..
-        // ensure OpenSBI housekeeping in order for requesting reboots...
-        // if any of these harts are allowed permission to force a cold reboot
-        // it will happen here also...
-
-        for (enum HSSHartId source = HSS_HART_U54_1; source < HSS_HART_NUM_PEERS; source++) {
-            if (wdog_status & (1u << source)) {
-                mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d: Watchdog has fired\n", source);
-
-#if IS_ENABLED(CONFIG_ALLOW_COLDREBOOT)
-                if (mpfs_is_cold_reboot_allowed(source)) {
-                    HSS_Wdog_Reboot(HSS_HART_ALL);
-                } else
-#endif
-                { // if (mpfs_is_warm_reboot_allowed(source)) {
-                    restart_mask |= (1 << source);
-
-                    for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
-                        if (peer == source) { continue; }
-
-                        if (mpfs_are_harts_in_same_domain(peer, source)) {
-                            restart_mask |= (1 << peer);
-                        }
-                    }
-                }
-            }
-        }
-
-        // if we reached here, nobody triggered a cold reboot, so
-        // now trigger warm restarts as needed...
-        if (restart_mask) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Watchdog triggering reboot of ");
-            for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
-                if (restart_mask & (1u << peer)) {
-                    mHSS_DEBUG_PRINTF_EX("[u54_%d] ", peer);
-#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
-                    // Restart core using SRST mechanism
-                    IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL);
-                    wdogInitTime[peer] = HSS_GetTime();
-                    HSS_SpinDelay_MilliSecs(50u);
-#  endif
-                }
-            }
-            mHSS_DEBUG_PUTS("\n");
-
-        }
-#endif
-    }
+    if (wdog_status)
+        HSS_reboot(wdog_status);
 }
 
 
@@ -262,53 +203,6 @@ void HSS_Wdog_MonitorHart(enum HSSHartId target)
         hartBitmask.s.u54_2 = 1;
         hartBitmask.s.u54_3 = 1;
         hartBitmask.s.u54_4 = 1;
-        break;
-
-    default:
-        assert(1 == 0); // should never reach here!! LCOV_EXCL_LINE
-        break;
-    }
-}
-
-void __attribute__((__section__(".ramcode"))) HSS_Wdog_Reboot(enum HSSHartId target)
-{
-    switch (target) {
-    case HSS_HART_E51:
-        MSS_WD_force_reset(MSS_WDOG0_LO);
-        break;
-
-    case HSS_HART_U54_1:
-        MSS_WD_force_reset(MSS_WDOG1_LO);
-        break;
-
-    case HSS_HART_U54_2:
-        MSS_WD_force_reset(MSS_WDOG2_LO);
-        break;
-
-    case HSS_HART_U54_3:
-        MSS_WD_force_reset(MSS_WDOG3_LO);
-        break;
-
-    case HSS_HART_U54_4:
-        MSS_WD_force_reset(MSS_WDOG4_LO);
-        break;
-
-    case HSS_HART_ALL:
-        if (IS_ENABLED(CONFIG_COLDREBOOT_FULL_FPGA_RESET)) {
-            /*
-             * Writing a 1 to the reset register of the tamper macro triggers a
-             * full reset of the FPGA.
-             */
-            mHSS_WriteRegU32(TAMPER, RESET, 1u);
-        } else {
-	    SYSREG->MSS_RESET_CR = 0xDEAD;
-        }
-
-        while (1) {
-            ;
-        }
-
-        while (1) { ; }
         break;
 
     default:

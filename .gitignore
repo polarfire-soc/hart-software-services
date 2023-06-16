@@ -12,3 +12,5 @@
 config.h
 include/tool_versions.h
 services/opensbi/opensbi_ecall_exts.c
+compile_commands.json
+.cache/

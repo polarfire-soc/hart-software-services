@@ -1,8 +1,8 @@
-#ifndef HSS_VERSION_H
-#define HSS_VERSION_H
+#ifndef HSS_REBOOT_SERVICE_H
+#define HSS_REBOOT_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2023 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,26 +25,27 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - HSS Version
+ * Hart Software Services - Reboot Service
  *
  */
 
-/**
- * \file MPFS HSS Embedded Software - Version
- * \brief MPFS HSS Embedded Software - Version
+
+/*!
+ * \file Reboot Handling
+ * \brief Handling of reboot requests
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define HSS_VERSION_MAJOR 0
-#define HSS_VERSION_MINOR 99
-#define HSS_VERSION_PATCH 36
+#include "hss_state_machine.h"
+#include "hss_debug.h"
+#include "ssmb_ipi.h"
+#include "mpfs_reg_map.h"
 
-#ifndef VENDOR_STRING
-#  define VENDOR_STRING "dev-build"
-#endif
+void HSS_reboot(u32 wdog_status);
+void HSS_reboot_cold(enum HSSHartId target);
 
 #ifdef __cplusplus
 }
