@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2023.06
+
+### Added
+
+ * HSS: Auto Update: added support to mpfs-video-kit (not supported on icicle-kit-es)
+
+ * HSS: healthmon: added generic health monitoring service
+
+### Changed
+
+ * HSS: fixed various compiler warnings
+
+ * HSS: envm-wrapper: improved boot mode selection
+
+ * HSS: mpfs-hal: updated to v2.2.104
+
+ * HSS: opensbi: updated to v1.2 (SBI v1.0)
+
+ * HSS: sys-services: Updated driver to v2.1.100
+
+### Fixed
+
+ * HSS: profiling: refactored, fixed build issue, added user tool, and added documentation on use
+
+ * HSS: mmc: add delay before sending status command, to fix SD failure issue
+
+ * Docs: updated broken link in contribution docs
+
 ## 2023.02
 
 ### Added
