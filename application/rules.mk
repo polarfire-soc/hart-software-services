@@ -115,8 +115,9 @@ ifdef CONFIG_CC_STACKPROTECTOR_STRONG
   # CORE_CFLAGS+=-fstack-clash-protection  # currently does nothing on RISC-V
 else
   $(info INFO: NOTICE: enabling -flto (which means stack protection is disabled))
-  OPT-y+=-flto=auto -ffat-lto-objects -fcompare-debug -fno-stack-protector
+  OPT-y+=-flto=auto -ffat-lto-objects -fno-stack-protector
 endif
+
 
 ##############################################################################
 #
