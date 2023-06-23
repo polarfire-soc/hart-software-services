@@ -65,13 +65,15 @@ static int HSS_reboot_auto_update(void)
         goto out_err;
     }
 
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Update in progress\n");
+    HSS_SpinDelay_MilliSecs(100u);
+
     // for Auto Update, only the 0th argument is used
     ret = MSS_SYS_execute_iap(MSS_SYS_IAP_AUTOUPDATE_CMD, 0, 0);
     if (ret) {
         goto out_err;
     }
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Update in progress\n");
     while (1) { ; }
 
 out_err:
