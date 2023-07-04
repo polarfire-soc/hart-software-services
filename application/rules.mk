@@ -160,36 +160,36 @@ EXTRA_OBJS += $(addprefix $(BINDIR)/,$(ASM_SRCS-y:.S=.o))
 
 .SUFFIXES:
 
-%.s: %.c $(BINDIR)/config.h
+%.s: %.c $(CONFIG_H)
 	$(ECHO) " CC -s     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -S -g  $<  -o $@
 
-%.S: %.c $(BINDIR)/config.h
+%.S: %.c $($(CONFIG_H)
 	$(ECHO) " CC -S     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -Wa,-adhln -g  $<  > $@
 
-%.e: %.c $(BINDIR)/config.h
+%.e: %.c $($(CONFIG_H)
 	$(ECHO) " CC -E     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
-%.e: %.s $(BINDIR)/config.h
+%.e: %.s $($(CONFIG_H)
 	$(ECHO) " CC -E     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
 ifdef CONFIG_CC_USE_MAKEDEP
-  $(BINDIR)/%.o: %.c $(BINDIR)/config.h $(BINDIR)/%.d
+  $(BINDIR)/%.o: %.c $(CONFIG_H) $(BINDIR)/%.d
 else
-  $(BINDIR)/%.o: %.c $(BINDIR)/config.h
+  $(BINDIR)/%.o: %.c $(CONFIG_H)
 endif
 	if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(ECHO) " CC        $@"
 	$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-%.o: %.c $(BINDIR)/config.h
+%.o: %.c $(CONFIG_H)
 	$(ECHO) " CC        $@"
 	$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -c -o $@ $<
 
-$(BINDIR)/%.o: %.S $(BINDIR)/config.h
+$(BINDIR)/%.o: %.S $(CONFIG_H)
 	if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(ECHO) " CC        $@"
 	$(CC) $(CFLAGS) $(OPT-y) $(INCLUDES) -D__ASSEMBLY__=1 -c -o $@ $<
@@ -211,13 +211,15 @@ $(BINDIR)/%.o: %.S $(BINDIR)/config.h
 	$(ECHO) " BIN       $@"
 	$(OBJCOPY) -O binary $< $@
 
-%.ld: %.lds $(BINDIR)/config.h
+%.ld: %.lds $(CONFIG_H)
 	$(ECHO) " CPP       $@"
 	$(CPP) -P $(INCLUDES) $< -o $@
 
 #
 $(BINDIR)/%.d: %.c
+	if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $(BINDIR)/$*.d
 
 $(BINDIR)/%.d: %.S
+	if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(MAKEDEP) -f - $(INCLUDES) $< 2>/dev/null | sed 's,\($*\.o\)[ :]*\(.*\),$@ : $$\(wildcard \2\)\n\1 : \2,g' > $(BINDIR)/$*.d

@@ -26,9 +26,8 @@
 #
 #
 
-BINDIR=build
-all: $(TARGETS) $(BINDIR)/config.h
-include $(BINDIR)/.config
+all: $(TARGETS) $(CONFIG_H)
+include $(DOT_CONFIG)
 
 SRCS-y += \
     application/hart0/hss_state_machine.c \
@@ -37,6 +36,7 @@ SRCS-y += \
 
 INCLUDES +=\
     -I./include \
+    -I$(BINDIR) \
     -I.
 
 ASM_SRCS += \

@@ -91,7 +91,7 @@ carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_SRST) += ecall_srst
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_TIME) += ecall_time
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_VENDOR) += ecall_vendor
 
-$(BINDIR)/services/opensbi/opensbi_ecall_exts.c: $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_exts.carray .config
+$(BINDIR)/services/opensbi/opensbi_ecall_exts.c: $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_exts.carray $(DOT_CONFIG)
 	echo " CARRAY    $<"
 	if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(OPENSBI_SRC_DIR)/scripts/carray.sh -i $< -l "$(carray-sbi_ecall_exts-y)" > $@

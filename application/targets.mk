@@ -27,7 +27,7 @@
 # Defines build targets
 #
 
-all: config.h $(TARGET)
+all: $(CONFIG_H) $(TARGET)
 
 ##############################################################################
 #
@@ -36,51 +36,51 @@ all: config.h $(TARGET)
 
 defconfig:
 	@$(ECHO) " CP       def_config";
-	cp boards/${BOARD}/def_config .config
+	cp boards/${BOARD}/def_config $(DOT_CONFIG)
 	@$(ECHO) " GENCONFIG"
-	$(PYTHON) $(GENCONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(GENCONFIG)
 
 menuconfig:
 	@$(ECHO) " MENUCONFIG"
-	$(PYTHON) $(MENUCONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(MENUCONFIG)
 
 config:
 	@$(ECHO) " MENUCONFIG"
-	$(PYTHON) $(MENUCONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(MENUCONFIG)
 
 guiconfig:
 	@$(ECHO) " GUICONFIG"
-	$(PYTHON) $(GUICONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(GUICONFIG)
 
 
 # we can't run curses in SoftConsole, so just copy a pre-canned
 # config, and the user can tweak if necessary
-.config:
+$(DOT_CONFIG):
 ifeq ($(HOST_WINDOWS), true)
 	$(info Using boards/${BOARD}/def_config - edit as necessary.)
 	@$(ECHO) " CP       def_config";
-	cp boards/${BOARD}/def_config .config
+	cp boards/${BOARD}/def_config $(DOT_CONFIG)
 	@$(ECHO) " GENCONFIG"
-	$(PYTHON) $(GENCONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(GENCONFIG)
 else
   ifeq ($(HOST_LINUX_DESKTOP), true)
 	@$(ECHO) " CP       def_config";
-	cp boards/${BOARD}/def_config .config
+	cp boards/${BOARD}/def_config $(DOT_CONFIG)
 	@$(ECHO) " GUICONFIG"
-	$(PYTHON) $(GUICONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(GUICONFIG)
   else
 	@$(ECHO) " CP       def_config";
-	cp boards/${BOARD}/def_config .config
+	cp boards/${BOARD}/def_config $(DOT_CONFIG)
 	@$(ECHO) " MENUCONFIG"
-	$(PYTHON) $(MENUCONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(MENUCONFIG)
   endif
 endif
 
-config.h: .config
+$(CONFIG_H): $(DOT_CONFIG)
 	@$(ECHO) " GENCONFIG"
-	$(PYTHON) $(GENCONFIG)
+	KCONFIG_CONFIG=$(DOT_CONFIG) KCONFIG_AUTOHEADER=$(CONFIG_H) $(PYTHON) $(GENCONFIG)
 
-genconfig: config.h
+genconfig: $(CONFIG_H)
 
 ##############################################################################
 #
@@ -106,7 +106,7 @@ clean: envm-wrapper_clean
 		$(TEST_OBJS) $(TEST_OBJS.o=.gcno) $(TEST_OBJS.o=.c.gcov) $(TEST_OBJS:.o=.su) \
 		$(DEPENDENCIES) \
 		gmon.out cscope.out \
-		error.log flawfinder.log sparse.log $(BINDIR)/output-*.map config.h \
+		error.log flawfinder.log sparse.log $(BINDIR)/output-*.map $(CONFIG_H) \
                 $(TARGET:.elf=.hex) $(TARGET:.elf=.lss) $(TARGET:.elf=.sym) $(TARGET:.elf=.bin)
 	$(RM) -r docs/DoxygenOutput
 	$(RM) -r lcovOutput coverage.info

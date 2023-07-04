@@ -39,8 +39,9 @@ LINKER_SCRIPT-l2scratch=boards/${BOARD}/hss-l2scratch.ld
 BOARD_DIR=boards/custom-board-design
 
 INCLUDES += \
-	-I$(BOARD_DIR)/mpfs_hal_config/\
-	-I$(BOARD_DIR)/fpga_design_config/\
+	-I$(BOARD_DIR)/mpfs_hal_config/ \
+	-I$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ \
+	-I$(BINDIR)/$(BOARD_DIR)/ \
 	-I$(BOARD_DIR)/ \
 	-Ibaremetal/polarfire-soc-bare-metal-library/src/platform \
 
@@ -91,7 +92,7 @@ endif
 # Linker Scripts
 #
 
-$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds $(BINDIR)/config.h
+$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds $(CONFIG_H)
 
 ################################################################################################
 
@@ -100,42 +101,42 @@ $(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds $(BINDIR)/config.h
 #
 
 SOC_CONFIG_FILES =  \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_ddr_pll.h \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_mss_cfm.h \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_mss_pll.h \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_sgmii_cfm.h \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_sgmii_pll.h \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_sysreg.h \
-	$(BOARD_DIR)/fpga_design_config/clocks/hw_mss_clks.h \
-	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_io_bank.h \
-	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_mode.h \
-	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_off_mode.h \
-	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_options.h \
-	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_segs.h \
-	$(BOARD_DIR)/fpga_design_config/ddr/hw_ddrc.h \
-	$(BOARD_DIR)/fpga_design_config/general/hw_gen_peripherals.h \
-	$(BOARD_DIR)/fpga_design_config/fpga_design_config.h \
-	$(BOARD_DIR)/fpga_design_config/io/hw_hsio_mux.h \
-	$(BOARD_DIR)/fpga_design_config/io/hw_mssio_mux.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_apb_split.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_cache.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_memory.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_crypto.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_fic0.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_fic1.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_fic2.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_gem0.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_gem1.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_mmc.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_scb.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_trace.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_usb.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart0.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart1.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart2.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart3.h \
-	$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart4.h \
-	$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_ddr_pll.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_mss_cfm.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_mss_pll.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_sgmii_cfm.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_sgmii_pll.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_clk_sysreg.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/clocks/hw_mss_clks.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_io_bank.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_mode.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_off_mode.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_options.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ddr/hw_ddr_segs.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/ddr/hw_ddrc.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/general/hw_gen_peripherals.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/fpga_design_config.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/io/hw_hsio_mux.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/io/hw_mssio_mux.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_apb_split.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_cache.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_memory.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_crypto.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_fic0.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_fic1.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_fic2.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_gem0.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_gem1.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_mmc.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_scb.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_trace.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_mpu_usb.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart0.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart1.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart2.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart3.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/memory_map/hw_pmp_hart4.h \
+	$(BINDIR)/$(BOARD_DIR)/fpga_design_config/sgmii/hw_sgmii_tip.h \
 
 ifeq ($(origin CONFIG_SOC_FPGA_DESIGN_XML), undefined)
 else
@@ -148,6 +149,6 @@ endif
 config.h: $(SOC_CONFIG_FILES)
 $(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
 	@$(ECHO) " MPFSCFGGEN    $<";
-	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BOARD_DIR)
+	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
