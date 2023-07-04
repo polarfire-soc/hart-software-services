@@ -34,5 +34,5 @@ SRCS-$(CONFIG_SERVICE_TINYCLI) += \
 INCLUDES +=\
 	-I./services/tinycli \
 
-services/tinycli/tinycli_api.o: CFLAGS=$(CFLAGS_GCCEXT)
-services/tinycli/tinycli_service.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/tinycli/tinycli_api.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/tinycli/tinycli_service.o: CFLAGS=$(CFLAGS_GCCEXT)

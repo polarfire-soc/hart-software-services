@@ -29,7 +29,6 @@
 
 $(info mpfs-video-kit selected)
 
-BINDIR=Default
 TARGET-l2scratch=hss-l2scratch.elf
 TARGET-envm-wrapper=hss-envm-wrapper.elf
 RISCV_TARGET=$(TARGET-l2scratch) $(TARGET-envm-wrapper)
@@ -79,7 +78,7 @@ baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
 # Linker Scripts
 #
 
-$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds config.h
+$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds $(BINDIR)/config.h
 
 ################################################################################################
 

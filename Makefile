@@ -54,6 +54,11 @@ else
   endif
 endif
 
+#ifeq ("$(wildcard $(BINDIR))", "")
+#  $(info INFO: mkdir -p $(BINDIR))
+#  #$(shell mkdir -p $(BINDIR))
+#endif
+
 CORE_CFLAGS+=-DBOARD=${BOARD}
 
 MCMODEL=-mcmodel=medany
@@ -70,7 +75,7 @@ LIBS =
 #$(info $$INCLUDES is [${INCLUDES}])
 
 ifdef CONFIG_CC_USE_MAKEDEP
-  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) $(ASM_SRCS-y:.S=.d)
+  DEPENDENCIES=$(addprefix $(BINDIR)/, $(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) $(ASM_SRCS-y:.S=.d))
   .PHONY: dep
   dep: $(DEPENDENCIES)
 

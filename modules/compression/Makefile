@@ -36,4 +36,4 @@ INCLUDES +=\
     -I./modules/compression \
     -I./thirdparty/miniz \
 
-thirdparty/miniz/miniz.o: CFLAGS+=-DMINIZ_NO_STDIO -DMINIZ_NO_TIME
+$(BINDIR)/thirdparty/miniz/miniz.o: CFLAGS+=-DMINIZ_NO_STDIO -DMINIZ_NO_TIME

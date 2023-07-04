@@ -52,12 +52,12 @@ EXTRA_SRCS-$(CONFIG_OPENSBI) += \
 INCLUDES +=\
 	-Ibaremetal/drivers/mss/mss_usb \
 
-init/hss_ddr_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_pdma_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_boot_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_opensbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_sys_setup.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_pcie_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_tamper_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_usb_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-init/hss_ihc_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_ddr_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_pdma_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_boot_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_opensbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_sys_setup.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_pcie_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_tamper_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_usb_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/init/hss_ihc_init.o: CFLAGS=$(CFLAGS_GCCEXT)

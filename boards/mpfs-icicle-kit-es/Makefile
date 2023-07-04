@@ -29,7 +29,6 @@
 
 $(info mpfs-icicle-kit-es selected)
 
-BINDIR=Default
 TARGET-l2scratch=hss-l2scratch.elf
 TARGET-envm-wrapper=hss-envm-wrapper.elf
 RISCV_TARGET=$(TARGET-l2scratch) $(TARGET-envm-wrapper)
@@ -92,7 +91,7 @@ endif
 # Linker Scripts
 #
 
-$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds config.h
+$(BOARD_DIR)/hss-l2scratch.ld: $(BOARD_DIR)/hss-l2scratch.lds $(BINDIR)/config.h
 
 ################################################################################################
 

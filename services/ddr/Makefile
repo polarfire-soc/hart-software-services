@@ -33,5 +33,4 @@ SRCS-y += \
 INCLUDES +=\
 	-I./services/ddr \
 
-services/ddr/ddr_api.o: CFLAGS=$(CFLAGS_GCCEXT)
-
+$(BINDIR)/services/ddr/ddr_api.o: CFLAGS=$(CFLAGS_GCCEXT)

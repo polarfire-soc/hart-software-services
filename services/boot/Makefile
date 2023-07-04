@@ -37,5 +37,5 @@ SRCS-$(CONFIG_CRYPTO_SIGNING) += \
 INCLUDES +=\
 	-I./services/boot \
 
-services/boot/hss_boot_service.o: CFLAGS=$(CFLAGS_GCCEXT)
-services/boot/hss_boot_pmp.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/boot/hss_boot_service.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/boot/hss_boot_pmp.o: CFLAGS=$(CFLAGS_GCCEXT)

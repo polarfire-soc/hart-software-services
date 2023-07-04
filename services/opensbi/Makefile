@@ -66,7 +66,10 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_unpriv.c \
 	$(OPENSBI_SRC_DIR)/lib/utils/timer/aclint_mtimer.c \
 	$(OPENSBI_SRC_DIR)/lib/utils/ipi/aclint_mswi.c \
-	services/opensbi/opensbi_ecall_exts.c \
+
+ifdef CONFIG_SERVICE_OPENSBI
+EXTRA_OBJS += $(BINDIR)/services/opensbi/opensbi_ecall_exts.o
+endif
 
 SRCS-$(CONFIG_SERVICE_OPENSBI) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_base.c
 SRCS-$(CONFIG_SBI_ECALL_HSM) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_hsm.c
@@ -88,9 +91,13 @@ carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_SRST) += ecall_srst
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_TIME) += ecall_time
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_VENDOR) += ecall_vendor
 
-services/opensbi/opensbi_ecall_exts.c: $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_exts.carray .config
+$(BINDIR)/services/opensbi/opensbi_ecall_exts.c: $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_exts.carray .config
 	echo " CARRAY    $<"
+	if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(OPENSBI_SRC_DIR)/scripts/carray.sh -i $< -l "$(carray-sbi_ecall_exts-y)" > $@
+
+$(BINDIR)/$(BINDIR)/services/opensbi/opensbi_ecall_exts.d: $(BINDIR)/services/opensbi/opensbi_ecall_exts.c
+	touch $<
 
 ifdef CONFIG_USE_IHC
 SRCS-$(CONFIG_SERVICE_OPENSBI_IHC) += \
@@ -126,52 +133,52 @@ services/opensbi/mpfs_dtb.o: $(CONFIG_DEFAULT_DEVICE_TREE:"%"=%).dtb
 endif
 endif
 
-services/opensbi/opensbi_service.o: CFLAGS=$(CFLAGS_GCCEXT)
-services/opensbi/opensbi_ihc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
-services/opensbi/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/irqchip/plic.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_rw.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_ro.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_overlay.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_strerror.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_sw.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_addresses.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_wip.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/serial/sifive-uart.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/platform/sifive/fu540/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/riscv_asm.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/riscv_atomic.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/riscv_locks.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_bitmap.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_bitops.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_console.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_domain.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_base.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_hsm.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_legacy.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_replace.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_vendor.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_emulate_csr.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_fifo.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hart.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hsm.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_illegal_insn.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ipi.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_math.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_misaligned_ldst.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_platform.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_pmu.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_scratch.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_string.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_system.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_timer.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_tlb.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_trap.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_unpriv.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/timer/aclint_mtimer.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/utils/ipi/aclint_mswi.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_pmu.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_srst.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/opensbi/opensbi_service.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/opensbi/opensbi_ihc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/opensbi/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/irqchip/plic.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_rw.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_ro.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_overlay.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_strerror.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_sw.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_addresses.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_wip.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/serial/sifive-uart.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/platform/sifive/fu540/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/riscv_asm.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/riscv_atomic.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/riscv_locks.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_bitmap.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_bitops.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_console.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_domain.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_base.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_hsm.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_legacy.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_replace.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_vendor.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_emulate_csr.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_fifo.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hart.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hsm.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_illegal_insn.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_init.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ipi.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_math.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_misaligned_ldst.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_platform.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_pmu.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_scratch.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_string.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_system.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_timer.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_tlb.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_trap.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_unpriv.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/timer/aclint_mtimer.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/ipi/aclint_mswi.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_pmu.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_srst.o: CFLAGS=$(CFLAGS_GCCEXT)

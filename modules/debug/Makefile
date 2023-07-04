@@ -42,4 +42,4 @@ OPT-$(CONFIG_DEBUG_PROFILING_SUPPORT) += \
 INCLUDES +=\
 	-Imodules/debug/ \
 
-modules/debug/profiling.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/debug/profiling.o: CFLAGS=$(CFLAGS_GCCEXT)

@@ -33,4 +33,4 @@ SRCS-$(CONFIG_SERVICE_YMODEM) += \
 INCLUDES +=\
 	-I./services/ymodem \
 
-services/ymodem/hss_ymodem_loader.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/ymodem/hss_ymodem_loader.o: CFLAGS=$(CFLAGS_GCCEXT)
