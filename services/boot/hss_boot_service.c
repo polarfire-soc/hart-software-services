@@ -351,7 +351,7 @@ static void boot_init_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
+static void register_harts(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
@@ -394,6 +394,12 @@ static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
 		pBootImage->hart[target-1].flags & BOOT_FLAG_ALLOW_WARM_REBOOT);
         }
     }
+}
+
+static void boot_setup_pmp_onEntry(struct StateMachine * const pMyMachine)
+{
+    /* Initially register harts, so that IPIs work for remainder of boot */
+    register_harts(pMyMachine);
 }
 
 static void boot_setup_pmp_handler(struct StateMachine * const pMyMachine)
@@ -602,6 +608,8 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
 
 static void boot_download_chunks_onExit(struct StateMachine * const pMyMachine)
 {
+    /* Re-register harts now that we've fully parsed the boot image (ancillary data etc) */
+    register_harts(pMyMachine);
 }
 
 /////////////////
