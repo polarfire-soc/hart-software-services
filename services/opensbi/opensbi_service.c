@@ -26,7 +26,12 @@
 
 #include "csr_helper.h"
 
+#if !IS_ENABLED(CONFIG_OPENSBI)
+#  error OPENSBI needed for this module
+#endif
+
 #include "opensbi_service.h"
+#include <sbi/sbi_ecall.h>
 #include "opensbi_ecall.h"
 #include "riscv_encoding.h"
 
@@ -36,10 +41,6 @@
 
 #include "mpfs_reg_map.h"
 #include "sbi_version.h"
-
-#if !IS_ENABLED(CONFIG_OPENSBI)
-#  error OPENSBI needed for this module
-#endif
 
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
 #  include "miv_ihc.h"
@@ -140,9 +141,13 @@ struct StateMachine opensbi_service = {
 // --------------------------------------------------------------------------------------------------
 // Handlers for each state in the state machine
 //
+#define MPFS_HSS_SBI_IMPID	8
+
 static void opensbi_init_handler(struct StateMachine * const pMyMachine)
 {
     pMyMachine->state++;
+
+    sbi_ecall_set_impid(MPFS_HSS_SBI_IMPID);
 }
 
 /////////////////
