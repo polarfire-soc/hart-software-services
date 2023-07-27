@@ -21,8 +21,9 @@
 #include "uart_helper.h"
 
 #include "fpga_design_config/fpga_design_config.h"
+#include "sbi_bitops.h"
 
-#define mUART_DEV(x) ( LIBERO_SETTING_APBBUS_CR & (1u << x) ? &g_mss_uart##x##_hi : &g_mss_uart##x##_lo )
+#define mUART_DEV(x) ( LIBERO_SETTING_APBBUS_CR & (BIT(x)) ? &g_mss_uart##x##_hi : &g_mss_uart##x##_lo )
 
 // UART devices list
 mss_uart_instance_t * const pUartDeviceList[] = {
