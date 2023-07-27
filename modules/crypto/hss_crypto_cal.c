@@ -39,6 +39,9 @@
 #include <assert.h>
 #include <string.h>
 
+#include <config_athena.h>
+#include "mss_peripherals.h"
+
 #include "calini.h"
 #include "calenum.h"
 #include "hash.h"
@@ -48,6 +51,14 @@ static void crypto_init_(void)
     static bool initialized = false;
 
     if (!initialized) {
+        (void)mss_config_clk_rst(MSS_PERIPH_CRYPTO, (uint8_t) 0, PERIPHERAL_ON);
+        (void)mss_config_clk_rst(MSS_PERIPH_ATHENA, (uint8_t) 0, PERIPHERAL_ON);
+        /*
+         * Initialize the Athena core. To enable user crypto bring out off reset
+         *  and enable RINGOSC on.
+         */
+        ATHENAREG->ATHENA_CR = SYSREG_ATHENACR_RESET | SYSREG_ATHENACR_RINGOSCON;
+        ATHENAREG->ATHENA_CR = SYSREG_ATHENACR_RINGOSCON;
         SATR retval = CALIni();
         assert(retval == SATR_SUCCESS);
         initialized = true;
