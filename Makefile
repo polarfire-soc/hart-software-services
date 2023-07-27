@@ -74,7 +74,11 @@ include baremetal/Makefile
 include services/Makefile
 include modules/Makefile
 
-LIBS =
+ifdef CONFIG_USE_USER_CRYPTO
+	LIBS = ./services/crypto/mpfs-rv64imac-user-crypto-lib.a
+else
+	LIBS =
+endif
 
 #$(info $$INCLUDES is [${INCLUDES}])
 
