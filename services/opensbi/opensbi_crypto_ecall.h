@@ -1,5 +1,5 @@
-#ifndef OPENSBI_ECALL_H
-#define OPENSBI_ECALL_H
+#ifndef OPENSBI_CRYPTO_ECALL_H
+#define OPENSBI_CRYPTO_ECALL_H
 
 /*******************************************************************************
  * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
@@ -25,51 +25,26 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - OpenSBI ECALL Interface
+ *
  */
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <string.h>
+#include "opensbi_ecall.h"
 
-// Previously the vendor ID was to be a number allocated by RISC-V International,
-// but this duplicates the work of JEDEC in maintaining a manufacturer ID standard.
-// SBI ECALLs in the VENDOR region are by MVENDORID as per section 3.1.2 of
-// RISC-V Priviliged Architectures spec (2.2-draft or later)
-//
-// mvendorid[6:0] = JEDEC[6:0]
-// mvendorid[XLEN-1:7] = number of 0x7f continuation codes
+struct mc_crypto_aes_op {
+    uint64_t src_addr;
+    uint64_t dst_addr;
+    uint64_t key_addr;
+    uint64_t iv_addr;
+    uint32_t length;
+};
 
-
-// Microchip Technology JEDEC Id: Bank 1, 0x29 => MVENDORID = 0x029
-#define MICROCHIP_TECHNOLOGY_MVENDOR_ID  0x029
-
-#define SBI_EXT_MICROCHIP_TECHNOLOGY       (SBI_EXT_VENDOR_START | MICROCHIP_TECHNOLOGY_MVENDOR_ID)
-
-#define SBI_EXT_IHC_CTX_INIT   0x00
-#define SBI_EXT_IHC_SEND       0x01
-#define SBI_EXT_IHC_RECEIVE    0x02
-
-#define SBI_EXT_RPROC_STATE    0x03
-#define SBI_EXT_RPROC_START    0x04
-#define SBI_EXT_RPROC_STOP     0x05
-
-#define SBI_EXT_HSS_REBOOT     0x10
-
-#define SBI_EXT_CRYPTO_INIT    0x06
-#define SBI_EXT_CRYPTO_SERVICE 0x07
-
-#include <sbi/sbi_ecall.h>
-#include <sbi/sbi_ecall_interface.h>
-#include <sbi/sbi_error.h>
-#include <sbi/sbi_platform.h>
-#include <sbi/sbi_trap.h>
-
-int HSS_SBI_ECALL_Handler(long extid, long funcid,
+int sbi_ecall_crypto_handler(unsigned long extid, unsigned long funcid,
     const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
-int HSS_SBI_Vendor_Ext_Check(long extid);
 
 #ifdef __cplusplus
 }

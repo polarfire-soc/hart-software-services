@@ -108,6 +108,12 @@ SRCS-$(CONFIG_SERVICE_OPENSBI_RPROC) += \
 
 endif
 
+ifdef CONFIG_USE_USER_CRYPTO
+SRCS-$(CONFIG_SERVICE_OPENSBI_CRYPTO) += \
+	services/opensbi/opensbi_crypto_ecall.c \
+
+endif
+
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	$(OPENSBI_SRC_DIR)/lib/sbi/riscv_hardfp.S \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_expected_trap.S \

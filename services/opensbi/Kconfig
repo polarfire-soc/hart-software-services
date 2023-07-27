@@ -24,6 +24,15 @@ config SERVICE_OPENSBI_RPROC
                 
 		If you do not know what to do here, say Y.
 
+config SERVICE_OPENSBI_CRYPTO
+	bool "User Crypto ecall service support"
+	default y
+	depends on OPENSBI && USE_USER_CRYPTO
+	help
+                This feature enables support for user crypto ecall service.
+
+		If you do not know what to do here, say Y.
+
 config OPENSBI_SRC_DIR
 	string
 	option env="OPENSBI_SRC_DIR"
