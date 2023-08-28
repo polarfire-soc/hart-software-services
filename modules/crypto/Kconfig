@@ -30,7 +30,7 @@ config CRYPTO_LIBECC
 
 config CRYPTO_USER_CRYPTO
 	bool "User Crypto (SHA2 and ECDSA P-384)"
-	depends on CRYPTO_SIGNING
+	depends on CRYPTO_SIGNING && USE_USER_CRYPTO
 	help
 		This feature enables support for the UserCrypto core for SHA384 hashing
                 and ECDSA P-384 code signing.
