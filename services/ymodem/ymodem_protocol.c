@@ -35,7 +35,7 @@
 
 #define HSS_XYMODEM_MAX_SYNC_ATTEMPTS      20u
 #define HSS_XYMODEM_CAN_COUNT_REQUIRED     2u
-#define HSS_XYMODEM_PRE_SYNC_TIMEOUT_SEC   2
+#define HSS_XYMODEM_PRE_SYNC_TIMEOUT_SEC   10
 #define HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC  1
 #define HSS_XYMODEM_BAD_PACKET_RETRIES     10u
 
@@ -222,7 +222,6 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
             case XYMODEM_EOT:
                 can_rx_count = 0u;
                 pPacket->length = 0u;
-                //pState->status.s.endOfSession = true;
                 pState->eotReceived= true;
                 synced = true;
                 syncAttempt = HSS_XYMODEM_MAX_SYNC_ATTEMPTS;
@@ -251,8 +250,6 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
             case XYMODEM_GETCHAR_TIMEOUT:
                 __attribute__((fallthrough)); // deliberate fallthrough
             default:
-                //mHSS_DEBUG_PRINTF("%s(): %d: char is %0x\n", __func__, syncAttempt,
-                //    pPacket->startByte);
                 can_rx_count = 0u;
                 ++syncAttempt;
                 synced = false;
@@ -304,7 +301,6 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
         }
     }
 
-    //mHSS_DEBUG_PRINTF("%s(): returning %d\n", __func__, result);
     return result;
 }
 
