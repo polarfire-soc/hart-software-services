@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2023.09
+
+### Added
+
+ * HSS: opensbi: added unique SBI impid to allow supervisor mode software differentiate HSS from OpenSBI
+
+ * HSS: boards: added PolarBerry support
+
+ * HSS: uart: allow extra serial port configuration (via Kconfig)
+
+### Changed
+
+ * HSS: boards: Update to Aries m100pfsevp board support
+
+ * HSS: slight refactoring of uart code
+
+### Fixed
+
+ * HSS: post-boot detection
+
+ * HSS: ymodem: increased timeout for more reliable behaviour
+
+ * HSS: ancilliary data: re-register harts after downloading to correctly pass ancilliary data
+
+
 ## 2023.06
 
 ### Added
