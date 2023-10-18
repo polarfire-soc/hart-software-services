@@ -99,6 +99,18 @@ profile: clean $(TARGET)
 
 .PHONY: clean cppcheck splint cscope cscope.files
 
+ifeq ($(OS), Windows_NT)
+# The make.exe bundled with SoftConsole has issues expanding a long list of
+# targets to clean...
+# working around this by forcibly clearing the entire $(BINDIR) here...
+clean: envm-wrapper_clean
+	$(RM) -r $(BINDIR)/*
+	$(RM) -r docs/DoxygenOutput
+	$(RM) -r lcovOutput coverage.info
+	$(RM) *.gcov
+	$(RM) *.lss *.hex *.sym
+	$(RM) x509-ec-secp384r1-public.h
+else
 clean: envm-wrapper_clean
 	$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
 		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) $(OBJS:.o=.su) \
@@ -114,6 +126,7 @@ clean: envm-wrapper_clean
 	$(RM) *.lss *.hex *.sym
 	$(RM) $(BINDIR)/hss* $(BINDIR)/output.map
 	$(RM) x509-ec-secp384r1-public.h
+endif
 
 distclean:
 	$(RM) $(OBJS) $(TARGET) cppcheck.log splint.log valgrind.log \
