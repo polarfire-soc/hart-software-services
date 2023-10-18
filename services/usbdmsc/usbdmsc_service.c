@@ -26,6 +26,7 @@
 #include "hss_boot_service.h"
 
 #include "drivers/mss/mss_mmuart/mss_uart.h"
+#include "flash_drive_app.h"
 
 static void usbdmsc_init_handler(struct StateMachine * const pMyMachine);
 static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine);
@@ -96,19 +97,24 @@ static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine)
 
 static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachine)
 {
-    USBDMSC_Init();
-    mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
+    bool idle = USBDMSC_Init();
+
+    if (!idle) {
+        mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
+    }
 }
 
-uint32_t FLASH_DRIVE_is_host_connected(void); //TODO: tidy
 static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachine)
 {
-    if (FLASH_DRIVE_is_host_connected()) {
+    bool idle = USBDMSC_Poll();
+
+    if (idle) {
+        pMyMachine->state = USBDMSC_IDLE;
+    } else if (FLASH_DRIVE_is_host_connected()) {
         mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
         pMyMachine->state = USBDMSC_ACTIVE;
     }
 
-    USBDMSC_Poll();
 }
 
 /////////////////
@@ -141,7 +147,10 @@ static void usbdmsc_active_handler(struct StateMachine * const pMyMachine)
         pMyMachine->state = USBDMSC_IDLE;
     }
 
-    USBDMSC_Poll();
+    bool idle = USBDMSC_Poll();
+    if (idle) {
+        pMyMachine->state = USBDMSC_IDLE;
+    }
 }
 
 static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine)

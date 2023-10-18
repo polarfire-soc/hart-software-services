@@ -42,7 +42,7 @@ extern "C" {
  * \brief USB Device Mass Storage API
  */
 
-void USBDMSC_Init(void);
+bool USBDMSC_Init(void);
 bool USBDMSC_Poll(void);
 void USBDMSC_Start(void);
 void USBDMSC_Shutdown(void);

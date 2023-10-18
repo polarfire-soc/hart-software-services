@@ -312,7 +312,6 @@ bool HSS_MMC_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 //
 bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 {
-    // temporary code to bring up Icicle board
     char *pCSrc = (char *)pSrc;
 
     // if byte count is not a multiple of the sector size, round it up...
@@ -355,7 +354,6 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 //
 bool HSS_MMC_WriteBlockSDMA(size_t dstOffset, void *pSrc, size_t byteCount)
 {
-    // temporary code to bring up Icicle board
     char *pCSrc = (char *)pSrc;
 
     // if byte count is not a multiple of the sector size, round it up...

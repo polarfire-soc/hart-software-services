@@ -941,7 +941,6 @@ static void tinyCLI_SPI_(void)
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
 static void tinyCLI_USBDMSC_(void)
 {
-    USBDMSC_Init();
     USBDMSC_Start();
     HSS_TinyCLI_WaitForUSBMSCDDone();
 }

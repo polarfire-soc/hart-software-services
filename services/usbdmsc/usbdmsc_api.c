@@ -3,9 +3,6 @@
  *
  * SPDX-License-Identifier: MIT
  *
- *
- * SVN $Revision: 11522 $
- * SVN $Date: 2019-06-26 10:14:17 +0530 (Wed, 26 Jun 2019) $
  */
 
 #include "config.h"
@@ -18,13 +15,49 @@
 #include "mss_assert.h"
 #include "flash_drive_app.h"
 #include "mss_plic.h"
+#include "mss_l2_cache.h"
 #include "uart_helper.h"
 #include "usbdmsc_service.h"
 #include "hss_init.h"
 
 /**************************************************************************//**
  */
-void USBDMSC_Init(void)
+static bool mpu_blocks_access = false;
+
+extern const uint64_t _hss_start;
+extern const uint64_t _hss_end;
+const uintptr_t p_hss_start = (uintptr_t)&_hss_start;
+const uintptr_t p_hss_end = (uintptr_t)&_hss_end;
+
+static void check_mpu_(const mss_mpu_mport_t master_port, const char * master_port_name, const uint64_t region_base, const uint64_t region_size)
+{
+    mss_mpu_pmp_region_t pmp_region = 0;
+    uint64_t base, size;
+    uint8_t permission, lock_en;
+    mss_mpu_addrm_t matching_mode;
+    int retval;
+
+    while ((retval = MSS_MPU_get_config(master_port, pmp_region, &base, &size, &permission,
+        &matching_mode, &lock_en)) == 0) {
+
+        if ((base <= region_base) && ((base + size) >= (region_base + region_size))) {
+            // mHSS_DEBUG_PRINTF(LOG_ERROR, "%d: BASE->BASE/SIZE %p->%p OKAY\n", pmp_region, base, base + size);
+            if (permission & (MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS)) {
+                // mHSS_DEBUG_PRINTF(LOG_ERROR, "%d: PERMS %d OKAY\n", pmp_region, permission);
+                break;
+            }
+        }
+
+        ++pmp_region;
+    }
+
+    if (retval) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, ">>%s<< is not granted access in Design XML...\n", master_port_name);
+        mpu_blocks_access = true;
+    }
+}
+
+bool USBDMSC_Init(void)
 {
     SYSREG->SOFT_RESET_CR &= ~ (1u << 16u);
 
@@ -43,71 +76,88 @@ void USBDMSC_Init(void)
 
     HSS_USBInit();
 
-    MSS_MPU_configure(MSS_MPU_USB, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
-        MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
+    // we'll check the MPU configuration and ensure that we have sufficient
+    // privileges to implement USBDMSC (and optionally MMC access) and if not we'll
+    // complain...
+    if (!mpu_blocks_access) {
+        const struct {
+            uintptr_t base;
+            ptrdiff_t size;
+        } regions[] = {
+            { p_hss_start, (ptrdiff_t)p_hss_end - (ptrdiff_t)p_hss_start },
+        };
 
-    /* DMA init for eMMC */
-    MSS_MPU_configure(MSS_MPU_MMC, MSS_MPU_PMP_REGION3, 0x08000000u, 0x200000u,
-        MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS, MSS_MPU_AM_NAPOT, 0u);
+        for (int i = 0; i < ARRAY_SIZE(regions); i++) {
+            check_mpu_(MSS_MPU_USB, "MSS_MPU_USB", regions[i].base, regions[i].size);
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+            check_mpu_(MSS_MPU_MMC, "MSS_MPU_MMC", regions[i].base, regions[i].size);
+#endif
+            if (mpu_blocks_access) { break; }
+        }
+    }
+
+    return mpu_blocks_access;
 }
 
 HSSTicks_t last_poll_time = 0u;
 
 bool USBDMSC_Poll(void)
 {
-    bool done = false;
-#if !defined(CONFIG_SERVICE_USBDMSC_REGISTER) || !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
-    uint8_t rx_byte = 0;
+    bool idle = mpu_blocks_access;
 
-    bool retval = uart_getchar(&rx_byte, 0, false);
+    if (!idle) {
+#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER) || !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
+        uint8_t rx_byte = 0;
 
-    if (retval) {
-        if ((rx_byte == '\003') || (rx_byte == '\033')) {
-        done = true;
-        }
-    } else {
+        bool retval = uart_getchar(&rx_byte, 0, false);
+
+        if (retval) {
+            if ((rx_byte == '\003') || (rx_byte == '\033')) {
+                idle = true;
+            }
+        } else {
 #else
-    {
+        {
+#endif
+            //poll PLIC
+            uint32_t source = PLIC_ClaimIRQ();
+
+            switch (source) {
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
+			case MMC_main_PLIC: // MMC interrupt
+				PLIC_mmc_main_IRQHandler(); // interrupt 88
+                break;
 #endif
 
-        //poll PLIC
-        uint32_t source = PLIC_ClaimIRQ();
+            case PLIC_USB_MC_INT_OFFSET: // main USB interrupt
+                PLIC_usb_mc_IRQHandler(); // interrupt 87
+                break;
 
-        switch (source) {
-#if defined(CONFIG_SERVICE_MMC)
-        case MMC_main_PLIC: // MMC interrupt
-            PLIC_mmc_main_IRQHandler(); // interrupt 88
-            break;
-#endif
+            case PLIC_USB_DMA_INT_OFFSET: // DMA USB interrupt
+                PLIC_usb_dma_IRQHandler(); // interrupt 86
+                break;
 
-        case PLIC_USB_MC_INT_OFFSET: // main USB interrupt
-            PLIC_usb_mc_IRQHandler(); // interrupt 87
-            break;
+            default:
+                break;
+            }
 
-        case PLIC_USB_DMA_INT_OFFSET: // DMA USB interrupt
-            PLIC_usb_dma_IRQHandler(); // interrupt 86
-            break;
-
-        default:
-            break;
+            if (source != INVALID_IRQn) {
+                PLIC_CompleteIRQ(source);
+            }
         }
 
-        if (source != INVALID_IRQn) {
-            PLIC_CompleteIRQ(source);
+        if (HSS_Timer_IsElapsed(last_poll_time, 5*TICKS_PER_SEC)) {
+            FLASH_DRIVE_dump_xfer_status();
+            last_poll_time = HSS_GetTime();
         }
     }
 
-    if (HSS_Timer_IsElapsed(last_poll_time, 5*TICKS_PER_SEC)) {
-        FLASH_DRIVE_dump_xfer_status();
-        last_poll_time = HSS_GetTime();
-    }
-
-    return done;
+    return idle;
 }
 
 void USBDMSC_Shutdown(void)
 {
-#ifndef CONFIG_SERVICE_USBDMSC_REGISTER
+#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
     PLIC_ClearPendingIRQ();
     USBDMSC_Deactivate();
 #endif
@@ -115,12 +165,17 @@ void USBDMSC_Shutdown(void)
 
 void USBDMSC_Start(void)
 {
-    bool done = !FLASH_DRIVE_init();
+    bool idle = false;
+#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
+    idle = USBDMSC_Init();
+#endif
 
-    if (done) {
+    idle = idle | !FLASH_DRIVE_init();
+
+    if (idle) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false...\n");
     } else {
-#if !defined(CONFIG_SERVICE_USBDMSC_REGISTER) || !defined(CONFIG_SERVICE_TINYCLI_REGISTER)
+#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER) || !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
         bool isHostConnected = false;
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
 
@@ -135,12 +190,12 @@ void USBDMSC_Start(void)
                 // else quit once we've disconnected again...
                 isHostConnected = FLASH_DRIVE_is_host_connected();
                 if (!isHostConnected) {
-                    done = true;
+                    idle = true;
                 }
             }
 
-            done = done || USBDMSC_Poll();
-        } while (!done);
+            idle = idle || USBDMSC_Poll();
+        } while (!idle);
 
         void HSS_Storage_FlushWriteBuffer(void);
         HSS_Storage_FlushWriteBuffer();
