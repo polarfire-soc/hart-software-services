@@ -4,7 +4,7 @@
       <design_name>MSS_VIDEO_KIT_H264</design_name>
       <mpfs_part_no>MPFS250TS</mpfs_part_no>
       <mpfs_package>FCG1152</mpfs_package>
-      <creation_date_time>11-01-2023_15:59:09</creation_date_time>
+      <creation_date_time>11-01-2023_16:01:06</creation_date_time>
       <xml_format_version>0.6.8</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -3806,7 +3806,7 @@
             <field Type="RW" name="REG_POWERDOWN_B" offset="0" width="1">0x1</field>
             <field Type="RW" name="REG_RFDIV_EN" offset="1" width="1">0x1</field>
             <field Type="RW" name="REG_DIVQ0_EN" offset="2" width="1">0x1</field>
-            <field Type="RW" name="REG_DIVQ1_EN" offset="3" width="1">0x0</field>
+            <field Type="RW" name="REG_DIVQ1_EN" offset="3" width="1">0x1</field>
             <field Type="RW" name="REG_DIVQ2_EN" offset="4" width="1">0x1</field>
             <field Type="RW" name="REG_DIVQ3_EN" offset="5" width="1">0x0</field>
             <field Type="RW" name="REG_RFCLK_SEL" offset="6" width="1">0x0</field>
@@ -3850,7 +3850,7 @@
             <field Type="RO" name="VCO1PH_SEL" offset="16" width="3">0x0</field>
             <field Type="RW" name="DIV1_START" offset="19" width="3">0x0</field>
             <field Type="RSVD" name="RESERVE20" offset="22" width="2">0x0</field>
-            <field Type="RW" name="POST1DIV" offset="24" width="7">0x1</field>
+            <field Type="RW" name="POST1DIV" offset="24" width="7">0x3</field>
             <field Type="RSVD" name="RESERVE21" offset="31" width="1">0x0</field>
           </register>
           <register address="0x00000014" description="PLL 2/3 division registers" name="PLL_DIV_2_3">
