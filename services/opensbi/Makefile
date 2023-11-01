@@ -110,8 +110,7 @@ endif
 
 ifdef CONFIG_USE_USER_CRYPTO
 SRCS-$(CONFIG_SERVICE_OPENSBI_CRYPTO) += \
-	services/opensbi/opensbi_crypto_ecall.c \
-
+	services/opensbi/opensbi_crypto_ecall.c
 endif
 
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
