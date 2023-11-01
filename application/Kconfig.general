@@ -23,6 +23,14 @@ config USE_IHC
 	help
 		Enable MiV Inter-Hart Communication (IHC)
 
+config USE_USER_CRYPTO
+	bool "Use User Crypto"
+	default n
+	help
+		Enable User Crypto for Crypto signing, OpenSBI ecall service or both.
+
+		If you do not know what to do here, say Y.
+
 menu "Serial Port"
 config UART_SURRENDER
 	bool "HSS UART Surrender"
