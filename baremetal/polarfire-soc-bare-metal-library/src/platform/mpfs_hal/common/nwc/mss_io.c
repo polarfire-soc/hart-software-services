@@ -550,7 +550,7 @@ uint8_t switch_mssio_config(MSS_IO_OPTIONS option)
  */
 __attribute__((weak)) uint8_t fabric_sd_emmc_demux_present(void)
 {
-    return (uint8_t) FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT;
+    return (uint8_t) CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT;
 }
 
 /**
@@ -559,7 +559,7 @@ __attribute__((weak)) uint8_t fabric_sd_emmc_demux_present(void)
  */
 __attribute__((weak)) uint32_t * fabric_sd_emmc_demux_address(void)
 {
-    return (uint32_t *)FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS;
+    return (uint32_t *)CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS;
 }
 
 /**
