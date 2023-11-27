@@ -29,29 +29,29 @@
 COMPRESS=tools/compression/hss-deflate.py
 
 OBJS-envm-wrapper = \
-	envm-wrapper/envm-wrapper_crt.o \
-	envm-wrapper/envm-wrapper_validate_crc.o \
-	envm-wrapper/envm-wrapper_stubs.o \
+	$(BINDIR)/envm-wrapper/envm-wrapper_crt.o \
+	$(BINDIR)/envm-wrapper/envm-wrapper_validate_crc.o \
+	$(BINDIR)/envm-wrapper/envm-wrapper_stubs.o \
 	\
-	application/hart0/hss_clock.o \
-	init/hss_sys_setup.o \
-	modules/misc/hss_crc32.o \
-	baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_cache.o \
-	modules/misc/csr_helper.o \
-	modules/misc/assert.o \
-	modules/misc/c_stubs.o \
-	modules/misc/stack_guard.o \
-	thirdparty/miniz/miniz.o
+	$(BINDIR)/application/hart0/hss_clock.o \
+	$(BINDIR)/init/hss_sys_setup.o \
+	$(BINDIR)/modules/misc/hss_crc32.o \
+	$(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_l2_cache.o \
+	$(BINDIR)/modules/misc/csr_helper.o \
+	$(BINDIR)/modules/misc/assert.o \
+	$(BINDIR)/modules/misc/c_stubs.o \
+	$(BINDIR)/modules/misc/stack_guard.o \
+	$(BINDIR)/thirdparty/miniz/miniz.o
 
 #ifndef CONFIG_CODE_SIGNING
 OBJS-envm-wrapper += \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.o \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_pll.o \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_io.o \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_sgmii.o \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_peripherals.o \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_utils.o \
-       baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss/mss_mmuart/mss_uart.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_pll.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_io.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_sgmii.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/mss_peripherals.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_utils.o \
+       $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss/mss_mmuart/mss_uart.o \
 
 #endif
 
@@ -62,15 +62,15 @@ LINKER_SCRIPT-envm-wrapper = envm-wrapper/envm-wrapper.ld
 
 COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2scratch:.elf=.bin.deflate)
 
-envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) 
-thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
-envm-wrapper/envm-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) 
+$(BINDIR)/thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
+$(BINDIR)/envm-wrapper/envm-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 define common-boot-mode-programmer
 	-$(RM) -r $(BINDIR)/bootmode$(BOOTMODE)
 	[ "$(SC_INSTALL_DIR)" ] || ( echo "SC_INSTALL_DIR environment variable is unset"; exit 1 )
 	[ -d $(SC_INSTALL_DIR) ] || ( echo "SoftConsole subdirectory >>$(SC_INSTALL_DIR)<< does not exist."; exit 2 )
-	$(MPFS_BOOTMODE_PROGRAMMER) --workdir `pwd`/Default --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(BOOTMODE_ARGS) $(1) $(2)
+	$(MPFS_BOOTMODE_PROGRAMMER) --workdir `pwd`/$(BINDIR) --die $(DIE) --package $(PACKAGE) --bootmode $(BOOTMODE) $(BOOTMODE_ARGS) $(1) $(2)
 endef
 
 

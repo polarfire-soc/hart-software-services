@@ -32,4 +32,4 @@ EXTRA_SRCS-$(CONFIG_SERVICE_MMC) += \
 INCLUDES +=\
 	-Iservices/mmc \
 
-services/mmc/mmc_api.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/mmc/mmc_api.o: CFLAGS=$(CFLAGS_GCCEXT)

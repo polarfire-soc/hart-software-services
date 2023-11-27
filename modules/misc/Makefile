@@ -51,11 +51,11 @@ EXTRA_SRCS-$(CONFIG_CC_STACKPROTECTOR_STRONG) += \
 
 INCLUDES +=\
 
-modules/misc/c_stubs.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/vsnprintf.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/assert.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/ee_printf.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/csr_helper.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/hss_memcpy_via_pdma.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/stack_guard.o: CFLAGS=$(CFLAGS_GCCEXT)
-modules/misc/uart_helper.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/c_stubs.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/vsnprintf.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/assert.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/ee_printf.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/csr_helper.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/hss_memcpy_via_pdma.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/stack_guard.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/modules/misc/uart_helper.o: CFLAGS=$(CFLAGS_GCCEXT)

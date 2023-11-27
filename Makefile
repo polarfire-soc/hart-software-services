@@ -29,6 +29,10 @@
 
 SHELL=/bin/sh
 
+BINDIR=build
+DOT_CONFIG=.config
+CONFIG_H=config.h
+
 #
 # To build the HSS under SoftConsole on Windows, we need to use SoftConsole-provided
 # tools, and potentially to modify paths
@@ -39,7 +43,7 @@ SHELL=/bin/sh
 include application/os.mk
 
 include application/Makefile
-include .config
+include $(DOT_CONFIG)
 
 ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
   include boards/${BOARD}/Makefile
@@ -53,6 +57,11 @@ else
     $(error Board >>${BOARD}<< not found)
   endif
 endif
+
+#ifeq ("$(wildcard $(BINDIR))", "")
+#  $(info INFO: mkdir -p $(BINDIR))
+#  #$(shell mkdir -p $(BINDIR))
+#endif
 
 CORE_CFLAGS+=-DBOARD=${BOARD}
 
@@ -70,7 +79,7 @@ LIBS =
 #$(info $$INCLUDES is [${INCLUDES}])
 
 ifdef CONFIG_CC_USE_MAKEDEP
-  DEPENDENCIES=$(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) $(ASM_SRCS-y:.S=.d)
+  DEPENDENCIES=$(addprefix $(BINDIR)/, $(SRCS-y:.c=.d) $(EXTRA_SRCS-y:.c=.d) $(TEST_SRCS:.c=.d) $(ASM_SRCS:.S=.d) $(ASM_SRCS-y:.S=.d))
   .PHONY: dep
   dep: $(DEPENDENCIES)
 
@@ -112,7 +121,7 @@ endef
 # Build Targets
 #
 
-$(TARGET-envm): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-envm) $(LIBS)
+$(TARGET-envm): $(OBJS) $(EXTRA_OBJS) $(CONFIG_H) $(DEPENDENCIES) $(LINKER_SCRIPT-envm) $(LIBS)
 	$(call main-build-target,envm)
 	$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
@@ -120,7 +129,7 @@ $(TARGET-envm): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-
 	$(OBJCOPY) -O ihex $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.hex
 	$(SIZE) $(BINDIR)/$(TARGET-envm) 2>/dev/null
 
-$(TARGET-l2scratch): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-l2scratch) $(LIBS) $(LIBS-y)
+$(TARGET-l2scratch): $(OBJS) $(EXTRA_OBJS) $(CONFIG_H) $(DEPENDENCIES) $(LINKER_SCRIPT-l2scratch) $(LIBS) $(LIBS-y)
 	$(call main-build-target,l2scratch)
 	$(ECHO) " BIN       `basename $@ .elf`.bin"
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
@@ -129,5 +138,5 @@ $(TARGET-l2scratch): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SC
 $(BINDIR)/$(TARGET-envm): $(TARGET-envm)
 $(BINDIR)/$(TARGET-l2scratch): $(TARGET-l2scratch)
 
-$(TARGET-ddr): $(OBJS) $(EXTRA_OBJS) config.h  $(DEPENDENCIES) $(LINKER_SCRIPT-ddr) $(LIBS)
+$(TARGET-ddr): $(OBJS) $(EXTRA_OBJS) $(CONFIG_H) $(DEPENDENCIES) $(LINKER_SCRIPT-ddr) $(LIBS)
 	$(call main-build-target,ddr)

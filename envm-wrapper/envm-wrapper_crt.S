@@ -475,7 +475,7 @@ __sc_end:
 	.align 4
 	.globl	hss_l2scratch_lz
 hss_l2scratch_lz:
-	.incbin	"Default/hss-l2scratch.bin.deflate"
+	.incbin	"build/hss-l2scratch.bin.deflate"
 
 	.section .data
 	.align 8

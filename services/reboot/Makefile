@@ -32,4 +32,4 @@ SRCS-$(CONFIG_SERVICE_REBOOT) += \
 INCLUDES +=\
 	-I./services/reboot \
 
-services/reboot/reboot_service.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/reboot/reboot_service.o: CFLAGS=$(CFLAGS_GCCEXT)
