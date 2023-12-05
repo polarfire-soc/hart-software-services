@@ -58,6 +58,7 @@ bool mpfs_is_hart_using_opensbi(int hartid);
 bool mpfs_are_harts_in_same_domain(int hartid1, int hartid2);
 bool mpfs_is_cold_reboot_allowed(int hartid);
 bool mpfs_is_warm_reboot_allowed(int hartid);
+void mpfs_uart_surrender(void);
 
 extern struct StateMachine opensbi_service;
 
