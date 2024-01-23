@@ -46,8 +46,8 @@ enum BeuStatesEnum {
  * \brief Health Driver State Descriptors
  */
 static const struct StateDesc healthmon_state_descs[] = {
-    { (const stateType_t)HEALTH_INITIALIZATION, (const char *)"init",      NULL, NULL, &healthmon_init_handler },
-    { (const stateType_t)HEALTH_MONITORING,      (const char *)"monitoring", NULL, NULL, &healthmon_monitoring_handler },
+    { (const stateType_t)HEALTH_INITIALIZATION, (const char *)"init",       NULL, NULL, &healthmon_init_handler },
+    { (const stateType_t)HEALTH_MONITORING,     (const char *)"monitoring", NULL, NULL, &healthmon_monitoring_handler },
 };
 
 /*!
