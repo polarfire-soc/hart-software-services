@@ -223,7 +223,7 @@ struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI)
     &opensbi_service,
 #endif
-#if IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
     &tinycli_service,
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
@@ -289,9 +289,6 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     { "HSS_QSPIInit",                  HSS_QSPIInit,                  false, false },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-#  if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-    { "HSS_TinyCLI_Parser",            HSS_TinyCLI_Parser,            false, false },
-#  endif
 #  if IS_ENABLED(CONFIG_USE_IHC)
     { "HSS_IHCInit",                   HSS_IHCInit,                   false, false },
 #  endif

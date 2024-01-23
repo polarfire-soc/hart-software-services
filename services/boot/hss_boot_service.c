@@ -26,6 +26,7 @@
 #include "common/mss_peripherals.h"
 #include "hss_crc32.h"
 #include "u54_state.h"
+#include "hss_boot_init.h"
 
 #include <assert.h>
 #include <string.h>
@@ -792,7 +793,7 @@ static void boot_idle_handler(struct StateMachine * const pMyMachine)
 // PUBLIC API
 //
 
-bool HSS_Boot_Harts(const union HSSHartBitmask restartHartBitmask)
+bool HSS_Boot_Harts_Using_Bitmask(const union HSSHartBitmask restartHartBitmask)
 {
     bool result = false;
 
@@ -835,28 +836,9 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
     if (!HSS_Boot_ValidateImage(pBootImage)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for u54_%u\n", source);
     } else if (source != HSS_HART_ALL) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for u54_%u\n", source);
+        union HSSHartBitmask restartHartBitmask = { .uint = BIT(source) };
 
-        union HSSHartBitmask restartHartBitmask = { .uint = 0u };
-
-        // in interrupts-always-enabled world of the HSS, it would appear less
-        // racey to boot secondary cores first and have them all wait...
-        for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
-            enum HSSHartId peer = bootMachine[i].hartId;
-
-            if (peer == source) { continue; } // skip myself
-
-            if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[source-1].entryPoint) {
-                // found another hart in same boot set as me...
-                restartHartBitmask.uint |= (1u << peer);
-            }
-        }
-
-        restartHartBitmask.uint |= (1u << source);
-
-        if (pBootImage->hart[source-1].numChunks && HSS_Boot_Harts(restartHartBitmask)) {
-                result = IPI_SUCCESS;
-        }
+        result = HSS_Boot_RestartCores_Using_Bitmask(restartHartBitmask);
     } else {
         //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts\n");
 
@@ -864,13 +846,51 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
             .s = { .u54_1 = 1, .u54_2 = 1, .u54_3 = 1, .u54_4 = 1, }
         };
 
-        if (HSS_Boot_Harts(restartHartBitmask)) {
+        if (HSS_Boot_Harts_Using_Bitmask(restartHartBitmask)) {
             result = IPI_SUCCESS;
         }
     }
 
     return result;
 }
+
+enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask restartHartBitmask)
+{
+    enum IPIStatusCode result = IPI_FAIL;
+
+    if (!HSS_Boot_ValidateImage(pBootImage)) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for Hart bitmask %x\n", restartHartBitmask.uint);
+    } else {
+        for (unsigned int source = HSS_HART_U54_1;
+             (source < HSS_HART_NUM_PEERS) && (restartHartBitmask.uint & (unsigned int)BIT(source)); source++) {
+            union HSSHartBitmask localRestartHartBitmask = { .uint = 0u };
+
+            // in interrupts-always-enabled world of the HSS, it would appear less
+            // racey to boot secondary cores first and have them all wait...
+            for (unsigned int i = 0u; i < ARRAY_SIZE(bootMachine); i++) {
+                enum HSSHartId peer = bootMachine[i].hartId;
+
+                if (peer == source) { continue; } // skip myself
+
+                if (pBootImage->hart[peer-1].entryPoint == pBootImage->hart[source-1].entryPoint) {
+                    // found another hart in same boot set as me...
+                    localRestartHartBitmask.uint |= (1u << peer);
+                }
+            }
+
+            localRestartHartBitmask.uint |= (1u << source);
+
+            if (pBootImage->hart[source-1].numChunks && HSS_Boot_Harts_Using_Bitmask(localRestartHartBitmask)) {
+                    result = IPI_SUCCESS;
+            }
+
+            restartHartBitmask.uint &= (~localRestartHartBitmask.uint);
+        }
+    }
+
+    return result;
+}
+
 
 bool HSS_SkipBoot_IsSet(enum HSSHartId target)
 {
@@ -1205,7 +1225,7 @@ bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut)
 
         // couldn't send message, so free up resources...
         if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%u: failed to send message, so freeing\n", target); //TODO
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "u54_%u: failed to send message, so freeing\n", target);
             IPI_MessageFree(*indexOut);
         }
     }
