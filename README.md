@@ -135,7 +135,7 @@ Verbose builds (which show each individual command) are possible by adding V=1 t
 
 The HSS relies only on SoftConsole v2021.3 or later to build on Windows.
 
-For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/software-development/polarfire-soc-software-tool-flow.md#build-the-hss.
+For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://mi-v-ecosystem.github.io/redirects/software-development_polarfire-soc-software-tool-flow
 
 First, ensure that the `%SC_INSTALL_DIR%` environment variable is correctly set to the location of SoftConsole.  For example, if SoftConsole is installed in `C:\Microchip\SoftConsole-v2021.3-7.0.0.578`:
 
