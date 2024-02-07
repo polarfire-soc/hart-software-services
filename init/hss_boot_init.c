@@ -20,6 +20,7 @@
 #include "hss_boot_init.h"
 #include "hss_sys_setup.h"
 #include "hss_progress.h"
+#include "u54_state.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_SPI)
 #  include <mss_sys_services.h>
@@ -39,6 +40,10 @@
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
 #  include "mmc_service.h"
 #  include "gpt.h"
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+#  include "tinycli_service.h"
 #endif
 
 #if (SPI_FLASH_BOOT_ENABLED)
@@ -62,6 +67,8 @@
 
 #include "hss_boot_pmp.h"
 #include "hss_atomic.h"
+
+#include "sbi_bitops.h"
 
 //
 // local module functions
@@ -176,6 +183,35 @@ void HSS_BootListStorageProviders(void)
     }
 }
 
+void HSS_BootHarts(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+        union HSSHartBitmask restartHartBitmask = { .uint = 0u };
+
+        for (int i = HSS_HART_U54_1; i < HSS_HART_NUM_PEERS; i++) {
+            //mHSS_DEBUG_PRINTF(LOG_ERROR, "%s(): checking u54_%d\n", __func__, i);
+            if (HSS_U54_GetState_Ex(i) == HSS_State_Idle) {
+                //mHSS_DEBUG_PRINTF(LOG_ERROR, "%s(): => rebooting u54_%d\n", __func__, i);
+                restartHartBitmask.uint |= BIT(i);
+            }
+        }
+
+        if (restartHartBitmask.uint) {
+            HSS_Boot_RestartCores_Using_Bitmask(restartHartBitmask);
+            HSS_BootInit_IndicatePostInit();
+
+#  if IS_ENABLED(CONFIG_UART_SURRENDER)
+#    if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+            HSS_TinyCLI_SurrenderUART();
+#    endif
+#    if IS_ENABLED(CONFIG_OPENSBI)
+            mpfs_uart_surrender();
+#    endif
+#  endif
+#endif
+        }
+}
+
 bool HSS_BootInit(void)
 {
     bool result = true;
@@ -193,7 +229,7 @@ bool HSS_BootInit(void)
         }
     } else {
         for (int i = 0; i < ARRAY_SIZE(pStorages); i++) {
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Trying to boot via %s ...\n", pStorages[i]->name);
+            mHSS_DEBUG_PRINTF(LOG_NORMAL, "Trying to get boot image via %s ...\n", pStorages[i]->name);
 
             if (pStorages[i]->init) {
                 result = pStorages[i]->init();
@@ -207,6 +243,10 @@ bool HSS_BootInit(void)
             }
         }
     }
+
+#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+    HSS_BootHarts();
+#endif
 
     HSS_PerfCtr_Lap(perf_ctr_index);
 #endif

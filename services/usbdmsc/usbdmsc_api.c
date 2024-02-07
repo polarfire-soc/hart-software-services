@@ -106,7 +106,7 @@ bool USBDMSC_Poll(void)
     bool idle = mpu_blocks_access;
 
     if (!idle) {
-#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER) || !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
+#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
         uint8_t rx_byte = 0;
 
         bool retval = uart_getchar(&rx_byte, 0, false);
@@ -175,7 +175,7 @@ void USBDMSC_Start(void)
     if (idle) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false...\n");
     } else {
-#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER) || !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
+#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
         bool isHostConnected = false;
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
 

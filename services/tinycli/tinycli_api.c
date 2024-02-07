@@ -77,7 +77,6 @@
 #define mMAX_NUM_TOKENS 40
 static size_t argc_tokenCount = 0u;
 static char *argv_tokenArray[mMAX_NUM_TOKENS];
-static bool quitFlag = false;
 static size_t tokenId;
 
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_MONITOR)
@@ -149,7 +148,6 @@ static void tinyCLI_Scrub_(void);
 static void output_duration_(char const * const description, const uint32_t val, bool continuation);
 static void tinyCLI_DumpStateMachines_(void);
 static void tinyCLI_IPIDumpStats_(void);
-static void tinyCLI_Quit_(void);
 static void tinyCLI_EMMC_(void);
 static void tinyCLI_MMC_(void);
 static void tinyCLI_SDCARD_(void);
@@ -178,7 +176,6 @@ static void display_help_(struct tinycli_cmd const * const pCmds, size_t arraySi
 
 enum CmdId {
     CMD_YMODEM,
-    CMD_QUIT,
     CMD_BOOT,
     CMD_RESET,
     CMD_HELP,
@@ -282,7 +279,6 @@ static const struct tinycli_cmd toplevelCmds[] = {
 #if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     { CMD_YMODEM,  "YMODEM",  "Run YMODEM utility to download an image to DDR.", tinyCLI_YModem_ },
 #endif
-    { CMD_QUIT,    "QUIT",    "Quit TinyCLI and return to regular boot process.", tinyCLI_Quit_ },
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     { CMD_BOOT,    "BOOT",    "Quit TinyCLI and return to regular boot process.", tinyCLI_Boot_ },
 #endif
@@ -312,7 +308,6 @@ static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
 #if IS_ENABLED(CONFIG_SERVICE_YMODEM)
     { CMD_YMODEM,  true },
 #endif
-    { CMD_QUIT,    true },
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     { CMD_BOOT,    true },
 #endif
@@ -637,7 +632,11 @@ static void tinyCLI_Boot_Select_(void)
 
 static void tinyCLI_Boot_(void)
 {
-    quitFlag = !dispatch_command_(bootCmds, ARRAY_SIZE(bootCmds), 1u);
+    if (!dispatch_command_(bootCmds, ARRAY_SIZE(bootCmds), 1u)) {
+        // figure out idle harts
+        // boot just those babies...
+        HSS_BootHarts();
+    }
 }
 
 #endif
@@ -888,11 +887,6 @@ static void tinyCLI_Scrub_(void)
 }
 #endif
 
-static void tinyCLI_Quit_(void)
-{
-    quitFlag = true;
-}
-
 static void tinyCLI_EMMC_(void)
 {
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
@@ -943,25 +937,6 @@ static void tinyCLI_USBDMSC_(void)
 {
     USBDMSC_Start();
     HSS_TinyCLI_WaitForUSBMSCDDone();
-}
-#endif
-
-#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
-static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen);
-static bool tinyCLI_Getline_(char **pBuffer, size_t *pBufLen)
-{
-    bool result = false;
-    ssize_t status = 0;
-
-    status = uart_getline(pBuffer, pBufLen);
-
-    if (status < 0) {
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Problem reading input\n");
-    } else {
-        result = true;
-    }
-
-    return result;
 }
 #endif
 
@@ -1035,7 +1010,7 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
                 }
             }
 
-            if (matchFoundFlag && (pCmds[cmdIndex].handler)) {
+            if (pCmds[cmdIndex].handler) {
                 pCmds[cmdIndex].handler();
                 handled = true;
             }
@@ -1062,24 +1037,10 @@ bool HSS_TinyCLI_Parser(void)
         HSSTicks_t readlineIdleTime = HSS_GetTime();
 #endif
 
-        while (!quitFlag) {
-#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI_REGISTER)
-            static char *pBuffer = NULL;
-            static size_t bufLen = 0u;
-
-            mHSS_FANCY_PUTS(LOG_NORMAL, ">> ");
-            bool result = tinyCLI_Getline_(&pBuffer, &bufLen);
-
-            if (result && (pBuffer != NULL)) {
-                if (HSS_TinyCLI_ParseIntoTokens(pBuffer)) {
-                   HSS_TinyCLI_Execute();
-                }
-            }
-#else
+        {
             RunStateMachine(&tinycli_service);
-#  if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
             RunStateMachine(&usbdmsc_service);
-#  endif
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT)
