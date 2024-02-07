@@ -86,18 +86,13 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
         case SBI_EXT_HSS_REBOOT:
             IPI_MessageAlloc(&index);
             IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
-            result = 0;
+            result = SBI_OK;
             break;
 
         default:
             result = SBI_ENOTSUPP;
     };
 
-//exit:
-    //if (result >= 0) {
-    //    *out_val = result;
-    //    result = 0;
-    //}
     return result;
 }
 
