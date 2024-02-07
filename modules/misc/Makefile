@@ -36,6 +36,7 @@ EXTRA_SRCS-y += \
         modules/misc/hss_progress.c \
         modules/misc/device_serial_number.c \
         modules/misc/uart_helper.c \
+        modules/misc/hss_trigger.c \
 
 #        modules/misc/ee_printf.c \
 #        modules/misc/vsnprintf.c \

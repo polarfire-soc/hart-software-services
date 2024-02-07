@@ -29,6 +29,7 @@
 #include "mpfs_reg_map.h"
 #include "csr_helper.h"
 
+#include "hss_trigger.h"
 #include "hss_state_machine.h"
 #include "hss_registry.h"
 #include "hss_atomic.h"
@@ -112,7 +113,8 @@ __extension__ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
     [ IPI_MSG_HALT ]              = "IPI_MSG_HALT",
     [ IPI_MSG_CONTINUE ]          = "IPI_MSG_CONTINUE",
     [ IPI_MSG_GOTO ]              = "IPI_MSG_GOTO",
-    [ IPI_MSG_OPENSBI_INIT ]      = "IPI_MSG_OPENSBI_INIT"
+    [ IPI_MSG_OPENSBI_INIT ]      = "IPI_MSG_OPENSBI_INIT",
+    [ IPI_MSG_DDR_TRAIN ]         = "IPI_MSG_DDR_TRAIN"
 };
 #endif
 
@@ -514,6 +516,8 @@ bool IPI_QueuesInit(void)
     }
 
     IPI_DATA.ipi_version = IPI_VERSION;
+
+    HSS_Trigger_Notify(EVENT_IPI_INITIALIZED);
 
     return true;
 }

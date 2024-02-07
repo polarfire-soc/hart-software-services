@@ -1,8 +1,8 @@
-#ifndef HSS_BOOT_INIT_H
-#define HSS_BOOT_INIT_H
+#ifndef HSS_STARTUP_SERVICE_H
+#define HSS_STARTUP_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,25 +25,25 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Boot Init Routines
+ * Hart Software Services - Startup Service API
  *
+ */
+
+
+/*!
+ * \file Startup API
+ * \brief Startup State Machine API function declarations
  */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void HSS_BootHarts(void);
-bool HSS_BootInit(void);
+#include "hss_state_machine.h"
+#include "hss_debug.h"
 
-void HSS_BootSelectQSPI(void);
-void HSS_BootSelectMMC(void);
-void HSS_BootSelectEMMC(void);
-void HSS_BootSelectSDCARD(void);
-void HSS_BootSelectPayload(void);
-void HSS_BootSelectSPI(void);
+extern struct StateMachine startup_service;
 
-void HSS_BootListStorageProviders(void);
 #ifdef __cplusplus
 }
 #endif

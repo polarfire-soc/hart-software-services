@@ -1010,7 +1010,6 @@ typedef enum MTC_ADD_PATTERN_
  */
 typedef enum DDR_SM_STATES_
 {
-
     DDR_STATE_INIT         = 0x00,     /*!< 0 DDR_STATE_INIT*/
     DDR_STATE_MONITOR      = 0x01,     /*!< 1 DDR_STATE_MONITOR */
     DDR_STATE_TRAINING     = 0x02,     /*!< 2 DDR_STATE_TRAINING */
@@ -1022,7 +1021,6 @@ typedef enum DDR_SM_STATES_
  */
 typedef enum DDR_SS_COMMAND_
 {
-
     DDR_SS__INIT        = 0x00,     /*!< 0 DDR_SS__INIT */
     DDR_SS_MONITOR      = 0x01,     /*!< 1 DDR_SS_MONITOR */
 } DDR_SS_COMMAND;
@@ -1033,7 +1031,6 @@ typedef enum DDR_SS_COMMAND_
  */
 typedef enum DDR_SS_STATUS_
 {
-
     DDR_SETUP_DONE      = 0x01,      /*!< 0 DDR_SETUP_DONE */
     DDR_SETUP_FAIL      = 0x02,      /*!< 1 DDR_SETUP_FAIL */
     DDR_SETUP_SUCCESS   = 0x04,      /*!< 2 DDR_SETUP_SUCCESS */
@@ -1046,7 +1043,6 @@ typedef enum DDR_SS_STATUS_
  */
 typedef enum DDR_TRAINING_SM_
 {
-
     DDR_TRAINING_INIT,              /*!< DDR_TRAINING_INIT */
     DDR_TRAINING_FAIL,
     DDR_CHECK_TRAINING_SWEEP,
@@ -1116,7 +1112,6 @@ typedef enum DDR_TRAINING_SM_
 
  */
 typedef enum {
-
     USR_CMD_GET_DDR_STATUS      = 0x00,    //!< USR_CMD_GET_DDR_STATUS
     USR_CMD_GET_MODE_SETTING    = 0x01,    //!< USR_CMD_GET_MODE_SETTING
     USR_CMD_GET_W_CALIBRATION   = 0x02,    //!< USR_CMD_GET_W_CALIBRATION

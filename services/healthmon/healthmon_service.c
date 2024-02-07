@@ -15,6 +15,7 @@
 #include "config.h"
 #include "hss_types.h"
 #include "hss_state_machine.h"
+#include "hss_trigger.h"
 #include "hss_debug.h"
 
 #include <assert.h>
@@ -25,10 +26,6 @@
 #include "sbi_bitops.h"
 
 #include "mss_hart_ints.h"
-
-#ifndef BIT
-#  define BIT(nr)			(1UL << (nr))
-#endif
 
 static void healthmon_init_handler(struct StateMachine * const pMyMachine);
 static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine);
@@ -162,7 +159,9 @@ static struct HealthMonitor_Status
 //
 static void healthmon_init_handler(struct StateMachine * const pMyMachine)
 {
-    pMyMachine->state++;
+    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+        pMyMachine->state = HEALTH_MONITORING;
+    }
 }
 
 /////////////////

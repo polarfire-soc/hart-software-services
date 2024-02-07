@@ -100,6 +100,7 @@ enum IPIMessagesEnum {
     IPI_MSG_CONTINUE,
     IPI_MSG_GOTO,
     IPI_MSG_OPENSBI_INIT,
+    IPI_MSG_DDR_TRAIN,
     IPI_MSG_NUM_MSG_TYPES,
 };
 

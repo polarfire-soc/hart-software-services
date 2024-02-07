@@ -54,7 +54,6 @@ bool HSS_SkipBoot_IsSet(enum HSSHartId target);
 
 void HSS_Register_Boot_Image(struct HSS_BootImage *pImage);
 
-bool HSS_Boot_Harts_Using_Bitmask(const union HSSHartBitmask bootHartBitmask);
 bool HSS_Boot_ValidateImage(struct HSS_BootImage *pBootImage);
 bool HSS_Boot_VerifyMagic(struct HSS_BootImage const * const pBootImage);
 

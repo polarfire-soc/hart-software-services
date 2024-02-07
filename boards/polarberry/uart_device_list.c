@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "hss_boot_init.h"
+#include "hss_trigger.h"
 #include "uart_helper.h"
 
 extern mss_uart_instance_t * const pUartDeviceList[];
@@ -25,7 +25,7 @@ extern mss_uart_instance_t * const pUartDeviceList[];
 void *HSS_UART_GetInstance(int hartid)
 {
     mss_uart_instance_t *pUart;
-    const bool postBoot = HSS_BootInit_IsPostInit();
+    const bool postBoot = HSS_Trigger_IsNotified(EVENT_POST_BOOT);
 
     switch (hartid) {
     default:

@@ -26,6 +26,7 @@
 #include "common/mss_peripherals.h"
 #include "hss_crc32.h"
 #include "u54_state.h"
+#include "hss_trigger.h"
 #include "hss_boot_init.h"
 
 #include <assert.h>
@@ -327,26 +328,28 @@ static bool check_for_ipi_acks(struct StateMachine * const pMyMachine)
 //
 static void boot_init_handler(struct StateMachine * const pMyMachine)
 {
-    if (pBootImage) {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot\n", pMyMachine->pMachineName);
-        SYSREG->BOOT_FAIL_CR = 0;
+    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+        if (pBootImage) {
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::\tstarting boot\n", pMyMachine->pMachineName);
+            SYSREG->BOOT_FAIL_CR = 0;
 
-        pMyMachine->startTime = HSS_GetTime();
-        struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
-        enum HSSHartId const target = pInstanceData->target;
+            pMyMachine->startTime = HSS_GetTime();
+            struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
+            enum HSSHartId const target = pInstanceData->target;
 
-        if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
-	   mHSS_DEBUG_PRINTF(LOG_STATUS, "%s:: BOOT_FLAG_SKIP_OPENSBI found\n", pMyMachine->pMachineName);
+            if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_OPENSBI) {
+	           mHSS_DEBUG_PRINTF(LOG_STATUS, "%s:: BOOT_FLAG_SKIP_OPENSBI found\n", pMyMachine->pMachineName);
+            }
+
+            HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
+            pMyMachine->state = BOOT_SETUP_PMP;
+        } else {
+            // unexpected error state
+            if (!pBootImage) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::\tNo Boot Image registered\n", pMyMachine->pMachineName);
+            }
+            pMyMachine->state = BOOT_ERROR;
         }
-
-        HSS_PerfCtr_Allocate(&pInstanceData->perfCtr, pMyMachine->pMachineName);
-        pMyMachine->state = BOOT_SETUP_PMP;
-    } else {
-        // unexpected error state
-        if (!pBootImage) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::\tNo Boot Image registered\n", pMyMachine->pMachineName);
-        }
-        pMyMachine->state = BOOT_ERROR;
     }
 }
 
@@ -793,7 +796,8 @@ static void boot_idle_handler(struct StateMachine * const pMyMachine)
 // PUBLIC API
 //
 
-bool HSS_Boot_Harts_Using_Bitmask(const union HSSHartBitmask restartHartBitmask)
+static bool boot_using_hart_bitmask_(const union HSSHartBitmask restartHartBitmask);
+static bool boot_using_hart_bitmask_(const union HSSHartBitmask restartHartBitmask)
 {
     bool result = false;
 
@@ -826,12 +830,17 @@ bool HSS_Boot_Harts_Using_Bitmask(const union HSSHartBitmask restartHartBitmask)
         }
     }
 
+    HSS_Trigger_Notify(EVENT_POST_BOOT);
     return result;
 }
 
 enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 {
     enum IPIStatusCode result = IPI_FAIL;
+
+    if (!pBootImage) {
+        HSS_BootInit();
+    }
 
     if (!HSS_Boot_ValidateImage(pBootImage)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for u54_%u\n", source);
@@ -846,7 +855,7 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
             .s = { .u54_1 = 1, .u54_2 = 1, .u54_3 = 1, .u54_4 = 1, }
         };
 
-        if (HSS_Boot_Harts_Using_Bitmask(restartHartBitmask)) {
+        if (boot_using_hart_bitmask_(restartHartBitmask)) {
             result = IPI_SUCCESS;
         }
     }
@@ -857,6 +866,10 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask restartHartBitmask)
 {
     enum IPIStatusCode result = IPI_FAIL;
+
+    if (!pBootImage) {
+        HSS_BootInit();
+    }
 
     if (!HSS_Boot_ValidateImage(pBootImage)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for Hart bitmask %x\n", restartHartBitmask.uint);
@@ -880,7 +893,7 @@ enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask rest
 
             localRestartHartBitmask.uint |= (1u << source);
 
-            if (pBootImage->hart[source-1].numChunks && HSS_Boot_Harts_Using_Bitmask(localRestartHartBitmask)) {
+            if (pBootImage->hart[source-1].numChunks && boot_using_hart_bitmask_(localRestartHartBitmask)) {
                     result = IPI_SUCCESS;
             }
 
@@ -986,7 +999,7 @@ bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
             mHSS_DEBUG_PRINTF(LOG_ERROR, "Boot Image failed code signing\n");
 #  endif
         } else if (validateCrc_(pImage)) {
-            mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC\n");
+            //mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC\n");
 
         // GCC 9.x appears to dislike the pImage cast, and sees dereferencing the
         // set name as an out-of-bounds... So we'll disable that warning just for

@@ -8,27 +8,41 @@ config SERVICE_BOOT
                 is enabled by default.
 
 menu "Boot Service"
-	visible if SERVICE_BOOT
+    visible if SERVICE_BOOT
 
 config SERVICE_BOOT_SPI_FLASH_OFFSET
-        hex "Copy payload from SPI FLASH at offset"
-        default  0x400
-        depends on SERVICE_SPI
-        help
+    hex "Copy payload from SPI FLASH at offset"
+    default  0x80000000
+    depends on SERVICE_SPI
+    help
                 This feature specifies the offset in SPI Flash where a boot image is stored.
 
 config SERVICE_BOOT_USE_PAYLOAD
-        bool "Use Payload file"
-        default  n
-        depends on SERVICE_BOOT 
-        help
+    bool "Use Payload Boot"
+    default  n
+    depends on SERVICE_BOOT
+    help
                 This feature enables booting a directly contained payload.
 
+config SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC
+    bool "Use Payload in Fabric"
+    default  n
+    depends on SERVICE_BOOT_USE_PAYLOAD
+    help
+            This feature enables booting a payload contained in the fabric.
+
+config SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC_ADDRESS
+    hex "Payload Fabric Address"
+    default  0x400
+    depends on SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC
+    help
+            This feature specifies the address for a payload contained in the fabric.
+
 config SERVICE_BOOT_CUSTOM_FLOW
-        bool "Use Custom Boot Flow"
-        default  n
-        depends on SERVICE_BOOT
-        help
+    bool "Use Custom Boot Flow"
+    default  n
+    depends on SERVICE_BOOT
+    help
                 This feature enables custom booting flow where all HARTs
                 will jump to same entry point in M-mode.
 
@@ -40,11 +54,11 @@ config SERVICE_BOOT_DDR_TARGET_ADDR
                 This feature specifies a scratch address for EMMC/QSPI decompression
 
 config SERVICE_BOOT_MMC_USE_GPT
-        bool "Use GPT with MMC"
-        default SERVICE_BOOT && SERVICE_MMC && y
+    bool "Use GPT with MMC"
+    default SERVICE_BOOT && SERVICE_MMC && y
 	depends on SERVICE_MMC
 	help
-		If CONFIG_SERVICE_MMC is enabled, then for MMC boots this option enables 
+		If CONFIG_SERVICE_MMC is enabled, then for MMC boots this option enables
                 parsing of a GUID Partition Table (GPT) in search of the boot image starting
                 sector..
 

@@ -23,6 +23,7 @@
 
 #include "hss_atomic.h"
 #include "hss_init.h"
+#include "hss_board_init.h"
 #include "hss_version.h"
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
 #  include "tinycli_service.h"
@@ -225,9 +226,9 @@ bool HSS_E51_Banner(void)
     HSS_PrintToolVersions();
 #endif
 
-    if (&_hss_start == &__l2_start) {
-        mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2 Scratchpad\n\n");
-    }
+    //if (&_hss_start == &__l2_start) {
+    //    mHSS_FANCY_PRINTF(LOG_WARN, "NOTICE: Running from L2 Scratchpad\n\n");
+    //}
 
     return true;
 }
@@ -273,5 +274,7 @@ bool HSS_ResetReasonInit(void)
 
 void HSS_Init(void)
 {
-    RunInitFunctions(spanOfGlobalInitFunctions, globalInitFunctions);
+    HSS_Init_RWDATA_BSS();
+    HSS_UARTInit();
+    HSS_OpenSBIInit();
 }

@@ -17,6 +17,7 @@
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 #include "hss_boot_pmp.h"
+#include "hss_trigger.h"
 
 #include "ssmb_ipi.h"
 #include <assert.h>
@@ -73,7 +74,9 @@ struct StateMachine scrub_service = {
 //
 static void scrub_init_handler(struct StateMachine * const pMyMachine)
 {
-    pMyMachine->state++;
+    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
+        pMyMachine->state++;
+    }
 }
 
 /////////////////

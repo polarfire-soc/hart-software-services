@@ -259,7 +259,7 @@ SECTIONS
      * (Explicitly) Initialized data section
      *
      */
-#ifdef CONFIG_SERVICE_BOOT_USE_PAYLOAD 
+#if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD) && !defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC)
     .data.payload : ALIGN(16) 
     {
       _payload_start = .;

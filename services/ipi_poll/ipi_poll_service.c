@@ -23,6 +23,7 @@
 
 #include "mpfs_reg_map.h"
 #include "csr_helper.h"
+#include "hss_trigger.h"
 
 #include "ipi_poll_service.h"
 
@@ -73,9 +74,11 @@ static union HSSHartBitmask hartBitmask = { .uint = 0 };
 
 static void ipiPoll_init_handler(struct StateMachine * const pMyMachine)
 {
-    memset(&hartBitmask, 0, sizeof(hartBitmask));
-    hartBitmask.uint = mHSS_BITMASK_ALL_U54;
-    pMyMachine->state = IPI_POLL_MONITORING;
+    if (HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+        memset(&hartBitmask, 0, sizeof(hartBitmask));
+        hartBitmask.uint = mHSS_BITMASK_ALL_U54;
+        pMyMachine->state = IPI_POLL_MONITORING;
+    }
 }
 
 // --------------------------------------------------------------------------------------------------

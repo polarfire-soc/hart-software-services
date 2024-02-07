@@ -39,6 +39,7 @@
 #include "wdog_service.h"
 #include "hss_perfctr.h"
 #include "profiling.h"
+#include "hss_trigger.h"
 #include "u54_state.h"
 
 #include "hss_registry.h"
@@ -309,7 +310,7 @@ static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
     { CMD_YMODEM,  true },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-    { CMD_BOOT,    true },
+    { CMD_BOOT,    false },
 #endif
     { CMD_RESET,   true },
     { CMD_HELP,    false },
@@ -329,7 +330,7 @@ static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
     { CMD_USBDMSC, true },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
-    { CMD_SCRUB,   true },
+    { CMD_SCRUB,   false },
 #endif
 };
 
@@ -633,8 +634,6 @@ static void tinyCLI_Boot_Select_(void)
 static void tinyCLI_Boot_(void)
 {
     if (!dispatch_command_(bootCmds, ARRAY_SIZE(bootCmds), 1u)) {
-        // figure out idle harts
-        // boot just those babies...
         HSS_BootHarts();
     }
 }
@@ -916,7 +915,7 @@ static void tinyCLI_SDCARD_(void)
 
 static void tinyCLI_Payload_(void)
 {
-#if IS_ENABLED(CONFIG_SERVICE_PAYLOAD) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     HSS_BootSelectPayload();
 #else
     tinyCLI_UnsupportedBootMechanism_("Payload");
@@ -935,6 +934,7 @@ static void tinyCLI_SPI_(void)
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
 static void tinyCLI_USBDMSC_(void)
 {
+    USBDMSC_Init();
     USBDMSC_Start();
     HSS_TinyCLI_WaitForUSBMSCDDone();
 }
@@ -998,7 +998,7 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
 
         if (matchFoundFlag) {
             if (level == 0u) { // toplevel
-                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && HSS_BootInit_IsPostInit()) {
+                if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && HSS_Trigger_IsNotified(EVENT_POST_BOOT)) {
                     mHSS_DEBUG_PRINTF(LOG_WARN,
                         "Command %s may cause problems post boot.\n"
                         "Please type it again if you definitely want to execute it"

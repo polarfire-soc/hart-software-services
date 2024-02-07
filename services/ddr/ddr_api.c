@@ -14,11 +14,17 @@
 
 #include "config.h"
 #include "hss_types.h"
-#include "hss_state_machine.h"
 #include "hss_debug.h"
+#include "hss_state_machine.h"
+#include "hss_trigger.h"
 
 #include "ssmb_ipi.h"
+#include "hss_init.h"
+#include "hss_memtest.h"
 #include "ddr_service.h"
+
+#include "csr_helper.h"
+#include <assert.h>
 
 extern const uint64_t __ddr_start;
 extern const uint64_t __ddr_end;
@@ -84,5 +90,26 @@ uintptr_t HSS_DDRHi_GetStart(void)
 
 void HSS_DDR_Train(void)
 {
-    //mHSS_DEBUG_PRINTF("running DDR training on hart %u...\n", current_hartid());
+    //mHSS_DEBUG_PRINTF(LOG_WARN, "*** >>DDR Training Started<<\n");
+    IPI_Send(HSS_HART_U54_1, IPI_MSG_DDR_TRAIN, 0u, 0u, NULL, NULL);
 }
+
+enum IPIStatusCode HSS_DDR_Train_IPIHandler(TxId_t transaction_id, enum HSSHartId source,
+    uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr)
+{
+    (void)transaction_id;
+    (void)source;
+    (void)immediate_arg;
+    (void)p_extended_buffer_in_ddr;
+    (void)p_ancilliary_buffer_in_ddr;
+
+    HSS_DDRInit();
+    HSS_ZeroDDR();
+#if IS_ENABLED(CONFIG_MEMTEST)
+    HSS_MemTestDDRFast();
+#endif
+    HSS_Trigger_Notify(EVENT_DDR_TRAINED);
+
+    return IPI_IDLE;
+}
+

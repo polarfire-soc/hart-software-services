@@ -19,6 +19,7 @@
 #include "hss_clock.h"
 #include "hss_boot_init.h"
 #include "hss_progress.h"
+#include "hss_trigger.h"
 
 #include <string.h> //memset
 #include <assert.h>
@@ -91,7 +92,9 @@ struct StateMachine tinycli_service = {
 
 static void tinycli_init_handler(struct StateMachine * const pMyMachine)
 {
-    pMyMachine->state = TINYCLI_PREBOOT;
+    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+        pMyMachine->state = TINYCLI_PREBOOT;
+    }
 }
 
 /////////////////
@@ -135,7 +138,7 @@ static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine)
 
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT)
 #  define PREBOOT_IDLE_TIMEOUT (ONE_SEC * CONFIG_SERVICE_TINYCLI_PREBOOT_TIMEOUT)
-    if (!HSS_BootInit_IsPostInit()) {
+    if (!HSS_Trigger_IsNotified(EVENT_POST_BOOT)) {
         if (HSS_Timer_IsElapsed(readlineIdleTime, PREBOOT_IDLE_TIMEOUT)) {
             mHSS_DEBUG_PRINTF(LOG_ERROR, "***** Timeout on Pre-Boot TinyCLI *****\n");
             HSS_SpinDelay_Secs(5u);
