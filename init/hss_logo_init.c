@@ -23,7 +23,6 @@
 // define these as ASCII characters if color output is not enabled
 //
 #if IS_ENABLED(CONFIG_COLOR_OUTPUT)
-#  if IS_ENABLED(CONFIG_LOGO_INVERT_COLORS)
   const char B0_str[] ="\033[48;5;188m ";
   const char W0_str[] ="\033[0m ";
   const char r1_str[] ="\033[48;5;217m ";
@@ -34,18 +33,6 @@
   const char b2_str[] ="\033[48;5;145m ";
   const char b3_str[] ="\033[48;5;102m ";
   const char b4_str[] ="\033[48;5;59m ";
-#  else
-  const char B0_str[] = "\033[48;5;188m ";
-  const char W0_str[] = "\033[48;5;188m ";
-  const char r1_str[] ="\033[48;5;217m ";
-  const char r2_str[] ="\033[48;5;210m ";
-  const char r3_str[] ="\033[48;5;203m ";
-  const char r4_str[] ="\033[48;5;196m ";
-  const char b1_str[] ="\033[48;5;16m ";
-  const char b2_str[] ="\033[48;5;59m ";
-  const char b3_str[] ="\033[48;5;102m ";
-  const char b4_str[] ="\033[48;5;145m ";
-#  endif
   const char RST_str[] ="\033[0m";
 #else
   const char B0_str[] =" ";
@@ -98,17 +85,17 @@ const struct __attribute__((packed))  {
     uint8_t const count;
     enum Color const tokenIndex;
 } rleLogoElements[] = {
-    { 4, W0 }, { 1, r1 }, { 1, r3 }, { 7, r4 }, { 62, W0 }, { 1, RST }, { 1, CRLF_token },
+    { 4, W0 }, { 1, r1 }, { 1, r3 }, { 7, r4 }, { 1, RST }, { 1, CRLF_token },
 
-    { 3, W0 }, { 1, r2 }, { 9, r4 }, { 1, r3 }, { 61, W0 }, { 1, RST }, { 1, CRLF_token },
+    { 3, W0 }, { 1, r2 }, { 9, r4 }, { 1, r3 }, { 1, RST }, { 1, CRLF_token },
 
     { 2, W0 }, { 1, r3 }, { 2, r4 }, { 1, r3 }, { 1, r2 }, { 5, r4 }, { 1, r2 },
-        { 1, r4 }, { 1, r1 }, { 7, W0 }, { 1, b3 }, { 5, W0 }, { 1, b3 }, { 46, W0 },
+        { 1, r4 }, { 1, r1 }, { 7, W0 }, { 1, b3 }, { 5, W0 }, { 1, b3 }, 
         { 1, RST }, { 1, CRLF_token },
 
     { 1, W0 }, { 1, r1 }, { 3, r4 }, { 2, B0 }, { 1, r2 }, { 3, r4 }, { 1, r1 },
         { 1, B0 }, { 1, r1 }, { 1, r4 }, { 6, W0 }, { 1, b4 }, { 1, b1 }, { 1, b2 },
-        { 3, W0 }, { 1, b3 }, { 1, b1 }, { 1, b4 }, { 45, W0 }, { 1, RST },
+        { 3, W0 }, { 1, b3 }, { 1, b1 }, { 1, b4 }, { 1, RST },
         { 1, CRLF_token },
 
     { 1, W0 }, { 3, r4 }, { 1, r1 }, { 3, B0 }, { 2, r4 }, { 1, r2 }, { 3, B0 },
@@ -116,7 +103,7 @@ const struct __attribute__((packed))  {
         { 1, W0 }, { 1, b4 }, { 2, W0 }, { 1, b4 }, { 3, b3 }, { 1, b4 }, { 1, W0 },
         { 5, b4 }, { 2, W0 }, { 1, b4 }, { 3, b3 }, { 1, b4 }, { 2, W0 }, { 1, b4 },
         { 3, b3 }, { 1, b4 }, { 1, W0 }, { 1, b4 }, { 3, W0 }, { 1, b4 }, { 2, W0 },
-        { 1, b4 }, { 1, W0 }, { 5, b4 }, { 1, W0 }, { 1, RST }, { 1, CRLF_token },
+        { 1, b4 }, { 1, W0 }, { 5, b4 }, { 1, RST }, { 1, CRLF_token },
 
     { 1, r1 }, { 3, r4 }, { 4, B0 }, { 1, r1 }, { 1, r4 }, { 5, B0 }, { 1, r4 },
         { 1, r1 }, { 4, W0 }, { 1, b3 }, { 2, b1 }, { 1, b4 }, { 1, W0 }, { 1, b4 },
@@ -158,27 +145,27 @@ const struct __attribute__((packed))  {
         { 1, b2 }, { 1, b3 }, { 1, W0 }, { 1, b1 }, { 1, b3 }, { 2, b4 }, { 1, b1 },
         { 1, b3 }, { 1, b4 }, { 1, b1 }, { 4, b4 }, { 1, W0 }, { 1, b1 }, { 3, W0 },
         { 1, b2 }, { 1, b4 }, { 1, W0 }, { 1, b1 }, { 1, W0 }, { 1, b1 }, { 1, b3 },
-        { 2, b4 }, { 2, W0 }, { 1, RST }, { 1, CRLF_token },
+        { 2, b4 }, { 1, RST }, { 1, CRLF_token },
 
     { 5, B0 }, { 1, r3 }, { 1, r4 }, { 4, B0 }, { 1, r1 }, { 1, r4 }, { 5, B0 }, { 3, W0 },
         { 1, b1 }, { 1, b4 }, { 2, W0 }, { 1, b3 }, { 3, W0 }, { 1, b1 }, { 1, W0 },
         { 1, b1 }, { 1, b4 }, { 1, W0 }, { 5, b1 }, { 1, W0 }, { 1, b1 }, { 1, b4 },
         { 2, W0 }, { 2, b3 }, { 1, W0 }, { 1, b2 }, { 4, b1 }, { 2, W0 }, { 5, b1 },
         { 1, W0 }, { 1, b1 }, { 3, W0 }, { 1, b2 }, { 1, b4 }, { 1, W0 }, { 1, b1 },
-        { 1, W0 }, { 1, b1 }, { 5, W0 }, { 1, RST }, { 1, CRLF_token },
+        { 1, W0 }, { 1, b1 }, { 1, RST }, { 1, CRLF_token },
 
     { 1, W0 }, { 3, B0 }, { 1, r2 }, { 2, r4 }, { 1, r2 }, { 3, B0 }, { 1, r3 }, { 1, r4 },
-        { 1, r3 }, {2, B0 }, {1, B0}, { 58, W0 }, { 1, RST }, { 1, CRLF_token },
+        { 1, r3 }, {2, B0 }, {1, B0}, { 1, RST }, { 1, CRLF_token },
 
     { 1, W0 }, {1, r1}, { 2, B0 }, { 4, r4 }, { 2, B0 }, { 1, r1 }, { 3, r4 }, { 1, r1 },
-        {1, B0 }, {1, r1}, { 58, W0 }, { 1, RST }, { 1, CRLF_token },
+        {1, B0 }, {1, r1}, { 1, RST }, { 1, CRLF_token },
 
-    { 2, W0 }, {1, r2},  { 5, r4 }, { 1, r3 }, { 1, r1 }, { 5, r4 }, {1, r3}, { 59, W0 },
+    { 2, W0 }, {1, r2},  { 5, r4 }, { 1, r3 }, { 1, r1 }, { 5, r4 }, {1, r3},
         { 1, RST }, { 1, CRLF_token },
 
-    { 3, W0 }, { 1, r2 }, { 11, r4 }, { 60, W0 }, { 1, RST }, { 1, CRLF_token },
+    { 3, W0 }, { 1, r2 }, { 11, r4 }, { 1, RST }, { 1, CRLF_token },
 
-    { 4, W0 }, { 1, r1 }, { 1, r3 }, { 7, r4 }, { 1, r3 }, { 61, W0 }, { 1, RST }, {1, CRLF_token}
+    { 4, W0 }, { 1, r1 }, { 1, r3 }, { 7, r4 }, { 1, r3 }, { 1, RST }, {1, CRLF_token}
 };
 
 bool HSS_LogoInit(void)
