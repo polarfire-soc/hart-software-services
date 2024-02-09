@@ -11,7 +11,7 @@
 #define __RISCV_ATOMIC_H__
 
 typedef struct {
-	volatile long counter;
+	/*volatile*/ long counter;
 } atomic_t;
 
 #define ATOMIC_INIT(_lptr, val) (_lptr)->counter = (val)
