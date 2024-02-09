@@ -237,7 +237,7 @@ bool HSS_E51_Banner(void)
 bool HSS_ResetReasonInit(void)
 {
 #if IS_ENABLED(CONFIG_DEBUG_RESET_REASON)
-    uint8_t reset_reason = SYSREG->RESET_SR;
+    uint32_t reset_reason = SYSREG->RESET_SR;
 
     const char* const reset_reason_string[] = {
         [ RESET_SR_SCB_PERIPH_RESET_OFFSET ]	= "SCB peripheral reset signal",
