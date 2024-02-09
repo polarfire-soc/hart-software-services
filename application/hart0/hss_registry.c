@@ -85,6 +85,10 @@
 #  include "healthmon_service.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+#  include "scrub_service.h"
+#endif
+
 #include "startup_service.h"
 
 #include "hss_debug.h"
@@ -121,64 +125,69 @@ static enum IPIStatusCode HSS_Null_IPIHandler(TxId_t transaction_id, enum HSSHar
  */
 
 const struct IPI_Handler ipiRegistry[] = {
-    { IPI_MSG_NO_MESSAGE, 		HSS_Null_IPIHandler },
+    { IPI_MSG_NO_MESSAGE,        HSS_Null_IPIHandler },
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-    { IPI_MSG_BOOT_REQUEST, 		HSS_Boot_IPIHandler },
-    { IPI_MSG_PMP_SETUP, 		HSS_Boot_PMPSetupHandler },
+    { IPI_MSG_BOOT_REQUEST,      HSS_Boot_IPIHandler },
+    { IPI_MSG_PMP_SETUP,         HSS_Boot_PMPSetupHandler },
 #else
-    { IPI_MSG_BOOT_REQUEST, 		HSS_Null_IPIHandler },
-    { IPI_MSG_PMP_SETUP, 		HSS_Null_IPIHandler },
+    { IPI_MSG_BOOT_REQUEST,      HSS_Null_IPIHandler },
+    { IPI_MSG_PMP_SETUP,         HSS_Null_IPIHandler },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SPI)
-    { IPI_MSG_SPI_XFER, 		HSS_Null_IPIHandler },
+    { IPI_MSG_SPI_XFER,          HSS_Null_IPIHandler },
 #else
-    { IPI_MSG_SPI_XFER, 		HSS_Null_IPIHandler },
+    { IPI_MSG_SPI_XFER,          HSS_Null_IPIHandler },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_NET)
-    { IPI_MSG_NET_RXPOLL, 		HSS_Null_IPIHandler },
-    { IPI_MSG_NET_TX, 			HSS_Null_IPIHandler },
+    { IPI_MSG_NET_RXPOLL,        HSS_Null_IPIHandler },
+    { IPI_MSG_NET_TX,            HSS_Null_IPIHandler },
 #else
-    { IPI_MSG_NET_RXPOLL, 		HSS_Null_IPIHandler },
-    { IPI_MSG_NET_TX, 			HSS_Null_IPIHandler },
+    { IPI_MSG_NET_RXPOLL,        HSS_Null_IPIHandler },
+    { IPI_MSG_NET_TX,            HSS_Null_IPIHandler },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SGDMA)
-    { IPI_MSG_SCATTERGATHER_DMA, 	HSS_SGDMA_IPIHandler },
+    { IPI_MSG_SCATTERGATHER_DMA, HSS_SGDMA_IPIHandler },
 #else
-    { IPI_MSG_SCATTERGATHER_DMA, 	HSS_Null_IPIHandler },
+    { IPI_MSG_SCATTERGATHER_DMA, HSS_Null_IPIHandler },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_WDOG)
-    { IPI_MSG_WDOG_INIT, 		HSS_Null_IPIHandler },
+    { IPI_MSG_WDOG_INIT,         HSS_Null_IPIHandler },
 #else
-    { IPI_MSG_WDOG_INIT, 		HSS_Null_IPIHandler },
+    { IPI_MSG_WDOG_INIT,         HSS_Null_IPIHandler },
 #endif
-    { IPI_MSG_GPIO_SET, 		HSS_Null_IPIHandler },
+    { IPI_MSG_GPIO_SET,          HSS_Null_IPIHandler },
 #if IS_ENABLED(CONFIG_SERVICE_UART)
-    { IPI_MSG_UART_TX,                  HSS_UartTx_IPIHandler },
-    { IPI_MSG_UART_POLL_RX,             HSS_UartPollRx_IPIHandler },
+    { IPI_MSG_UART_TX,           HSS_UartTx_IPIHandler },
+    { IPI_MSG_UART_POLL_RX,      HSS_UartPollRx_IPIHandler },
 #else
-    { IPI_MSG_UART_TX,                  HSS_Null_IPIHandler },
-    { IPI_MSG_UART_POLL_RX,             HSS_Null_IPIHandler },
+    { IPI_MSG_UART_TX,           HSS_Null_IPIHandler },
+    { IPI_MSG_UART_POLL_RX,      HSS_Null_IPIHandler },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_POWERMODE)
-    { IPI_MSG_POWERMODE,                HSS_Null_IPIHandler },
+    { IPI_MSG_POWERMODE,         HSS_Null_IPIHandler },
 #else
-    { IPI_MSG_POWERMODE,                HSS_Null_IPIHandler },
+    { IPI_MSG_POWERMODE,         HSS_Null_IPIHandler },
 #endif
-    { IPI_MSG_ACK_PENDING, 	        IPI_ACK_IPIHandler },
-    { IPI_MSG_ACK_COMPLETE, 		IPI_ACK_IPIHandler },
-    { IPI_MSG_HALT, 			HSS_Null_IPIHandler },
-    { IPI_MSG_CONTINUE, 		HSS_Null_IPIHandler },
+    { IPI_MSG_ACK_PENDING,       IPI_ACK_IPIHandler },
+    { IPI_MSG_ACK_COMPLETE,      IPI_ACK_IPIHandler },
+    { IPI_MSG_HALT,              HSS_Null_IPIHandler },
+    { IPI_MSG_CONTINUE,          HSS_Null_IPIHandler },
 #if IS_ENABLED(CONFIG_SERVICE_GOTO)
-    { IPI_MSG_GOTO, 			HSS_GOTO_IPIHandler },
+    { IPI_MSG_GOTO,              HSS_GOTO_IPIHandler },
 #else
-    { IPI_MSG_GOTO, 			HSS_Null_IPIHandler },
+    { IPI_MSG_GOTO,              HSS_Null_IPIHandler },
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI)
-    { IPI_MSG_OPENSBI_INIT, 	  	HSS_OpenSBI_IPIHandler },
+    { IPI_MSG_OPENSBI_INIT,      HSS_OpenSBI_IPIHandler },
 #else
-    { IPI_MSG_OPENSBI_INIT, 	  	HSS_Null_IPIHandler },
+    { IPI_MSG_OPENSBI_INIT,      HSS_Null_IPIHandler },
 #endif
-    { IPI_MSG_DDR_TRAIN,		HSS_DDR_Train_IPIHandler },
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    { IPI_MSG_SCRUB,             Scrub_IPIHandler },
+#else
+    { IPI_MSG_SCRUB,             HSS_Null_IPIHandler },
+#endif
+    { IPI_MSG_DDR_TRAIN,         HSS_DDR_Train_IPIHandler },
 };
 const size_t spanOfIpiRegistry = ARRAY_SIZE(ipiRegistry);
 

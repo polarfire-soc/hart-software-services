@@ -2,37 +2,101 @@ config SERVICE_SCRUB
 	bool "RAM Scrubbing support"
 	default n
 	help
-                This feature enables support for E51-delegated RAM Scrubbing.
+	  This feature enables support for E51-delegated RAM Scrubbing.
 
-		If you do not know what to do here, say Y.
+	  This feature is incompatible with using non-coherent memory. It will
+	  conflict with any Linux drivers using non-coherent DMA transfers for
+	  speed on PolarFire SoC, such as PCIe, but may be of use in systems
+	  where the working set will not guarantee sufficient flushing of the
+          cache to prevent undetected singe-bit errors.
+
+          To use this feature with Linux, make sure the Linux kernel is using
+          fully coherent DMA transfers.
+
+	  If you do not know what to do here, say N.
 
 menu "RAM Scrubbing Service"
 	visible if SERVICE_SCRUB
 
 config SERVICE_SCRUB_MAX_SIZE_PER_LOOP_ITER
-        int "Number of bytes per superloop iteration to scrub"
-        default  4096
-        depends on SERVICE_SCRUB
-        help
-                This parameter determines how many bytes will be scrubbed per superloop.
+	int "Number of bytes per superloop iteration to scrub"
+	default  4096
+	depends on SERVICE_SCRUB
+	help
+	  This parameter determines how many bytes will be scrubbed per superloop.
 
 config SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS
-        int "Throttle to run every X superloops"
-        default  256
-        depends on SERVICE_SCRUB
-        help
-                This parameter throttles the scrubbing service to only run once every
-                specified number of superloop iterations.
+	int "Throttle to run every X superloops"
+	default  256
+	depends on SERVICE_SCRUB
+	help
+	  This parameter throttles the scrubbing service to only run once every
+	  specified number of superloop iterations.
+
+config SERVICE_SCRUB_CACHES
+	bool "Cache Scrubbing Support"
+	default n
+	help
+	  This feature enables support for scrubbing caches. It scrubs the
+	  I$ on E51 and U54s, and scrubs the TLBs on the U54s.
+
+	  This feature is incompatible with using non-coherent memory. It will
+	  conflict with any Linux drivers using non-coherent DMA transfers for
+	  speed on PolarFire SoC, such as PCIe, but may be of use in systems
+	  where the working set will not guarantee sufficient flushing of the
+          cache to prevent undetected singe-bit errors.
+
+	  If you do not know what to do here, say N.
+
+config SERVICE_SCRUB_CACHES_TRIGGER_SETPOINT
+	int "Throttle to run every X superloops"
+	default 1000000
+	depends on SERVICE_SCRUB_CACHES
+	help
+	  This parameter throttles the cache scrubbing service to only run once every
+	  specified number of superloop iterations.
+
+config SERVICE_SCRUB_L2LIM
+	bool "L2 LIM Memory Scrubbing support"
+	default y
+	help
+	  This feature enables support for scrubbing L2 LIM memory.
+
+	  If you do not know what to do here, say Y.
+
+config SERVICE_SCRUB_L2SCRATCH
+	bool "L2 Scratch Memory Scrubbing support"
+	default y
+	help
+	  This feature enables support for scrubbing L2 Scratch memory.
+
+	  If you do not know what to do here, say Y.
+
+config SERVICE_SCRUB_DTIM
+	bool "E51 DTIM Scrubbing support"
+	default y
+	help
+	  This feature enables support for scrubbing E51 DTIM.
+
+	  If you do not know what to do here, say Y.
 
 config SERVICE_SCRUB_CACHED_DDR
 	bool "Cached RAM Scrubbing support"
 	default n
 	help
-                This feature enables support for Cached RAM. This will conflict
-                with any Linux drivers using non-coherent DMA transfers for speed
-                on PolarFire SoC, such as PCIe, but may be of use in bare metal
-                systems where the working set won't guarantee sufficient
-                flushing of the cache to prevent undetected singe-bit errors.
+	  This feature enables support for Cached RAM. It will conflict
+	  with any Linux drivers using non-coherent DMA transfers for speed
+	  on PolarFire SoC, such as PCIe, but may be of use in systems
+	  where the working set will not guarantee sufficient flushing of the
+          cache to prevent undetected singe-bit errors.
 
-		If you do not know what to do here, say N.
+	  If you do not know what to do here, say N.
+
+config SERVICE_SCRUB_NONCACHED_DDR
+	bool "Non-Cached RAM Scrubbing support"
+	default n
+	help
+	  This feature enables support for Non-Cached RAM.
+
+	  If you do not know what to do here, say N.
 endmenu

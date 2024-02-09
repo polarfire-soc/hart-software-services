@@ -114,7 +114,8 @@ __extension__ static const char * const ipiName[] = { // IPI_MSG_NUM_MSG_TYPES
     [ IPI_MSG_CONTINUE ]          = "IPI_MSG_CONTINUE",
     [ IPI_MSG_GOTO ]              = "IPI_MSG_GOTO",
     [ IPI_MSG_OPENSBI_INIT ]      = "IPI_MSG_OPENSBI_INIT",
-    [ IPI_MSG_DDR_TRAIN ]         = "IPI_MSG_DDR_TRAIN"
+    [ IPI_MSG_DDR_TRAIN ]         = "IPI_MSG_DDR_TRAIN",
+    [ IPI_MSG_SCRUB ]             = "IPI_MSG_SCRUB",
 };
 #endif
 

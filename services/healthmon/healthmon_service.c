@@ -13,19 +13,22 @@
  */
 
 #include "config.h"
+
+#include "sbi_bitops.h"
+
 #include "hss_types.h"
 #include "hss_state_machine.h"
 #include "hss_trigger.h"
-#include "hss_debug.h"
 
 #include <assert.h>
 #include <string.h>
 
 #include "hss_clock.h"
 #include "healthmon_service.h"
-#include "sbi_bitops.h"
 
 #include "mss_hart_ints.h"
+
+extern int sbi_snprintf(char *out, u32 out_sz, const char *format, ...);
 
 static void healthmon_init_handler(struct StateMachine * const pMyMachine);
 static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine);
@@ -142,6 +145,10 @@ static const struct HealthMonitor
     { "IOSCB_PLL:pll_nw_1:PLL_CTRL",	0x38200004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
     { "IOSCB_PLL:pll_sw_0:PLL_CTRL",	0x38400004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
     { "IOSCB_PLL:pll_sw_1:PLL_CTRL",	0x38800004, CHANGED_SINCE_LAST, 0u,      0u, 25u, 1u,       nop_trigger, 5u },
+
+    { "L2:Config:ECCDirFixCount",       0x02010108, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0xFFFFFFFFFFFFFFFFu, nop_trigger, 1u },
+    { "L2:Config:ECCDataFixCount",      0x02010148, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0xFFFFFFFFFFFFFFFFu, nop_trigger, 1u },
+    { "L2:Config:ECCDataFailCount",     0x02010168, CHANGED_SINCE_LAST, 0u,      0u, 0u,  0xFFFFFFFFFFFFFFFFu, nop_trigger, 1u },
 };
 
 static struct HealthMonitor_Status
@@ -171,62 +178,61 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
 
     // general health monitoring...
     {
-
         for (size_t i = 0u; i < ARRAY_SIZE(monitors); i++) {
-            uint32_t value = *(uint32_t volatile *)(monitors[i].pAddr);
-            enum CheckTypeEnum checkType = monitors[i].checkType;
-            bool triggered = false;
+            if (HSS_Timer_IsElapsed(monitor_status[i].throttle_startTime, monitors[i].throttleScale * ONE_SEC)) {
+                uint32_t value = *(uint32_t volatile *)(monitors[i].pAddr);
+                enum CheckTypeEnum checkType = monitors[i].checkType;
+                bool triggered = false;
 
-            if (monitors[i].shift) { value = value >> monitors[i].shift; }
-            if (monitors[i].mask) { value = value & monitors[i].mask; }
+                if (monitors[i].shift) { value = value >> monitors[i].shift; }
+                if (monitors[i].mask) { value = value & monitors[i].mask; }
 
-            switch (checkType) {
-            case ABOVE_THRESHOLD:
-                if (value > monitors[i].maxValue) { triggered = true; }
-                break;
+                switch (checkType) {
+                case ABOVE_THRESHOLD:
+                    if (value > monitors[i].maxValue) { triggered = true; }
+                    break;
 
-            case BELOW_THRESHOLD:
-                if (value < monitors[i].minValue) { triggered = true; }
-                break;
+                case BELOW_THRESHOLD:
+                    if (value < monitors[i].minValue) { triggered = true; }
+                    break;
 
-            case ABOVE_OR_BELOW_THRESHOLD:
-                if (value > monitors[i].maxValue) {
-                    triggered = true;
-                    checkType = ABOVE_THRESHOLD;
-                } else if (value < monitors[i].minValue) {
-                    triggered = true;
-                    checkType = BELOW_THRESHOLD;
-                }
-                break;
-
-            case EQUAL_TO_VALUE:
-                if (value == monitors[i].maxValue) { triggered = true; }
-                break;
-
-            case NOT_EQUAL_TO_VALUE:
-                if (value != monitors[i].maxValue) { triggered = true; }
-                break;
-
-            case CHANGED_SINCE_LAST:
-                if (monitor_status[i].initialized) {
-                    if (value != monitor_status[i].lastValue) {
+                case ABOVE_OR_BELOW_THRESHOLD:
+                    if (value > monitors[i].maxValue) {
                         triggered = true;
+                        checkType = ABOVE_THRESHOLD;
+                    } else if (value < monitors[i].minValue) {
+                        triggered = true;
+                        checkType = BELOW_THRESHOLD;
                     }
-                } else {
-                    monitor_status[i].initialized = true;
+                    break;
+
+                case EQUAL_TO_VALUE:
+                    if (value == monitors[i].maxValue) { triggered = true; }
+                    break;
+
+                case NOT_EQUAL_TO_VALUE:
+                    if (value != monitors[i].maxValue) { triggered = true; }
+                    break;
+
+                case CHANGED_SINCE_LAST:
+                    if (monitor_status[i].initialized) {
+                        if (value != monitor_status[i].lastValue) {
+                            triggered = true;
+                        }
+                    } else {
+                        monitor_status[i].initialized = true;
+                    }
+                    monitor_status[i].lastValue = value;
+                    break;
+
+                default:
+                    // unexpected check type
+                    break;
                 }
-                monitor_status[i].lastValue = value;
-                break;
 
-            default:
-                // unexpected check type
-                break;
-            }
+                if (triggered) {
+                    monitor_status[i].count++;
 
-            if (triggered) {
-                monitor_status[i].count++;
-
-                if (HSS_Timer_IsElapsed(monitor_status[i].throttle_startTime, monitors[i].throttleScale * ONE_SEC)) {
                     mHSS_DEBUG_PRINTF(LOG_ERROR, "%s %s ",
                         monitors[i].pName, checkName[monitors[i].checkType]);
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
@@ -241,8 +247,6 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                     }
 
                     monitor_status[i].throttle_startTime = HSS_GetTime();
-                } else {
-                    continue;
                 }
             }
         }
@@ -259,8 +263,6 @@ void HSS_Health_DumpStats(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Health Monitoring Counts per trigger:\n");
     for (size_t i = 0u; i < ARRAY_SIZE(monitors); i++) {
         char tmp_buffer[80] = "\0";
-
-        extern int sbi_snprintf(char *out, u32 out_sz, const char *format, ...);
 
         switch (monitors[i].checkType) {
         case BELOW_THRESHOLD:

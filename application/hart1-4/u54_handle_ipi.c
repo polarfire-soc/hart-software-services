@@ -61,6 +61,9 @@ static const struct IntentsArray
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI)
     { IPI_MSG_OPENSBI_INIT },
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
+    { IPI_MSG_SCRUB },
+#endif
     { IPI_MSG_DDR_TRAIN },
 };
 #endif

@@ -43,10 +43,15 @@ extern "C" {
 #include "hss_debug.h"
 
 #include "scrub_types.h"
+#include "ssmb_ipi.h"
 
 extern struct StateMachine scrub_service;
 
 void scrub_dump_stats(void);
+
+
+enum IPIStatusCode Scrub_IPIHandler(TxId_t transaction_id, enum HSSHartId source,
+    uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);
 
 #ifdef __cplusplus
 }
