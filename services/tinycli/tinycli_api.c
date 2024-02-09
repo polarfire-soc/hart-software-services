@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
+/*
+ * Copyright 2019-2024 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -159,6 +159,7 @@ static void tinyCLI_USBDMSC_(void);
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_BEU)
 static void tinyCLI_BEU_(void);
+static void tinyCLI_ECC_(void);
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_HEALTHMON)
 static void tinyCLI_HEALTHMON_(void);
@@ -192,6 +193,7 @@ enum CmdId {
     CMD_SPI,
     CMD_USBDMSC,
     CMD_SCRUB,
+    CMD_ECC,
     CMD_INVALID,
 
     CMD_DBG_BEU,
@@ -303,6 +305,9 @@ static const struct tinycli_cmd toplevelCmds[] = {
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
     { CMD_SCRUB,   "SCRUB",   "Dump Scrub service stats.", tinyCLI_Scrub_ },
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+    { CMD_ECC,     "ECC",   "Dump ECC stats.", tinyCLI_ECC_ },
+#endif
 };
 
 static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
@@ -331,6 +336,9 @@ static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
     { CMD_SCRUB,   false },
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+    { CMD_ECC,     false },
 #endif
 };
 
@@ -1071,5 +1079,38 @@ void HSS_TinyCLI_RunMonitors(void)
             monitors[0].time = HSS_GetTime();
        }
     }
+}
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_BEU)
+static void tinyCLI_ECC_(void)
+{
+    // addresses of L2 cache controller
+    #define CACHE_CONTROLLER_BASE_ADDR 0x2010000
+    #define CACHE_CONTROLLER_ECCInjectError_OFFSET 0x40
+    #define CACHE_CONTROLLER_ECCDirFixCount_OFFSET 0x108
+    #define CACHE_CONTROLLER_ECCDirFailCount_OFFSET 0x128
+    #define CACHE_CONTROLLER_ECCDataFixCount_OFFSET 0x148
+    #define CACHE_CONTROLLER_ECCDataFailCount_OFFSET 0x168
+
+    uint32_t data = 0;
+
+    HSS_BEU_DumpStats();
+
+    // directory correctable errors
+    data = mHSS_ReadRegU32(CACHE_CONTROLLER, ECCDirFixCount);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 45s:  %" PRIu64 "\n", "L2 ECCDirFixCount", data);
+
+    // directory uncorrectable errors
+    data = mHSS_ReadRegU32(CACHE_CONTROLLER, ECCDirFailCount);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 45s:  %" PRIu64 "\n", "L2 ECCDirFailCuont", data);
+
+    // data correctable errors
+    data = mHSS_ReadRegU32(CACHE_CONTROLLER, ECCDataFixCount);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 45s:  %" PRIu64 "\n", "L2 ECCDataFixCount", data);
+
+    // data uncorrectable errors
+    data = mHSS_ReadRegU32(CACHE_CONTROLLER, ECCDataFailCount);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 45s:  %" PRIu64 "\n", "L2 ECCDataFailCount", data);
 }
 #endif
