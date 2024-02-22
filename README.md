@@ -113,7 +113,7 @@ Once configured, to build, run `make`:
 
     $ make BOARD=mpfs-icicle-kit-es
 
-In the `Default` subdirectory, the standard build will create `hss-envm.elf` and various binary formats (`hss-envm.hex` and `hss-envm.bin`).  Also generated are `output-envm.map`, which is a mapfile for the build, and  `hss-envm.sym`, which is a list of symbols.  (The name `Default` is required by SoftConsole for programming purposes.)
+In the `build` subdirectory, the standard build will create `hss-envm.elf` and various binary formats (`hss-envm.hex` and `hss-envm.bin`).  Also generated are `output-envm.map`, which is a mapfile for the build, and  `hss-envm.sym`, which is a list of symbols.  (The name `build` is required by SoftConsole for programming purposes. In earlier releases, this was called `Default`.)
 
 Once built, program the HSS to the board:
 
@@ -170,3 +170,11 @@ Function profiling in the HSS can be enabled using the `CONFIG_DEBUG_PROFILING_S
 Function profiling allows capturing of the time spent in each C function (through the use of `__cyg_profile_func_enter` and `__cyg_profile_func_exit`. This information can be logged to the serial console through calling the `HSS_Profile_DumpAll()` function at an appropriate time, depending on what is being debugged, and by using the `debug profile` CLI command.
 
 For more information, please refer to the [HSS Function Profiling documentation](https://mi-v-ecosystem.github.io/redirects/hart-software-services-profiling).
+
+### Scrubbing for ECCs and Non-Coherent Memory.
+
+The HSS includes a scrubbing service (running on the E51) to scrub ECC protected memories such as DDR, L2 Scratchpad, LIM for correctable single-bit errors in an effort to correct them before they propagate to uncorrectable double-bit errors. Note that by default, mpfs-linux is configured such that DDR accesses to/from peripherals such as PCIe, eNVM and USB are directed to uncached memory addresses; with cache synchronisation performed explicitly by the Linux kerne. Enabling scrubbing can result in interfering with this default mpfs-linux behavior, and so it is important to configure mpfs-linux to only used coherent memory when using scrubbing.
+
+As a consequence, scrubbing is currently off by default in provided `def_config` files.
+
+   # CONFIG_SERVICE_SCRUB is not set
