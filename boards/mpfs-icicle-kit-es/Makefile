@@ -77,7 +77,7 @@ INCLUDES += \
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
 
-baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
 endif
 
 ifdef CONFIG_SERVICE_QSPI_MICRON_MQ25T
@@ -86,7 +86,8 @@ INCLUDES += \
 
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/drivers/micron_mt25q/micron_mt25q.c
-baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
+
+$(BINDIR)/baremetal/drivers/micron_mt25q/micron_mt25q.o: CFLAGS=$(CFLAGS_GCCEXT)
 endif
 
 
