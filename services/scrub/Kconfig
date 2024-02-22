@@ -36,6 +36,7 @@ config SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS
 config SERVICE_SCRUB_CACHES
 	bool "Cache Scrubbing Support"
 	default n
+	depends on SERVICE_SCRUB
 	help
 	  This feature enables support for scrubbing caches. It scrubs the
 	  I$ on E51 and U54s, and scrubs the TLBs on the U54s.
@@ -59,6 +60,7 @@ config SERVICE_SCRUB_CACHES_TRIGGER_SETPOINT
 config SERVICE_SCRUB_L2LIM
 	bool "L2 LIM Memory Scrubbing support"
 	default y
+	depends on SERVICE_SCRUB
 	help
 	  This feature enables support for scrubbing L2 LIM memory.
 
@@ -67,6 +69,7 @@ config SERVICE_SCRUB_L2LIM
 config SERVICE_SCRUB_L2SCRATCH
 	bool "L2 Scratch Memory Scrubbing support"
 	default y
+	depends on SERVICE_SCRUB
 	help
 	  This feature enables support for scrubbing L2 Scratch memory.
 
@@ -75,6 +78,7 @@ config SERVICE_SCRUB_L2SCRATCH
 config SERVICE_SCRUB_DTIM
 	bool "E51 DTIM Scrubbing support"
 	default y
+	depends on SERVICE_SCRUB
 	help
 	  This feature enables support for scrubbing E51 DTIM.
 
@@ -83,6 +87,7 @@ config SERVICE_SCRUB_DTIM
 config SERVICE_SCRUB_CACHED_DDR
 	bool "Cached RAM Scrubbing support"
 	default n
+	depends on SERVICE_SCRUB
 	help
 	  This feature enables support for Cached RAM. It will conflict
 	  with any Linux drivers using non-coherent DMA transfers for speed
@@ -95,6 +100,7 @@ config SERVICE_SCRUB_CACHED_DDR
 config SERVICE_SCRUB_NONCACHED_DDR
 	bool "Non-Cached RAM Scrubbing support"
 	default n
+	depends on SERVICE_SCRUB
 	help
 	  This feature enables support for Non-Cached RAM.
 
