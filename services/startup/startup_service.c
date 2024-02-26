@@ -16,6 +16,7 @@
 #include "hss_types.h"
 #include "hss_state_machine.h"
 #include "hss_debug.h"
+#include "hss_boot_init.h"
 #include "hss_boot_pmp.h"
 #include "hss_trigger.h"
 #include "hss_progress.h"
@@ -109,6 +110,10 @@ static void startup_init_handler(struct StateMachine * const pMyMachine)
     } else {
         pMyMachine->state++;
         HSS_Trigger_Notify(EVENT_STARTUP_COMPLETE);
+
+#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+        HSS_BootHarts();
+#endif
     }
 }
 
