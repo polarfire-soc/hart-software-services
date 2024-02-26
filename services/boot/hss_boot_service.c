@@ -842,21 +842,23 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
         HSS_BootInit();
     }
 
-    if (!HSS_Boot_ValidateImage(pBootImage)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for u54_%u\n", source);
-    } else if (source != HSS_HART_ALL) {
+    if (source != HSS_HART_ALL) {
         union HSSHartBitmask restartHartBitmask = { .uint = BIT(source) };
 
         result = HSS_Boot_RestartCores_Using_Bitmask(restartHartBitmask);
     } else {
-        //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts\n");
+        if (!HSS_Boot_ValidateImage(pBootImage)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for u54_%u\n", source);
+        } else {
+            //mHSS_DEBUG_PRINTF(LOG_NORMAL, "called for all harts\n");
 
-        const union HSSHartBitmask restartHartBitmask = {
-            .s = { .u54_1 = 1, .u54_2 = 1, .u54_3 = 1, .u54_4 = 1, }
-        };
+            const union HSSHartBitmask restartHartBitmask = {
+                .s = { .u54_1 = 1, .u54_2 = 1, .u54_3 = 1, .u54_4 = 1, }
+            };
 
-        if (boot_using_hart_bitmask_(restartHartBitmask)) {
-            result = IPI_SUCCESS;
+            if (boot_using_hart_bitmask_(restartHartBitmask)) {
+                result = IPI_SUCCESS;
+            }
         }
     }
 
