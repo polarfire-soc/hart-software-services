@@ -59,9 +59,12 @@ EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
 
 $(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
+ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC
 EXTRA_OBJS-$(CONFIG_SERVICE_BOOT_USE_PAYLOAD) += $(BOARD_DIR)/payload.o
 $(BOARD_DIR)/payload.o: $(BOARD_DIR)/payload.bin
 	$(LD) -r -b binary $< -o $@
+else
+endif
 
 ################################################################################################
 #
@@ -78,7 +81,7 @@ INCLUDES += \
 EXTRA_SRCS-$(CONFIG_SERVICE_QSPI) += \
 	baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.c
 
-baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BIND)R/baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.o: CFLAGS=$(CFLAGS_GCCEXT)
 endif
 
 
