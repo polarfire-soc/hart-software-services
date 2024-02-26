@@ -148,6 +148,7 @@ endif
 
 config.h: $(SOC_CONFIG_FILES)
 $(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
+	@mkdir -p $(BINDIR)/$(BOARD_DIR)
 	@$(ECHO) " MPFSCFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)
 
