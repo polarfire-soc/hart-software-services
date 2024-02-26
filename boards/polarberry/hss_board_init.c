@@ -51,7 +51,7 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     { "HSS_PCIeInit",           HSS_PCIeInit,           false, false },
 #endif
 #ifdef CONFIG_USE_TAMPER
-    { "HSS_TamperInit",       HSS_TamperInit,       false, false },
+    { "HSS_TamperInit",         HSS_TamperInit,         false, false },
 #endif
     //{ "HSS_USBInit",            HSS_USBInit,            false, false }, // if using 64-bit upper memory only, uncomment this
 };

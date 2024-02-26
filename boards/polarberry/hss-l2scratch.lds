@@ -259,11 +259,11 @@ SECTIONS
      * (Explicitly) Initialized data section
      *
      */
-#ifdef CONFIG_SERVICE_BOOT_USE_PAYLOAD 
+#if defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD) && !defined(CONFIG_SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC)
     .data.payload : ALIGN(16) 
     {
       _payload_start = .;
-      KEEP(boards/polarberry/payload.o(.*))
+      KEEP(boards/mpfs-icicle-kit-es/payload.o(.*))
       _payload_end = .;
     }
 #endif
