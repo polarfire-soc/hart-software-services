@@ -877,8 +877,10 @@ enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask rest
         mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for Hart bitmask %x\n", restartHartBitmask.uint);
     } else {
         for (unsigned int source = HSS_HART_U54_1;
-             (source < HSS_HART_NUM_PEERS) && (restartHartBitmask.uint & (unsigned int)BIT(source)); source++) {
+             (source < HSS_HART_NUM_PEERS); source++) {
             union HSSHartBitmask localRestartHartBitmask = { .uint = 0u };
+
+            if (!(restartHartBitmask.uint & (unsigned int)BIT(source))) { continue; }
 
             // in interrupts-always-enabled world of the HSS, it would appear less
             // racey to boot secondary cores first and have them all wait...
