@@ -24,6 +24,7 @@
 #include "usbdmsc_service.h"
 #include "mpfs_reg_map.h"
 #include "hss_boot_service.h"
+#include "hss_trigger.h"
 
 #include "drivers/mss/mss_mmuart/mss_uart.h"
 #include "flash_drive_app.h"
@@ -106,15 +107,16 @@ static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachin
 
 static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachine)
 {
-    bool idle = USBDMSC_Poll();
+    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+        bool idle = USBDMSC_Poll();
 
-    if (idle) {
-        pMyMachine->state = USBDMSC_IDLE;
-    } else if (FLASH_DRIVE_is_host_connected()) {
-        mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
-        pMyMachine->state = USBDMSC_ACTIVE;
+        if (idle) {
+            pMyMachine->state = USBDMSC_IDLE;
+        } else if (FLASH_DRIVE_is_host_connected()) {
+            mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
+            pMyMachine->state = USBDMSC_ACTIVE;
+        }
     }
-
 }
 
 /////////////////

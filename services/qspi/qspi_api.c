@@ -34,6 +34,9 @@
 #if IS_ENABLED(CONFIG_SERVICE_QSPI_MICRON_MQ25T)
 #  include "micron_mt25q.h"
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#  include "wdog_service.h"
+#endif
 
 /*
  * QSPI doesn't need a "service" to run every super-loop, but it does need to be
@@ -237,6 +240,8 @@ static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
     for (size_t offset = byteOffset; dirtyBlockCount && (offset < endOffset); offset += blockSize) {
 
         HSS_ShowProgress(initialDirtyBlockCount, dirtyBlockCount);
+
+        HSS_Wdog_E51_Tickle();
 
         const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
 

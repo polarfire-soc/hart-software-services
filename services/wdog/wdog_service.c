@@ -85,15 +85,7 @@ static HSSTicks_t wdogInitTime[MAX_NUM_HARTS] = { 0u };
 
 static void wdog_init_handler(struct StateMachine * const pMyMachine)
 {
-#if IS_ENABLED(CONFIG_SERVICE_WDOG_ENABLE_E51)
-    mss_watchdog_config_t wd0lo_config;
-    MSS_WD_get_config(MSS_WDOG0_LO, &wd0lo_config);
-
-    wd0lo_config.forbidden_en = MSS_WDOG_ENABLE;
-    wd0lo_config.mvrp_val = 0xFFFF000;
-
-    MSS_WD_configure(MSS_WDOG0_LO, &wd0lo_config);
-#endif
+    HSS_Wdog_E51_Tickle();
 
     pMyMachine->state = WDOG_IDLE;
 }
@@ -239,5 +231,18 @@ void HSS_Wdog_DumpStats(void)
     }
 
     mHSS_DEBUG_PRINTF_EX("\n");
+#endif
+}
+
+void HSS_Wdog_E51_Tickle(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_WDOG_ENABLE_E51)
+    mss_watchdog_config_t wd0lo_config;
+    MSS_WD_get_config(MSS_WDOG0_LO, &wd0lo_config);
+
+    wd0lo_config.forbidden_en = MSS_WDOG_ENABLE;
+    wd0lo_config.mvrp_val = 0xFFFF000;
+
+    MSS_WD_configure(MSS_WDOG0_LO, &wd0lo_config);
 #endif
 }
