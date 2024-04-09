@@ -52,6 +52,7 @@
 
 #include "mss_beu_def.h"
 #include "mss_beu.h"
+#include "mss_peripherals.h"
 
 /******************************************************************************/
 
@@ -173,6 +174,15 @@ bool HSS_Setup_Clocks(void)
     SYSREG->SUBBLK_CLOCK_CR = hss_subblk_clock_Config;
 
     SYSREG->FABRIC_RESET_CR = FABRIC_RESET_CR_ENABLE_MASK;
+
+    /*
+     * Turn on FIC interfaces by default. Drivers will turn on/off other MSS
+     * peripherals as required.
+     */
+    (void)mss_config_clk_rst(MSS_PERIPH_FIC0, (uint8_t)0u, PERIPHERAL_ON);
+    (void)mss_config_clk_rst(MSS_PERIPH_FIC1, (uint8_t)0u, PERIPHERAL_ON);
+    (void)mss_config_clk_rst(MSS_PERIPH_FIC2, (uint8_t)0u, PERIPHERAL_ON);
+    (void)mss_config_clk_rst(MSS_PERIPH_FIC3, (uint8_t)0u, PERIPHERAL_ON);
 
     return true;
 }
