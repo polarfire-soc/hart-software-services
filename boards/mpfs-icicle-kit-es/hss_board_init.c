@@ -22,6 +22,8 @@
 #include "hss_state_machine.h"
 #include "ssmb_ipi.h"
 #include "hss_registry.h"
+#include "mss_sys_services.h"
+#include <string.h>
 
 /******************************************************************************************************/
 /*!
@@ -69,8 +71,35 @@ bool HSS_BoardInit(void)
     return true;
 }
 
+
 bool HSS_BoardLateInit(void)
 {
+    bool result = false;
+    uint8_t design_info[76];
+
+    MSS_SYS_select_service_mode( MSS_SYS_SERVICE_POLLING_MODE, NULL);
+    memset(design_info, 0, ARRAY_SIZE(design_info));
+
+    if (MSS_SYS_SUCCESS == MSS_SYS_get_design_info(design_info, 0u)) {
+        mHSS_FANCY_PRINTF(LOG_STATUS, "Design Info: \n");
+        mHSS_PRINTF("    Design Name: ");
+        for (int i = 2; i < 32; i++) {
+            mHSS_PUTC(design_info[i]);
+        }
+        int version = ((int)design_info[33] << 8) + design_info[32];
+        int year = version / 1000;
+        int month = (version / 10) % 100;
+        int patch = (version % 10);
+        mHSS_PRINTF("\n    Design Version: %02d.%02d", year, month);
+        if (patch) {
+            mHSS_PRINTF(".%d", patch);
+        }
+        mHSS_PUTS("\n");
+        result = true;
+    } else {
+        mHSS_FANCY_PRINTF(LOG_ERROR, "Couldn't read Design Information\n");
+    }
+
 #if defined(CONFIG_SERVICE_MMC_MODE_SDCARD) || defined(CONFIG_SERVICE_MMC_MODE_EMMC)
     mHSS_DEBUG_PRINTF(LOG_WARN, "Please ensure that jumpers J34/J43 are correct for "
 #  if defined(CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8)
@@ -80,5 +109,6 @@ bool HSS_BoardLateInit(void)
 #  endif
         " MMC voltage... \n");
 #endif
-    return true;
+
+    return result;
 }
