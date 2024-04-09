@@ -69,6 +69,9 @@
 #  include "opensbi_rproc_ecall.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+#  include "gpio_ui_service.h"
+#endif
 
 /* Timeouts */
 #define BOOT_SETUP_PMP_COMPLETE_TIMEOUT (ONE_SEC * 1u)
@@ -1004,6 +1007,10 @@ bool HSS_Boot_ValidateImage(struct HSS_BootImage *pImage)
 #  endif
         } else if (validateCrc_(pImage)) {
             //mHSS_DEBUG_PRINTF(LOG_STATUS, "Boot image passed CRC\n");
+
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+            HSS_GPIO_UI_ReportImageGoodCRC();
+#endif
 
         // GCC 9.x appears to dislike the pImage cast, and sees dereferencing the
         // set name as an out-of-bounds... So we'll disable that warning just for

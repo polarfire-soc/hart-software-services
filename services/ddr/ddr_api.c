@@ -22,6 +22,9 @@
 #include "hss_init.h"
 #include "hss_memtest.h"
 #include "ddr_service.h"
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+#  include "gpio_ui_service.h"
+#endif
 
 #include "csr_helper.h"
 #include <assert.h>
@@ -90,7 +93,9 @@ uintptr_t HSS_DDRHi_GetStart(void)
 
 void HSS_DDR_Train(void)
 {
-    //mHSS_DEBUG_PRINTF(LOG_WARN, "*** >>DDR Training Started<<\n");
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+    HSS_GPIO_UI_ReportDDRInitStart();
+#endif
     IPI_Send(HSS_HART_U54_1, IPI_MSG_DDR_TRAIN, 0u, 0u, NULL, NULL);
 }
 
@@ -109,6 +114,9 @@ enum IPIStatusCode HSS_DDR_Train_IPIHandler(TxId_t transaction_id, enum HSSHartI
     HSS_MemTestDDRFast();
 #endif
     HSS_Trigger_Notify(EVENT_DDR_TRAINED);
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+    HSS_GPIO_UI_ReportDDRInitEnd();
+#endif
 
     return IPI_IDLE;
 }

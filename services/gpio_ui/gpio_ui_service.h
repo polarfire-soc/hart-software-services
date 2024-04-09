@@ -1,5 +1,5 @@
-#ifndef HSS_USBDMSC_SERVICE_H
-#define HSS_USBDMSC_SERVICE_H
+#ifndef HSS_GPIOUI_SERVICE_H
+#define HSS_GPIOUI_SERVICE_H
 
 /*******************************************************************************
  * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
@@ -25,7 +25,7 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - USB Device Mass Storage Class
+ * Hart Software Services - GPIO User Interface
  *
  */
 
@@ -33,27 +33,25 @@
 extern "C" {
 #endif
 
-#include "ssmb_ipi.h"
 #include "hss_state_machine.h"
-#include "hss_debug.h"
 
-/**
- * \file USB Device Mass Storage API
- * \brief USB Device Mass Storage API
- */
+void GPIO_UI_Init(void);
+void GPIO_UI_Shutdown(void);
 
-bool USBDMSC_Init(void);
-bool USBDMSC_Poll(void);
-void USBDMSC_Shutdown(void);
+bool HSS_GPIO_UI_user_button_pressed(void);
+bool HSS_GPIO_UI_Preboot_Check_Button(void);
 
-void USBDMSC_Activate(void);
-void USBDMSC_Deactivate(void);
-bool USBDMSC_IsActive(void);
+void HSS_GPIO_UI_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining);
+void HSS_GPIO_UI_ReportDDRInitStart(void);
+void HSS_GPIO_UI_ReportDDRInitEnd(void);
+void HSS_GPIO_UI_ReportImageGoodCRC(void);
+void HSS_GPIO_UI_ReportUSBProgress(uint32_t writeCount, uint32_t readCount);
 
-extern struct StateMachine usbdmsc_service;
+extern struct StateMachine gpio_ui_service;
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
+

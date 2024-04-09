@@ -20,6 +20,8 @@
 #include "hss_debug.h"
 #include "hss_progress.h"
 
+#include "gpio_ui_service.h"
+
 void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
 {
     static uint32_t oldProgressPercent = 101u;
@@ -49,6 +51,10 @@ void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
 
         oldProgressPercent = progressPercent;
     }
+
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+    HSS_GPIO_UI_ShowProgress(totalNumTasks, numTasksRemaining);
+#endif
 }
 
 bool HSS_ShowTimeout(char const * const msg, uint32_t timeout_sec, uint8_t *pRcvBuf)

@@ -61,7 +61,9 @@ extern "C" {
 #define mHSS_BOOT_VERSION       1u
 
 #ifndef CONFIG_OPENSBI
-#  define MIN(A,B)		((A) < (B) ? A : B)
+#  ifndef MIN
+#    define MIN(A,B)		((A) < (B) ? A : B)
+#  endif
 #  define likely(x)		__builtin_expect((x), 1)
 #  define unlikely(x)		__builtin_expect((x), 0)
 #  ifndef __ssize_t_defined

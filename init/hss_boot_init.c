@@ -229,7 +229,7 @@ bool HSS_BootInit(void)
         }
     }
 
-#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
     HSS_BootHarts();
 #endif
 

@@ -93,7 +93,13 @@ struct StateMachine tinycli_service = {
 static void tinycli_init_handler(struct StateMachine * const pMyMachine)
 {
     if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
-        pMyMachine->state = TINYCLI_PREBOOT;
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
+        if (!HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED) && !USBDMSC_IsActive()) {
+#else
+        {
+#endif
+            pMyMachine->state = TINYCLI_PREBOOT;
+        }
     }
 }
 

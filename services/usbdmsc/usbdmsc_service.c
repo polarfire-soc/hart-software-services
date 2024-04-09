@@ -84,7 +84,13 @@ struct StateMachine usbdmsc_service = {
 
 static void usbdmsc_init_handler(struct StateMachine * const pMyMachine)
 {
-    pMyMachine->state = USBDMSC_IDLE;
+    if (
+#if IS_ENABLED(CONFIG_SERVICE_DDR)
+        HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) &&
+#endif
+        HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+        pMyMachine->state = USBDMSC_IDLE;
+    }
 }
 
 /////////////////
@@ -92,30 +98,36 @@ static void usbdmsc_init_handler(struct StateMachine * const pMyMachine)
 static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
+
+    if (HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED)) {
+        HSS_Trigger_Clear(EVENT_USBDMSC_REQUESTED);
+        usbdmsc_service.state = USBDMSC_WAIT_FOR_USB_HOST;
+    }
 }
 
 /////////////////
 
 static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachine)
 {
-    bool idle = USBDMSC_Init();
+    bool result = USBDMSC_Init();
 
-    if (!idle) {
+    if (result) {
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
+    } else {
+        mHSS_PUTS("USBDMSC_Init() returned false\n");
+        usbdmsc_service.state = USBDMSC_IDLE;
     }
 }
 
 static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachine)
 {
-    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
-        bool idle = USBDMSC_Poll();
+    bool idle = USBDMSC_Poll();
 
-        if (idle) {
-            pMyMachine->state = USBDMSC_IDLE;
-        } else if (FLASH_DRIVE_is_host_connected()) {
-            mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
-            pMyMachine->state = USBDMSC_ACTIVE;
-        }
+    if (idle) {
+        pMyMachine->state = USBDMSC_IDLE;
+    } else if (FLASH_DRIVE_is_host_connected()) {
+        mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
+        pMyMachine->state = USBDMSC_ACTIVE;
     }
 }
 
@@ -162,6 +174,8 @@ static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine)
     void HSS_Storage_FlushWriteBuffer(void);
     HSS_Storage_FlushWriteBuffer();
 
+    USBDMSC_Shutdown();
+
     mHSS_PUTS("\nUSB Host disconnected...\n");
 }
 
@@ -169,7 +183,7 @@ static void usbdmsc_active_onExit(struct StateMachine * const pMyMachine)
 
 void USBDMSC_Activate(void)
 {
-    usbdmsc_service.state = USBDMSC_WAIT_FOR_USB_HOST;
+    HSS_Trigger_Notify(EVENT_USBDMSC_REQUESTED);
 }
 
 void USBDMSC_Deactivate(void)

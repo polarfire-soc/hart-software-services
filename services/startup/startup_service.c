@@ -111,7 +111,7 @@ static void startup_init_handler(struct StateMachine * const pMyMachine)
         pMyMachine->state++;
         HSS_Trigger_Notify(EVENT_STARTUP_COMPLETE);
 
-#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
         HSS_BootHarts();
 #endif
     }

@@ -19,6 +19,7 @@
 #include "uart_helper.h"
 #include "usbdmsc_service.h"
 #include "hss_init.h"
+#include "hss_trigger.h"
 
 /**************************************************************************//**
  */
@@ -41,9 +42,7 @@ static void check_mpu_(const mss_mpu_mport_t master_port, const char * master_po
         &matching_mode, &lock_en)) == 0) {
 
         if ((base <= region_base) && ((base + size) >= (region_base + region_size))) {
-            // mHSS_DEBUG_PRINTF(LOG_ERROR, "%d: BASE->BASE/SIZE %p->%p OKAY\n", pmp_region, base, base + size);
             if (permission & (MPU_MODE_READ_ACCESS|MPU_MODE_WRITE_ACCESS|MPU_MODE_EXEC_ACCESS)) {
-                // mHSS_DEBUG_PRINTF(LOG_ERROR, "%d: PERMS %d OKAY\n", pmp_region, permission);
                 break;
             }
         }
@@ -59,7 +58,12 @@ static void check_mpu_(const mss_mpu_mport_t master_port, const char * master_po
 
 bool USBDMSC_Init(void)
 {
-    SYSREG->SOFT_RESET_CR &= ~ (1u << 16u);
+    bool result;
+
+    SYSREG->SUBBLK_CLOCK_CR &= ~SUBBLK_CLOCK_CR_USB_MASK;
+    SYSREG->SUBBLK_CLOCK_CR |= SUBBLK_CLOCK_CR_USB_MASK;
+    SYSREG->SOFT_RESET_CR &= ~SOFT_RESET_CR_USB_MASK;
+    SYSREG->SOFT_RESET_CR |= SOFT_RESET_CR_USB_MASK;
 
     PLIC_init();
 
@@ -74,12 +78,12 @@ bool USBDMSC_Init(void)
     PLIC_EnableIRQ(MMC_main_PLIC);
     PLIC_EnableIRQ(MMC_wakeup_PLIC);
 
-    HSS_USBInit();
+    result = HSS_USBInit();
 
     // we'll check the MPU configuration and ensure that we have sufficient
     // privileges to implement USBDMSC (and optionally MMC access) and if not we'll
     // complain...
-    if (!mpu_blocks_access) {
+    if (result && !mpu_blocks_access) {
         const struct {
             uintptr_t base;
             ptrdiff_t size;
@@ -94,9 +98,23 @@ bool USBDMSC_Init(void)
 #endif
             if (mpu_blocks_access) { break; }
         }
+
+        result = result && !mpu_blocks_access;
     }
 
-    return mpu_blocks_access;
+    if (result) {
+        if (!FLASH_DRIVE_init()) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false...\n");
+            result = false;
+        }
+    }
+
+    if (result) {
+        if (HSS_Trigger_IsNotified(EVENT_USBDMSC_FINISHED)) {
+            HSS_Trigger_Clear(EVENT_USBDMSC_FINISHED);
+        }
+    }
+    return result;
 }
 
 HSSTicks_t last_poll_time = 0u;
@@ -105,33 +123,36 @@ bool USBDMSC_Poll(void)
 {
     bool idle = mpu_blocks_access;
 
-    if (!idle) {
-        {
-            //poll PLIC
-            uint32_t source = PLIC_ClaimIRQ();
+    if (HSS_Trigger_IsNotified(EVENT_USBDMSC_FINISHED)) {
+        HSS_Trigger_Clear(EVENT_USBDMSC_FINISHED);
+        idle = true;
+    }
 
-            switch (source) {
+    if (!idle) {
+        //poll PLIC
+        uint32_t source = PLIC_ClaimIRQ();
+
+        switch (source) {
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
-			case MMC_main_PLIC: // MMC interrupt
-				PLIC_mmc_main_IRQHandler(); // interrupt 88
-                break;
+        case MMC_main_PLIC: // MMC interrupt
+            PLIC_mmc_main_IRQHandler(); // interrupt 88
+            break;
 #endif
 
-            case PLIC_USB_MC_INT_OFFSET: // main USB interrupt
-                PLIC_usb_mc_IRQHandler(); // interrupt 87
-                break;
+        case PLIC_USB_MC_INT_OFFSET: // main USB interrupt
+            PLIC_usb_mc_IRQHandler(); // interrupt 87
+            break;
 
-            case PLIC_USB_DMA_INT_OFFSET: // DMA USB interrupt
-                PLIC_usb_dma_IRQHandler(); // interrupt 86
-                break;
+        case PLIC_USB_DMA_INT_OFFSET: // DMA USB interrupt
+            PLIC_usb_dma_IRQHandler(); // interrupt 86
+            break;
 
-            default:
-                break;
-            }
+        default:
+            break;
+        }
 
-            if (source != INVALID_IRQn) {
-                PLIC_CompleteIRQ(source);
-            }
+        if (source != INVALID_IRQn) {
+            PLIC_CompleteIRQ(source);
         }
 
         if (HSS_Timer_IsElapsed(last_poll_time, 5*TICKS_PER_SEC)) {
@@ -140,22 +161,18 @@ bool USBDMSC_Poll(void)
         }
     }
 
+    if (idle) {
+        // clear any residual MMC / main USB / DMA USB interrupts
+        PLIC_ClearPendingIRQ();
+    }
+
     return idle;
 }
 
 void USBDMSC_Shutdown(void)
 {
-}
-
-void USBDMSC_Start(void)
-{
-    bool idle = false;
-
-    idle = idle | !FLASH_DRIVE_init();
-
-    if (idle) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false...\n");
-    } else {
-        USBDMSC_Activate();
-    }
+    SYSREG->SUBBLK_CLOCK_CR &= ~SUBBLK_CLOCK_CR_USB_MASK;
+    SYSREG->SUBBLK_CLOCK_CR |= SUBBLK_CLOCK_CR_USB_MASK;
+    SYSREG->SOFT_RESET_CR &= ~SOFT_RESET_CR_USB_MASK;
+    SYSREG->SOFT_RESET_CR |= SOFT_RESET_CR_USB_MASK;
 }

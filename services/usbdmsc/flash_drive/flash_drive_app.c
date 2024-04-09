@@ -25,6 +25,11 @@
 #include "mss_mpu.h"
 #include "drivers/mss/mss_mmc/mss_mmc.h"
 
+#include "hss_types.h"
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+#  include "gpio_ui_service.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -115,6 +120,7 @@ static mss_usbd_msc_scsi_inq_resp_t usb_flash_media_inquiry_data[NUMBER_OF_LUNS_
 /******************************************************************************
   See flash_drive_app.h for details of how to use this function.
 */
+
 bool FLASH_DRIVE_init(void)
 {
     bool result = false;
@@ -175,6 +181,10 @@ void FLASH_DRIVE_dump_xfer_status(void)
     if (HSS_Timer_IsElapsed(last_sec_time, TICKS_PER_SEC)) {
         mHSS_DEBUG_PRINTF_EX("\r %c %lu bytes written, %lu bytes read", activeThrobber, writeCount, readCount);
         last_sec_time = HSS_GetTime();
+
+#if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+        HSS_GPIO_UI_ReportUSBProgress(writeCount, readCount);
+#endif
     }
 }
 
