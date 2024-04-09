@@ -20,6 +20,13 @@
 #include "hss_trigger.h"
 #include "riscv_atomic.h"
 
+#if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
+#  include "tinycli_service.h"
+#endif
+#if IS_ENABLED(CONFIG_OPENSBI)
+#  include "opensbi_service.h"
+#endif
+
 #define CONFIG_DEBUG_TRIGGERS 0
 
 struct HSS_Triggers
@@ -88,7 +95,7 @@ void HSS_Trigger_Notify(enum HSS_Event event)
         break;
 
     case EVENT_USBDMSC_FINISHED:
-        atomic_write(&triggerStatus.usbdmsc_requested, 0);
+        atomic_write(&triggerStatus.usbdmsc_finished, 1);
         break;
 
     case EVENT_POST_BOOT:
@@ -142,7 +149,7 @@ bool HSS_Trigger_IsNotified(enum HSS_Event event)
         break;
 
     case EVENT_USBDMSC_FINISHED:
-        result = (!atomic_read(&triggerStatus.usbdmsc_requested)) ? true : false;
+        result = atomic_read(&triggerStatus.usbdmsc_finished) ? true : false;
         break;
 
     case EVENT_POST_BOOT:
@@ -182,9 +189,11 @@ void HSS_Trigger_Clear(enum HSS_Event event)
         break;
 
     case EVENT_USBDMSC_REQUESTED:
+        atomic_write(&triggerStatus.usbdmsc_requested, 0);
         break;
 
     case EVENT_USBDMSC_FINISHED:
+        atomic_write(&triggerStatus.usbdmsc_finished, 0);
         break;
 
     case EVENT_POST_BOOT:
