@@ -10,6 +10,32 @@ config USE_PCIE
 
 		If you don't know what to do here, say Y.
 
+menu "Enabled PCIe controllers"
+	visible if USE_PCIE
+
+config ENABLE_PCIE_CTRL_0
+	bool "Use PCIe controller 0"
+	default n
+		depends on USE_PCIE
+	help
+                This feature enables PCIe Controller 0.
+				Enable this feature if PCIe controller 0 is enabled in the FPGA design.
+
+		If you do not know what to do here, say N.
+
+config ENABLE_PCIE_CTRL_1
+	bool "Use PCIe controller 1"
+	default n
+		depends on USE_PCIE
+	help
+                This feature enables PCIe Controller 1.
+				Enable this feature if PCIe controller 1 is enabled in the FPGA design.
+
+		If you do not know what to do here, say N.
+
+endmenu
+
+
 config OPENSBI
 	def_bool y
 	help

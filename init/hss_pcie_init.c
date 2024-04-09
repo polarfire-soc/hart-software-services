@@ -45,6 +45,19 @@
 #define PCIE1_CTRL_DED_ERROR_INT_MASK_OFFSET	0x34u
 #define PCIE1_CTRL_PCIE_EVENT_INT_OFFSET	0x14c
 
+#define PCIE0_BRIDGE_BASE_ADDR			(PCIE_BASE_ADDR + 0x00004000u)
+#define PCIE0_BRIDGE_IMASK_LOCAL_OFFSET		0x180u
+#define PCIE0_BRIDGE_ISTATUS_LOCAL_OFFSET	0x184u
+#define PCIE0_BRIDGE_IMASK_HOST_OFFSET		0x188u
+#define PCIE0_BRIDGE_ISTATUS_HOST_OFFSET	0x18Cu
+
+#define PCIE0_CTRL_BASE_ADDR			(PCIE_BASE_ADDR + 0x00006000u)
+#define PCIE0_CTRL_SEC_ERROR_INT_OFFSET		0x28u
+#define PCIE0_CTRL_SEC_ERROR_INT_MASK_OFFSET	0x2Cu
+#define PCIE0_CTRL_DED_ERROR_INT_OFFSET		0x30u
+#define PCIE0_CTRL_DED_ERROR_INT_MASK_OFFSET	0x34u
+#define PCIE0_CTRL_PCIE_EVENT_INT_OFFSET	0x14c
+
 #define MAX_RETRY_COUNT				255u
 
 bool HSS_PCIeInit(void)
@@ -62,7 +75,49 @@ bool HSS_PCIeInit(void)
     uint32_t retryCount = 0u;
 
     while (claim != 0u) {
-    	uint32_t status;
+        uint32_t status = 0;
+        (void)status;
+
+#if IS_ENABLED(CONFIG_ENABLE_PCIE_CTRL_0)
+
+        // turn off SEC - on ctrl0
+        // clear out stragglers
+        mHSS_WriteRegU32(PCIE0_CTRL, SEC_ERROR_INT_MASK, 0xFFFFu);
+        status = mHSS_ReadRegU32(PCIE0_CTRL, SEC_ERROR_INT);
+        if (status) {
+            mHSS_WriteRegU32(PCIE0_CTRL, SEC_ERROR_INT, status);
+        }
+
+        // turn off DED - on ctrl0
+        mHSS_WriteRegU32(PCIE0_CTRL, DED_ERROR_INT_MASK, 0xFFFFu);
+        status = mHSS_ReadRegU32(PCIE0_CTRL, DED_ERROR_INT);
+        if (status) {
+            mHSS_WriteRegU32(PCIE0_CTRL, DED_ERROR_INT, status);
+        }
+
+        // turn of PCIe EVENTs - on ctrl0
+        // Clear outstanding and disable future PCIE_EVENT_INTS
+        status = mHSS_ReadRegU32(PCIE0_CTRL, PCIE_EVENT_INT);
+        if (status & 0x7) {
+            mHSS_WriteRegU32(PCIE0_CTRL, PCIE_EVENT_INT, 0x0070007u);
+        }
+
+        // turn off LOCAL interrupts - on bridge0
+        mHSS_WriteRegU32(PCIE0_BRIDGE, IMASK_LOCAL, 0u);
+        status = mHSS_ReadRegU32(PCIE0_BRIDGE, ISTATUS_LOCAL);
+        if (status) {
+            mHSS_WriteRegU32(PCIE0_BRIDGE, ISTATUS_LOCAL, status);
+        }
+
+        // turn off HOST interrupts - on bridge0
+        mHSS_WriteRegU32(PCIE0_BRIDGE, IMASK_HOST, 0u);
+        status = mHSS_ReadRegU32(PCIE0_BRIDGE, ISTATUS_HOST);
+        if (status) {
+            mHSS_WriteRegU32(PCIE0_BRIDGE, ISTATUS_HOST, status);
+        }
+#endif
+
+#if IS_ENABLED(CONFIG_ENABLE_PCIE_CTRL_1)
 
         // turn off SEC - on ctrl1
         // clear out stragglers
@@ -99,6 +154,7 @@ bool HSS_PCIeInit(void)
         if (status) {
             mHSS_WriteRegU32(PCIE1_BRIDGE, ISTATUS_HOST, status);
         }
+#endif
 
         PLIC_CompleteIRQ(claim);
 
