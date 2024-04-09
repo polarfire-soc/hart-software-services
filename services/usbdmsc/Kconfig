@@ -10,16 +10,6 @@ config SERVICE_USBDMSC
 menu "USB Device Mass Storage Class"
 	visible if SERVICE_USBDMSC
 
-config SERVICE_USBDMSC_REGISTER
-        depends on SERVICE_USBDMSC
-	bool "Register USBDMSC as a state machine"
-	default n
-	help
-		This feature enables the USBD-MSC support to be registered
-		as a state machine, which makes it available at all times via the E51.
-
-		If you do not know what to do here, say N.
-
 config SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT
 	bool "Apply timeout to USBDMSC"
 	default n

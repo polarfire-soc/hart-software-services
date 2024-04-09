@@ -106,19 +106,7 @@ bool USBDMSC_Poll(void)
     bool idle = mpu_blocks_access;
 
     if (!idle) {
-#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
-        uint8_t rx_byte = 0;
-
-        bool retval = uart_getchar(&rx_byte, 0, false);
-
-        if (retval) {
-            if ((rx_byte == '\003') || (rx_byte == '\033')) {
-                idle = true;
-            }
-        } else {
-#else
         {
-#endif
             //poll PLIC
             uint32_t source = PLIC_ClaimIRQ();
 
@@ -157,52 +145,17 @@ bool USBDMSC_Poll(void)
 
 void USBDMSC_Shutdown(void)
 {
-#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
-    PLIC_ClearPendingIRQ();
-    USBDMSC_Deactivate();
-#endif
 }
 
 void USBDMSC_Start(void)
 {
     bool idle = false;
-#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
-    idle = USBDMSC_Init();
-#endif
 
     idle = idle | !FLASH_DRIVE_init();
 
     if (idle) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "FLASH_DRIVE_init() returned false...\n");
     } else {
-#if !IS_ENABLED(CONFIG_SERVICE_USBDMSC_REGISTER)
-        bool isHostConnected = false;
-        mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
-
-        do {
-            if (!isHostConnected) {
-                // if we are not connected, wait until we are
-                isHostConnected = FLASH_DRIVE_is_host_connected();
-                if (isHostConnected) {
-                    mHSS_PUTS("USB Host connected. Waiting for disconnect... (CTRL-C to quit)\n");
-                }
-            } else {
-                // else quit once we've disconnected again...
-                isHostConnected = FLASH_DRIVE_is_host_connected();
-                if (!isHostConnected) {
-                    idle = true;
-                }
-            }
-
-            idle = idle || USBDMSC_Poll();
-        } while (!idle);
-
-        void HSS_Storage_FlushWriteBuffer(void);
-        HSS_Storage_FlushWriteBuffer();
-
-        mHSS_PUTS("\nUSB Host disconnected...\n");
-#else
         USBDMSC_Activate();
-#endif
     }
 }
