@@ -1,4 +1,3 @@
-#pragma GCC optimize("O0")
 /*
  * SPDX-License-Identifier: BSD-2-Clause
  *
