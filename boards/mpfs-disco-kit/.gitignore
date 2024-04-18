@@ -1,0 +1,8 @@
+fpga_design_config/clocks/
+fpga_design_config/ddr/
+fpga_design_config/general/
+fpga_design_config/io/
+fpga_design_config/memory_map/
+fpga_design_config/sgmii/
+fpga_design_config/fpga_design_config.h
+hss-l2scratch.ld
