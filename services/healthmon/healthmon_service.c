@@ -166,7 +166,8 @@ static struct HealthMonitor_Status
 //
 static void healthmon_init_handler(struct StateMachine * const pMyMachine)
 {
-    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
+    if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) && HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)
+        && HSS_Trigger_IsNotified(EVENT_POST_BOOT)) {
         pMyMachine->state = HEALTH_MONITORING;
     }
 }
@@ -222,7 +223,6 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                     } else {
                         monitor_status[i].initialized = true;
                     }
-                    monitor_status[i].lastValue = value;
                     break;
 
                 default:
@@ -230,7 +230,7 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                     break;
                 }
 
-                if (triggered) {
+                if (triggered && value != monitor_status[i].lastValue) {
                     monitor_status[i].count++;
 
                     mHSS_DEBUG_PRINTF(LOG_ERROR, "%s %s ",
@@ -247,6 +247,7 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                     }
 
                     monitor_status[i].throttle_startTime = HSS_GetTime();
+                    monitor_status[i].lastValue = value;
                 }
             }
         }
