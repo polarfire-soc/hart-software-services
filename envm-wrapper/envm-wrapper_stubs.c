@@ -11,7 +11,12 @@
 #include "hss_types.h"
 #include "hss_debug.h"
 #include "hss_progress.h"
+#include "hss_trigger.h"
 #include "uart_helper.h"
+
+bool HSS_Trigger_IsNotified(enum HSS_Event event) {
+    return TRUE;
+}
 
 void HSS_Debug_Timestamp(void)
 {

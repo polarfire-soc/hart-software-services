@@ -124,13 +124,17 @@ _start:
 
 	call	mss_nwc_init
 
+#define GET_HSS_UART \
+	la 	a0, 0; \
+	call	HSS_UART_GetInstance // value of UART is now in a0
+
 #ifndef CONFIG_CRYPTO_SIGNING
 .e51_print_message:
 	la	a0, g_mss_uart0_lo
 	li	a1, 115200
-#define MSS_UART_DATA_8_BITS     (0x03)
-#define MSS_UART_NO_PARITY       (0x00)
-#define MSS_UART_ONE_STOP_BIT    (0x00)
+#  define MSS_UART_DATA_8_BITS     (0x03)
+#  define MSS_UART_NO_PARITY       (0x00)
+#  define MSS_UART_ONE_STOP_BIT    (0x00)
 	li	a2, MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT
 
 	la	a0, g_mss_uart1_lo
@@ -151,7 +155,8 @@ _start:
 	// it might look redundant, but we explicitly restore a0 here, in case the
 	// previous call to MSS_UART_init clobbers it (which can be the case
 	// depending on compiler options/optimization levels etc.)
-	la	a0, g_mss_uart0_lo
+
+	GET_HSS_UART
 	la	a1, decomp_msg
 	call	MSS_UART_polled_tx_string
 #endif
@@ -203,11 +208,11 @@ _start:
 
 .crc_good:
 #ifndef CONFIG_CRYPTO_SIGNING
-	la	a0, g_mss_uart0_lo
+	GET_HSS_UART
 	la	a1, passed_msg
 	call	MSS_UART_polled_tx_string
 1:
-	la	a0, g_mss_uart0_lo
+	GET_HSS_UART
 	call	MSS_UART_get_tx_status
 
 	andi	a0, a0, 64

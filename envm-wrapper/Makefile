@@ -41,7 +41,9 @@ OBJS-envm-wrapper = \
 	$(BINDIR)/modules/misc/assert.o \
 	$(BINDIR)/modules/misc/c_stubs.o \
 	$(BINDIR)/modules/misc/stack_guard.o \
-	$(BINDIR)/thirdparty/miniz/miniz.o
+	$(BINDIR)/thirdparty/miniz/miniz.o \
+	$(BINDIR)/modules/misc/uart_helper.o \
+        $(BINDIR)/$(BOARD_DIR)/uart_device_list.o \
 
 #ifndef CONFIG_CODE_SIGNING
 OBJS-envm-wrapper += \
@@ -65,6 +67,7 @@ COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2scratch:.elf=.bin.deflate)
 $(BINDIR)/envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) 
 $(BINDIR)/thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
 $(BINDIR)/envm-wrapper/envm-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/$(BOARD_DIR)/uart_device_list.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 define common-boot-mode-programmer
 	-$(RM) -r $(BINDIR)/bootmode$(BOOTMODE)
