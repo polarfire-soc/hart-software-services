@@ -22,7 +22,7 @@
 
 #include "gpio_ui_service.h"
 
-void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
+void HSS_ShowProgress(const size_t totalNumTasks, const size_t numTasksRemaining)
 {
     static uint32_t oldProgressPercent = 101u;
 

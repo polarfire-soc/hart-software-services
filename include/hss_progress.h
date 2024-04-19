@@ -37,7 +37,7 @@ extern "C" {
  * \brief Progress output utilities for long-running functions
  */
 
-void HSS_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining);
+void HSS_ShowProgress(const size_t totalNumTasks, const size_t numTasksRemaining);
 
 bool HSS_ShowTimeout(char const * const msg, uint32_t timeout_sec, uint8_t *pRcvBuf);
 
