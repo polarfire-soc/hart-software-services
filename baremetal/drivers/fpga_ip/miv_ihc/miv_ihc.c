@@ -33,7 +33,7 @@ IHC_TypeDef * IHC[] = { &IHC_H0_IP_GROUP , &IHC_H1_IP_GROUP, &IHC_H2_IP_GROUP, &
  * \brief IHC configuration
  *
  */
-const uint64_t ihc_base_addess[][5U] = {
+const uint64_t ihc_base_address[][5U] = {
         /* hart 0 */
         {0x0,
         IHC_LOCAL_H0_REMOTE_H1,
@@ -70,7 +70,7 @@ const uint64_t ihc_base_addess[][5U] = {
  * \brief IHC configuration
  *
  */
-const uint64_t IHCIA_base_addess[5U] = {
+const uint64_t IHCIA_base_address[5U] = {
 
         IHCIA_LOCAL_H0,
         IHCIA_LOCAL_H1,
@@ -138,14 +138,16 @@ void IHC_global_init(void)
             /*
              * Configure base addresses
              */
-            IHC[my_hart_id]->HART_IHCC[remote_hart_id] = (IHCC_IP_TypeDef *)ihc_base_addess[my_hart_id][remote_hart_id];
-            IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
+            IHC[my_hart_id]->HART_IHCC[remote_hart_id] = (IHCC_IP_TypeDef *)ihc_base_address[my_hart_id][remote_hart_id];
+            if (NULL != IHC[my_hart_id]->HART_IHCC[remote_hart_id]) {
+                IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
+            }
             remote_hart_id++;
         }
         /*
          * Configure base addresses
          */
-        IHC[my_hart_id]->HART_IHCIA = (IHCIA_IP_TypeDef *)IHCIA_base_addess[my_hart_id];
+        IHC[my_hart_id]->HART_IHCIA = (IHCIA_IP_TypeDef *)IHCIA_base_address[my_hart_id];
         /*
          * Clear interrupt enables
          */
@@ -178,14 +180,16 @@ void IHC_local_context_init(uint32_t hart_to_configure)
             /*
              * Configure base addresses
              */
-            IHC[hart_to_configure]->HART_IHCC[remote_hart_id] = (IHCC_IP_TypeDef *)ihc_base_addess[hart_to_configure][remote_hart_id];
-            IHC[hart_to_configure]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
+            IHC[hart_to_configure]->HART_IHCC[remote_hart_id] = (IHCC_IP_TypeDef *)ihc_base_address[hart_to_configure][remote_hart_id];
+            if (NULL != IHC[hart_to_configure]->HART_IHCC[remote_hart_id]) {
+                IHC[hart_to_configure]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
+            }
             remote_hart_id++;
         }
         /*
          * Configure base addresses
          */
-        IHC[hart_to_configure]->HART_IHCIA = (IHCIA_IP_TypeDef *)IHCIA_base_addess[hart_to_configure];
+        IHC[hart_to_configure]->HART_IHCIA = (IHCIA_IP_TypeDef *)IHCIA_base_address[hart_to_configure];
         /*
          *
          */
