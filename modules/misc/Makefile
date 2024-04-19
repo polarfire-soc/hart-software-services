@@ -35,6 +35,7 @@ EXTRA_SRCS-y += \
         modules/misc/hss_memcpy_via_pdma.c \
         modules/misc/hss_progress.c \
         modules/misc/device_serial_number.c \
+        modules/misc/design_version_info.c \
         modules/misc/uart_helper.c \
         modules/misc/hss_trigger.c \
 

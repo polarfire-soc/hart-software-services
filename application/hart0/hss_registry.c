@@ -274,6 +274,7 @@ const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
 #include "hss_sys_setup.h"
 #include "hss_board_init.h"
 #include "device_serial_number.h"
+#include "design_version_info.h"
 #if IS_ENABLED(CONFIG_MEMTEST)
 #  include "hss_memtest.h"
 #endif
@@ -301,6 +302,7 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #if IS_ENABLED(CONFIG_DEBUG_RESET_REASON)
     { "HSS_ResetReasonInit",           HSS_ResetReasonInit,           false, false },
 #endif
+    { "Design_Version_Info_Init",      Design_Version_Info_Init,      false, false },
     { "HSS_BoardLateInit",             HSS_BoardLateInit,             false, false },
 };
 const size_t spanOfGlobalInitFunctions = ARRAY_SIZE(globalInitFunctions);
