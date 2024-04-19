@@ -56,6 +56,19 @@ config SERVICE_MMC_BUS_VOLTAGE_3V3
 		If you do not know what to do here, say Y.
 endmenu
 
+choice "MMC Speed"
+	prompt "SD/eMMC Bus Speed"
+	default SERVICE_MMC_HIGH_SPEED
+	depends on SERVICE_MMC
+
+config SERVICE_MMC_HIGH_SPEED
+        bool "Use MMC High Speed (HS) Mode"
+
+config SERVICE_MMC_DEFAULT_SPEED
+        bool "Use MMC Default Speed (DS) Mode"
+
+endchoice
+
 menu "SDIO Control"
 
 config SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT

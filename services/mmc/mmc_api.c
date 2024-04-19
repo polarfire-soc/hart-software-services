@@ -182,7 +182,11 @@ static bool mmc_init_sdcard(void)
     {
         .card_type = MSS_MMC_CARD_TYPE_SD,
         .data_bus_width = MSS_MMC_DATA_WIDTH_4BIT,
+#if IS_ENABLED(CONFIG_SERVICE_MMC_DEFAULT_SPEED)
+        .bus_speed_mode = MSS_SDCARD_MODE_DEFAULT_SPEED,
+#else
         .bus_speed_mode = MSS_SDCARD_MODE_HIGH_SPEED,
+#endif
         .clk_rate = MSS_MMC_CLOCK_50MHZ,
     };
 
