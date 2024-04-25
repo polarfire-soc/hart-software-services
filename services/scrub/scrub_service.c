@@ -129,6 +129,8 @@ static size_t idx = 0u;
 static size_t entryCount = 0u;
 static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
 {
+#if IS_ENABLED(CONFIG_SERVICE_SCRUB_L2LIM) || IS_ENABLED(CONFIG_SERVICE_SCRUB_L2SCRATCH) || IS_ENABLED(CONFIG_SERVICE_SCRUB_DTIM) || IS_ENABLED(CONFIG_SERVICE_SCRUB_CACHED_DDR) || IS_ENABLED(CONFIG_SERVICE_SCRUB_NONCACHED_DDR)
+
     (void)pMyMachine;
 
     if (ARRAY_SIZE(rams)) {
@@ -159,7 +161,7 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
         }
     }
 
-#if IS_ENABLED(CONFIG_SERVICE_SCRUB_CACHES)
+#  if IS_ENABLED(CONFIG_SERVICE_SCRUB_CACHES)
     static size_t trigger_cache_flush = 0u;
     static enum HSSHartId last_peer = HSS_HART_U54_1;
 
@@ -200,12 +202,13 @@ static void scrub_scrubbing_handler(struct StateMachine * const pMyMachine)
     } else {
         trigger_cache_flush++;
     }
-#endif
+#  endif
 
-#if defined(CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS)
+#  if defined(CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS)
     entryCount = (entryCount + 1u) % CONFIG_SERVICE_SCRUB_RUN_EVERY_X_SUPERLOOPS;
-#else
+#  else
     entryCount = 0u;
+#  endif
 #endif
 }
 
