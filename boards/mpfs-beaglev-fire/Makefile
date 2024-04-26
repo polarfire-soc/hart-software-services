@@ -57,7 +57,7 @@ EXTRA_SRCS-y += \
         $(BOARD_DIR)/hss_board_init.c \
 
 EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
-        init/hss_logo_init.c
+        $(BOARD_DIR)/hss_logo_init.c
 
 $(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
