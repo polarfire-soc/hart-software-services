@@ -8,4 +8,4 @@ jobs:
       - uses: actions/setup-node@v1
       - run: cp boards/mpfs-icicle-kit-es/def_config .config
       - run: make BOARD=mpfs-icicle-kit-es
-      - run: ls -la ./Default
+      - run: ls -la ./build

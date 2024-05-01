@@ -5,7 +5,7 @@
         		
         <cconfiguration id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1848292451">
             			
-            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1848292451" moduleId="org.eclipse.cdt.core.settings" name="Default">
+            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1848292451" moduleId="org.eclipse.cdt.core.settings" name="build">
                 				
                 <externalSettings/>
                 				
@@ -29,7 +29,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="${ProjName}" buildProperties="" description="" id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1848292451" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+                <configuration artifactName="${ProjName}" buildProperties="" description="" id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1848292451" name="build" parent="org.eclipse.cdt.build.core.emptycfg">
                     					
                     <folderInfo id="ilg.gnumcueclipse.managedbuild.cross.riscv.toolchain.base.1848292451.1041878065" name="/" resourcePath="">
                         						
@@ -301,7 +301,7 @@
     	
     <storageModule moduleId="refreshScope" versionNumber="2">
         		
-        <configuration configurationName="Default">
+        <configuration configurationName="build">
             			
             <resource resourceType="PROJECT" workspacePath="/hart-software-services"/>
             		
