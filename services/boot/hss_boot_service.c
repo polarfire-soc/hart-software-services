@@ -18,6 +18,7 @@
 #include "hss_state_machine.h"
 #include "hss_boot_service.h"
 #include "opensbi_service.h"
+#include "ddr_service.h"
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_clock.h"
@@ -491,14 +492,20 @@ static void boot_zero_init_chunks_handler(struct StateMachine * const pMyMachine
 
     if (pZiChunk->size != 0u) {
         if (target == pZiChunk->owner) {
+            if (HSS_DDR_IsAddrInDDR((uintptr_t)pZiChunk->execAddr) && !HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
+                ; // need to wait until DDR is initialized
+            } else {
 #if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
-            mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ziChunk->0x%x, %u bytes\n",
-                pMyMachine->pMachineName, pInstanceData->ziChunkCount,
-                (uintptr_t)pZiChunk->execAddr, pZiChunk->size);
+                mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:ziChunk->0x%x, %u bytes\n",
+                    pMyMachine->pMachineName, pInstanceData->ziChunkCount,
+                    (uintptr_t)pZiChunk->execAddr, pZiChunk->size);
 #endif
-            boot_do_zero_init_chunk(pZiChunk);
+                boot_do_zero_init_chunk(pZiChunk);
+                pInstanceData->pZiChunk++;
+            }
+        } else {
+            pInstanceData->pZiChunk++;
         }
-        pInstanceData->pZiChunk++;
     } else {
         pMyMachine->state = BOOT_DOWNLOAD_CHUNKS;
     }
@@ -784,7 +791,7 @@ static void boot_error_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-static atomic_t first_boot_complete[5] = {
+atomic_t bootComplete[5] = {
      ATOMIC_INITIALIZER(0),
      ATOMIC_INITIALIZER(0),
      ATOMIC_INITIALIZER(0),
@@ -796,15 +803,15 @@ static void boot_complete_onEntry(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData const * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const hartId = pInstanceData->target;
-    atomic_write(&first_boot_complete[hartId], 1);
+    atomic_write(&bootComplete[hartId], 1);
 }
 
 static void boot_complete_handler(struct StateMachine * const pMyMachine)
 {
-    bool all_complete = atomic_read(&first_boot_complete[1]) ? true : false;
-    all_complete &= atomic_read(&first_boot_complete[2]) ? true : false;
-    all_complete &= atomic_read(&first_boot_complete[3]) ? true : false;
-    all_complete &= atomic_read(&first_boot_complete[4]) ? true : false;
+    bool all_complete = atomic_read(&bootComplete[1]) ? true : false;
+    all_complete &= atomic_read(&bootComplete[2]) ? true : false;
+    all_complete &= atomic_read(&bootComplete[3]) ? true : false;
+    all_complete &= atomic_read(&bootComplete[4]) ? true : false;
 
     if (all_complete) {
        HSS_Trigger_Notify(EVENT_BOOT_COMPLETE);

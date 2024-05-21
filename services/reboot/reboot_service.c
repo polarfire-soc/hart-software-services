@@ -146,8 +146,9 @@ void HSS_reboot(uint32_t wdog_status)
 {
     uint32_t restart_mask = 0u;
 
-    if (IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ALWAYS))
+    if (IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ALWAYS)) {
         HSS_reboot_cold(HSS_HART_ALL);
+    }
 
     // watchdog timer has triggered for a monitored hart.
     // ensure OpenSBI housekeeping is in order for requesting reboots.

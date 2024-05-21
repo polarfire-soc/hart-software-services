@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "ddr_service.h"
 #include "tinycli_service.h"
 #include "hss_memcpy_via_pdma.h"
 #include "startup_service.h"
@@ -35,6 +36,7 @@
 #endif
 
 static void startup_init_handler(struct StateMachine * const pMyMachine);
+static void startup_boot_handler(struct StateMachine * const pMyMachine);
 static void startup_idle_handler(struct StateMachine * const pMyMachine);
 
 /*!
@@ -42,6 +44,7 @@ static void startup_idle_handler(struct StateMachine * const pMyMachine);
  */
 enum ScrubStatesEnum {
     STARTUP_INITIALIZATION,
+    STARTUP_BOOT,
     STARTUP_IDLE,
     STARTUP_NUM_STATES = STARTUP_IDLE+1
 };
@@ -51,6 +54,7 @@ enum ScrubStatesEnum {
  */
 static const struct StateDesc startup_state_descs[] = {
     { (const stateType_t)STARTUP_INITIALIZATION, (const char *)"init", NULL, NULL, &startup_init_handler },
+    { (const stateType_t)STARTUP_BOOT,           (const char *)"boot", NULL, NULL, &startup_boot_handler },
     { (const stateType_t)STARTUP_IDLE,           (const char *)"idle", NULL, NULL, &startup_idle_handler },
 };
 
@@ -110,11 +114,17 @@ static void startup_init_handler(struct StateMachine * const pMyMachine)
     } else {
         pMyMachine->state++;
         HSS_Trigger_Notify(EVENT_STARTUP_COMPLETE);
-
-#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
-        HSS_BootHarts();
-#endif
     }
+}
+
+static void startup_boot_handler(struct StateMachine * const pMyMachine)
+{
+#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
+    if (!HSS_DDR_IsAddrInDDR(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR) || HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
+        HSS_BootHarts();
+        pMyMachine->state++;
+    }
+#endif
 }
 
 static void startup_idle_handler(struct StateMachine * const pMyMachine)
