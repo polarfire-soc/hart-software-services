@@ -85,12 +85,12 @@
 #  include "healthmon_service.h"
 #endif
 
-#if IS_ENABLED(CONFIG_SERVICE_SCRUB)
-#  include "scrub_service.h"
-#endif
-
 #if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
 #  include "gpio_ui_service.h"
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_LOCKDOWN)
+#  include "lockdown_service.h"
 #endif
 
 #include "startup_service.h"
@@ -256,6 +256,9 @@ struct StateMachine /*@null@*/ * const pGlobalStateMachines[] = {
 #endif
 #if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
     &gpio_ui_service,
+#endif
+#if IS_ENABLED(CONFIG_SERVICE_LOCKDOWN)
+    &lockdown_service,
 #endif
     &startup_service,
 };

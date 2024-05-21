@@ -31,6 +31,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "riscv_atomic.h"
 
 #include "mpfs_reg_map.h"
 
@@ -98,6 +99,8 @@ static void boot_opensbi_init_onExit(struct StateMachine * const pMyMachine);
 static void boot_wait_onEntry(struct StateMachine * const pMyMachine);
 static void boot_wait_handler(struct StateMachine * const pMyMachine);
 static void boot_error_handler(struct StateMachine * const pMyMachine);
+static void boot_complete_onEntry(struct StateMachine * const pMyMachine);
+static void boot_complete_handler(struct StateMachine * const pMyMachine);
 static void boot_idle_onEntry(struct StateMachine * const pMyMachine);
 static void boot_idle_handler(struct StateMachine * const pMyMachine);
 
@@ -119,6 +122,7 @@ enum BootStatesEnum {
     BOOT_DOWNLOAD_CHUNKS,
     BOOT_OPENSBI_INIT,
     BOOT_WAIT,
+    BOOT_COMPLETE,
     BOOT_IDLE,
     BOOT_ERROR,
     BOOT_NUM_STATES = BOOT_ERROR+1
@@ -136,6 +140,7 @@ static const struct StateDesc boot_state_descs[] = {
     { (const stateType_t)BOOT_DOWNLOAD_CHUNKS,    (const char *)"Download",         &boot_download_chunks_onEntry,    &boot_download_chunks_onExit, &boot_download_chunks_handler },
     { (const stateType_t)BOOT_OPENSBI_INIT,       (const char *)"OpenSBIInit",      &boot_opensbi_init_onEntry,       &boot_opensbi_init_onExit,    &boot_opensbi_init_handler },
     { (const stateType_t)BOOT_WAIT,               (const char *)"Wait",             &boot_wait_onEntry,               NULL,                         &boot_wait_handler },
+    { (const stateType_t)BOOT_COMPLETE,           (const char *)"Complete",         &boot_complete_onEntry,           NULL,                         &boot_complete_handler },
     { (const stateType_t)BOOT_IDLE,               (const char *)"Idle",             &boot_idle_onEntry,               NULL,                         &boot_idle_handler },
     { (const stateType_t)BOOT_ERROR,              (const char *)"Error",            NULL,                             NULL,                         &boot_error_handler } };
 
@@ -434,7 +439,6 @@ static void boot_setup_pmp_complete_onEntry(struct StateMachine * const pMyMachi
 
 static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachine)
 {
-
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
 
@@ -458,7 +462,7 @@ static void boot_setup_pmp_complete_handler(struct StateMachine * const pMyMachi
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::PMP setup completed\n", pMyMachine->pMachineName);
 
         if (pBootImage->hart[target-1].flags & BOOT_FLAG_SKIP_AUTOBOOT)
-            pMyMachine->state = BOOT_IDLE;
+            pMyMachine->state = BOOT_COMPLETE;
         else
             pMyMachine->state = BOOT_ZERO_INIT_CHUNKS;
         }
@@ -609,7 +613,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
             pMyMachine->state = BOOT_OPENSBI_INIT;
         }
     } else {
-        pMyMachine->state = BOOT_IDLE;
+        pMyMachine->state = BOOT_COMPLETE;
     }
 }
 
@@ -734,7 +738,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
     if (!pBootImage->hart[target-1].entryPoint) {
         // nothing for me to do, not expecting GOTO ack...
         HSS_U54_SetState_Ex(target, HSS_State_Idle);
-        pMyMachine->state = BOOT_IDLE;
+        pMyMachine->state = BOOT_COMPLETE;
     } else if (HSS_Timer_IsElapsed(pMyMachine->startTime, BOOT_WAIT_TIMEOUT)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::IPI ACK Timeout after %" PRIu64 " iterations\n",
             pMyMachine->pMachineName, pMyMachine->executionCount);
@@ -756,7 +760,7 @@ static void boot_wait_handler(struct StateMachine * const pMyMachine)
 
             //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: ACK/IDLE ACK\n",
             //    pMyMachine->pMachineName);
-            pMyMachine->state = BOOT_IDLE;
+            pMyMachine->state = BOOT_COMPLETE;
         }
     }
 }
@@ -774,10 +778,39 @@ static void boot_error_handler(struct StateMachine * const pMyMachine)
     // Set BOOT_FAIL_CR to indicate to the fabric that boot process failed...
     SYSREG->BOOT_FAIL_CR = 1;
 
-    pMyMachine->state = BOOT_IDLE;
+    pMyMachine->state = BOOT_COMPLETE;
 }
 
 
+/////////////////
+
+static atomic_t first_boot_complete[5] = {
+     ATOMIC_INITIALIZER(0),
+     ATOMIC_INITIALIZER(0),
+     ATOMIC_INITIALIZER(0),
+     ATOMIC_INITIALIZER(0),
+     ATOMIC_INITIALIZER(0),
+};
+
+static void boot_complete_onEntry(struct StateMachine * const pMyMachine)
+{
+    struct HSS_Boot_LocalData const * const pInstanceData = pMyMachine->pInstanceData;
+    enum HSSHartId const hartId = pInstanceData->target;
+    atomic_write(&first_boot_complete[hartId], 1);
+}
+
+static void boot_complete_handler(struct StateMachine * const pMyMachine)
+{
+    bool all_complete = atomic_read(&first_boot_complete[1]) ? true : false;
+    all_complete &= atomic_read(&first_boot_complete[2]) ? true : false;
+    all_complete &= atomic_read(&first_boot_complete[3]) ? true : false;
+    all_complete &= atomic_read(&first_boot_complete[4]) ? true : false;
+
+    if (all_complete) {
+       HSS_Trigger_Notify(EVENT_BOOT_COMPLETE);
+       pMyMachine->state = BOOT_IDLE;
+   }
+}
 /////////////////
 
 static void boot_idle_onEntry(struct StateMachine * const pMyMachine)

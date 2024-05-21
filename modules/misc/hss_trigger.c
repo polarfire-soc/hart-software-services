@@ -38,6 +38,7 @@ struct HSS_Triggers
     atomic_t usbdmsc_requested;
     atomic_t usbdmsc_finished;
     atomic_t post_boot;
+    atomic_t boot_complete;
     atomic_t hart_state_changed;
     atomic_t healthmon;
 } triggerStatus = {
@@ -48,6 +49,7 @@ struct HSS_Triggers
     .usbdmsc_requested =   ATOMIC_INITIALIZER(0),
     .usbdmsc_finished =    ATOMIC_INITIALIZER(0),
     .post_boot =           ATOMIC_INITIALIZER(0),
+    .boot_complete =       ATOMIC_INITIALIZER(0),
     .hart_state_changed =  ATOMIC_INITIALIZER(0),
     .healthmon =           ATOMIC_INITIALIZER(0),
 };
@@ -65,6 +67,7 @@ void HSS_Trigger_Notify(enum HSS_Event event)
         [EVENT_USBDMSC_REQUESTED] =   "USBDMSC Request",
         [EVENT_USBDMSC_FINISHED] =    "USBDMSC Complete",
         [EVENT_POST_BOOT] =           "Post First Boot",
+        [EVENT_BOOT_COMPLETE] =       "Boot Complete",
         [EVENT_HART_STATE_CHANGED] =  "Hart State Changed",
         [EVENT_HEALTHMON] =           "Healthmon Event",
     };
@@ -112,6 +115,10 @@ void HSS_Trigger_Notify(enum HSS_Event event)
 #endif
         break;
 
+    case EVENT_BOOT_COMPLETE:
+        atomic_write(&triggerStatus.boot_complete, 1);
+        break;
+
     case EVENT_HART_STATE_CHANGED:
         break;
 
@@ -156,6 +163,10 @@ bool HSS_Trigger_IsNotified(enum HSS_Event event)
         result = atomic_read(&triggerStatus.post_boot) ? true : false;
         break;
 
+    case EVENT_BOOT_COMPLETE:
+        result = atomic_read(&triggerStatus.boot_complete) ? true : false;
+        break;
+
     case EVENT_HART_STATE_CHANGED:
         break;
 
@@ -198,6 +209,10 @@ void HSS_Trigger_Clear(enum HSS_Event event)
 
     case EVENT_POST_BOOT:
         atomic_write(&triggerStatus.post_boot, 0);
+        break;
+
+    case EVENT_BOOT_COMPLETE:
+        atomic_write(&triggerStatus.boot_complete, 0);
         break;
 
     case EVENT_HART_STATE_CHANGED:

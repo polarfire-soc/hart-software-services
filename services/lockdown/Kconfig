@@ -1,0 +1,14 @@
+config SERVICE_LOCKDOWN
+	bool "Lockdown Service"
+	default n
+	help
+                This feature enables support for E51 lockdown service.
+                Once boot has completed, the E51 will go into a loop in 
+                the lockdown service, where it sets up its own PMPs,
+                and from then only services the watchdogs.
+    
+                This service provides an opportunity/single place in the
+                code to modify behavior once boot has completed if the
+                user wishes to prevent the E51/HSS from running further.
+
+		If you do not know what to do here, say N.
