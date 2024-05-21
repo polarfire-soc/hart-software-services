@@ -79,8 +79,7 @@ static int HSS_reboot_auto_update(void)
 out_err:
     switch(ret) {
     case AUTO_UPDATE_ERR_SAME_VERSION:
-        mHSS_DEBUG_PRINTF(LOG_NORMAL,
-                          "reboot: Auto Update image is not an update: %d\n", ret);
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Auto Update image is not an update: %d\n", ret);
         break;
 
     default:
@@ -91,11 +90,12 @@ out_err:
     return ret;
 }
 
-static void HSS_reboot_cold_all(void)
+__attribute__((__noreturn__)) static void HSS_reboot_cold_all(void)
 {
     if (IS_ENABLED(CONFIG_COLDREBOOT_TRY_AUTO_UPDATE)) {
-        if(HSS_reboot_auto_update())
+        if (HSS_reboot_auto_update()) {
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Using fallback reboot provider\n");
+        }
     }
 
     if (IS_ENABLED(CONFIG_COLDREBOOT_FULL_FPGA_RESET)) {
@@ -105,6 +105,8 @@ static void HSS_reboot_cold_all(void)
     } else {
         SYSREG->MSS_RESET_CR = 0xDEAD;
     }
+
+    while (1) { ; }
 }
 
 void HSS_reboot_cold(enum HSSHartId target)
@@ -132,9 +134,6 @@ void HSS_reboot_cold(enum HSSHartId target)
 
     case HSS_HART_ALL:
         HSS_reboot_cold_all();
-
-        while (1) { ; }
-
         break;
 
     default:
@@ -156,8 +155,9 @@ void HSS_reboot(uint32_t wdog_status)
     // it will happen here also...
 
     for (enum HSSHartId source = HSS_HART_U54_1; source < HSS_HART_NUM_PEERS; source++) {
-        if (!(wdog_status & (1u << source)))
+        if (!(wdog_status & (1u << source))) {
             continue;
+        }
 
         mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d: Watchdog has fired\n", source);
 
@@ -170,8 +170,9 @@ void HSS_reboot(uint32_t wdog_status)
         restart_mask |= (1 << source);
 
         for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
-            if (peer == source)
+            if (peer == source) {
                 continue;
+            }
 
             if (mpfs_are_harts_in_same_domain(peer, source)) {
                 restart_mask |= (1 << peer);
@@ -184,20 +185,21 @@ void HSS_reboot(uint32_t wdog_status)
     if (restart_mask) {
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "reboot: Watchdog triggering reboot of ");
         for (enum HSSHartId peer = HSS_HART_U54_1; peer < HSS_HART_NUM_PEERS; peer++) {
-            if (!(restart_mask & (1u << peer)))
-                    continue;
+            if (!(restart_mask & (1u << peer))) {
+                continue;
+             }
 
             mHSS_DEBUG_PRINTF_EX("[u54_%d] ", peer);
 
-#if         IS_ENABLED(CONFIG_SERVICE_BOOT)
-                // Restart core using SRST mechanism
-                IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL);
-                HSS_Wdog_Init_Time(peer);
-                HSS_SpinDelay_MilliSecs(50u);
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+            // Restart core using SRST mechanism
+            IPI_Send(peer, IPI_MSG_GOTO, 0u, PRV_M, do_srst_ecall, NULL);
+            HSS_Wdog_Init_Time(peer);
+            HSS_SpinDelay_MilliSecs(50u);
 #else
-                mHSS_DEBUG_PRINTF(LOG_ERROR,
-                                  "reboot: warm reboot requested without SERVICE_BOOT enabled\n");
-                assert(1 == 0);
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "reboot: warm reboot requested without SERVICE_BOOT enabled\n");
+            assert(1 == 0);
 #endif
         }
         mHSS_DEBUG_PUTS("\n");
