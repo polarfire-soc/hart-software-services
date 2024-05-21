@@ -177,9 +177,9 @@ bool HSS_DDRInit(void)
     bool result = true;
     if (!IS_ENABLED(CONFIG_SKIP_DDR)) {
 	const char ddr_training_prefix[] = "DDR training ...";
-
-        sbi_printf("%s", ddr_training_prefix);
-        sbi_printf("\n");
+        mHSS_DEBUG_PRINTF_EX("\033[2J\033[H\033[0m");
+        mHSS_DEBUG_PRINTF_EX("%s", ddr_training_prefix);
+        mHSS_DEBUG_PRINTF_EX("\n");
         int perf_ctr_index = PERF_CTR_UNINITIALIZED;
         HSS_PerfCtr_Allocate(&perf_ctr_index, "DDR Init");
 
@@ -189,19 +189,19 @@ bool HSS_DDRInit(void)
         HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, 0u);
 
         if (retval != 0) {
-            sbi_printf(CURSOR_UP "%s Failed\n", ddr_training_prefix);
+            mHSS_DEBUG_PRINTF_EX(CURSOR_UP "%s Failed\n", ddr_training_prefix);
             result = false;
         } else {
             HSS_PerfCtr_Lap(perf_ctr_index);
-            sbi_printf(CURSOR_UP "%s Passed", ddr_training_prefix);
+            mHSS_DEBUG_PRINTF_EX(CURSOR_UP "%s Passed", ddr_training_prefix);
 
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
             size_t ticks = HSS_PerfCtr_GetTime(perf_ctr_index);
             size_t millisecs = (ticks + (TICKS_PER_MILLISEC/2)) / TICKS_PER_MILLISEC;
 
-            sbi_printf(" ( %lu ms)", millisecs);
+            mHSS_DEBUG_PRINTF_EX(" ( %lu ms)", millisecs);
 #endif
-            sbi_printf("\n");
+            mHSS_DEBUG_PRINTF_EX("\n");
         }
         HSS_PerfCtr_Lap(perf_ctr_index);
     }

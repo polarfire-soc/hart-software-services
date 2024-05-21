@@ -121,3 +121,13 @@ enum IPIStatusCode HSS_DDR_Train_IPIHandler(TxId_t transaction_id, enum HSSHartI
     return IPI_IDLE;
 }
 
+bool HSS_DDR_IsAddrInDDR(uintptr_t addr)
+{
+    bool result = (addr >= HSS_DDR_GetStart())
+        && (addr <= (HSS_DDR_GetStart() + HSS_DDR_GetSize()));
+
+    result |= (addr >= HSS_DDRHi_GetStart())
+        && (addr <= (HSS_DDRHi_GetStart() + HSS_DDRHi_GetSize()));
+
+    return result;
+}
