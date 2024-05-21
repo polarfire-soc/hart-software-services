@@ -199,7 +199,7 @@ void __noreturn HSS_OpenSBI_DoBoot(enum HSSHartId hartid)
 
     // should never be reached...
     while (1) {
-        asm("wfi");
+        wfi();
     };
 }
 

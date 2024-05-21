@@ -46,7 +46,7 @@ static void __attribute__((__noreturn__, unused)) do_srst_ecall(void)
     asm volatile ("ecall" : "+r" (a0), "+r" (a1) : "r" (a6), "r" (a7) : "memory");
 
     csr_write(CSR_MIE, MIP_MSIP);
-    while (1) { asm("wfi"); }
+    while (1) { wfi(); }
 }
 
 static int HSS_reboot_auto_update(void)

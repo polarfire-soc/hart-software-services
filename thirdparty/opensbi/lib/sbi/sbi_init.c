@@ -538,7 +538,7 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 			if (hartid == dom->boot_hartid) {
 				// if I'm the designated driver, I'm taking the keys...
 				while (!mpfs_is_last_hart_ready()) {
-					asm("wfi");
+					wfi();
 				}
 
 				// start me up...
