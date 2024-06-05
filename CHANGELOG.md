@@ -7,24 +7,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2024.02
 
 ### Added
+
  * HSS: crypto: User Crypto support added - supports AES (ECB, CBC, OFB, CFB and CTR modes)
+
  * HSS: tinycli: Added simple ECC stats to tinyCLI.
+
  * HSS: boot: Restructured early initialization as a state machine, and offloaded DDR training to U54_1 for faster boot-up.
 
 ### Changed
+
  * HSS: scrub: improved scrubbing of LIM, U54 I$/VMA TLBs. Disabled scrubbing by default as it
    is incompatible with non-coherent PCIe speed-ups enabled by default in MPFS Linux.
+
  * HSS: tinycli: Simplified early pre-boot CLI to use regular tinyCLI service.
+
  * HSS: sbi: Tidy-up of ECALL returns
+
  * HSS: boot: Simplified boot logo to save time.
+
  * XML: Updated XML for mpfs-video-kit and mpfs-icicle-kit-es
 
 ### Fixed
+
  * HSS: init: reset reason type is incorrect
+
  * Docs: fixed web link to software flow documentation
+
  * HSS: build: moved build assets to $(BINDIR) directory (from "Default" to "build") and fix make clean on Windows
+
  * HSS: init: Detect if MPU config prevents USBDMSC
- * QSPI: build issue with QSPI-enabled def_config files resolved
+
+ * QSPI: build issue with QSPI-enabled `def_config` files resolved
 
 ## 2023.09
 
