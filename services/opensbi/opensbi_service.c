@@ -248,13 +248,18 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
             pScratches[hartid].scratch.next_mode = (unsigned long)immediate_arg;
 
             // set arg1 (A1) to point to override device tree blob, if provided
+            if (p_ancilliary_buffer_in_ddr) {
+                // use ancilliary data if provided in boot image, assuming it is a DTB
+                scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
+            } else {
 #if IS_ENABLED(CONFIG_PROVIDE_DTB)
-            extern unsigned long _binary_services_opensbi_mpfs_dtb_start;
-            scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_services_opensbi_mpfs_dtb_start;
+                extern unsigned long _binary_build_services_opensbi_mpfs_dtb_start;
+                scratches[hartid].scratch.next_arg1 = (unsigned long)&_binary_build_services_opensbi_mpfs_dtb_start;
 #else
-            // else use ancilliary data if provided in boot image, assuming it is a DTB
-            scratches[hartid].scratch.next_arg1 = (uintptr_t)p_ancilliary_buffer_in_ddr;
+                scratches[hartid].scratch.next_arg1 = 0u;
 #endif
+            }
+
             HSS_OpenSBI_DoBoot(hartid);
         }
     }

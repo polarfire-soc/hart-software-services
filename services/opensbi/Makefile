@@ -132,9 +132,15 @@ endif
 
 ifdef CONFIG_PROVIDE_DTB
 ifdef CONFIG_DEFAULT_DEVICE_TREE
-EXTRA_OBJS += services/opensbi/mpfs_dtb.o
-services/opensbi/mpfs_dtb.o: $(CONFIG_DEFAULT_DEVICE_TREE:"%"=%).dtb
-	$(CROSS_COMPILE)ld -r -b binary -o $@ $<
+CONFIG_DEFAULT_DEVICE_TREE_UNQUOTED:=$(CONFIG_DEFAULT_DEVICE_TREE:"%"=%)
+EXTRA_OBJS += $(BINDIR)/services/opensbi/mpfs_dtb.o
+$(BINDIR)/services/opensbi/mpfs_dtb.o: $(CONFIG_DEFAULT_DEVICE_TREE_UNQUOTED)
+	cp $(CONFIG_DEFAULT_DEVICE_TREE_UNQUOTED) $(BINDIR)/services/opensbi/mpfs.dtb
+	$(CROSS_COMPILE)ld -r -b binary -o $@ $(BINDIR)/services/opensbi/mpfs.dtb
+	rm $(BINDIR)/services/opensbi/mpfs.dtb
+
+$(CONFIG_DEFAULT_DEVICE_TREE_UNQUOTED): $(CONFIG_DEFAULT_DEVICE_TREE_UNQUOTED:%.dtb=%.dts)
+	$(error Error:: Rebuilding the DTB is not supported... Please rebuild manually)
 endif
 endif
 

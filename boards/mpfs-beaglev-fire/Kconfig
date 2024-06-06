@@ -5,5 +5,11 @@ config SOC_FPGA_DESIGN_XML
 	default "boards/$(BOARD)/soc_fpga_design/xml/PF_SOC_MSS_mss_cfg.xml"
 	help
 		This option specifies the design XML file to use.
-endmenu
 
+config DEFAULT_DEVICE_TREE
+	string "boards/$(BOARD)/mpfs_minimal_uboot.dtb"
+	depends on PROVIDE_DTB
+	help
+		This option specifies the default Device Tree to be used.
+
+endmenu

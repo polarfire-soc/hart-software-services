@@ -7,6 +7,7 @@
 # Icicle-Kit Design Configuration Options
 #
 CONFIG_SOC_FPGA_DESIGN_XML="boards/mpfs-icicle-kit-es/soc_fpga_design/xml/ICICLE_MSS_mss_cfg.xml"
+CONFIG_DEFAULT_DEVICE_TREE="boards/mpfs-icicle-kit-es/mpfs_minimal_uboot.dtb"
 # end of Icicle-Kit Design Configuration Options
 # end of Board/Design Configuration Options
 
@@ -176,7 +177,7 @@ CONFIG_ALLOW_COLDREBOOT_ALWAYS=y
 #
 # OpenSBI
 #
-# CONFIG_PROVIDE_DTB is not set
+CONFIG_PROVIDE_DTB=y
 # end of OpenSBI
 
 #
