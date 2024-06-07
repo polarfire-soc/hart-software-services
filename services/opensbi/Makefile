@@ -100,8 +100,8 @@ $(BINDIR)/$(BINDIR)/services/opensbi/opensbi_ecall_exts.d: $(BINDIR)/services/op
 	touch $<
 
 ifdef CONFIG_USE_IHC
-SRCS-$(CONFIG_SERVICE_OPENSBI_IHC) += \
-	services/opensbi/opensbi_ihc_ecall.c \
+SRCS-$(CONFIG_SERVICE_OPENSBI_IPC) += \
+	services/opensbi/opensbi_ipc_ecall.c \
 
 SRCS-$(CONFIG_SERVICE_OPENSBI_RPROC) += \
     services/opensbi/opensbi_rproc_ecall.c \

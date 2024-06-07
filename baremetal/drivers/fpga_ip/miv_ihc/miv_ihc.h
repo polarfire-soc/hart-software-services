@@ -1,5 +1,7 @@
 /*******************************************************************************
- * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
+ * The PolarFire SoC platform is released under the following software license:
+ *
+ * Copyright 2023 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -25,13 +27,12 @@
  *
  */
 /*=========================================================================*//**
-  @mainpage PolarFire FPGA-IP Mi-V Inter Hart Communication Bare Metal Driver.
-
+  @mainpage Mi-V IHC Bare Metal Driver.
 
   ==============================================================================
   Introduction
   ==============================================================================
-  The Bare metal Mi-V-IHC driver facilitates the use of the Mi-V IHC
+  The Bare metal Mi-V IHC driver facilitates the use of the Mi-V IHC
   FPGA-subsystem which allows inter hart/processor communication as part of a
   HW/SW stack.
 
@@ -48,12 +49,12 @@
        This is the IP core for each channel. It has an A and a B side. Each
        side is configured from the hart associated with each side using the apb
        bus.
-     - Mi-V Inter Hart Communication Interrupt Aggregator (IHCIA) IP
-       This is the Interrupt Aggregator Core, one for each hart. It takes inputs
+     - Mi-V Inter Hart Communication Interrupt Module (IHCIM) IP
+       This is the Interrupt Module Core, one for each hart. It takes inputs
        from the Mi-V IHCC's and generates an interrupt to the connected hart
        based on the programmed configuration.
      - Mi-V Inter Hart Communication (IHC) subsystem
-       This is the collection of Mi-V IHCC's and Mi-V IHCIA's which form the
+       This is the collection of Mi-V IHCC's and Mi-V IHCIM's which form the
        Inter hart Communications subsystem.
 
   ==============================================================================
@@ -68,229 +69,20 @@
         register. This can be read to determine the module version. The register
         is at offset zero from the base of the channel.
 
-  ==============================================================================
-  Hardware Flow Dependencies
-  ==============================================================================
-  The Mi-V IHC IP must be present in your FPGA design and connected to one of
-  the fabric interface connections. The base addresses of the IP must be mapped
-  as designed. If the default addressing is not used, the base addresses listed
-  in miv_ihc_add_mapping.h must be edited to reflect the base addresses used in
-  the Libero design.
-  Likewise if the connected interrupts deviate from default, the mappings must
-  be updated in the miv_ihc_config.h file to reflect the Libero design.
-  Note that the address mapping is divided into five regions to allow easy use
-  of PMPs to restrict access to memory regions from harts that are not required
-  for that hart. Each Mi-V IHCC has a register set associated with its A and B
-  side, each of which appears in a separate address space associated with the
-  connected core.
-  Below is a simplified view of the Mi-V IHC subsytem.
-
-  ```
-        ^               ^               ^               ^               ^
-        |               |               |               |               |
-+-----------------------------------------------------------------------------------------+
-|       | Int to hart0  | Int to hart1  | Int to hart2  | Int to hart3  | Int to hart4    |
-|       |               |               |               |               |                 |
-|    +--+--------+   +--+--------+   +--+--------+   +--+--------+   +--+--------+        |
-|    | MiV IHCIA |   | MiV IHCIA |   | MiV IHCIA |   | MiV IHCIA |   | MiV IHCIA |        |
-|    |  hart0    |   |  hart1    |   |  hart2    |   |  hart3    |   |  hart4    |        |
-|    +---+-------+   +^--^-------+   +^--^---^---+   +--------^--+   +---^-^---^-+        |
-|        ^            |  |            |  |   |                |          | |   |          |
-|        |   +--------+  |  +---------+  |   |                |          | |   |          |
-|        |   |           |  |       +----+   |                |          | |   |          |
-|      +-+---+-+      +--+--+-+     |  +-----+-+       +------++         | |   |          |
-|      |  IHCC |      | IHCC  |     |  | IHCC  |       | IHCC  +---------+ |   |          |
-|      | 0<->1 |      | 1<->2 |     |  | 2<->4 +----+  | 3<->4 |           |   |          |
-|      +-------+      +-------+     |  +-------+    |  +-------+           |   |          |
-|                                   |               +----------------------+   |          |
-|      +-------+      +-------+     |  +-------+                               |          |
-|      | IHCC  |      | IHCC  |     +--+ IHCC  +-------------------------------+          |
-|      | 0<->2 |      | 1<->3 |        | 2<->4 |                                          |
-|      +-------+      +-------+        +-------+                                          |
-|                                                                                         |
-|      +-------+      +-------+       Mi-V IHC - Inter Hart Communication subsytem        |
-|      | IHCC  |      | IHCC  |       Not all connections are shown for                   |
-|      | 0<->3 |      | 1<->4 |       reasons of clarity                                  |
-|      +-------+      +-------+                                                           |
-|                                                                                         |
-|      +-------+                                                                          |
-|      | IHCC  |                                                                          |
-|      | 0<->4 |                                                                          |
-|      +-------+                                                                          |
-|                                                                                         |
-+-----------------------------------------------------------------------------------------+
-
-
-  ```
-
-  ==============================================================================
-  Theory of Operation
-  ==============================================================================
-  The Mi-V IHC subsystem facilitates sending messages between independent
-  software contexts in an AMP system. API functions are provided for the
-  following:
-    - Initialization and configuration functions
-    - Polled transmit and receive functions
-    - Interrupt driven transmit and receive functions
-
-  --------------------------------
-  Initialization and Configuration
-  --------------------------------
-  At start-up, one hart should be designated to initialize the Mi-V IHC and set
-  the default values.
-  This hart must have access to the full memory range. In the Microchip software
-  ecosystem, the HSS, running on E51 monitor core carries out this function.
-  Local contexts initialize local channels. Examples of initialization are given
-  in the functions descriptions.
-  A drawing of an example start-up showing the order of the functions used is
-  shown below:
-
-```
-    +----------------+
-    |                |
-    |  monitor hart  |                           Example start-up
-    |                |
-    +-------+--------+
-            |
-   +--------v---------+
-   |IHC_global_init()|
-   +--------+---------+
-            |
-+-----------v--------------+   +----------------+---------------------------------+--------------------------------+---------------------------------+
-|IHC_local_context_init()  |   |                |                                 |                                |                                 |
-+-----------+--------------+   |                |                                 |                                |                                 |
-            ^                  |                |                                 |                                |                                 |
-+-----------+--------------+   |    +-----------v--------------+    +-------------v------------+     +-------------v------------+     +--------------v-----------+
-|IHC_local_remote_config() |   |    |IHC_local_context_init() |    |IHC_local_context_init() |     |IHC_local_context_init() |     |IHC_local_context_init() |
-| channel 0 <> 1 config    |   |    +--------------------------+    +-------------+------------+     +-------------+------------+     +--------------+-----------+
-+--------------------------+   |                                                  |                                |                                 |
-            |                  |    +--------------------------+    +-------------v------------+     +-------------v------------+     +--------------v-----------+
-+-----------v--------------+   |    |IHC_local_remote_config()|    |IHC_local_remote_config()|     |IHC_local_remote_config()|     |IHC_local_remote_config()|
-|IHC_local_remote_config() |   |    | channel 1 <> 0 config    |    | channel 1 <> 0 config    |     | channel 1 <> 0 config    |     | channel 4 <> 0 config    |
-| channel 0 <> 2 config    |   |    +--------------------------+    +-------------+------------+     +-------------+------------+     +--------------+-----------+
-+--------------------------+   |                                                  |                                |                                 |
-            |                  |    +--------------------------+                  v                                v                  +--------------v-----------+
-+-----------v--------------+   |    |IHC_local_remote_config()|                                                                      |IHC_local_remote_config()|
-|IHC_local_remote_config() |   |    | channel A <> B config    |                                                                      | channel B <> A config    |
-| channel 0 <> 3 config    |   |    +--------------------------+                                                                      +--------------+-----------+
-+--------------------------+   |                |                                                                                                    |
-            |                  |                v                                                                                                    v
-+-----------v--------------+   |
-|IHC_local_remote_config() |   |
-| channel 0 <> 4 config    |   |
-+--------------------------+   |
-            |                  |
-+-----------v---------------+  |
-| Start other harts/contexts+--+
-+-----------+---------------+
-            |
-            v
-
-```
-
-  --------------------------------------
-  Polled Transmit and Receive Operations
-  --------------------------------------
-  See the function description for message_present_poll(void) below.
-  Note that one side of a channel can be polled and at the same time, the other
-  side can be interrupt driven.
-  This is the case on hart0 where the HSS running on hart0 polls the incoming
-  messages. The outgoing messages from hart0 generate local interrupt to the far
-  side ( hart 1 to 4 ) via Mi-V IHC IP.
-
-  ---------------------------
-  Interrupt Driven Operation
-  ---------------------------
-  On start-up the driver uses the function IHC_local_remote_config() to
-  register an interrupt handler for each incoming channel being configured.
-  Below is a bare metal example of handling an incoming message:
-
-  ```
-                  +-------------------------+
-                  | registered function for |
-                  | incoming channel A<>B   |
-                  +-----------------+-------+
-     +-------------------------+    ^
-     | registered function for |    |
-     | incoming channel 0<>4   |    |
-     +----+--------------------+    |
-          ^                         |
-          | Bare metal application  |
-+------------------------------------------+
-          | Bare metal Driver       |
-          |                         |
-          |                         |
-          |                         |
-     +----+-------------------------+--+
-     |  miv_ihc_hart4_int()            |
-     |                                 |
-     |  parses IP and calls registered |
-     |  interrupt associated with the  |
-     |  channel                        |
-     +--------+------------------------+
-              ^
-              |
-              |
-              | Interrupt from Mi-V IHCIA
-              + to hart4
-  ```
-
-  ==============================================================================
-  Files used in the Mi-V IHC
-  ==============================================================================
-  Below are the names along with a brief description of each file used in the
-  Mi-V IHC bare metal driver. They are grouped into two sections. The fixed
-  files in the driver folder, and configuration files which are edited to
-  configure for particular use case and it is recommended to place them under
-  the boards directory in the recommended program structure for a bare metal
-  project( See the associated example project or HSS).
-
-  --------------------------------
-  Driver files
-  --------------------------------
-  These files are found in
-
-  ```
-  src/platform/drivers/fpga_ip/miv_ihc/
-  ```
-
-  |file name                  | detail                                         |
-  |---------------------------| -----------------------------------------------|
-  | **miv_ihc_defines.h**     | defines required by configuration files        |
-  | **miv_ihc_regs.h**        | defines related to hardware                    |
-  | **miv_ihc.h**             | software and API defines                       |
-  | **miv_ihc_version.h**     | Contains the version to the software driver    |
-  | **miv_ihc.c**             | All code including API functions               |
-
-  --------------------------------
-  Configuration files
-  --------------------------------
-  These files are found in
-
-  ```
-  src/boards/your-board/platform-config/drivers-config/fpga_ip/miv_ihc/
-  ```
-
-  |file name                      | detail                                            |
-  |-------------------------------| --------------------------------------------------|
-  | **miv_ihc_add_mapping.h**     | address Mi-V IHC is instantiated in Libero design |
-  | **miv_ihc_config.h**          | Configures channels used in software design       |
-
-  Please note when using the Mi-V IHC, the configuration files must be
-  referenced in the mss_sw_config.h file, to include them in the project.
-  See the example project.
 
  *//*=========================================================================*/
+
 #ifndef __MSS_MIV_IHC_H_
 #define __MSS_MIV_IHC_H_ 1
 
-#include "miv_ihc_regs.h"
+#include <drivers/fpga_ip/miv_ihc/miv_ihc_regs.h>
+#include <drivers/fpga_ip/miv_ihc/miv_ihc_types.h>
+
+#include "hal/hal.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern IHC_TypeDef * IHC[];
 
 /*-------------------------------------------------------------------------*//**
 
@@ -300,477 +92,888 @@ extern IHC_TypeDef * IHC[];
   Please see defines in miv_ihc.h for the default defines.
   The default values below are over-written with those in the
   miv_ihc_add_mapping.h file if it this is present in the boards directory.
-
-  |driver interrupt name |default mapped fabric interrupt in the ref. design   |
-  |---------------------------------| -----------------------------------------|
-  | **IHCIA_hart0_INT**             | fabric_f2h_63_plic_IRQHandler            |
-  | **IHCIA_hart1_INT**             | fabric_f2h_62_plic_IRQHandler            |
-  | **IHCIA_hart2_INT**             | fabric_f2h_61_plic_IRQHandler            |
-  | **IHCIA_hart3_INT**             | fabric_f2h_60_plic_IRQHandler            |
-  | **IHCIA_hart4_INT**             | fabric_f2h_59_plic_IRQHandler            |
-
  */
-#ifndef IHCIA_hart0_IRQHandler
-#define IHCIA_hart0_IRQHandler fabric_f2h_63_plic_IRQHandler
-#endif
-#ifndef IHCIA_hart1_IRQHandler
-#define IHCIA_hart1_IRQHandler fabric_f2h_62_plic_IRQHandler
-#endif
-#ifndef IHCIA_hart2_IRQHandler
-#define IHCIA_hart2_IRQHandler fabric_f2h_61_plic_IRQHandler
-#endif
-#ifndef IHCIA_hart3_IRQHandler
-#define IHCIA_hart3_IRQHandler fabric_f2h_60_plic_IRQHandler
-#endif
-#ifndef IHCIA_hart4_IRQHandler
-#define IHCIA_hart4_IRQHandler fabric_f2h_59_plic_IRQHandler
+
+#ifndef IHC_APP_X_H0_IRQHandler
+#define IHC_APP_X_H0_IRQHandler fabric_f2h_63_plic_IRQHandler
 #endif
 
-#ifndef IHCIA_hart0_INT
-#define IHCIA_hart0_INT  PLIC_F2M_63_INT_OFFSET
+#ifndef IHC_APP_X_H1_IRQHandler
+#define IHC_APP_X_H1_IRQHandler fabric_f2h_62_plic_IRQHandler
 #endif
 
-#ifndef IHCIA_hart1_INT
-#define IHCIA_hart1_INT  PLIC_F2M_62_INT_OFFSET
+#ifndef IHC_APP_X_H2_IRQHandler
+#define IHC_APP_X_H2_IRQHandler fabric_f2h_61_plic_IRQHandler
 #endif
 
-#ifndef IHCIA_hart2_INT
-#define IHCIA_hart2_INT  PLIC_F2M_61_INT_OFFSET
+#ifndef IHC_APP_X_H3_IRQHandler
+#define IHC_APP_X_H3_IRQHandler fabric_f2h_60_plic_IRQHandler
 #endif
 
-#ifndef IHCIA_hart3_INT
-#define IHCIA_hart3_INT  PLIC_F2M_60_INT_OFFSET
+#ifndef IHC_APP_X_H4_IRQHandler
+#define IHC_APP_X_H4_IRQHandler fabric_f2h_59_plic_IRQHandler
 #endif
 
-#ifndef IHCIA_hart4_INT
-#define IHCIA_hart4_INT  PLIC_F2M_59_INT_OFFSET
+#ifndef IHC_CTRL_H0_H1_IRQHandler
+#define IHC_CTRL_H0_H1_IRQHandler U54_f2m_31_local_IRQHandler
+#endif
+
+#ifndef IHC_CTRL_H0_H2_IRQHandler
+#define IHC_CTRL_H0_H2_IRQHandler U54_f2m_30_local_IRQHandler
+#endif
+
+#ifndef IHC_CTRL_H0_H3_IRQHandler
+#define IHC_CTRL_H0_H3_IRQHandler U54_f2m_29_local_IRQHandler
+#endif
+
+#ifndef IHC_CTRL_H0_H4_IRQHandler
+#define IHC_CTRL_H0_H4_IRQHandler U54_f2m_28_local_IRQHandler
 #endif
 
 
-/*-------------------------------------------------------------------------*//**
+/* Macros used across the driver */
 
-  ## Channel definitions
+#define IHC_MSG_INVALID         -1
+#define IHC_MSG_SUCCESS          0
+#define IHC_MSG_BUSY            -2
+#define IHC_MSG_NT_CLR          -3
+#define IHC_MSG_CLR              0
+#define IHC_MSG_RECEIVED         0
+#define IHC_MSG_PRESENT          6
+#define IHC_MSG_CONSUMED         7
+#define IHC_NO_MSG              -4
+#define IHC_CALLBACK_NOT_CONFIG -5
 
-  Choose the interrupt mapping used in you system
-  Please see miv_ihc_regs.h for the defaults
-  The default values below are over-written with those in the
-  miv_ihc_add_mapping.h file if it this is present in the platform directory.
+extern IHC_TypeDef g_ihc;
 
-  |value | channel                      |comment                               |
-  |------|------------------------------| -------------------------------------|
-  | 0    | **IHC_CHANNEL_TO_HART0**     | channel connected to hart 0          |
-  | 1    | **IHC_CHANNEL_TO_HART1**     | channel connected to hart 1          |
-  | 2    | **IHC_CHANNEL_TO_HART2**     | channel connected to hart 2          |
-  | 3    | **IHC_CHANNEL_TO_HART3**     | channel connected to hart 3          |
-  | 4    | **IHC_CHANNEL_TO_HART4**     | channel context A                    |
-  | 6    | **IHC_CHANNEL_TO_CONTEXTB**  | channel context B                    |
-
- */
+/* Need confirmation on channels/Processors supported*/
 typedef enum IHC_CHANNEL_
 {
-    IHC_CHANNEL_TO_HART0              = 0x00,   /*!< your hart to hart 0 */
-    IHC_CHANNEL_TO_HART1              = 0x01,   /*!< your hart to hart 1 */
-    IHC_CHANNEL_TO_HART2              = 0x02,   /*!< your hart to hart 2 */
-    IHC_CHANNEL_TO_HART3              = 0x03,   /*!< your hart to hart 3 */
-    IHC_CHANNEL_TO_HART4              = 0x04,   /*!< your hart to hart 4 */
-    IHC_CHANNEL_TO_CONTEXTA           = 0x05,   /*!< your hart to context A */
-    IHC_CHANNEL_TO_CONTEXTB           = 0x06,   /*!< your hart to context B */
-}   IHC_CHANNEL;
+    MIV_IHC_CH_H0_H1 = 0,
+    MIV_IHC_CH_H0_H2,
+    MIV_IHC_CH_H0_H3,
+    MIV_IHC_CH_H0_H4,
+    MIV_IHC_CH_H0_H5,
+    MIV_IHC_CH_H1_H0,
+    MIV_IHC_CH_H1_H2,
+    MIV_IHC_CH_H1_H3,
+    MIV_IHC_CH_H1_H4,
+    MIV_IHC_CH_H1_H5,
+    MIV_IHC_CH_H2_H0,
+    MIV_IHC_CH_H2_H1,
+    MIV_IHC_CH_H2_H3,
+    MIV_IHC_CH_H2_H4,
+    MIV_IHC_CH_H2_H5,
+    MIV_IHC_CH_H3_H0,
+    MIV_IHC_CH_H3_H1,
+    MIV_IHC_CH_H3_H2,
+    MIV_IHC_CH_H3_H4,
+    MIV_IHC_CH_H3_H5,
+    MIV_IHC_CH_H4_H0,
+    MIV_IHC_CH_H4_H1,
+    MIV_IHC_CH_H4_H2,
+    MIV_IHC_CH_H4_H3,
+    MIV_IHC_CH_H4_H5,
+    MIV_IHC_CH_H5_H0,
+    MIV_IHC_CH_H5_H1,
+    MIV_IHC_CH_H5_H2,
+    MIV_IHC_CH_H5_H3,
+    MIV_IHC_CH_H5_H4
+} IHC_CHANNEL;
 
-/*-------------------------------------------------------------------------*//**
-  These hold pointers to IP associated with each hart
-  Generally the mapping is fixed between Libero designs to keep thing obvious
-  but it can change. The base addresses are located in the mapping header file.
+typedef enum IHC_MODULE_NUM_
+{
+    MIV_IHCIM_H0 = 0,
+    MIV_IHCIM_H1,
+    MIV_IHCIM_H2,
+    MIV_IHCIM_H3,
+    MIV_IHCIM_H4,
+    MIV_IHCIM_H5
+} IHC_MODULE_NUM;
+
+typedef enum IHCIM_CONFIG_STATUS_
+{
+    IHCIM_NT_CONFIGURED = 0,
+    IHCIM_CONFIGURED
+} IHCIM_CONFIG_STATUS;
+
+/*******************************************************************************
+ * The IHC_init() function initializes the individual processor. It is called
+ * from each processor using the IHC once on start-up.
+ *
+ * @param channel
+ *  The channel to be configured
+ *
+ * @return
+ *   This function does not return a value.
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *    int main(void)
+ *    {
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-extern IHC_TypeDef                  IHC_H0_IP_GROUP;
-extern IHC_TypeDef                  IHC_H1_IP_GROUP;
-extern IHC_TypeDef                  IHC_H2_IP_GROUP;
-extern IHC_TypeDef                  IHC_H3_IP_GROUP;
-extern IHC_TypeDef                  IHC_H4_IP_GROUP;
+void IHC_init(uint8_t channel);
 
-/*--------------------------------Public APIs---------------------------------*/
-
-/*-------------------------------------------------------------------------*//**
-  The IHC_global_init() function initializes the IP. It is the first function
-  called that accesses the Mi-V IHC.
-  It must be called from the monitor hart before other harts try and access the
-  Mi-V IHC. It assumes access to the full memory map. It initializes regs to
-  default values which will later be updated using a local init function called
-  from the Hart using the particular channels related to it hartid in the
-  Mi-V IHC.
-
-  @param
-    No parameters
-
-  @return
-    This function does not return a value.
-
-  @code
-      // Initialization code
-      #include "mss_ihc.h"
-      int main(void)
-      {
-
-	    // The IHC_global_init() function initializes the Mi-V IHC subsystem.
-	    // It is the first function called that accesses the Mi-V IHC. it must
-	    // be called from the monitor hart before other harts try and access
-	    // the Mi-V IHC. It assumes access to the full memory map.
-	    // It sets up the base address points to reference the Mi-V IHC
-	    // subsystem IHCC and IHCIA IP blocks, and sets registers to default
-	    // values.
-
-        IHC_global_init();
-
-        uint32_t local_hartid = HSS_HART_ID;
-        IHC_local_context_init((uint32_t)local_hartid);
-
-        {
-            uint32_t remote_hart_id = HART1_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART2_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART3_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART4_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-        return (0u);
-      }
-  @endcode
+/*******************************************************************************
+ * The IHC_config_mp_callback_handler() function configures the message present
+ * callback handler. It is called by respective processor once initialization
+ * is completed or when want to change configuration each time prior to
+ * communication.
+ *
+ * @param channel
+ *   channel to be configured
+ *
+ * @param handler
+ *   callback handler called once msg is present
+ *
+ * @return
+ *   This function does not return a value.
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-void IHC_global_init
-(
-    void
-);
+void IHC_config_mp_callback_handler(uint8_t channel, QUEUE_IHC_INCOMING handler);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_local_context_init() function initializes the IP. It is called from
-  each hart using the Mi-V IHC once on start-up.
-  @param
-    No parameters
-
-  @return
-    This function does not return a value.
-
-  @code
-      // Initialization code
-      #include "mss_ihc.h"
-      int main(void)
-      {
-
-	    // The IHC_global_init() function initializes the Mi-V IHC subsystem.
-	    // It is the first function called that accesses the Mi-V IHC. it must
-	    // be called from the monitor hart before other harts try and access
-	    // the Mi-V IHC. It assumes access to the full memory map.
-	    // It sets up the base address points to reference the Mi-V IHC
-	    // subsystem IHCC and IHCIA IP blocks, and sets registers to default
-	    // values.
-
-        IHC_global_init();
-
-        uint32_t local_hartid = HSS_HART_ID;
-        IHC_local_context_init((uint32_t)local_hartid);
-
-        {
-            uint32_t remote_hart_id = HART1_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART2_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART3_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART4_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-        return (0u);
-      }
-  @endcode
+/*******************************************************************************
+ * The IHC_config_mc_callback_handler() function configures the message consumed
+ * callback handler. It is called by respective processor once initialization
+ * is completed or when want to change configuration each time prior to
+ * communication.
+ *
+ * @param channel
+ *   channel to be configured
+ *
+ * @param handler
+ *   callback handler called once msg is consumed
+ *
+ * @return
+ *   This function does not return a value.
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mc_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mc_isr_callback);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-void IHC_local_context_init(uint32_t hart_to_configure);
+void IHC_config_mc_callback_handler(uint8_t channel, QUEUE_IHC_INCOMING handler);
 
-/*-------------------------------------------------------------------------*//**
-  The IIHC_local_remote_config() function initializes the IP. It is called from
-  each hart using the inter hart comms once for every hart ot context the local
-  hart is communicating with.
-  @param
-    No parameters
-
-  @return
-    This function does not return a value.
-
-  @code
-      // Initialization code
-      #include "mss_ihc.h"
-      int main(void)
-      {
-
-	    // The IHC_global_init() function initializes the Mi-V IHC subsystem.
-	    // It is the first function called that accesses the Mi-V IHC. it must
-	    // be called from the monitor hart before other harts try and access
-	    // the Mi-V IHC. It assumes access to the full memory map.
-	    // It sets up the base address points to reference the Mi-V IHC
-	    // subsystem IHCC and IHCIA IP blocks, and sets registers to default
-	    // values.
-
-        IHC_global_init();
-
-        uint32_t local_hartid = HSS_HART_ID;
-        IHC_local_context_init((uint32_t)local_hartid);
-
-        {
-            uint32_t remote_hart_id = HART1_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART2_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART3_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-
-        {
-            uint32_t remote_hart_id = HART4_ID;
-            bool set_mpie_en = true;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, queue_incoming_hss_main, set_mpie_en, set_ack_en);
-        }
-        return (0u);
-      }
-  @endcode
+/*******************************************************************************
+ * The IHC_enable_mp_interrupt() function enables the message present interrupt.
+ * It is called by respective processor once initialization & configured.
+ *
+ * @param channel
+ *   channel for which interrupt has be enabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-void IHC_local_remote_config(uint32_t hart_to_configure, uint32_t remote_hart_id, QUEUE_IHC_INCOMING  handler, bool set_mpie_en, bool set_ack_en );
+void IHC_enable_mp_interrupt(uint8_t channel);
 
-
-/*-------------------------------------------------------------------------*//**
-  The IHC_hart_to_context_or_hart_id() Returns the lowest hart ID of the context
-  the local hart is in.
-
-  @param channel
-    The channel we want the local hart ID of.
-
-  @return
-    hartID
-
-  @code
-        // example code showing use
-        uint32_t my_hart_id = context_to_local_hart_id(channel);
-        uint32_t remote_hart_id = context_to_remote_hart_id(channel);
-        uint32_t message_size = IHC[my_hart_id]->HART_IHC[remote_hart_id]->size_msg;
-  @endcode
+/*******************************************************************************
+ * The IHC_enable_mc_interrupt() function enables the message consumed
+ * interrupt. It is called by respective processor once initialization &
+ * configured.
+ *
+ * @param channel
+ *   channel for which interrupt has be enabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mc_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mc_isr_callback);
+ *
+ *      IHC_enable_mc_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-uint32_t IHC_hart_to_context_or_hart_id(IHC_CHANNEL channel);
+void IHC_enable_mc_interrupt(uint8_t channel);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_context_to_context_hart_id() Returns the lowest hart ID of the context
-  the hart is in.
-
-  @param channel
-    The channel we want the remote hart ID of.
-
-  @return
-    hartID
-
-  @code
-        // example code showing use
-        uint32_t my_hart_id = IHC_partner_context_hart_id(remote_channel);
-        uint32_t remote_hart_id = IHC_context_to_context_hart_id(remote_channel);
-        uint32_t message_size = IHC[my_hart_id]->HART_IHC[remote_hart_id]->size_msg;
-  @endcode
+/*******************************************************************************
+ * The IHC_disable_mp_interrupt() function disables the message present
+ * interrupt. It is called by respective processor once initialization &
+ * configured.
+ *
+ * @param channel
+ *   channel for which interrupt has be disabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      // further code follows
+ *
+ *      IHC_disable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-extern uint32_t IHC_context_to_context_hart_id(IHC_CHANNEL remote_channel);
+void IHC_disable_mp_interrupt(uint8_t channel);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_partner_context_hart_id() Returns the lowest hart ID of the context
-  the hart is in.
-
-  @param remote_channel
-    The channel we want the remote hart ID of.
-
-  @return
-    hartID
-
-  @code
-        // example code showing use
-        uint32_t my_hart_id = IHC_partner_context_hart_id(remote_channel);
-        uint32_t remote_hart_id = IHC_context_to_context_hart_id(remote_channel);
-        uint32_t message_size = IHC[my_hart_id]->HART_IHC[remote_hart_id]->size_msg;
-  @endcode
+/*******************************************************************************
+ * The IHC_disable_mc_interrupt() function disables the message consumed
+ * interrupt. It is called by respective processor once initialization &
+ * configured.
+ *
+ * @param channel
+ *   channel for which interrupt has be disabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mc_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mc_isr_callback);
+ *
+ *      IHC_enable_mc_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      // further code follows
+ *
+ *      IHC_disable_mc_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-extern uint32_t IHC_partner_context_hart_id(IHC_CHANNEL channel);
+void IHC_disable_mc_interrupt(uint8_t channel);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_tx_message_from_context()
-  Is used to send a message to a context from a context.
-
-  @param channel
-    The channel we want the remote hart ID of.
-
-  @param message
-    Pointer to message being sent
-
-  @return status
-    hartID
-
-  @code
-        // example code showing use
-        if ( MESSAGE_SENT == IHC_tx_message_from_context(IHC_CHANNEL_TO_HART0, (uint32_t *)&tx_message_buffer[0]))
-        {
-            // message has been sent
-        }
-        else
-        {
-            // you can try again...
-  @endcode
+/*******************************************************************************
+ * The IHC_enable_mp_interrupt_module() function enables message present
+ * interrupt module. Its is AND with MP interrupts hence individual channel
+ * interrupt must be enabled before. It is called by respective processor once
+ * initialization, configured, interrupt enabled.
+ *
+ * @param module
+ *   module for which interrupt has be enabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_enable_mp_interrupt_module(MIV_IHCIM_H0);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-extern uint32_t IHC_tx_message_from_context(IHC_CHANNEL channel, uint32_t *message);
+void IHC_enable_mp_interrupt_module(uint8_t channel);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_tx_message_from_hart()
-  Is used to send a message from non-context based upper layer (i.e. HSS) when
-  you want to send a message directly to a HART or a context.
-
-  @param channel
-    The channel we want the remote hart ID of.
-
-  @param message
-    Pointer to message being sent
-
-  @return status
-    hartID
-
-  @code
-        // example code showing use
-        if ( MESSAGE_SENT == IHC_tx_message_from_hart(IHC_CHANNEL_TO_HART0, (uint32_t *)&tx_message_buffer[0]))
-        {
-            // message has been sent
-        }
-        else
-        {
-            // you can try again...
-  @endcode
+/*******************************************************************************
+ * The IHC_disable_mp_interrupt_module() function disables message present
+ * interrupt module. Its is AND with MP interrupts hence individual channel
+ * interrupt need not to be disable before. It is called by respective processor
+ * once initialization & configured.
+ *
+ * @param module
+ *   module for which interrupt has be enabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_enable_mp_interrupt_module(MIV_IHCIM_H0);
+ *
+ *      // further code follows
+ *
+ *      IHC_disable_mp_interrupt_module(MIV_IHCIM_H0);
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-extern uint32_t IHC_tx_message_from_hart(IHC_CHANNEL channel, uint32_t *message);
+void IHC_disable_mp_interrupt_module(uint8_t module);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_message_present_poll()
-  When calls parse to see if message present and processes the message with
-  message present handler previous registered using the
-  IHC_local_remote_config() function
-
-  @param none
-
-  @return none
-
-  @code
-        // example code showing use
-        uint32_t local_hartid = HSS_HART_ID;
-        IHC_local_context_init((uint32_t)local_hartid);
-        {
-            uint32_t remote_hart_id = HART1_ID;
-            bool set_mpie_en = false;
-            bool set_ack_en = false;
-            IHC_local_remote_config((uint32_t)local_hartid, remote_hart_id, our_message_handler, set_mpie_en, set_ack_en);
-        }
-        while(1)
-        {
-            // poll for incoming messages
-            // if message present it is handled using our_message_handler()
-            // register earlier, and written by you based on one of the examples
-            // in the example programs bundled with this driver
-            IHC_message_present_poll();
-            // ..
-  @endcode
+/*******************************************************************************
+ * The IHC_enable_mp_interrupt_module() function enables message consumed
+ * interrupt module. Its is AND with MC interrupts hence individual channel
+ * interrupt must be enabled before. It is called by respective processor once
+ * initialization, configured, interrupt enabled.
+ *
+ * @param module
+ *   module for which interrupt has be enabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mc_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mc_isr_callback);
+ *
+ *      IHC_enable_mc_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_enable_mc_interrupt_module(MIV_IHCIM_H0);
+ *
+ *      // further code follows
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-void  IHC_message_present_poll(void);
+void IHC_enable_cp_interrupt_module(uint8_t channel);
 
-/*-------------------------------------------------------------------------*//**
-  The IHC_context_indirect_isr()
-  When called parse to see if message present and processes the message with
-  message present handler previous registered using the
-  IHC_local_remote_config() function. When we call this function we already
-  have worked out our hart ID and have our message storage pointer.
-  One use case is when openSBI handler when called by an upper layer.
-  Below is a simplified flow diagram:
-
-  ```
-       +--------------------------+
-       |Remote Processor Messaging|
-       |(RPMsg) linux driver      |
-       |         s-mode           |
-       +------+------------+----+-+
-              ^            |    ^
-              |            |    |
-    delegate to s-mode     |    | ecall to m-mode handler
-              |            |    | returns with message pointer
-              |            v    |
-+-------------+----+    +--+----+--------------+
-|Mi-V IHCIA        |    |                      |
-|fabric interrupt  |    |HSS_SBI_ECALL_Handler |
-|openSBI_int_handler    |m-mode                |
-|m-mode            |    |                      |
-+---------+--------+    +--+----+--------------+
-          ^                |    ^
-          |        +-------v----+------------------+
-    MP interrupt   | IHC_context_indirect_isr()    |
-          |        +-------------------------------+
-          +
-
-  ```
-
-  @param message_storage_ptr
-      where we want to store the incoming message
-
-  @return none
-
-  @code
-        // see example application
-  @endcode
+/*******************************************************************************
+ * The IHC_disable_cp_interrupt_module() function disables message consumed
+ * interrupt module. Its is AND with MC interrupts hence individual channel
+ * interrupt need not to be disable before. It is called by respective processor
+ * once initialization & configured.
+ *
+ * @param module
+ *   module for which interrupt has be enabled
+ *
+ * @return
+ *   This function does not return a value
+ *
+ * @code
+ *    // Initialization code
+ *    #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *    {
+ *      // expected functionality in callback
+ *      return 0;
+ *    }
+ *    int main(void)
+ *    {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mc_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mc_isr_callback);
+ *
+ *      IHC_enable_mc_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_enable_mc_interrupt_module(MIV_IHCIM_H0);
+ *
+ *      // further code follows
+ *
+ *      IHC_disable_mc_interrupt_module(MIV_IHCIM_H0);
+ *
+ *      return (0u);
+ *    }
+ *  @endcode
  */
-void  IHC_context_indirect_isr(uint32_t * message_storage_ptr);
+void IHC_disable_cp_interrupt_module(uint8_t module);
 
+/*******************************************************************************
+ * The IHC_tx_message() is used to send a message from one processor to another
+ * processor.
+ *
+ * @param channel
+ *   The channel we want the remote hart ID of.
+ *
+ * @param message
+ *   Pointer to message being sent
+ *
+ * @param msg_size
+ *   size of msg being sent in words
+ *
+ * @return
+ *   message status
+ *
+ * @code
+ *   // example code showing use
+ *   if ( IHC_MSG_SUCCESS == IHC_tx_message(MIV_IHC_CH_H0_H1, message_data, 1))
+ *   {
+ *      // message has been sent
+ *   }
+ *   else
+ *   {
+ *      // you can try again...
+ *   }
+ * @endcode
+ */
+int8_t IHC_tx_message(uint8_t channel, const uint32_t *message, uint16_t msg_size);
+
+/*******************************************************************************
+ * The IHC_poll_message_present() is called to poll message present and
+ * processes the message with message present handler previous registered
+ * using the IHC_config_mp_callback_handler() function
+ *
+ * @param channel
+ *   The channel for message present to poll
+ *
+ * @return
+ *   status for received message
+ *
+ * @code
+ *   // Initialization code
+ *   #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *   {
+ *     // expected functionality in callback
+ *     return 0;
+ *   }
+ *
+ *   int main(void)
+ *   {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_disable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *     //polling data
+ *     while(condition)
+ *     {
+ *         IHC_poll_message_present(MIV_IHC_CH_H0_H1);
+ *     }
+ *
+ *     return (0u);
+ *   }
+ */
+int8_t IHC_poll_msg_present(uint8_t channel);
+
+/*******************************************************************************
+ * The IHC_poll_msg_consumed() is called to poll message consumed and jump to
+ * callback handler previous registered using IHC_config_mp_callback_handler()
+ * function.
+ *
+ * @param channel
+ *   The channel for message present to poll
+ *
+ * @return
+ *   status for received message
+ *
+ * @code
+ *   // Initialization code
+ *   #include "mss_ihc.h"
+ *
+ *    static uint32_t queue_ihc_mc_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *   {
+ *     // expected functionality in callback
+ *     return 0;
+ *   }
+ *
+ *   int main(void)
+ *   {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mc_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mc_isr_callback);
+ *
+ *      IHC_disable_mc_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *     //polling data
+ *     while(condition)
+ *     {
+ *         IHC_poll_msg_consumed(MIV_IHC_CH_H0_H1);
+ *     }
+ *
+ *     return (0u);
+ *   }
+ */
+int8_t IHC_poll_msg_consumed(uint8_t channel);
+
+/*******************************************************************************
+ * The IHC_app_irq_handler() is called by the interrupt handler
+ *
+ * @param module_num
+ *   The module for application interrupt occurred
+ *
+ * @return
+ *   none
+ *
+ * @code
+ *   // Initialization code
+ *   #include "mss_ihc.h"
+ *
+ *  uint8_t IHC_APP_X_H5_IRQHandler(void)
+ *  {
+ *      IHC_app_irq_handler(MIV_IHCIM_H5);
+ *      return (EXT_IRQ_KEEP_ENABLED);
+ *  }
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *   {
+ *     // expected functionality in callback
+ *     return 0;
+ *   }
+ *
+ *   int main(void)
+ *   {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      return (0u);
+ *   }
+ */
+void IHC_app_irq_handler(uint8_t module_num);
+
+/*******************************************************************************
+ * The IHC_ctlr_irqhandler() is called by the interrupt handler
+ *
+ * @param module_num
+ *   The module for application interrupt occurred
+ *
+ * @return
+ *   none
+ *
+ * @code
+ *   // Initialization code
+ *   #include "mss_ihc.h"
+ *
+ *  uint8_t IHC_APP_X_H5_IRQHandler(void)
+ *  {
+ *      IHC_ctlr_irqhandler(MIV_IHCIM_H5);
+ *      return (EXT_IRQ_KEEP_ENABLED);
+ *  }
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *   {
+ *     // expected functionality in callback
+ *     return 0;
+ *   }
+ *
+ *   int main(void)
+ *   {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      return (0u);
+ *   }
+ */
+void IHC_ctlr_irqhandler(uint8_t module_num);
+
+/*******************************************************************************
+ * The IHC_indirect_irq_handler() is called by the interrupt handler
+ *
+ * @param module_num
+ *   The module for application interrupt occurred
+ *
+ * @param msg_buffer
+ *   The msg buffer to store received msg data
+ *
+ * @return
+ *   error code
+ *
+ * @code
+ *   // Initialization code
+ *   #include "mss_ihc.h"
+ *
+ *  uint32_t *msg_buffer;
+ *
+ *  uint8_t IHC_APP_X_H5_IRQHandler(void)
+ *  {
+ *      uint8 error_code = IHC_indirect_irq_handler(MIV_IHCIM_H5, msg_buffer);
+ *      return (EXT_IRQ_KEEP_ENABLED);
+ *  }
+ *
+ *    static uint32_t queue_ihc_mp_isr_callback(uint8_t channel,
+ *                         const uint32_t *message,
+ *                         uint32_t message_size)
+ *   {
+ *     // expected functionality in callback
+ *     return 0;
+ *   }
+ *
+ *   int main(void)
+ *   {
+ *
+ *      IHC_init(MIV_IHC_CH_H0_H1);
+ *
+ *      IHC_config_mp_callback_handler(MIV_IHC_CH_H0_H1, queue_ihc_mp_isr_callback);
+ *
+ *      IHC_enable_mp_interrupt(MIV_IHC_CH_H0_H1);
+ *
+ *      return (0u);
+ *   }
+ */
+int8_t IHC_indirect_irq_handler(uint8_t module_num, uint32_t *msg_buffer);
+/*******************************************************************************
+ * The IHC_get_channel_status() returns the status register details for
+ * respective channel
+ *
+ * @param channel
+ *   The channel number to get status
+ *
+ * @return
+ *   Status register
+ *
+ */
+static inline uint32_t IHC_get_ip_version(void)
+{
+    return *(g_ihc.ip_version);
+}
+
+/*******************************************************************************
+ * The IHC_get_debug_id() returns the DEBUG register details for respective
+ * channel
+ *
+ * @param channel
+ *   The channel number to get debug id for
+ *
+ * @return
+ *   DEBUG register
+ *
+ */
+static inline uint32_t IHC_get_debug_id(uint8_t channel)
+{
+    return g_ihc.IHC_Channels[channel].HART_IHCC->DEBUG_ID;
+}
+
+/*******************************************************************************
+ * The IHC_get_mp_intr_status() returns the interrupt status for message
+ * present.
+ *
+ * @param channel
+ *   The channel to get interrupt details
+ *
+ * @return
+ *   enable/disable status
+ *
+ */
+static inline uint32_t IHC_get_mp_intr_status(uint8_t channel)
+{
+    uint32_t module = (uint32_t) channel / CH_PER_MODULE;
+    uint32_t module_index = (uint32_t) channel % CH_PER_MODULE;
+
+    if(module_index >= module)
+    {
+        module_index++;
+    }
+
+    return ((g_ihc.HART_IHCIM[module]->IRQ_MASK & (1U << (module_index << 1U))) &&
+            (g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG & MIV_IHC_REGS_CH_CTRL_MPIE_MASK));
+}
+
+/*******************************************************************************
+ * The IHC_get_mc_intr_status() returns the interrupt status for message
+ * consumed.
+ *
+ * @param channel
+ *   The channel to get interrupt details
+ *
+ * @return
+ *   enable/disable status
+ *
+ */
+static inline uint32_t IHC_get_mc_intr_status(uint8_t channel)
+{
+    uint32_t module = (uint32_t)channel / CH_PER_MODULE;
+    uint32_t module_index = (uint32_t)channel % CH_PER_MODULE;
+
+    if (module_index >= module)
+    {
+        module_index++;
+    }
+
+    return ((g_ihc.HART_IHCIM[module]->IRQ_MASK & (1U << ((module_index << 1U) + 1U))) &&
+            (g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG & MIV_IHC_REGS_CH_CTRL_ACKIE_MASK));
+}
+
+/*******************************************************************************
+ * The IHC_get_module_intr_status() returns the interrupt status for module.
+ *
+ * @param channel
+ *   The channel to get interrupt details
+ *
+ * @return
+ *   enable/disable status
+ *
+ */
+static inline uint32_t IHC_get_module_intr_status(uint8_t module_num)
+{
+    return (g_ihc.HART_IHCIM[module_num]->IRQ_STATUS & MIV_IHC_REGS_IRQ_STATUS_NS_MASK);
+}
 
 #ifdef __cplusplus
 }

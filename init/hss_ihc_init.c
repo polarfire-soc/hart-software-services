@@ -26,6 +26,19 @@
 #include "mss_plic.h"
 #include "miv_ihc.h"
 
+enum {
+    IHC_CHAN_ID_H0_H1,
+    IHC_CHAN_ID_H0_H2,
+    IHC_CHAN_ID_H0_H3,
+    IHC_CHAN_ID_H0_H4,
+    IHC_CHAN_ID_H0_HX_MAX = IHC_CHAN_ID_H0_H4,
+    IHC_CHAN_ID_H1_H0 = 5,
+    IHC_CHAN_ID_H2_H0 = 10,
+    IHC_CHAN_ID_H3_H0 = 15,
+    IHC_CHAN_ID_H4_H0 = 20,
+    IHC_CHAN_ID_HX_H0_MAX = IHC_CHAN_ID_H4_H0,
+};
+
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
 static uint32_t hss_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in, uint32_t message_size, bool is_ack_required, uint32_t *p_message_storage)
 {
@@ -52,23 +65,18 @@ bool HSS_IHCInit(void)
 {
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Mi-V IHC\n");
 
-    IHC_global_init();
-
-    const uint32_t local_hartid = (uint32_t)HSS_HART_E51;
-    IHC_local_context_init(local_hartid);
-
+    for (uint32_t chan_id = IHC_CHAN_ID_H0_H1; chan_id <= IHC_CHAN_ID_H0_HX_MAX; chan_id++) {
+        IHC_init(chan_id);
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
-    const bool e51_mp_enable = false;
-    const bool u54_mp_enable = true;
-    const bool ack_disable   = false;
+        IHC_config_mp_callback_handler(ch, hss_ihc_incoming_);
 #endif
+    }
 
-    for (uint32_t remote_hartid = (uint32_t)HSS_HART_U54_1; remote_hartid <= (uint32_t)HSS_HART_U54_4; remote_hartid++) {
-
-        IHC_local_context_init(remote_hartid);
+    for (uint32_t chan_id = IHC_CHAN_ID_H1_H0; chan_id <= IHC_CHAN_ID_HX_H0_MAX; chan_id+=5) {
+        IHC_init(chan_id);
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
-        IHC_local_remote_config(local_hartid, remote_hartid, hss_ihc_incoming_, e51_mp_enable, ack_disable);
-        IHC_local_remote_config(remote_hartid, local_hartid, u54_ihc_incoming_, u54_mp_enable, ack_disable);
+        IHC_config_mp_callback_handler(chan_id, u54_ihc_incoming_);
+        IHC_enable_mp_interrupt(chan_id);
 #endif
     }
 

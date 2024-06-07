@@ -35,21 +35,7 @@ extern "C" {
 
 #include "opensbi_ecall.h"
 
-enum {
-    MP_IRQ = 0x0,
-    ACK_IRQ = 0x1,
-};
-
-struct mpfs_ihc_msg {
-    uint32_t msg[IHC_MAX_MESSAGE_SIZE];
-};
-
-struct ihc_sbi_rx_msg {
-    struct mpfs_ihc_msg ihc_msg;
-    uint8_t irq_type;
-};
-
-int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
+int sbi_ecall_ipc_handler(unsigned long extid, unsigned long funcid,
     const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
 
 #ifdef __cplusplus
