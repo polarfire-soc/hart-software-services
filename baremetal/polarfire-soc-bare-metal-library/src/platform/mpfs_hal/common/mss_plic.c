@@ -1,21 +1,16 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
- *
  * @file mss_plic.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS PLIC and PRCI access data structures and functions.
  *
  * PLIC related data which cannot be placed in mss_plic.h
  *
  */
+
 #include "mpfs_hal/mss_hal.h"
 
 #ifdef __cplusplus

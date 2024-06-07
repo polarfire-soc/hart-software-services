@@ -1,15 +1,10 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
  * @file mss_pll.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief MPSS PLL setup
  *
  */
@@ -167,8 +162,6 @@ static void mss_mux_pre_mss_pll_config(void)
      * 9:5  bclk1_sel
      * 4:0  bclk0_sel
      *
-     * From SAC spec:
-     * Table 9 1: Each gbim bank clock mux programming in MSS corner
      * The DDRPHY bank clocks bclk_horz<5:0> and bclk_vert<5:0> are driven
      * from mux's gbim<5:0> in the MSS corner. Each mux uses 5 configuration
      * bits.
@@ -294,6 +287,118 @@ __attribute__((section(".ram_codetext"))) \
     * Change the RTC clock divisor, so RTC clock is 1MHz
     */
     set_RTC_divisor();
+}
+
+/***************************************************************************//**
+ * mss_mux_post_mss_pll_config(void)
+ *
+ * Once the MSS is locked, the output mux is set up. This code must run from
+ * RAM, as the clock of the eNVM must be modified. The first thing changed is
+ * the eNVM clock. This will prevent L1 cache from accessing the eNVM, which it
+ * will do after the return instruction.
+ *
+ ******************************************************************************/
+__attribute__((section(".ram_codetext"))) \
+        void mss_freq_scaling(uint32_t required_freq_scaling)
+{
+   /*
+    * Modify the eNVM clock, so it now matches new MSS clock
+    *
+    * [5:0]
+    * Sets the number of AHB cycles used to generate the PNVM clock,.
+    * Clock period = (Value+1) * (1000/AHBFREQMHZ)
+    * Value must be 1 to 63 (0 defaults to 15)
+    * e.g.
+    * 7 will generate a 40ns period 25MHz clock if the AHB clock is 200MHz
+    * 11 will generate a 40ns period 25MHz clock if the AHB clock is 250MHz
+    * 15 will generate a 40ns period 25MHz clock if the AHB clock is 400MHz
+    *
+    */
+    SYSREG->ENVM_CR = LIBERO_SETTING_MSS_ENVM_CR;
+
+    /* mb() makes sure clock is changed in eNVM first so its ready by the time
+    function returns. In short, it makes sure the order of processing is not
+    changed by the compiler */
+    mb();
+
+    /*
+    * The eNVM control register has a bit (ENVM_CR_CLOCK_OKAY) which may be
+    * polled to confirm the frequency has changed, prior to bumping the AHB
+    * frequency.
+    */
+    volatile uint32_t wait_for_true = 0U;
+    while ((SYSREG->ENVM_CR & ENVM_CR_CLOCK_OKAY_MASK) !=\
+            ENVM_CR_CLOCK_OKAY_MASK)
+    {
+        wait_for_true++; /* need something here to stop debugger freezing */
+    }
+
+   /*
+    * Change the MSS clock as required.
+    *
+    * CLOCK_CONFIG_CR
+    * [5:0]
+    * Sets the master synchronous clock divider
+    * bits [1:0] CPU clock divider
+    * bits [3:2] AXI clock divider
+    * bits [5:4] AHB/APB clock divider
+    * 00=/1 01=/2 10=/4 11=/8 (AHB/APB divider may not be set to /1)
+    * Reset = 0x3F
+    *
+    * SYSREG->CLOCK_CONFIG_CR = (0x0U<<0U) | (0x1U<<2U) | (0x2U<<4U);
+    * MSS clk= 80Mhz, implies CPU = 80Mhz, AXI = 40Mhz, AHB/APB = 20Mhz
+    * Until we switch in MSS PLL clock (MSS_SCB_CFM_MSS_MUX->MSSCLKMUX = 0x01)
+    * e.g. If MSS clk 800Mhz
+    * MSS clk= 800Mhz, implies CPU = 800Mhz, AXI = 400Mhz, AHB/APB = 200Mhz
+    *
+    */
+    switch(required_freq_scaling)
+    {
+        default:
+        case MSS_CLK_SCALING_NORMAL:
+            SYSREG->CLOCK_CONFIG_CR = LIBERO_SETTING_MSS_CLOCK_CONFIG_CR;
+            break;
+        case MSS_CLK_SCALING_MEDIUM:
+            SYSREG->CLOCK_CONFIG_CR = MSS_CLOCK_CONFIG_CR_MED;
+            break;
+        case MSS_CLK_SCALING_LOW:
+            SYSREG->CLOCK_CONFIG_CR = MSS_CLOCK_CONFIG_CR_LOW;
+            break;
+    }
+
+}
+
+uint32_t mss_current_pclk_freq(void)
+{
+    uint32_t pclk_freq;
+    uint32_t scale = LIBERO_SETTING_MSS_CLOCK_CONFIG_CR & (0x3UL<<4U);
+    uint32_t current_scale = SYSREG->CLOCK_CONFIG_CR & (0x3UL<<4U);
+
+    pclk_freq = LIBERO_SETTING_MSS_APB_AHB_CLK * (current_scale/scale);
+
+    return pclk_freq;
+}
+
+uint32_t mss_current_axi_freq(void)
+{
+    uint32_t axi_freq;
+    uint32_t scale = LIBERO_SETTING_MSS_CLOCK_CONFIG_CR & (0x3UL<<2U);
+    uint32_t current_scale = SYSREG->CLOCK_CONFIG_CR & (0x3UL<<2U);
+
+    axi_freq = LIBERO_SETTING_MSS_AXI_CLK * (current_scale/scale);
+
+    return axi_freq;
+}
+
+uint32_t mss_current_mss_freq(void)
+{
+    uint32_t mss_freq;
+    uint32_t scale = LIBERO_SETTING_MSS_CLOCK_CONFIG_CR & (0x3UL<<0U);
+    uint32_t current_scale = SYSREG->CLOCK_CONFIG_CR & (0x3UL<<0U);
+
+    mss_freq = LIBERO_SETTING_MSS_SYSTEM_CLK * (current_scale/scale);
+
+    return mss_freq;
 }
 
 /***************************************************************************//**
@@ -573,7 +678,7 @@ void ddr_pll_config(REG_LOAD_METHOD option)
                                                 LIBERO_SETTING_DDR_PLL_DIV_2_3;
             CFG_DDR_SGMII_PHY->PLL_CTRL2_MAIN.PLL_CTRL2_MAIN      =\
                                                    LIBERO_SETTING_DDR_PLL_CTRL2;
-            /* Read only in RPC  todo: verify this is correct
+            /*
              * CFG_DDR_SGMII_PHY->PLL_CAL_MAIN.PLL_CAL_MAIN  =\
              *                                   LIBERO_SETTING_DDR_PLL_CAL; */
             CFG_DDR_SGMII_PHY->PLL_PHADJ_MAIN.PLL_PHADJ_MAIN      =\

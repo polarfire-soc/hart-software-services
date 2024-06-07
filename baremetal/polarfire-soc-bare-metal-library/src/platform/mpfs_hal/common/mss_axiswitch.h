@@ -1,14 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
+ * @file mss_axiswitch.h
+ * @author Microchip FPGA Embedded Systems Solutions
+ * @brief
  *
  */
-/*=========================================================================*//**
 
- *//*=========================================================================*/
 #ifndef __MSS_AXISW_H_
 #define __MSS_AXISW_H_ 1
 

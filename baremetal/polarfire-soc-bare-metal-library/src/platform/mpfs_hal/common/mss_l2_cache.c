@@ -1,20 +1,13 @@
 /*******************************************************************************
- * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-/*******************************************************************************
  * @file mss_l2_cache.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief The code in this file is executed before any code/data sections are
  * copied. This code must not rely sdata/data section content. Hence, global
  * variables should not be used unless they are constants.
- *
- */
-/*==============================================================================
  *
  */
 
@@ -37,7 +30,7 @@ static const uint64_t g_init_marker = INIT_MARKER;
 static void check_config_l2_scratchpad(void);
 
 /***************************************************************************//**
- * See hw_l2_scratch.h for details of how to use this function.
+ * See mss_l2_scratch.h for details of how to use this function.
  */
 __attribute__((weak)) uint64_t end_l2_scratchpad_address(void)
 {
@@ -46,7 +39,7 @@ __attribute__((weak)) uint64_t end_l2_scratchpad_address(void)
 }
 
 /***************************************************************************//**
- * See hw_l2_scratch.h for details of how to use this function.
+ * See mss_l2_scratch.h for details of how to use this function.
  */
 __attribute__((weak)) uint32_t num_cache_ways(void)
 {
@@ -58,16 +51,36 @@ __attribute__((weak)) uint32_t num_cache_ways(void)
 }
 
 /***************************************************************************//**
- * See hw_l2_scratch.h for details of how to use this function.
+ * See mss_l2_scratch.h for details of how to use this function.
  */
-__attribute__((weak)) uint32_t my_num_cache_ways(void)
+__attribute__((weak)) uint32_t my_num_dcache_ways(uint32_t hartid)
 {
     uint32_t num_ways = 0U;
     uint32_t way_enable;
     uint32_t bit_index;
 
-    //todo: return for my hart, assuming e51 here
-    way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_E51_DCACHE;
+    for (uint32_t current_way = 0; current_way <= LIBERO_SETTING_WAY_ENABLE; current_way++) {
+        /* disable evictions from all but current_way */
+        switch (hartid)
+        {
+            case 0:
+                way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_E51_DCACHE;
+               break;
+            case 1:
+                way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_U54_1_DCACHE;
+                break;
+            case 2:
+                way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_U54_2_DCACHE;
+                break;
+            case 3:
+                way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_U54_3_DCACHE;
+                break;
+            case 4:
+                way_enable = (uint32_t)LIBERO_SETTING_WAY_MASK_U54_4_DCACHE;
+                break;
+        }
+    }
+
     bit_index = 0U;
 
     while(bit_index < 16U)
@@ -82,7 +95,7 @@ __attribute__((weak)) uint32_t my_num_cache_ways(void)
 }
 
 /***************************************************************************//**
- * See mss_uart.h for details of how to use this function.
+ * See mss_l2_scratch.h for details of how to use this function.
  */
 __attribute__((weak)) void config_l2_cache(void)
 {
@@ -204,7 +217,6 @@ __attribute__((weak)) void config_l2_cache(void)
     mb();
 }
 
-
 /*==============================================================================
  * Configure the L2 scratchpad based on linker symbols:
  *  __l2_scratchpad_vma_start
@@ -239,4 +251,64 @@ static void check_config_l2_scratchpad(void)
     }
 
     ASSERT(LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS >= n_scratchpad_ways);
+}
+
+/***************************************************************************//**
+ * See mss_l2_scratch.h for details of how to use this function.
+ */
+void flush_l2_cache(uint32_t hartid)
+{
+    /*
+     * flush L2 Cache, way-by-way
+     *  see https://forums.sifive.com/t/flush-invalidate-l1-l2-on-the-u54-mc/4483/9
+     *  the thing to be wary of is the policy is random replacement by way,
+     *  so there must be only 1 way enabled at a time...
+     *  then, still need to go through ~2MiB (2MiB/16 per way) of reads to
+     *  safely ensure the L2 is cleared...
+     */
+
+    for (uint32_t current_way = 0; current_way <= LIBERO_SETTING_WAY_ENABLE; current_way++) {
+        /* disable evictions from all but current_way */
+        switch (hartid)
+        {
+            case 0:
+               __atomic_store_8(&CACHE_CTRL->WAY_MASK_E51_DCACHE, current_way, __ATOMIC_RELAXED);
+               break;
+            case 1:
+                __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_1_DCACHE, current_way, __ATOMIC_RELAXED);
+                break;
+            case 2:
+                __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_2_DCACHE, current_way, __ATOMIC_RELAXED);
+                break;
+            case 3:
+                __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_3_DCACHE, current_way, __ATOMIC_RELAXED);
+                break;
+            case 4:
+                __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_4_DCACHE, current_way, __ATOMIC_RELAXED);
+                break;
+        }
+
+        /* read 2MiB/16 from L2 zero device */
+        for (uint64_t i = 0u; i < 131u*1024u; i+=8u)
+        { (void)*(volatile uint64_t *)(ZERO_DEVICE_BOTTOM + i); };
+    }
+    /* restore WayMask values... */
+    switch (hartid)
+    {
+        case 0:
+            __atomic_store_8(&CACHE_CTRL->WAY_MASK_E51_DCACHE, LIBERO_SETTING_WAY_MASK_E51_DCACHE, __ATOMIC_RELAXED);
+           break;
+        case 1:
+            __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_1_DCACHE, LIBERO_SETTING_WAY_MASK_U54_1_DCACHE, __ATOMIC_RELAXED);
+            break;
+        case 2:
+            __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_2_DCACHE, LIBERO_SETTING_WAY_MASK_U54_2_DCACHE, __ATOMIC_RELAXED);
+            break;
+        case 3:
+            __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_3_DCACHE, LIBERO_SETTING_WAY_MASK_U54_3_DCACHE, __ATOMIC_RELAXED);
+            break;
+        case 4:
+            __atomic_store_8(&CACHE_CTRL->WAY_MASK_U54_4_DCACHE, LIBERO_SETTING_WAY_MASK_U54_4_DCACHE, __ATOMIC_RELAXED);
+            break;
+    }
 }

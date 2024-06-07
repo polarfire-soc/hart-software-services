@@ -1,16 +1,10 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
- *
  * @file mss_irq_handler_stubs.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief MPFS MSS Interrupt Function stubs.
  *
  * The functions below will only be linked with the application code if the user
@@ -19,6 +13,7 @@
  * same prototype in the user's application code.
  *
  */
+
 #include <stdint.h>
 #include "mpfs_hal/mss_hal.h"
 

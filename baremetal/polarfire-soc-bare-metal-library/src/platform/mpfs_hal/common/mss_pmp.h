@@ -1,20 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-/*******************************************************************************
  * @file mss_pmp.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS PMP configuration using MSS configurator values.
  *
  */
-/*=========================================================================*//**
 
- *//*=========================================================================*/
 #ifndef MSS_PMP_H
 #define MSS_PMP_H
 

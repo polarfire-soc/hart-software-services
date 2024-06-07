@@ -1,18 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
  * @file newlib_stubs.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief Stubs for Newlib system calls.
  *
  */
+
 #include <sys/times.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -226,6 +222,31 @@ int _write_r( void * reent, int file, char * ptr, int len )
      */
     if(!g_stdio_uart_init_done)
     {
+        mss_peripherals peripheral = MSS_PERIPH_INVALID;
+
+        if ((&g_mss_uart0_lo == gp_my_uart) || (&g_mss_uart0_hi == gp_my_uart))
+        {
+            peripheral = MSS_PERIPH_MMUART0;
+        }
+        else if ((&g_mss_uart1_lo == gp_my_uart) || (&g_mss_uart1_hi == gp_my_uart))
+        {
+            peripheral = MSS_PERIPH_MMUART1;
+        }
+        else if ((&g_mss_uart2_lo == gp_my_uart) || (&g_mss_uart2_hi == gp_my_uart))
+        {
+            peripheral = MSS_PERIPH_MMUART2;
+        }
+        else if ((&g_mss_uart3_lo == gp_my_uart) || (&g_mss_uart3_hi == gp_my_uart))
+        {
+            peripheral = MSS_PERIPH_MMUART3;
+        }
+        else
+        {
+            ASSERT(0);
+        }
+
+        (void)mss_config_clk_rst(peripheral, (uint8_t) MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+
         MSS_UART_init(gp_my_uart,
                       MICROCHIP_STDIO_BAUD_RATE,
                       MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY);

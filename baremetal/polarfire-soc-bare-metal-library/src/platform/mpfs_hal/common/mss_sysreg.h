@@ -1,20 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/**************************************************************************
-    *
  * @file mss_sysreg.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief Hardware register definitions.
-
  *
  */
+
 #ifndef MSS_SYSREG_H
 #define MSS_SYSREG_H
 

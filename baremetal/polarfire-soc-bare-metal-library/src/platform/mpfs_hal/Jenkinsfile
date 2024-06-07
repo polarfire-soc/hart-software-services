@@ -1,2 +1,2 @@
 @Library('automated-testing-library') _
-pipelineBareMetalDriverSrc()
+pipelineBareMetalDriverSrc(examplesRepoBranch: 'develop')

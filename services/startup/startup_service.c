@@ -85,15 +85,15 @@ static void startup_init_handler(struct StateMachine * const pMyMachine)
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing %s\n", globalInitFunctions[i].pName);
 
     bool result = (globalInitFunctions[i].handler)();
-    
+
     if (!result) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "%s() returned %d\n", globalInitFunctions[i].pName, result);
-   
+
         if (globalInitFunctions[i].haltOnFailure) {
             while (true) { ; } // HALT on failure
         } else if (globalInitFunctions[i].restartOnFailure) {
             uint8_t rcvBuf;
-  
+
             bool keyPressedFlag = HSS_ShowTimeout("Init failed, press a key to prevent restart\n", 5u, &rcvBuf);
 
             if (IS_ENABLED(CONFIG_SERVICE_TINYCLI) && keyPressedFlag) {
@@ -104,7 +104,7 @@ static void startup_init_handler(struct StateMachine * const pMyMachine)
             }
         }
     }
-    
+
     if (i < (spanOfGlobalInitFunctions-1)) {
         i++;
     } else {

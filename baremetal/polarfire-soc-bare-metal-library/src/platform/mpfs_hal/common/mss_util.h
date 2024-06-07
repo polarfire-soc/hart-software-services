@@ -1,18 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/***************************************************************************
  * @file mss_util.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief MACROs defines and prototypes associated with utility functions
  *
  */
+
 #ifndef MSS_UTIL_H
 #define MSS_UTIL_H
 

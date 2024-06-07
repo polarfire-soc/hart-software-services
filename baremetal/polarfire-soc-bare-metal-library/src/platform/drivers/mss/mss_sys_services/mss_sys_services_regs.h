@@ -2,7 +2,7 @@
  * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * Register bit offsets and masks definitions for PolarFire SoC MSS system
  * services
  */
