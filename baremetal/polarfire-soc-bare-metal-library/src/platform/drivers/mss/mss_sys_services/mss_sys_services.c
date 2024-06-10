@@ -2,11 +2,11 @@
  * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
- * 
+ *
  * PolarFire SoC Microprocessor Subsystem(MSS) System Services bare metal driver
  * implementation.
  */
- 
+
 #include "mpfs_hal/mss_hal.h"
 #include "mss_sys_services_regs.h"
 #include "mss_sys_services.h"
@@ -14,7 +14,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /*******************************************************************************
  * Null buffer constant definition
@@ -119,7 +119,7 @@ MSS_SYS_get_serial_number
 )
 {
     uint16_t status = MSS_SYS_PARAM_ERR;
-    
+
     if (p_serial_number == NULL_BUFFER)
     {
         return status;
@@ -348,7 +348,7 @@ MSS_SYS_query_security
     }
 
     /* Actual QUERY_SECURITY_RESP_LEN is 9 but CoreSysService_PF IP needs number
-     * of words instead of number of bytes to be written to or read from 
+     * of words instead of number of bytes to be written to or read from
      * MailBox */
     if (MSS_SYS_SERVICE_INTERRUPT_MODE == g_service_mode)
     {
@@ -627,8 +627,8 @@ MSS_SYS_secure_nvm_write
     {
         ASSERT(!(NULL_BUFFER == p_user_key));
     }
-    
-    if ((p_data == NULL_BUFFER) || (snvm_module >= 221)) 
+
+    if ((p_data == NULL_BUFFER) || (snvm_module >= 221))
     {
         return status;
     }
@@ -1098,7 +1098,7 @@ MSS_SYS_spi_copy
      *(uint32_t *)(mb_format + 8u)  = mss_spi_flash;
      *(uint32_t *)(mb_format + 12u) = n_bytes;
      mb_format[16] = options;
-     
+
 
      if (MSS_SYS_SERVICE_INTERRUPT_MODE == g_service_mode)
      {
@@ -1967,7 +1967,7 @@ static uint16_t request_system_service
         return MSS_SYS_BUSY;
     }
 
-    /* Code for MSS_SYS_PARAM_ERR is not implemented with this version of 
+    /* Code for MSS_SYS_PARAM_ERR is not implemented with this version of
        driver. */
 
     *MSS_SCBMESSAGE_INT = 0x0u; /* clear message_int reg */

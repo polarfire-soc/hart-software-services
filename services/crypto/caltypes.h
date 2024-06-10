@@ -4,36 +4,36 @@
 /* ----------- MERCURY SYSTEMS INC IP PROTECTION HEADER ----------------
 * (c) Mercury Systems, Inc. 2020. All rights reserved.
 * Mercury Proprietary Information
-* 
 *
-* This file, the information contained herein, and its documentation are 
-* proprietary to Mercury Systems, Inc. This file, the information contained 
-* herein, and its documentation may only be used, duplicated,  or disclosed 
-* in accordance with the terms of a written license agreement between the 
-* receiving party and Mercury or the receiving party and an authorized 
+*
+* This file, the information contained herein, and its documentation are
+* proprietary to Mercury Systems, Inc. This file, the information contained
+* herein, and its documentation may only be used, duplicated,  or disclosed
+* in accordance with the terms of a written license agreement between the
+* receiving party and Mercury or the receiving party and an authorized
 * licensee of Mercury.
-*    
-* Each copy of this file shall include all copyrights, trademarks, service 
+*
+* Each copy of this file shall include all copyrights, trademarks, service
 * marks, and proprietary rights notices, if any.
-* 
+*
 * ------------ MERCURY SYSTEMS INC IP PROTECTION HEADER --------------*/
 
 /* -------------------------------------------------------------------
    Description:
-     This file defines common types in the CAL. 
-     
-     Since support for the C99 stdint.h integer types is not universal, 
-   these are defined herein and may require customization from compiler 
-   to compiler, or use of the stdint.h header, if present (recommended). 
+     This file defines common types in the CAL.
 
-     C99 supports 64-bit types; however, support in older compilers is 
-   spotty. For those that do not support it, the macro NO64BITINT may be 
-   defined by the user to prevent defintion of 64-bit types. This is 
+     Since support for the C99 stdint.h integer types is not universal,
+   these are defined herein and may require customization from compiler
+   to compiler, or use of the stdint.h header, if present (recommended).
+
+     C99 supports 64-bit types; however, support in older compilers is
+   spotty. For those that do not support it, the macro NO64BITINT may be
+   defined by the user to prevent defintion of 64-bit types. This is
    generally safe with CAL-PK and CAL-SYM; however, this is incompatible
-   with CAL-SW. 
+   with CAL-SW.
 
-     Most CAL types and constants are defined with the "SAT" prefix to 
-   reduce the chance of name space collisions with other users. 
+     Most CAL types and constants are defined with the "SAT" prefix to
+   reduce the chance of name space collisions with other users.
    ------------------------------------------------------------------- */
 
 #ifndef CALTYPES_H
@@ -74,8 +74,8 @@ typedef signed short          int16_t;
 typedef unsigned int          uint32_t;
 typedef int                   int32_t;
 
-/* stdint.h is a C99 feature, and C99 supports 64-bit ints, so this is 
-   immune to the macro used to disable 64-bit int support. 
+/* stdint.h is a C99 feature, and C99 supports 64-bit ints, so this is
+   immune to the macro used to disable 64-bit int support.
 */
 typedef unsigned long long    uint64_t;
 typedef long long             int64_t;
@@ -161,7 +161,7 @@ typedef SATSYMKEYSIZE *       SATSYMKEYSIZEPTR;
 /* Cipher mode type. */
 typedef uint8_t               SATSYMMODE;
 typedef SATSYMMODE *          SATSYMMODEPTR;
- 
+
 /* Cipher key object. */
 /* Other fields are only valid when sstCipher!=SATSYMTYPE_NULL. */
 typedef struct {
@@ -206,10 +206,10 @@ typedef struct {
 
 typedef struct {
   uint8_t uiContextType;
-  union{ 
+  union{
     SHACTX ctxSHA;
     SHAHMACCTX ctxMAC;
-  }CTXUNION;     
+  }CTXUNION;
 } SATRESCONTEXT;
 typedef SATRESCONTEXT *       SATRESCONTEXTPTR;
 
@@ -230,9 +230,9 @@ typedef union {
   uint8_t u8[16];
 } uint128_t;
 
-typedef struct {  
+typedef struct {
   uint128_t ui128V;
-  uint128_t ui128K[2];  
+  uint128_t ui128K[2];
   uint32_t uiReseedCnt;
   uint32_t uiReseedLim;
   uint32_t uiEntropyFactor;
@@ -300,7 +300,7 @@ typedef struct {
   SATUINT32_t*      puiSigY;
 } SATECDSASIG;
 
-typedef struct { 
+typedef struct {
   SATHASHSIZE       sHashLen;
   SATUINT32_t*      puiHash;
 } SATHASH;

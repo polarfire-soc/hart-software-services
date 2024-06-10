@@ -1,21 +1,15 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-/*******************************************************************************
  * @file mss_mpu.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS MPU driver APIs for configuring access regions for
  * the external masters.
  *
  */
-/*=========================================================================*//**
 
- *//*=========================================================================*/
 #ifndef MSS_MPU_H
 #define MSS_MPU_H
 
@@ -109,7 +103,7 @@ typedef struct
 typedef struct
 {
     MPU_CFG               PMPCFG[16U];
-    __IO MPU_FailStatus_TypeDef  STATUS;
+    MPU_FailStatus_TypeDef  STATUS;
 } MPU_TypeDef;
 
 

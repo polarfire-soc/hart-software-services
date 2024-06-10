@@ -4,18 +4,18 @@
 /* ----------- MERCURY SYSTEMS INC IP PROTECTION HEADER ----------------
 * (c) Mercury Systems, Inc. 2020. All rights reserved.
 * Mercury Proprietary Information
-* 
 *
-* This file, the information contained herein, and its documentation are 
-* proprietary to Mercury Systems, Inc. This file, the information contained 
-* herein, and its documentation may only be used, duplicated,  or disclosed 
-* in accordance with the terms of a written license agreement between the 
-* receiving party and Mercury or the receiving party and an authorized 
+*
+* This file, the information contained herein, and its documentation are
+* proprietary to Mercury Systems, Inc. This file, the information contained
+* herein, and its documentation may only be used, duplicated,  or disclosed
+* in accordance with the terms of a written license agreement between the
+* receiving party and Mercury or the receiving party and an authorized
 * licensee of Mercury.
-*    
-* Each copy of this file shall include all copyrights, trademarks, service 
+*
+* Each copy of this file shall include all copyrights, trademarks, service
 * marks, and proprietary rights notices, if any.
-* 
+*
 * ------------ MERCURY SYSTEMS INC IP PROTECTION HEADER --------------*/
 
 /* -------------------------------------------------------------------
@@ -35,7 +35,7 @@
 /* The following include provides a custom configuration header file when
    CALCONFIGH is defined
 */
-#ifdef CALCONFIGH 
+#ifdef CALCONFIGH
 #  include CALCONFIGH
 #else
 #  error "CALCONFIGH not defined. CAL requires a custom configuration header \
@@ -138,14 +138,14 @@ defined by CALCONFIGH. Review CAL README."
 #define SHAPKXOPT5124 (X52_CFG_OPT&0x00400000u)
 #define SHAPKXOPT5126 (X52_CFG_OPT&0x00800000u)
 
-/* Define the maximum number of return values that may be handled using 
+/* Define the maximum number of return values that may be handled using
    CAL*TrfRes() function(s).
 */
 #define CAL_MAXTRFS 4
 
 /* Volatile pointer operations */
-/* These access macros are designed so that they may be redefined by a 
-   user compiling CAL. 
+/* These access macros are designed so that they may be redefined by a
+   user compiling CAL.
 */
 #ifndef CALREAD32
 #  define CALREAD32(ptr) ( *(ptr) )

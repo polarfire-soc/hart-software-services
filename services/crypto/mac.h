@@ -4,18 +4,18 @@
 /* ----------- MERCURY SYSTEMS INC IP PROTECTION HEADER ----------------
 * (c) Mercury Systems, Inc. 2020. All rights reserved.
 * Mercury Proprietary Information
-* 
 *
-* This file, the information contained herein, and its documentation are 
-* proprietary to Mercury Systems, Inc. This file, the information contained 
-* herein, and its documentation may only be used, duplicated,  or disclosed 
-* in accordance with the terms of a written license agreement between the 
-* receiving party and Mercury or the receiving party and an authorized 
+*
+* This file, the information contained herein, and its documentation are
+* proprietary to Mercury Systems, Inc. This file, the information contained
+* herein, and its documentation may only be used, duplicated,  or disclosed
+* in accordance with the terms of a written license agreement between the
+* receiving party and Mercury or the receiving party and an authorized
 * licensee of Mercury.
-*    
-* Each copy of this file shall include all copyrights, trademarks, service 
+*
+* Each copy of this file shall include all copyrights, trademarks, service
 * marks, and proprietary rights notices, if any.
-* 
+*
 * ------------ MERCURY SYSTEMS INC IP PROTECTION HEADER --------------*/
 
 /* -------------------------------------------------------------------
@@ -54,14 +54,14 @@ extern "C" {
 extern SATR CALMAC(SATMACTYPE eMACType, const SATUINT32_t *pKey, SATUINT32_t uiKeyLen,
   const void *pMsg, SATUINT32_t uiMsgLen, void *pMAC);
 
-extern SATR CALMACDMA(SATMACTYPE eMACType, const SATUINT32_t *pKey, 
-  SATUINT32_t uiKeyLen, const void *pMsg, SATUINT32_t uiMsgLen, 
+extern SATR CALMACDMA(SATMACTYPE eMACType, const SATUINT32_t *pKey,
+  SATUINT32_t uiKeyLen, const void *pMsg, SATUINT32_t uiMsgLen,
   const void *pMAC, SATUINT32_t uiDMAChConfig);
 
-extern SATR CALMACIni(SATMACTYPE eMACType, const SATUINT32_t *pKey, 
+extern SATR CALMACIni(SATMACTYPE eMACType, const SATUINT32_t *pKey,
   SATUINT32_t uiKeyLen, SATUINT32_t uiMsgLen);
 
-extern SATR CALMACCtx(const SATRESHANDLE hResource, 
+extern SATR CALMACCtx(const SATRESHANDLE hResource,
   const SATRESCONTEXTPTR pContext, const void *pMsg, SATUINT32_t uiMsgLen,
   void *pHash, const SATUINT8_t uiFlag);
 
@@ -77,7 +77,7 @@ extern SATR CALMACRead(void *pMAC);
 /* ----------- -------- ---------- */
 extern SATUINT32_t iGetMACKeyLen(SATMACTYPE eMACType);
 
-extern SATR CALMACCtxLoad(const SATRESHANDLE hResource, 
+extern SATR CALMACCtxLoad(const SATRESHANDLE hResource,
   SATRESCONTEXTPTR const pContext, SATUINT32_t uiRunLen);
 
 extern SATUINT32_t iGetMACRunLen(SATRESCONTEXTPTR const pContext);

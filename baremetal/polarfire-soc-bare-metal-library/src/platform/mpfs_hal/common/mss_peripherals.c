@@ -1,20 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-/*******************************************************************************
  * @file mss_peripherals.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS functions related to peripherals.
  *
  */
-/*=========================================================================*//**
 
- *//*=========================================================================*/
 #include <stdio.h>
 #include <string.h>
 #include "mpfs_hal/mss_hal.h"
@@ -189,3 +183,16 @@ __attribute__((weak)) uint32_t mss_get_apb_bus_cr(void)
     return (SYSREG->APBBUS_CR);
 }
 
+/***************************************************************************//**
+ * See mss_peripherals.h for details of how to use this function.
+ */
+__attribute__((weak)) void mss_turn_off_unused_ram_clks(void)
+{
+    CAN0_RAM_OFF_IF_NOT_CONFIGURED();
+    CAN1_RAM_OFF_IF_NOT_CONFIGURED();
+    USB_RAM_OFF_IF_NOT_CONFIGURED();
+    MAC0_RAM_OFF_IF_NOT_CONFIGURED();
+    MAC1_RAM_OFF_IF_NOT_CONFIGURED();
+    MMC_RAM_OFF_IF_NOT_CONFIGURED();
+    DDR_RAM_OFF_IF_NOT_CONFIGURED();
+}

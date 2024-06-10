@@ -1,21 +1,15 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-/*******************************************************************************
  * @file mss_mpu.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief PolarFire SoC MSS MPU driver for configuring access regions for the
  * external masters.
  *
  */
-/*=========================================================================*//**
 
- *//*=========================================================================*/
 #include <stdio.h>
 #include <string.h>
 #include "mpfs_hal/mss_hal.h"

@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * PolarFire SoC MSS User Crypto additional register and SCB register 
+ * PolarFire SoC MSS User Crypto additional register and SCB register
  * definition.
  *
  */
@@ -47,8 +47,8 @@ typedef struct _g5uscryptotopreg
     /* User Accessible Register for controlling Athena core via SCB bus */
     uint32_t CONTROL_USER;
     /* Registers only accessible to G5-Control for it to override the the user
-     * and gain control of the Athena core. G5C control does not have access 
-     * to the internals of the Athena core, but can initiate purge cycles. 
+     * and gain control of the Athena core. G5C control does not have access
+     * to the internals of the Athena core, but can initiate purge cycles.
      */
     uint32_t CONTROL_G5C;
     /* Athena Status  */

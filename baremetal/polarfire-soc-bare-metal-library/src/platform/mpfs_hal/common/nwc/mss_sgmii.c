@@ -1,15 +1,10 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
  * @file mss_sgmii.c
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief sgmii related functions
  *
  */
@@ -450,7 +445,6 @@ void ddr_pvt_calibration(void)
      * Wait for IOEN from power detectors DDR and SGMII - IO enable signal from
      * System Control powers on
      *
-     * From DDR phy SAC spec:
      *      MSS processor releases dce bus to send RPC bits to IO buffer,
      *      setting each to it's programmed mode and then asserts
      *      ioen high at end of this state.

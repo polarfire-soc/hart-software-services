@@ -1,15 +1,10 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
  * @file mss_pll.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief PLL defines
  *
  */
@@ -219,6 +214,34 @@ typedef enum REG_LOAD_METHOD_
     RPC_REG_UPDATE               = 0x01,       /*!< 1 RPC -> SCB load */
 }   REG_LOAD_METHOD;
 
+typedef enum MSS_FREQ_SCALING_OPTION_
+{
+    MSS_CLK_SCALING_NORMAL                   = 0x00,       /*!< 0 SCB clock source */
+    MSS_CLK_SCALING_MEDIUM                   = 0x01,       /*!< 1 MSS PLL clock source */
+    MSS_CLK_SCALING_LOW                      = 0x02,       /*!< 1 MSS PLL clock source */
+}   MSS_FREQ_SCALING_OPTION;
+
+#if !defined (LIBERO_SETTING_MSS_CLOCK_CONFIG_CR_LOW)
+/*Master clock config (00=/1 01=/2 10=/4 11=/8 ) */
+#define LIBERO_SETTING_MSS_CLOCK_CONFIG_CR_LOW    0x0000003EUL
+    /* DIVIDER_CPU                       [0:2]   RW value= 0x2 */
+    /* DIVIDER_AXI                       [2:2]   RW value= 0x3 */
+    /* DIVIDER_APB_AHB                   [4:2]   RW value= 0x3 */
+#endif
+
+#if !defined (LIBERO_SETTING_MSS_CLOCK_CONFIG_CR_MED)
+/*Master clock config (00=/1 01=/2 10=/4 11=/8 ) */
+#define LIBERO_SETTING_MSS_CLOCK_CONFIG_CR_MED    0x00000029UL
+    /* DIVIDER_CPU                       [0:2]   RW value= 0x1 */
+    /* DIVIDER_AXI                       [2:2]   RW value= 0x2 */
+    /* DIVIDER_APB_AHB                   [4:2]   RW value= 0x2 */
+#endif
+
+#define MSS_CLOCK_CONFIG_CR_LOW ((LIBERO_SETTING_MSS_CLOCK_CONFIG_CR &\
+        0xFFFFFFC0UL) | LIBERO_SETTING_MSS_CLOCK_CONFIG_CR_LOW)
+
+#define MSS_CLOCK_CONFIG_CR_MED ((LIBERO_SETTING_MSS_CLOCK_CONFIG_CR &\
+        0xFFFFFFC0UL) | LIBERO_SETTING_MSS_CLOCK_CONFIG_CR_MED)
 
 
 /***************************************************************************//**
@@ -356,13 +379,15 @@ void pre_configure_sgmii_and_ddr_pll_via_scb(uint8_t option);
  */
 void mss_pll_config(void);
 
-/***************************************************************************//**
-  flag_mss_pll_lock_error()
-
-  Instantiate platform specific function to give error feedback on your platform
-
- */
 void flag_mss_pll_lock_error(void);
+
+void mss_freq_scaling(uint32_t required_freq_scaling);
+
+uint32_t mss_current_pclk_freq(void);
+
+uint32_t mss_current_axi_freq(void);
+
+uint32_t mss_current_mss_freq(void);
 
 #ifdef __cplusplus
 }

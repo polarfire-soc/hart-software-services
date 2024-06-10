@@ -1,21 +1,14 @@
 /*******************************************************************************
- * Copyright 2021-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
+ * @file mss_legacy_defines.h
+ * @author Microchip FPGA Embedded Systems Solutions
+ * @brief MPFS legacy defines
  *
  */
 
-/*******************************************************************************
- *
- * @file mss_hart_ints.h
- * @author Microchip-FPGA Embedded Systems Solutions
- * @brief MPFS legacy defines
- *
- * Mapping of older defines to newer defines to allow older code compile
- *
- */
 #ifndef MSS_LEGACY_DEFINES_H
 #define MSS_LEGACY_DEFINES_H
 
@@ -477,7 +470,7 @@ extern "C" {
 #define     fabric_f2h_62_plic_IRQHandler   PLIC_f2m_62_IRQHandler
 #define     fabric_f2h_63_plic_IRQHandler   PLIC_f2m_63_IRQHandler
 
-#define     bus_error_unit_hart_0_plic_IRQHandler    PLIC_E51_bus_error_unit_hart_0_IRQHandler
+#define     bus_error_unit_hart_0_plic_IRQHandler    PLIC_E51_bus_error_unit_IRQHandler
 #define     bus_error_unit_hart_1_plic_IRQHandler    PLIC_U54_1_bus_error_unit_IRQHandler
 #define     bus_error_unit_hart_2_plic_IRQHandler    PLIC_U54_2_bus_error_unit_IRQHandler
 #define     bus_error_unit_hart_3_plic_IRQHandler    PLIC_U54_3_bus_error_unit_IRQHandler

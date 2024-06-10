@@ -61,7 +61,7 @@ extern SATR CALHashDMA(SATHASHTYPE eHashType, const void *pMsg,
   SATUINT32_t uiMsgLen, void *pHash, SATUINT32_t uiDMAChConfig);
 
 extern SATR CALHashCtx(const SATRESHANDLE hResource,
-  const SATRESCONTEXTPTR pContext, const void *pMsg, SATUINT32_t uiMsgLen, 
+  const SATRESCONTEXTPTR pContext, const void *pMsg, SATUINT32_t uiMsgLen,
   void *pHash, const SATBOOL bFinal);
 
 extern SATR CALHashCtxIni(const SATRESCONTEXTPTR pContext,

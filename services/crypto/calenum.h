@@ -12,7 +12,7 @@
 * in accordance with the terms of a written license agreement between the
 * receiving party and Mercury or the receiving party and an authorized
 * licensee of Mercury.
-* 
+*
 * Each copy of this file shall include all copyrights, trademarks, service
 * marks, and proprietary rights notices, if any.
 *
@@ -23,7 +23,7 @@
      This file defines common types in the CAL.
 
      Most CAL types and constants are defined with the "SAT" prefix to
-     reduce the chance of name space collisions with other users. 
+     reduce the chance of name space collisions with other users.
    ------------------------------------------------------------------- */
 
 #ifndef CALENUM_H

@@ -1,7 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * @file mss_cfm.h
+ * @author Microchip FPGA Embedded Systems Solutions
+ * @brief
  *
  */
+
 /*=========================================================================*//**
   @mainpage PolarFire MSS Frequency Meter Bare Metal Driver.
    The MSS Clock Frequency Meter (CFM) block is used to support test of the

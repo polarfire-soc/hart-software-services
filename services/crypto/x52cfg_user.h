@@ -1,18 +1,18 @@
 /* ----------- MERCURY SYSTEMS INC IP PROTECTION HEADER ----------------
 * (c) Mercury Systems, Inc. 2020. All rights reserved.
 * Mercury Proprietary Information
-* 
 *
-* This file, the information contained herein, and its documentation are 
-* proprietary to Mercury Systems, Inc. This file, the information contained 
-* herein, and its documentation may only be used, duplicated,  or disclosed 
-* in accordance with the terms of a written license agreement between the 
-* receiving party and Mercury or the receiving party and an authorized 
+*
+* This file, the information contained herein, and its documentation are
+* proprietary to Mercury Systems, Inc. This file, the information contained
+* herein, and its documentation may only be used, duplicated,  or disclosed
+* in accordance with the terms of a written license agreement between the
+* receiving party and Mercury or the receiving party and an authorized
 * licensee of Mercury.
-*    
-* Each copy of this file shall include all copyrights, trademarks, service 
+*
+* Each copy of this file shall include all copyrights, trademarks, service
 * marks, and proprietary rights notices, if any.
-* 
+*
 * ------------ MERCURY SYSTEMS INC IP PROTECTION HEADER --------------*/
 /* X5200 configuration */
 /* $Date: 2015-07-23 14:30:19 -0400 (Thu, 23 Jul 2015) $ $Rev: 2093 $ */

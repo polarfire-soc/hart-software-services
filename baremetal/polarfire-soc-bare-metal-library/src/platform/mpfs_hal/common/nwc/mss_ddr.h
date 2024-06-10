@@ -1,15 +1,10 @@
 /*******************************************************************************
- * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
  * @file mss_ddr.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief DDR related defines
  *
  */
@@ -1249,20 +1244,12 @@ typedef struct sweep_index_{
 /***************************************************************************//**
 
  */
-uint8_t
-MSS_DDR_init_simulation
-(
-    void
-);
+uint8_t MSS_DDR_init_simulation(void);
 
 /***************************************************************************//**
 
  */
-uint8_t
-MSS_DDR_training
-(
-    uint8_t ddr_type
-);
+uint8_t MSS_DDR_training(uint8_t ddr_type);
 
 
 /***************************************************************************//**
@@ -1290,31 +1277,7 @@ MSS_DDR_training
   @endcode
 
  */
-uint32_t
-ddr_state_machine
-(
-    DDR_SS_COMMAND command
-);
-
-/***************************************************************************//**
-  The debug_read_ddrcfg() prints out the ddrcfg register values
-
-  @return
-    This function returns status, see DDR_SS_STATUS enum
-
-  Example:
-  @code
-
-      debug_read_ddrcfg();
-
-  @endcode
-
- */
-void
-debug_read_ddrcfg
-(
-    void
-);
+uint32_t ddr_state_machine(DDR_SS_COMMAND command);
 
 /***************************************************************************//**
   The setup_ddr_segments() sets up seg regs
@@ -1330,14 +1293,96 @@ debug_read_ddrcfg
   @endcode
 
  */
-void
-setup_ddr_segments
-(
-    SEG_SETUP option
-);
+void setup_ddr_segments(SEG_SETUP option);
 
-char * fill_cache_new_seg_address(void *dest, void *dest_end);
+/***************************************************************************//**
+  The clear_bootup_cache_ways() sets up seg regs
+
+  @return
+    none
+
+  Example:
+  @code
+
+      clear_bootup_cache_ways(DEFAULT_SEG_SETUP);
+
+  @endcode
+
+ */
 void clear_bootup_cache_ways(void);
+
+/***************************************************************************//**
+  The fill_cache_new_seg_address()
+
+  @return
+    none
+
+  Example:
+  @code
+
+      fill_cache_new_seg_address(DEFAULT_SEG_SETUP);
+
+  @endcode
+
+ */
+char * fill_cache_new_seg_address(void *dest, void *dest_end);
+
+/***************************************************************************//**
+  The mpfs_hal_turn_ddr_selfrefresh_on(void) flushes cache and turns on self
+  refresh. When DDR is in self refresh mode, less power is consumed by the
+  memory. Data is retained. You can not write or read from the DDR when
+  self-refresh is on.
+
+
+  @return
+    none
+
+  Example:
+  @code
+
+      mpfs_hal_turn_ddr_selfrefresh_on(DEFAULT_SEG_SETUP);
+
+  @endcode
+
+ */
+void mpfs_hal_turn_ddr_selfrefresh_on(void);
+
+/***************************************************************************//**
+  The mpfs_hal_turn_ddr_selfrefresh_off()
+
+  @return
+    none
+
+  Example:
+  @code
+
+      mpfs_hal_turn_ddr_selfrefresh_off();
+
+  @endcode
+
+ */
+void mpfs_hal_turn_ddr_selfrefresh_off(void);
+
+/***************************************************************************//**
+  The mpfs_hal_ddr_selfrefresh_status()
+
+  @return
+    none
+
+  Example:
+  @code
+
+      status = mpfs_hal_ddr_selfrefresh_status();
+
+      if(status != 0U)
+      {
+          printf("self refresh is on\n");
+      }
+
+  @endcode
+
+ */
+uint32_t mpfs_hal_ddr_selfrefresh_status(void);
 
 
 #ifdef __cplusplus

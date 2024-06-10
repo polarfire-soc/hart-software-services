@@ -4,18 +4,18 @@
 /* ----------- MERCURY SYSTEMS INC IP PROTECTION HEADER ----------------
 * (c) Mercury Systems, Inc. 2020. All rights reserved.
 * Mercury Proprietary Information
-* 
 *
-* This file, the information contained herein, and its documentation are 
-* proprietary to Mercury Systems, Inc. This file, the information contained 
-* herein, and its documentation may only be used, duplicated,  or disclosed 
-* in accordance with the terms of a written license agreement between the 
-* receiving party and Mercury or the receiving party and an authorized 
+*
+* This file, the information contained herein, and its documentation are
+* proprietary to Mercury Systems, Inc. This file, the information contained
+* herein, and its documentation may only be used, duplicated,  or disclosed
+* in accordance with the terms of a written license agreement between the
+* receiving party and Mercury or the receiving party and an authorized
 * licensee of Mercury.
-*    
-* Each copy of this file shall include all copyrights, trademarks, service 
+*
+* Each copy of this file shall include all copyrights, trademarks, service
 * marks, and proprietary rights notices, if any.
-* 
+*
 * ------------ MERCURY SYSTEMS INC IP PROTECTION HEADER --------------*/
 
 /* -------------------------------------------------------------------
@@ -51,15 +51,15 @@ extern "C" {
 
 /* Published API Functions */
 /* --------- --- --------- */
-extern SATR CALNRBGSetTestEntropy(SATUINT32_t * puiEntropy, 
+extern SATR CALNRBGSetTestEntropy(SATUINT32_t * puiEntropy,
   SATUINT32_t uiEntLen32);
 
-extern SATR CALNRBGGetEntropy(SATUINT32_t * puiEntropy, SATUINT32_t uiEntLen32, 
+extern SATR CALNRBGGetEntropy(SATUINT32_t * puiEntropy, SATUINT32_t uiEntLen32,
   SATBOOL bTesting);
 
-extern SATR CALNRBGConfig(SATUINT32_t uiWriteEn, SATUINT32_t uiCSR, 
-  SATUINT32_t uiCntLim, SATUINT32_t uiVoTimer, SATUINT32_t uiFMsk, 
-  SATUINT32_t* puiStatus); 
+extern SATR CALNRBGConfig(SATUINT32_t uiWriteEn, SATUINT32_t uiCSR,
+  SATUINT32_t uiCntLim, SATUINT32_t uiVoTimer, SATUINT32_t uiFMsk,
+  SATUINT32_t* puiStatus);
 
 extern SATUINT32_t CALNRBGHealthStatus(void);
 
@@ -68,7 +68,7 @@ extern SATUINT32_t CALNRBGHealthStatus(void);
 /* ----------- -------- ---------- */
 extern SATUINT32_t CALNRBGGetTestEntLen(void);
 
-extern SATR nrbgpkxgetentropy(SATUINT32_t * puiEntropy, 
+extern SATR nrbgpkxgetentropy(SATUINT32_t * puiEntropy,
   SATUINT32_t uiEntLen32);
 
 

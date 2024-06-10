@@ -56,7 +56,7 @@ void GPIO_UI_Init(void)
 {
     if (!g_gpio_configured)
     {
-        configure_leds();   
+        configure_leds();
     }
 }
 
@@ -100,11 +100,11 @@ void HSS_GPIO_UI_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
 
     if (!g_gpio_configured)
     {
-        configure_leds();   
+        configure_leds();
     }
 
     toggle = ~toggle & 0xC00;
-    
+
     leds = MSS_GPIO_get_outputs(GPIO2_LO);
     leds = (leds & ~0xC00) | toggle;
     MSS_GPIO_set_outputs(GPIO2_LO, leds);
@@ -112,7 +112,7 @@ void HSS_GPIO_UI_ShowProgress(size_t totalNumTasks, size_t numTasksRemaining)
 
 void HSS_GPIO_UI_ReportDDRInitStart(void)
 {
-    if (!g_gpio_configured) configure_leds();   
+    if (!g_gpio_configured) configure_leds();
 
     g_current_status |= REPORT_DDR_INIT_START;
     MSS_GPIO_set_outputs(GPIO2_LO, g_current_status);
@@ -120,7 +120,7 @@ void HSS_GPIO_UI_ReportDDRInitStart(void)
 
 void HSS_GPIO_UI_ReportDDRInitEnd(void)
 {
-    if (!g_gpio_configured) configure_leds();   
+    if (!g_gpio_configured) configure_leds();
 
     g_current_status |= REPORT_DDR_INIT_END;
     MSS_GPIO_set_outputs(GPIO2_LO, g_current_status);
@@ -128,7 +128,7 @@ void HSS_GPIO_UI_ReportDDRInitEnd(void)
 
 void HSS_GPIO_UI_ReportImageGoodCRC(void)
 {
-    if (!g_gpio_configured) configure_leds();   
+    if (!g_gpio_configured) configure_leds();
 
     g_current_status |= REPORT_GOOD_IMAGE_CRC;
     MSS_GPIO_set_outputs(GPIO2_LO, g_current_status);

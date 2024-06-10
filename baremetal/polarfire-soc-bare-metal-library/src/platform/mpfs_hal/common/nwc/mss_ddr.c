@@ -1,18 +1,14 @@
 /*******************************************************************************
- * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-
-/*******************************************************************************
- * @file mss_ddr.h
- * @author Microchip-FPGA Embedded Systems Solutions
+ * @file mss_ddr.c
+ * @author Microchip FPGA Embedded Systems Solutions
  * @brief DDR related code
  *
  */
+
 /* #define PRINT_CA_VREF_WINDOW "1" */
 #define MOVE_CK
 #define MANUAL_ADDCMD_TRAINIG
@@ -31,9 +27,11 @@
  * Local Defines
  */
 /* This string is updated if any change to ddr driver */
-#define DDR_DRIVER_VERSION_STRING   "0.4.023"
+#define DDR_DRIVER_VERSION_STRING   "0.4.024"
 const char DDR_DRIVER_VERSION[] = DDR_DRIVER_VERSION_STRING;
 /* Version     |  Comment                                                     */
+/* 0.4.024     |  Self-refresh is disabled from UI, api functions added for   */
+/*             |  turning self-refresh off and on.                                         */
 /* 0.4.023     |  Changed default ADDCMD CLK push order for DDR4 to 0,45,90   */
 /* 0.4.022     |  Tidied comments and simulation reference- no code change    */
 /* 0.4.021     |  Added options to increase post training tests during        */
@@ -248,6 +246,57 @@ uint32_t noise_ena = 0x0;
  * Public Functions - API
  ******************************************************************************/
 
+void mpfs_hal_turn_ddr_selfrefresh_on(void)
+{
+    uint32_t chip_selects;
+    /*
+     * Turn on user setting for self refresh
+     * Self-refresh control. Causes the controller to put the selected SDRAM
+     * rank(chip select) into self-refresh mode at the next refresh event. Each
+     * bit in init self refresh corresponds to the selected rank; asserting init
+     * self refresh[0] puts the devices connected to cs n[0] into self refresh,
+     * init self refresh[1] for cs n[1] and so on.
+     */
+    if ((LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_RANK_MASK) ==
+                                                          DDRPHY_MODE_TWO_RANKS)
+    {
+        chip_selects = 3U;
+    }
+    else
+    {
+        chip_selects = 1U;
+    }
+	DDRCFG->MC_BASE2.INIT_SELF_REFRESH.INIT_SELF_REFRESH = chip_selects;
+}
+
+void mpfs_hal_turn_ddr_selfrefresh_off(void)
+{
+	/*
+	 * Turn on user setting for self refresh
+	 */
+	DDRCFG->MC_BASE2.INIT_SELF_REFRESH.INIT_SELF_REFRESH = 0U;
+}
+
+uint32_t mpfs_hal_ddr_selfrefresh_status(void)
+{
+    uint32_t status = 1U; /* self refresh on */
+
+    if ((LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_RANK_MASK) == DDRPHY_MODE_TWO_RANKS)
+    {
+        if( (DDRCFG->MC_BASE2.INIT_SELF_REFRESH_STATUS.INIT_SELF_REFRESH_STATUS & 3U) == 3U)
+        {
+            status = 0U;
+        }
+    }
+    else
+    {
+        if((DDRCFG->MC_BASE2.INIT_SELF_REFRESH_STATUS.INIT_SELF_REFRESH_STATUS & 1U) == 1U)
+        {
+            status = 0U;
+        }
+    }
+    return status;
+}
 
 /***************************************************************************//**
  * ddr_state_machine(DDR_SS_COMMAND)
@@ -328,6 +377,26 @@ static uint32_t ddr_setup(void)
     volatile PATTERN_TEST_PARAMS pattern_test;
 
     ddr_type = LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_MASK;
+
+/*
+ * Usually in Renode we want to skip DDR training, as it is slow and does not
+ * do anything useful. If the user wants to explicitly simulate the training,
+ * then RENODE_SIM_DDR_TRAINING should be defined.
+ * The Training skip is achieved by reading from a register that should always
+ * return 0's in Hardware. In this case, the MPFS_DDRMock module will return
+ * a known pattern that will let us know we are in a simulation, and will skip
+ * the training.
+ * The RPC_RESET_MAIN_PLL register can usually only return 0x00 or 0x01, as
+ * the other bits are set to Rreturns0. This signature string "REND" will only
+ * ever be read when connected to the Renode MPFS_DDRMock module.
+ */
+#ifndef RENODE_SIM_DDR_TRAINING
+    if (0x52454E44 == CFG_DDR_SGMII_PHY->RPC_RESET_MAIN_PLL.RPC_RESET_MAIN_PLL)
+    {
+        ret_status |= DDR_SETUP_DONE;
+        ddr_training_state = DDR_TRAINING_FINISHED;
+    }
+#endif
 
     switch (ddr_training_state)
     {
@@ -549,7 +618,7 @@ static uint32_t ddr_setup(void)
 
             if (ddr_type == LPDDR4)
             {
-            	/* vrgen, modify during write leveling,  turns off ODT */
+                /* vrgen, modify during write leveling,  turns off ODT */
                 CFG_DDR_SGMII_PHY->DPC_BITS.DPC_BITS =\
                         (dpc_bits & ~DDR_DPC_VRGEN_H_MASK)| (DPC_VRGEN_H_LPDDR4_WR_LVL_VAL << DDR_DPC_VRGEN_H_SHIFT);
                 CFG_DDR_SGMII_PHY->rpc3_ODT.rpc3_ODT = 0x0;
@@ -2547,10 +2616,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
         MSSIO from reset- non default values
             Needs non default values to completely go completely OFF
             Drive bits and ibuff mode
-            Ciaran to define what need to be done
-              SAR107676
         DDR - by default put to DDR4 mode so needs active intervention
-            Bills sac spec (DDR PHY SAC spec section 6.1)
             Mode register set to 7
             Ibuff mode set to 7 (rx turned off)
             P-Code/ N-code of no relevance as not used
@@ -2560,8 +2626,6 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
             DDR APB ( three resets - soft reset bit 0 to 1)
                 Drive odt etc
        SGMII - from reset nothing to be done
-           See Jeff's spread sheet- default values listed
-           Extn clock off also defined in spread sheet
  */
 
 
@@ -2576,7 +2640,7 @@ static void set_ddr_rpc_regs(DDR_TYPE ddr_type)
  *  IP:
  *  DECODER_DRIVER, ODT, IO all out of reset
  *
- *  DDR PHY off mode that I took from version 1.58 of the DDR SAC spec.
+ *  DDR PHY off mode procedure.
  *  1.  DDR PHY OFF mode (not used at all).
  *  1.  Set the DDR_MODE register to 7
  *  This will disable all the drive and ODT to 0, as well as set all WPU bits.
@@ -3236,10 +3300,6 @@ static uint8_t FPGA_VREFDQ_calibration_using_mtc(void)
     /*
      * To manipulate the FPGA VREF value, firmware must write to the
      * DPC_BITS register, located at physical address 0x2000 7184.
-     * Full documentation for this register can be found in
-     * DFICFG Register Map [4].
-     */
-    /*
      * See DPC_BITS definition in .h file
      */
     /* CFG_DDR_SGMII_PHY->DPC_BITS.bitfield.dpc_vrgen_h; */
@@ -3481,7 +3541,6 @@ static uint8_t MTC_test(uint8_t mask, uint64_t start_address, uint32_t size, MTC
          *  configure common memory test interface by writing registers:
          *  MT_STOP_ON_ERROR, MT_DATA_PATTERN, MT_ADDR_PATTERN, MT_ADDR_BITS
          */
-        /* see MTC user guide */
         DDRCFG->MEM_TEST.MT_STOP_ON_ERROR.MT_STOP_ON_ERROR = 0U;
         /* make sure off, will turn on later. */
         DDRCFG->MEM_TEST.MT_EN_SINGLE.MT_EN_SINGLE = 0x00U;
@@ -4060,8 +4119,7 @@ static void init_ddrc(void)
         LIBERO_SETTING_CFG_CAL_READ_PERIOD;
     DDRCFG->MC_BASE2.CFG_NUM_CAL_READS.CFG_NUM_CAL_READS =\
         LIBERO_SETTING_CFG_NUM_CAL_READS;
-    DDRCFG->MC_BASE2.INIT_SELF_REFRESH.INIT_SELF_REFRESH =\
-        LIBERO_SETTING_INIT_SELF_REFRESH;
+    DDRCFG->MC_BASE2.INIT_SELF_REFRESH.INIT_SELF_REFRESH = 0U;
     DDRCFG->MC_BASE2.INIT_POWER_DOWN.INIT_POWER_DOWN =\
         LIBERO_SETTING_INIT_POWER_DOWN;
     DDRCFG->MC_BASE2.INIT_FORCE_WRITE.INIT_FORCE_WRITE =\
@@ -4696,6 +4754,7 @@ MSS_DDR_user_commands
 #endif
 
 #ifdef DEBUG_DDR_INIT
+#ifdef DEBUG_DDR_DDRCFG
 void debug_read_ddrcfg(void)
 {
     (void)print_reg_array(g_debug_uart ,
@@ -4745,6 +4804,7 @@ void debug_read_ddrcfg(void)
                 (sizeof(DDRCFG->csr_custom)/4U));
     return;
 }
+#endif
 #endif
 
 

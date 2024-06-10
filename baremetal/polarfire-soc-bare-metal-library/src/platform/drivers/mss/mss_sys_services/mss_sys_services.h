@@ -150,12 +150,12 @@
   parameter to MSS_SYS_select_service_mode() function.
   In interrupt mode, the function will be non-blocking and the calling service
   function exits after requesting the system service with a success return value.
-  The actual response from the system controller will only be available after 
-  the interrupt occurs. Use the MSS_SYS_read_response() function to read the 
+  The actual response from the system controller will only be available after
+  the interrupt occurs. Use the MSS_SYS_read_response() function to read the
   service response and the status response code.
   In Polling mode, the function call will be blocking until the service completes
-  and the calling service function exits only after the completion of the service. 
-  The return value in this case will indicate the service response code received 
+  and the calling service function exits only after the completion of the service.
+  The return value in this case will indicate the service response code received
   from the system controller.
   -----------------------------------------------------------------------------
   Status response
@@ -967,7 +967,7 @@ MSS_SYS_select_service_mode
   The MSS_SYS_get_serial_number() function is used to execute the device serial
   number service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_serial_number
@@ -998,7 +998,7 @@ MSS_SYS_get_serial_number
   The function MSS_SYS_get_user_code() is used to execute "USERCODE" system
   service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_user_code
@@ -1028,7 +1028,7 @@ MSS_SYS_get_user_code
   The function MSS_SYS_get_design_info() is used to execute "Get Design Info"
   system service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_design_info
@@ -1061,7 +1061,7 @@ MSS_SYS_get_design_info
   The function MSS_SYS_get_device_certificate() is used to execute "Get Device
   Certificate" system service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_device_certificate
@@ -1095,7 +1095,7 @@ MSS_SYS_get_device_certificate
   The function MSS_SYS_read_digest() is used to execute "Read Digest" system
   service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_digest
@@ -1125,7 +1125,7 @@ MSS_SYS_read_digest
   The function MSS_SYS_query_security() is used to execute "Query Security"
   system service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_security_locks
@@ -1155,7 +1155,7 @@ MSS_SYS_query_security
   The function MSS_SYS_read_debug_info() is used to execute "Read Debug info"
   system service.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_debug_info
@@ -1185,7 +1185,7 @@ MSS_SYS_read_debug_info
   The function MSS_SYS_read_envm_parameter() is used to retrieve all parameters
   needed for eNVM operation and programming.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_envm_param
@@ -1220,7 +1220,7 @@ MSS_SYS_read_envm_parameter
 
   This service is applicable to bitstreams stored in SPI Flash memory only.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param spi_flash_address
@@ -1257,7 +1257,7 @@ MSS_SYS_authenticate_bitstream
 
   This service is applicable to bitstreams stored in SPI Flash memory only.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param spi_idx
@@ -1289,7 +1289,7 @@ MSS_SYS_authenticate_iap_image
   8-bit optype and 128-bit challenge and return a 256-bit response unique to
   the given challenge and the device.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_challenge
@@ -1334,7 +1334,7 @@ MSS_SYS_puf_emulation_service
   The MSS_SYS_digital_signature_service() function is used to generate P-384
   ECDSA signature based on SHA384 hash value.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_hash
@@ -1382,7 +1382,7 @@ MSS_SYS_digital_signature_service
    -  Authenticated plaintext
    -  Authenticated ciphertext
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param format
@@ -1439,7 +1439,7 @@ MSS_SYS_secure_nvm_write
   region. User should provide USK key, if the data was programmed using
   authentication.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param snvm_module
@@ -1493,7 +1493,7 @@ MSS_SYS_secure_nvm_read
   The function MSS_SYS_nonce_service() is used to issue "Nonce Service" system
   service to the system controller.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param p_nonce
@@ -1524,7 +1524,7 @@ MSS_SYS_nonce_service
 
   This service is applicable to bitstream stored in SPI Flash memory only.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   Information : parameter options
@@ -1549,7 +1549,7 @@ MSS_SYS_nonce_service
   |   0x10000   |   SNVM_RW_ACCESS_MAP Digest                 |
   |   0x20000   |   SBIC revocation digest                    |
 
-  Information : parameter digesterr 
+  Information : parameter digesterr
   | DIGESTERR[i]|    Description                              |
   |-------------|---------------------------------------------|
   |   0x01      |   Fabric digest                             |
@@ -1575,7 +1575,7 @@ MSS_SYS_nonce_service
                The options parameter specifies the digest check options which
                indicate the area on which the digest check should be performed.
                Below is the list of options. You can OR these options to indicate
-               to perform digest check on multiple segments. Please refer 
+               to perform digest check on multiple segments. Please refer
                function description for more information of options parameter.
 
   @param mb_offset
@@ -1587,7 +1587,7 @@ MSS_SYS_nonce_service
                     mailbox starts from 11th word (offset 10).
   @param digesterr
                     The digesterr parameter specifies the set bit in case of
-                    DIGESTERR. Please refer function description for more 
+                    DIGESTERR. Please refer function description for more
                     information of digesterr parameter.
 
   @return
@@ -1614,10 +1614,10 @@ MSS_SYS_digest_check
   the newest image of the first two images in the SPI directory is chosen to be
   programmed.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
-  Information : parameter iap_cmd 
+  Information : parameter iap_cmd
   |     iap_cmd                 |  Description                     |
   |-----------------------------|----------------------------------|
   | IAP_PROGRAM_BY_SPIIDX_CMD   |  IAP program.                    |
@@ -1626,7 +1626,7 @@ MSS_SYS_digest_check
   | IAP_VERIFY_BY_SPIADDR_CMD   |  UL segment                      |
   | IAP_AUTOUPDATE_CMD          |  UKDIGEST0 in User Key segment   |
 
-  Information : parameter spiaddr 
+  Information : parameter spiaddr
   |         iap_cmd              |        spiaddr                 |
   |------------------------------|--------------------------------|
   | IAP_PROGRAM_BY_SPIIDX_CMD    |Index in the SPI directory.     |
@@ -1644,13 +1644,13 @@ MSS_SYS_digest_check
   @param iap_cmd
                The iap_cmd parameter specifies the specific IAP command which
                depends upon VERIFY or PROGRAM modes and the SPI address method.
-               Please refer function description for more information of 
+               Please refer function description for more information of
                iap_cmd parameter.
   @param spiaddr
                The spiaddr parameter specifies the either the either the index
                in the SPI directory or the SPI address in the SPI Flash memory.
                Below is the list of the possible meaning of spiaddr parameter
-               in accordance with the iap_cmd parameter. Please refer function 
+               in accordance with the iap_cmd parameter. Please refer function
                description for more information of spiaddr parameter.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -1681,7 +1681,7 @@ MSS_SYS_execute_iap
   controller SPI flash to MSS memory. The SPI SCK frequency is specified by a
   user-defined option with valid values shown in parameter description.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   Information : parameter options
@@ -1705,7 +1705,7 @@ MSS_SYS_execute_iap
   @param options
                     The 8 bit options parameter specifies the clock frequency
                     used for the SPI transfers.
-                    Please refer function description for more information 
+                    Please refer function description for more information
                     of options parameter.
   @param mb_offset
                     The mb_offset parameter specifies the offset from the start
@@ -1733,7 +1733,7 @@ MSS_SYS_spi_copy
   The MSS_SYS_debug_read_probe() function will read the content of a
   probe module (59 x 18b words).
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   Note: The IPROWADDR & IPSEGADDR addresses are not incremented as the
@@ -1781,7 +1781,7 @@ MSS_SYS_debug_read_probe
   service to the system controller. It service will writes up to 18 bits of data
   to selected probe address.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param prb_addr
@@ -1836,7 +1836,7 @@ MSS_SYS_debug_write_probe
      They remain in effect until either manually disabled or the device is
      reset.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param x_addr
@@ -1899,10 +1899,10 @@ MSS_SYS_debug_live_probe
   This service will specify a target fabric memory to be accessed by the MEM
   read & MEM write services.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
-  Information : parameter memtype 
+  Information : parameter memtype
   | MEMTYPE| Peripheral | MEMSIZE(words)| Access Width |
   |--------|------------|---------------|--------------|
   |     0  | LSRAM x1   | 16384         |     1        |
@@ -1926,7 +1926,7 @@ MSS_SYS_debug_live_probe
   @param memtype
                     The memtype parameter specifies the type of fabric
                     memory to be used for MEM read and write services.
-                    Please refer function description for more information 
+                    Please refer function description for more information
                     of memtype parameter.
 
   @param memlock_mode
@@ -1967,7 +1967,7 @@ MSS_SYS_debug_select_mem
   system controller. This service provides an interface to read data from the
   memory peripheral that is specified.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param mem_addr
@@ -2007,7 +2007,7 @@ MSS_SYS_debug_read_mem
   the system controller. This service provides an interface to write data from
   the memory peripheral that is specified.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param mem_addr
@@ -2047,7 +2047,7 @@ MSS_SYS_debug_write_mem
   system controller. This service will read a specified number of bytes from
   the fabric APB bus to the specified MSS RAM area.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   Note: This service will return only the status of service execution. Actual
@@ -2101,7 +2101,7 @@ MSS_SYS_debug_read_apb
   This service will write bytes of data to the current fabric APB address as
   specified by APBADDR.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param apb_addr
@@ -2147,7 +2147,7 @@ MSS_SYS_debug_write_apb
   fabric content. Data is read from each LSRAM, µRAM and probe module and copied
   to the fabric APB debug port.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param port_addr
@@ -2187,10 +2187,10 @@ MSS_SYS_debug_fabric_snapshot
   system controller. This service used to set up the device to receive a
   one-time passcode.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
-  Information : parameter keymode 
+  Information : parameter keymode
   Supported values for KEYMODE are shown
   |PCTYPE| KEYMODE|  Key Mode      | KROOT |  Note              |
   |------|--------|----------------|-------|--------------------|
@@ -2204,7 +2204,7 @@ MSS_SYS_debug_fabric_snapshot
                    The KEYMODE parameter is not checked for validity until the
                    MATCH OTP service is executed.  Both PCTYPE and KEYMODE are
                    stored in volatile memory for use by the MATCH OTP service.
-                   Please refer function description for more information of 
+                   Please refer function description for more information of
                    keymode parameter.
   @param n_user
                    The n_user parameter specifies the user nonce, is supplied
@@ -2245,7 +2245,7 @@ MSS_SYS_otp_generate
   passcode protocol. Before using this service the GENERATE OTP service must
   first be used to obtain a nonce, NFPGA from the device.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param user_id
@@ -2289,7 +2289,7 @@ MSS_SYS_otp_match
   the user debug pass code using the key loaded into the mailbox.  If the match
   is successful the software debug lock SWL_DEBUG is temporarily inactive.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
   @param cmd_data
@@ -2328,10 +2328,10 @@ MSS_SYS_unlock_debug_passcode
   mechanism for overriding the software debug lock  SWL_DEBUG without requiring
   any interaction with an external intelligence.
 
-  Please refer to theory of operation -> reference documents section for more 
+  Please refer to theory of operation -> reference documents section for more
   information about the service.
 
-  Information : parameter keymode 
+  Information : parameter keymode
   | KEYID|     Key Mode       |   Permitted |
   |------|--------------------|-------------|
   |    0 |  KM_INIT_FACTORY   |      No     |
@@ -2357,7 +2357,7 @@ MSS_SYS_unlock_debug_passcode
                     The 256-bit validator parameter store the validator key.
   @param keymode
                     The keymode parameter specifies the permitted keymodes for
-                    OWP service. Please refer function description for more 
+                    OWP service. Please refer function description for more
                     information of keymode parameter.
   @param dsn
                     The dsn parameter stores the value of device serial number.
