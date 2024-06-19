@@ -229,10 +229,6 @@ bool HSS_BootInit(void)
         }
     }
 
-#if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
-    HSS_BootHarts();
-#endif
-
     HSS_PerfCtr_Lap(perf_ctr_index);
 #endif
 

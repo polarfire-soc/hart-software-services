@@ -144,7 +144,9 @@ bool HSS_Trigger_IsNotified(enum HSS_Event event)
         break;
 
     case EVENT_DDR_TRAINED:
-        result = atomic_read(&triggerStatus.ddr_trained) ? true : false;
+        // DDR is considered notified as "trained" if training has completed,
+        // or if DDR service is not enabled
+        result = atomic_read(&triggerStatus.ddr_trained) ? true : !IS_ENABLED(CONFIG_SERVICE_DDR);
         break;
 
     case EVENT_STARTUP_COMPLETE:

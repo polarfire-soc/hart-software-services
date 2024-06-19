@@ -31,9 +31,11 @@
 #include "usbdmsc_service.h"
 
 #include "drivers/mss/mss_mmuart/mss_uart.h"
+#include "ddr_service.h"
 
 static void tinycli_init_handler(struct StateMachine * const pMyMachine);
 static void tinycli_preboot_handler(struct StateMachine * const pMyMachine);
+static void tinycli_doboot_handler(struct StateMachine * const pMyMachine);
 static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine);
 static void tinycli_readline_handler(struct StateMachine * const pMyMachine);
 static void tinycli_readline_onExit(struct StateMachine * const pMyMachine);
@@ -48,6 +50,7 @@ static void tinycli_uart_surrender_handler(struct StateMachine * const pMyMachin
 enum UartStatesEnum {
     TINYCLI_INITIALIZATION,
     TINYCLI_PREBOOT,
+    TINYCLI_DOBOOT,
     TINYCLI_READLINE,
     TINYCLI_PARSELINE,
     TINYCLI_USBDMSC,
@@ -62,6 +65,7 @@ enum UartStatesEnum {
 static const struct StateDesc tinycli_state_descs[] = {
     { (const stateType_t)TINYCLI_INITIALIZATION, (const char *)"init",           NULL,                      NULL,                     &tinycli_init_handler },
     { (const stateType_t)TINYCLI_PREBOOT,        (const char *)"preboot",        NULL,                      NULL,                     &tinycli_preboot_handler },
+    { (const stateType_t)TINYCLI_DOBOOT,         (const char *)"doboot",         NULL,                      NULL,                     &tinycli_doboot_handler },
     { (const stateType_t)TINYCLI_READLINE,       (const char *)"readline",       &tinycli_readline_onEntry, &tinycli_readline_onExit, &tinycli_readline_handler },
     { (const stateType_t)TINYCLI_PARSELINE,      (const char *)"parseline",      NULL,                      NULL,                     &tinycli_parseline_handler },
     { (const stateType_t)TINYCLI_USBDMSC,        (const char *)"usbdmsc",        NULL,                      NULL,                     &tinycli_usbdmsc_handler },
@@ -125,17 +129,27 @@ static void tinycli_preboot_handler(struct StateMachine * const pMyMachine)
    keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip\n",
        CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
 
+    pMyMachine->state = TINYCLI_READLINE;
+
     if (!keyPressedFlag) {
         mHSS_FANCY_PUTS(LOG_NORMAL, "CLI boot interrupt timeout\n");
-        HSS_BootHarts();
+        pMyMachine->state = TINYCLI_DOBOOT;
     } else {
         mHSS_FANCY_PUTS(LOG_NORMAL, "Type HELP for list of commands\n");
 #if IS_ENABLED(CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT)
         readlineIdleTime = HSS_GetTime();
 #endif
     }
+}
 
-    pMyMachine->state = TINYCLI_READLINE;
+static void tinycli_doboot_handler(struct StateMachine * const pMyMachine)
+{
+    (void)pMyMachine;
+
+    if (!HSS_DDR_IsAddrInDDR(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR) || HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
+        if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
+        pMyMachine->state = TINYCLI_READLINE;
+    }
 }
 
 static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine)

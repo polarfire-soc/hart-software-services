@@ -175,7 +175,6 @@ __attribute__((pure)) static inline uint32_t logical_to_physical_block_(const ui
 
 static void demandCopyFlashBlocksToCache_(size_t byteOffset, size_t byteCount, bool markDirty)
 {
-
     for (size_t offset = byteOffset; offset < (byteOffset + byteCount); offset += blockSize) {
         const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
 

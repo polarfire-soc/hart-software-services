@@ -881,9 +881,7 @@ enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source)
 {
     enum IPIStatusCode result = IPI_FAIL;
 
-    if (!pBootImage) {
-        HSS_BootInit();
-    }
+    assert(pBootImage);
 
     if (source != HSS_HART_ALL) {
         union HSSHartBitmask restartHartBitmask = { .uint = BIT(source) };
@@ -913,10 +911,8 @@ enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask rest
     enum IPIStatusCode result = IPI_FAIL;
 
     if (!pBootImage) {
-        HSS_BootInit();
-    }
-
-    if (!HSS_Boot_ValidateImage(pBootImage)) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "pBootImage is NULL\n");
+    } else if (!HSS_Boot_ValidateImage(pBootImage)) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "validation failed for Hart bitmask %x\n", restartHartBitmask.uint);
     } else {
         for (unsigned int source = HSS_HART_U54_1;

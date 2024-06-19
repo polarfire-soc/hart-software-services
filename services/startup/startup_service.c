@@ -121,7 +121,7 @@ static void startup_boot_handler(struct StateMachine * const pMyMachine)
 {
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
     if (!HSS_DDR_IsAddrInDDR(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR) || HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
-        HSS_BootHarts();
+        if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
         pMyMachine->state++;
     }
 #endif

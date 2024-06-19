@@ -642,7 +642,7 @@ static void tinyCLI_Boot_Select_(void)
 static void tinyCLI_Boot_(void)
 {
     if (!dispatch_command_(bootCmds, ARRAY_SIZE(bootCmds), 1u)) {
-        HSS_BootHarts();
+        if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
     }
 }
 
