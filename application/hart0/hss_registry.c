@@ -305,7 +305,10 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #if IS_ENABLED(CONFIG_DEBUG_RESET_REASON)
     { "HSS_ResetReasonInit",           HSS_ResetReasonInit,           false, false },
 #endif
+#if !IS_ENABLED(CONFIG_SERVICE_SPI)
+    // getting design version currently breaks SPI boot
     { "Design_Version_Info_Init",      Design_Version_Info_Init,      false, false },
+#endif
     { "HSS_BoardLateInit",             HSS_BoardLateInit,             false, false },
 };
 const size_t spanOfGlobalInitFunctions = ARRAY_SIZE(globalInitFunctions);
