@@ -38,6 +38,7 @@
 /*
  * Include any driver setup/over-rides you may require.
  */
+#include "drivers/fpga_ip/miv_ihc/miv_ihc_defines.h"
 #include "drivers_config/fpga_ip/miv_ihc/miv_ihc_config.h"
 
 /*

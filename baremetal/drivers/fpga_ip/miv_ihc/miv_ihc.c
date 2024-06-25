@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -7,646 +7,784 @@
  * software driver implementation.
  *
  */
-
 #include "mpfs_hal/mss_hal.h"
 #include "miv_ihc.h"
 
-IHC_TypeDef g_ihc;
+/******************************************************************************/
+/* defines                                                                    */
+/******************************************************************************/
+
+#define NO_CONTEXT_INCOMING_ACK_OR_DATA     99U
+#define INVALID_HART_ID                   0xFFU
+
+/******************************************************************************/
+/* configuration           arrays populated from user defines                 */
+/******************************************************************************/
+
+IHC_TypeDef             IHC_H0_IP_GROUP ;
+IHC_TypeDef             IHC_H1_IP_GROUP ;
+IHC_TypeDef             IHC_H2_IP_GROUP ;
+IHC_TypeDef             IHC_H3_IP_GROUP ;
+IHC_TypeDef             IHC_H4_IP_GROUP ;
+
+IHC_TypeDef * IHC[] = { &IHC_H0_IP_GROUP , &IHC_H1_IP_GROUP, &IHC_H2_IP_GROUP, &IHC_H3_IP_GROUP, &IHC_H4_IP_GROUP};
 
 /**
  * \brief IHC configuration
  *
  */
-
-const uint64_t ihc_base_addess[MAX_CHANNELS]= {
-        IHC_CH_H0_H1,       // IHC_H0_H1_A,
-        IHC_CH_H0_H2,       // IHC_H0_H2_A,
-        IHC_CH_H0_H3,       // IHC_H0_H3_A,
-        IHC_CH_H0_H4,       // IHC_H0_H4_A,
-        IHC_CH_H0_H5,       // IHC_H0_H5_A,
-        IHC_CH_H1_H0,       // IHC_H1_H0_B,
-        IHC_CH_H1_H2,       // IHC_H1_H2_A,
-        IHC_CH_H1_H3,       // IHC_H1_H3_A,
-        IHC_CH_H1_H4,       // IHC_H1_H4_A,
-        IHC_CH_H1_H5,       // IHC_H1_H5_A,
-        IHC_CH_H2_H0,       // IHC_H2_H0_B,
-        IHC_CH_H2_H1,       // IHC_H2_H1_B,
-        IHC_CH_H2_H3,       // IHC_H2_H3_A,
-        IHC_CH_H2_H4,       // IHC_H2_H4_A,
-        IHC_CH_H2_H5,       // IHC_H2_H5_A,
-        IHC_CH_H3_H0,       // IHC_H3_H0_B,
-        IHC_CH_H3_H1,       // IHC_H3_H1_B,
-        IHC_CH_H3_H2,       // IHC_H3_H2_B,
-        IHC_CH_H3_H4,       // IHC_H3_H4_A,
-        IHC_CH_H3_H5,       // IHC_H3_H5_A,
-        IHC_CH_H4_H0,       // IHC_H4_H0_B,
-        IHC_CH_H4_H1,       // IHC_H4_H1_B,
-        IHC_CH_H4_H2,       // IHC_H4_H2_B,
-        IHC_CH_H4_H3,       // IHC_H4_H3_B,
-        IHC_CH_H4_H5,       // IHC_H4_H5_A,
-        IHC_CH_H5_H0,       // IHC_H5_H0_B,
-        IHC_CH_H5_H1,       // IHC_H5_H1_B,
-        IHC_CH_H5_H2,       // IHC_H5_H2_B,
-        IHC_CH_H5_H3,       // IHC_H5_H3_B,
-        IHC_CH_H5_H4       // IHC_H5_H4_B
+const uint64_t ihc_base_address[][5U] = {
+        /* hart 0 */
+        {0x0,
+        IHC_LOCAL_H0_REMOTE_H1,
+        IHC_LOCAL_H0_REMOTE_H2,
+        IHC_LOCAL_H0_REMOTE_H3,
+        IHC_LOCAL_H0_REMOTE_H4},
+        /* hart 1 */
+        {IHC_LOCAL_H1_REMOTE_H0,
+        0x0,
+        IHC_LOCAL_H1_REMOTE_H2,
+        IHC_LOCAL_H1_REMOTE_H3,
+        IHC_LOCAL_H1_REMOTE_H4},
+        /* hart 2 */
+        {IHC_LOCAL_H2_REMOTE_H0,
+        IHC_LOCAL_H2_REMOTE_H1,
+        0x0,
+        IHC_LOCAL_H2_REMOTE_H3,
+        IHC_LOCAL_H2_REMOTE_H4},
+        /* hart 3 */
+        {IHC_LOCAL_H3_REMOTE_H0,
+        IHC_LOCAL_H3_REMOTE_H1,
+        IHC_LOCAL_H3_REMOTE_H2,
+        0x0,
+        IHC_LOCAL_H3_REMOTE_H4},
+        /* hart 4 */
+        {IHC_LOCAL_H4_REMOTE_H0,
+        IHC_LOCAL_H4_REMOTE_H1,
+        IHC_LOCAL_H4_REMOTE_H2,
+        IHC_LOCAL_H4_REMOTE_H3,
+        0x0},
 };
 
 /**
  * \brief IHC configuration
  *
  */
-const uint64_t IHCIM_base_addess[MAX_MODULE] = {
-        IHCIM_H0,
-        IHCIM_H1,
-        IHCIM_H2,
-        IHCIM_H3,
-        IHCIM_H4,
-        IHCIM_H5
+const uint64_t IHCIA_base_address[5U] = {
+
+        IHCIA_LOCAL_H0,
+        IHCIA_LOCAL_H1,
+        IHCIA_LOCAL_H2,
+        IHCIA_LOCAL_H3,
+        IHCIA_LOCAL_H4
 };
 
-#define IHC_ASSERT(x) ASSERT(x)
-
-/*
- * Private Functions
- */
-
-static int8_t rx_message(uint8_t channel, QUEUE_IHC_INCOMING handle_incoming, uint8_t msg_type);
-static int8_t message_present_isr(uint8_t channel);
-static int8_t message_consumed_isr(uint8_t channel);
-
-static void IHC_enable_mp_interrupt_ch_module(uint8_t channel);
-static void IHC_enable_cp_interrupt_ch_module(uint8_t channel);
-
-/*
- * Public API Functions
- */
-
-/*
- * IHC_init()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
+/**
+ * \brief Remote harts connected via channel to a local hart
  *
  */
-void IHC_init(uint8_t channel)
+const uint32_t IHCIA_remote_harts[5U] = {
+        IHCIA_H0_REMOTE_HARTS,
+        IHCIA_H1_REMOTE_HARTS,
+        IHCIA_H2_REMOTE_HARTS,
+        IHCIA_H3_REMOTE_HARTS,
+        IHCIA_H4_REMOTE_HARTS
+};
+
+
+/**
+ * \brief Remote harts connected via channel to a local hart
+ *
+ */
+const uint32_t IHCIA_remote_hart_ints[5U] = {
+        IHCIA_H0_REMOTE_HARTS_INTS,
+        IHCIA_H1_REMOTE_HARTS_INTS,
+        IHCIA_H2_REMOTE_HARTS_INTS,
+        IHCIA_H3_REMOTE_HARTS_INTS,
+        IHCIA_H4_REMOTE_HARTS_INTS
+};
+
+
+/******************************************************************************/
+/* Private Functions                                                          */
+/******************************************************************************/
+static void  message_present_isr(void);
+static uint32_t parse_incoming_hartid(uint32_t my_hart_id, bool *is_ack, bool polling);
+static uint32_t parse_incoming_context_msg(uint32_t my_hart_id, uint32_t remote_hart_id, bool *is_ack, bool polling);
+static uint32_t rx_message(uint32_t my_hart_id, uint32_t remote_hart_id, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint32_t * message_storage_ptr);
+static uint32_t lowest_hart_in_context(uint32_t mask);
+/******************************************************************************/
+/* Public API Functions                                                       */
+/******************************************************************************/
+
+/***************************************************************************//**
+ * IHC_global_init()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+void IHC_global_init(void)
 {
-    IHC_ASSERT(channel < MAX_CHANNELS);
+    uint32_t remote_hart_id;
+    uint32_t my_hart_id = 0;
 
-    uint8_t module = (channel / CH_PER_MODULE);
-
-    g_ihc.IHC_Channels[channel].HART_IHCC = (IHCC_IP_TypeDef *)ihc_base_addess[channel];
-    g_ihc.IHC_Channels[channel].mp_callback_handler = NULL;
-    g_ihc.IHC_Channels[channel].mc_callback_handler = NULL;
-    g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG = 0U;
-
-    if (g_ihc.IHCIM_CONFIG_STATUS[module] != IHCIM_CONFIGURED)
+    while(my_hart_id < 5U)
     {
-        g_ihc.HART_IHCIM[module] = (IHCIM_IP_TypeDef *)IHCIM_base_addess[module];
+        remote_hart_id = 0U;
 
-        g_ihc.HART_IHCIM[module]->IRQ_MASK = MIV_IHC_REGS_IRQ_DISABLE_MASK;
-
-        g_ihc.IHCIM_CONFIG_STATUS[module] = IHCIM_CONFIGURED;
-    }
-
-    static bool ip_version_configured = false;
-
-    if (!ip_version_configured)
-    {
-        g_ihc.ip_version = (uint32_t *)IHC_IP_VERSION;
-        ip_version_configured = true;
-    }
-}
-
-/*
- * IHC_config_mp_callback_handler()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-void IHC_config_mp_callback_handler(uint8_t channel, QUEUE_IHC_INCOMING handler)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    g_ihc.IHC_Channels[channel].mp_callback_handler = handler;
-}
-
-/*
- * IHC_config_mc_callback_handler()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-void IHC_config_mc_callback_handler(uint8_t channel, QUEUE_IHC_INCOMING handler)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    g_ihc.IHC_Channels[channel].mc_callback_handler = handler;
-}
-
-/*
- * IHC_enable_mp_interrupt()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-void IHC_enable_mp_interrupt(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG |= MIV_IHC_REGS_CH_CTRL_MPIE_MASK;
-
-    /* enable Interrupt module */
-    IHC_enable_mp_interrupt_ch_module(channel);
-}
-
-/*
- * IHC_enable_mc_interrupt()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-void IHC_enable_mc_interrupt(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG |= MIV_IHC_REGS_CH_CTRL_ACKIE_MASK;
-
-    /* enable Interrupt module */
-    IHC_enable_cp_interrupt_ch_module(channel);
-}
-
-/*
- * IHC_disable_mp_interrupt()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-void IHC_disable_mp_interrupt(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_MPIE_MASK);
-}
-
-/*
- * IHC_disable_mc_interrupt()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-void IHC_disable_mc_interrupt(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_ACKIE_MASK);
-}
-
-static void IHC_enable_mp_interrupt_ch_module(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    uint8_t module = channel / CH_PER_MODULE;
-    uint8_t module_index = channel % CH_PER_MODULE;
-
-    if (module_index >= module)
-    {
-        module_index++;
-    }
-
-    IHC_ASSERT(g_ihc.HART_IHCIM[module] != NULL);
-
-    g_ihc.HART_IHCIM[module]->IRQ_MASK |= (1U << (module_index * 2U));
-}
-
-static void IHC_enable_cp_interrupt_ch_module(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    uint8_t module = channel / CH_PER_MODULE;
-    uint8_t module_index = channel % CH_PER_MODULE;
-
-    if (module_index >= module)
-    {
-        module_index++;
-    }
-
-    IHC_ASSERT(g_ihc.HART_IHCIM[module] != NULL);
-
-    g_ihc.HART_IHCIM[module]->IRQ_MASK |= (1U << ((module_index * 2U) + 1U));
-}
-
-void IHC_enable_mp_interrupt_module(uint8_t module)
-{
-    IHC_ASSERT(module < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module] != NULL);
-
-    g_ihc.HART_IHCIM[module]->IRQ_MASK = MIV_IHC_REGS_IRQ_ENABLE_MASK;
-}
-
-void IHC_enable_cp_interrupt_module(uint8_t module)
-{
-    IHC_ASSERT(module < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module] != NULL);
-
-    g_ihc.HART_IHCIM[module]->IRQ_MASK = MIV_IHC_REGS_IRQ_ENABLE_MASK;
-}
-
-void IHC_disable_mp_interrupt_module(uint8_t module)
-{
-    IHC_ASSERT(module < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module] != NULL);
-
-    g_ihc.HART_IHCIM[module]->IRQ_MASK = MIV_IHC_REGS_IRQ_DISABLE_MASK;
-}
-
-void IHC_disable_cp_interrupt_module(uint8_t module)
-{
-    IHC_ASSERT(module < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module] != NULL);
-
-    g_ihc.HART_IHCIM[module]->IRQ_MASK = MIV_IHC_REGS_IRQ_DISABLE_MASK;
-}
-/*
- * IHC_tx_message()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-int8_t IHC_tx_message(uint8_t channel, const uint32_t* message, uint16_t msg_size)
-{
-    IHCC_IP_TypeDef *ihcc = (IHCC_IP_TypeDef *) g_ihc.IHC_Channels[channel].HART_IHCC;
-
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(message != NULL);
-    IHC_ASSERT(msg_size <= MAX_MSG_SIZE_IN_BYTES);
-    IHC_ASSERT(ihcc != NULL);
-
-    uint32_t ctr_reg = ihcc->CTR_REG;
-
-    if (ctr_reg & MIV_IHC_REGS_CH_CTRL_RMP_MASK)
-    {
-        return IHC_MSG_BUSY;
-    }
-
-    if (ctr_reg & MIV_IHC_REGS_CH_CTRL_ACK_MASK)
-    {
-        return IHC_MSG_NT_CLR;
-    }
-
-    if (msg_size > 0)
-    {
-        for (uint32_t i = 0; i < msg_size; i++)
+        while(remote_hart_id < 5U)
         {
-            ihcc->MSG_OUT[i] = message[i];
-        }
-
-        // Set RMP to set MP at other end
-        ihcc->CTR_REG |= MIV_IHC_REGS_CH_CTRL_RMP_MASK;
-
-        return IHC_MSG_SUCCESS;
-    }
-
-    return IHC_MSG_INVALID;
-}
-
-/*
- * IHC_poll_msg_present_status()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-int8_t IHC_poll_msg_present(uint8_t channel)
-{
-    IHCC_IP_TypeDef *ihcc = (IHCC_IP_TypeDef *) g_ihc.IHC_Channels[channel].HART_IHCC;
-
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(ihcc != NULL);
-
-    uint32_t ctr_reg = ihcc->CTR_REG;
-
-    if (ihcc->CTR_REG & MIV_IHC_REGS_CH_CTRL_MP_MASK)
-    {
-        if (NULL != g_ihc.IHC_Channels[channel].mp_callback_handler)
-        {
-            return rx_message(channel,
-                              g_ihc.IHC_Channels[channel].mp_callback_handler,
-                              IHC_MSG_PRESENT);
-        }
-        else
-        {
-            /* Clear interrupt & Send Ack*/
-            ihcc->CTR_REG =
-                (ctr_reg & ~MIV_IHC_REGS_CH_CTRL_MP_MASK) | MIV_IHC_REGS_CH_CTRL_ACK_MASK;
-            return IHC_CALLBACK_NOT_CONFIG;
-        }
-    }
-
-    return IHC_NO_MSG;
-}
-
-/*
- * IHC_poll_msg_consumed_status()
- *
- * See miv_ihc.h or miv_ihc user guide for details of how to use this function.
- *
- */
-int8_t IHC_poll_msg_consumed(uint8_t channel)
-{
-    IHCC_IP_TypeDef *ihcc = (IHCC_IP_TypeDef *) g_ihc.IHC_Channels[channel].HART_IHCC;
-
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(ihcc != NULL);
-
-    if (ihcc->CTR_REG & MIV_IHC_REGS_CH_CTRL_ACKCLR_MASK)
-    {
-        if (NULL != g_ihc.IHC_Channels[channel].mc_callback_handler)
-        {
-            return rx_message(channel,
-                              g_ihc.IHC_Channels[channel].mc_callback_handler,
-                              IHC_MSG_CONSUMED);
-        }
-        else
-        {
-            /* Clear interrupt */
-            ihcc->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_ACKCLR_MASK);
-
-            return IHC_CALLBACK_NOT_CONFIG;
-        }
-    }
-
-    return IHC_NO_MSG;
-}
-
-uint8_t IHC_APP_X_H0_IRQHandler(void)
-{
-    IHC_app_irq_handler(MIV_IHCIM_H0);
-    return (EXT_IRQ_KEEP_ENABLED);
-}
-
-uint8_t IHC_APP_X_H1_IRQHandler(void)
-{
-    IHC_app_irq_handler(MIV_IHCIM_H1);
-    return (EXT_IRQ_KEEP_ENABLED);
-}
-
-uint8_t IHC_APP_X_H2_IRQHandler(void)
-{
-    IHC_app_irq_handler(MIV_IHCIM_H2);
-    return (EXT_IRQ_KEEP_ENABLED);
-}
-
-uint8_t IHC_APP_X_H3_IRQHandler(void)
-{
-    IHC_app_irq_handler(MIV_IHCIM_H3);
-    return (EXT_IRQ_KEEP_ENABLED);
-}
-
-uint8_t IHC_APP_X_H4_IRQHandler(void)
-{
-    IHC_app_irq_handler(MIV_IHCIM_H4);
-    return (EXT_IRQ_KEEP_ENABLED);
-}
-
-void IHC_app_irq_handler(uint8_t module_num)
-{
-    IHC_ASSERT(module_num < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module_num] != NULL);
-
-    uint32_t local_irq_status =
-        g_ihc.HART_IHCIM[module_num]->IRQ_STATUS & MIV_IHC_REGS_IRQ_STATUS_NS_MASK;
-
-    if (local_irq_status)
-    {
-        uint8_t channel_parse = 0u, channel_num = 0u;
-
-        for (channel_parse = 0; channel_parse < MAX_MODULE; channel_parse++)
-        {
-            uint32_t msg_mask = 0x01u << (channel_parse * 2u);
-
-            channel_num = (CH_PER_MODULE * module_num) + channel_parse;
-            if (module_num <= channel_parse)
-            {
-                channel_num -= 1u;
+            IHC[my_hart_id]->local_h_setup.msg_in_handler[remote_hart_id] = NULL;
+            /*
+             * Configure base addresses
+             */
+            IHC[my_hart_id]->HART_IHCC[remote_hart_id] = (IHCC_IP_TypeDef *)ihc_base_address[my_hart_id][remote_hart_id];
+            if (NULL != IHC[my_hart_id]->HART_IHCC[remote_hart_id]) {
+                IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
             }
+            remote_hart_id++;
+        }
+        /*
+         * Configure base addresses
+         */
+        IHC[my_hart_id]->HART_IHCIA = (IHCIA_IP_TypeDef *)IHCIA_base_address[my_hart_id];
+        /*
+         * Clear interrupt enables
+         */
+        IHC[my_hart_id]->HART_IHCIA->INT_EN.INT_EN = 0x0U;
+        my_hart_id++;
+    }
+}
 
-            if (local_irq_status & msg_mask)
-            {
-                // message present Interrupt
-                message_present_isr(channel_num);
+/***************************************************************************//**
+ * IHC_local_context_init()
+ *
+ * See miv_ihc.h or miv_ihc user guide for details of how to use this
+ * function.
+ */
+void IHC_local_context_init(uint32_t hart_to_configure)
+{
+
+	ASSERT(hart_to_configure < 5U);
+
+    {
+        /*
+         * Configure the base addresses in this hart context
+         *
+         */
+        uint32_t remote_hart_id = 0U;
+
+        while(remote_hart_id < 5U)
+        {
+            IHC[hart_to_configure]->local_h_setup.msg_in_handler[remote_hart_id] = NULL;
+            /*
+             * Configure base addresses
+             */
+            IHC[hart_to_configure]->HART_IHCC[remote_hart_id] = (IHCC_IP_TypeDef *)ihc_base_address[hart_to_configure][remote_hart_id];
+            if (NULL != IHC[hart_to_configure]->HART_IHCC[remote_hart_id]) {
+                IHC[hart_to_configure]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = 0U;
             }
+            remote_hart_id++;
+        }
+        /*
+         * Configure base addresses
+         */
+        IHC[hart_to_configure]->HART_IHCIA = (IHCIA_IP_TypeDef *)IHCIA_base_address[hart_to_configure];
+        /*
+         *
+         */
+        IHC[hart_to_configure]->HART_IHCIA->INT_EN.INT_EN = 0x0U;
+    }
 
-            msg_mask <<= 1u;
+    IHC[hart_to_configure]->local_h_setup.connected_harts = IHCIA_remote_harts[hart_to_configure];
+    IHC[hart_to_configure]->local_h_setup.connected_hart_ints = IHCIA_remote_hart_ints[hart_to_configure];
+}
 
-            if (local_irq_status & msg_mask)
-            {
-                // message clear Interrupt
-                message_consumed_isr(channel_num);
-            }
+/***************************************************************************//**
+ * IHC_local_remote_config()
+ *
+ * See miv_ihc.h or miv_ihc user guide for details of how to use this
+ * function.
+ */
+void IHC_local_remote_config(uint32_t hart_to_configure, uint32_t remote_hart_id, QUEUE_IHC_INCOMING  handler, bool set_mpie_en, bool set_ack_en )
+{
+    /*
+     * Set-up enables in aggregator
+     */
+    IHC[hart_to_configure]->local_h_setup.msg_in_handler[remote_hart_id] = handler;
+
+    if(handler != NULL)
+    {
+    	IHC[hart_to_configure]->HART_IHCIA->INT_EN.INT_EN = IHCIA_remote_hart_ints[hart_to_configure];
+    }
+
+	if (set_mpie_en == true)
+	{
+		IHC[hart_to_configure]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG |= MPIE_EN;
+	}
+	if(set_ack_en == true)
+	{
+		IHC[hart_to_configure]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG |= ACKIE_EN;
+	}
+}
+
+/***************************************************************************//**
+ * IHC_tx_message_from_context()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint32_t IHC_tx_message_from_context(IHC_CHANNEL remote_channel, uint32_t *message)
+{
+    uint32_t i, ret_value = MESSAGE_SENT;
+
+    uint32_t my_hart_id = IHC_partner_context_hart_id(remote_channel);
+    uint32_t remote_hart_id = IHC_context_to_context_hart_id(remote_channel);
+    uint32_t message_size = IHC[my_hart_id]->HART_IHCC[remote_hart_id]->size_msg;
+
+    ASSERT(my_hart_id != INVALID_HART_ID);
+    ASSERT(remote_hart_id != INVALID_HART_ID);
+
+    /*
+     * return if RMP bit 1 indicating busy
+     */
+    if (RMP_MESSAGE_PRESENT == (IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG & RMP_MASK))
+    {
+        ret_value = MP_BUSY;
+    }
+    else if (ACK_INT_MASK == (IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG & ACK_INT_MASK))
+    {
+        ret_value = MP_BUSY;
+    }
+    else
+    {
+        /*
+         * Fill the buffer
+        */
+        for(i = 0;i < message_size; i++)
+        {
+            IHC[my_hart_id]->HART_IHCC[remote_hart_id]->mesg_out[i] = message[i];
+        }
+        /*
+         * set the MP bit. This will notify other of incoming hart message
+         */
+        IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG |= RMP_MESSAGE_PRESENT;
+        /*
+         * report status
+         */
+        ret_value = MESSAGE_SENT;
+    }
+
+    return (ret_value);
+}
+
+/***************************************************************************//**
+ * IHC_tx_message_from_hart()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint32_t IHC_tx_message_from_hart(IHC_CHANNEL remote_channel, uint32_t *message)
+{
+    uint32_t i, ret_value = MESSAGE_SENT;
+
+    uint64_t my_hart_id = read_csr(mhartid);
+    uint32_t remote_hart_id = IHC_hart_to_context_or_hart_id(remote_channel);
+    uint32_t message_size = IHC[my_hart_id]->HART_IHCC[remote_hart_id]->size_msg;
+
+    /*
+     * return if RMP bit 1 indicating busy
+     */
+    if (RMP_MESSAGE_PRESENT == (IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG & RMP_MASK))
+    {
+        ret_value = MP_BUSY;
+    }
+    else if (ACK_INT_MASK == (IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG & ACK_INT_MASK))
+    {
+        ret_value = MP_BUSY;
+    }
+    else
+    {
+        /*
+         * Fill the buffer
+         */
+        for(i = 0;i < message_size; i++)
+        {
+            IHC[my_hart_id]->HART_IHCC[remote_hart_id]->mesg_out[i] = message[i];
+        }
+        /*
+         * set the MP bit. This will notify other of incoming hart message
+         */
+        IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG |= RMP_MESSAGE_PRESENT;
+        /*
+         * report status
+         */
+        ret_value = MESSAGE_SENT;
+    }
+
+    return (ret_value);
+}
+
+/***************************************************************************//**
+ * IHC_message_present_poll()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+void IHC_message_present_poll(void)
+{
+    bool is_ack;
+    uint64_t my_hart_id = read_csr(mhartid);
+    /*
+     * Check all our channels
+     */
+    uint32_t origin_hart = parse_incoming_hartid((uint32_t)my_hart_id, &is_ack, true);
+    if(origin_hart != NO_CONTEXT_INCOMING_ACK_OR_DATA)
+    {
+        /*
+         * process incoming packet
+         */
+        rx_message((uint32_t)my_hart_id, origin_hart, IHC[my_hart_id]->local_h_setup.msg_in_handler[origin_hart], is_ack, NULL );
+        if(is_ack == true)
+        {
+            /* clear the ack */
+            IHC[my_hart_id]->HART_IHCC[origin_hart]->CTR_REG.CTL_REG &= ~ACK_CLR;
+        }
+    }
+}
+
+/***************************************************************************//**
+ * IHC_context_indirect_isr()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+void  IHC_context_indirect_isr(uint32_t * message_storage_ptr)
+{
+    bool is_ack;
+    uint32_t my_context_hart_id;
+    uint64_t my_hart_id = read_csr(mhartid);
+    IHC_CHANNEL remote_channel;
+
+    /*
+     * Get the receiving context hart
+     */
+    my_context_hart_id = IHC_context_to_context_hart_id((uint32_t)my_hart_id);
+    remote_channel = IHC_partner_context_hart_id(my_context_hart_id);
+
+    if(IHC[my_context_hart_id]->HART_IHCC[0]->version <= 5U)
+    {
+        /* clear the ack and message present if HSS has not cleared */
+        IHC[my_context_hart_id]->HART_IHCC[0]->CTR_REG.CTL_REG &= ~(ACK_CLR | MP_MASK) ;
+    }
+
+    if((my_context_hart_id == INVALID_HART_ID) || (remote_channel == INVALID_HART_ID))
+    {
+        /* HSS hart or no contexts setup */
+        return;
+    }
+
+    /*
+     * We know this routine is only called from a context receive, not the HSS.
+     * So we can assume it is the other context is sending us something
+     */
+    uint32_t origin_hart = parse_incoming_context_msg((uint32_t)my_context_hart_id, remote_channel, &is_ack, false);
+    if(origin_hart != NO_CONTEXT_INCOMING_ACK_OR_DATA)
+    {
+        /*
+         * process incoming packet
+         */
+        rx_message(my_context_hart_id, origin_hart, IHC[my_context_hart_id]->local_h_setup.msg_in_handler[origin_hart], is_ack, message_storage_ptr );
+        if(is_ack == true)
+        {
+            /* clear the ack */
+            IHC[my_context_hart_id]->HART_IHCC[origin_hart]->CTR_REG.CTL_REG &= ~ACK_CLR;
         }
     }
     else
     {
-        // False Interrupt
+        /*
+         * nothing to do
+         */
     }
-
 }
 
-int8_t IHC_indirect_irq_handler(uint8_t module_num, uint32_t *msg_buffer)
+/***************************************************************************//**
+ * parse_incoming_context_msg()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+static uint32_t parse_incoming_context_msg(uint32_t my_hart_id, uint32_t remote_hart_id, bool *is_ack, bool polling)
 {
-    IHC_ASSERT(module_num < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module_num] != NULL);
+    uint32_t return_hart_id = NO_CONTEXT_INCOMING_ACK_OR_DATA;
 
-    uint32_t local_irq_status =
-        g_ihc.HART_IHCIM[module_num]->IRQ_STATUS & MIV_IHC_REGS_IRQ_STATUS_NS_MASK;
+    if(my_hart_id > 5U)
+        return(return_hart_id);
 
-    int8_t msg_status = IHC_NO_MSG;
-
-    if (local_irq_status)
+    if (IHC[my_hart_id]->local_h_setup.connected_harts & (0x01U << remote_hart_id))
     {
-        uint8_t channel_parse = 0u, channel_num = 0u;
+        uint32_t test_int = (0x01U << ((remote_hart_id * 2) + 1));
 
-        for (channel_parse = 0; channel_parse < MAX_MODULE; channel_parse++)
+        if(IHC[my_hart_id]->HART_IHCIA->MSG_AVAIL_STAT.MSG_AVAIL & test_int)
         {
-            uint32_t msg_mask = 0x01u << (channel_parse * 2u);
-
-            channel_num = (CH_PER_MODULE * module_num) + channel_parse;
-            if (module_num <= channel_parse)
+            if (polling == true)
             {
-                channel_num -= 1u;
+                return_hart_id = remote_hart_id;
+                *is_ack = true;
+                return(return_hart_id);
             }
-
-            if (local_irq_status & msg_mask)
+            else if(IHC[my_hart_id]->local_h_setup.connected_hart_ints & test_int)
             {
-                // message present Interrupt
-                g_ihc.IHC_Channels[channel_num].ext_msg_ptr = msg_buffer;
-                msg_status = message_present_isr(channel_num);
-                
-
+                return_hart_id = remote_hart_id;
+                *is_ack = true;
+                return(return_hart_id);
             }
-
-            msg_mask <<= 1u;
-
-            if (local_irq_status & msg_mask)
+        }
+        test_int = (0x01U << (remote_hart_id * 2));
+        if(IHC[my_hart_id]->HART_IHCIA->MSG_AVAIL_STAT.MSG_AVAIL & test_int)
+        {
+            if (polling == true)
             {
-                // message clear Interrupt
-                g_ihc.IHC_Channels[channel_num].ext_msg_ptr = msg_buffer;
-                msg_status = message_consumed_isr(channel_num);
+                return_hart_id = remote_hart_id;
+                *is_ack = false;
+                return(return_hart_id);
             }
+            else if(((IHC[my_hart_id]->local_h_setup.connected_hart_ints & test_int) == test_int ) )
+            {
+                return_hart_id = remote_hart_id;
+                *is_ack = false;
+                return(return_hart_id);
+            }
+        }
+    }
+
+    return(return_hart_id);
+}
+
+/***************************************************************************//**
+ * IHC_context_to_context_hart_id()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint32_t IHC_context_to_context_hart_id(IHC_CHANNEL channel)
+{
+    uint32_t hart = INVALID_HART_ID;
+
+    if(channel <= IHC_CHANNEL_TO_HART4)
+    {
+        if ( (1U<<channel) & LIBERO_SETTING_CONTEXT_A_HART_EN )
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_A_HART_EN);
+        }
+        else if ( (1U<<channel) & LIBERO_SETTING_CONTEXT_B_HART_EN )
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_B_HART_EN);
         }
     }
     else
     {
-        // False Interrupt
-        msg_status = IHC_NO_MSG;
+        /* Returns the lowest hart in a context */
+        if(channel == IHC_CHANNEL_TO_CONTEXTA)
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_A_HART_EN);
+        }
+        else
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_B_HART_EN);
+        }
+    }
+    return (hart);
+}
+
+/***************************************************************************//**
+ * IHC_hart_to_context_or_hart_id()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint32_t IHC_hart_to_context_or_hart_id(IHC_CHANNEL channel)
+{
+    uint32_t hart = INVALID_HART_ID;
+
+    if(channel <= IHC_CHANNEL_TO_HART4)
+    {
+        hart = channel;
+    }
+    else
+    {
+        /* Returns the lowest hart in a context */
+        if(channel == IHC_CHANNEL_TO_CONTEXTA)
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_A_HART_EN);
+        }
+        else
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_B_HART_EN);
+        }
+    }
+    return (hart);
+}
+
+/**
+ * IHC_partner_context_hart_id()
+ * @param channel channel ID
+ * @return hart ID of context ( the lowest hart ID in the associated context )
+ */
+uint32_t IHC_partner_context_hart_id(IHC_CHANNEL channel)
+{
+    uint32_t hart = INVALID_HART_ID;
+
+    if(channel <= IHC_CHANNEL_TO_HART4)
+    {
+        if ((1U<<channel) & LIBERO_SETTING_CONTEXT_A_HART_EN)
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_B_HART_EN);
+        }
+        else if ((1U<<channel) & LIBERO_SETTING_CONTEXT_B_HART_EN)
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_A_HART_EN);
+        }
+    }
+    else /* in case called using context ID */
+    {
+        if(channel == IHC_CHANNEL_TO_CONTEXTA)
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_B_HART_EN);
+        }
+        else
+        {
+            hart = lowest_hart_in_context(LIBERO_SETTING_CONTEXT_A_HART_EN);
+        }
     }
 
-    return msg_status;
+    return (hart);
+}
+
+/***************************************************************************//**
+ * IHCIA_hart0_IRQHandler()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint8_t IHCIA_hart0_IRQHandler(void)
+{
+    message_present_isr();
+    return(EXT_IRQ_KEEP_ENABLED);
+}
+
+/***************************************************************************//**
+ * IHCIA_hart1_IRQHandler()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint8_t IHCIA_hart1_IRQHandler(void)
+{
+    message_present_isr();
+    return(EXT_IRQ_KEEP_ENABLED);
+}
+
+/***************************************************************************//**
+ * IHCIA_hart2_IRQHandler()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint8_t IHCIA_hart2_IRQHandler(void)
+{
+    message_present_isr();
+    return(EXT_IRQ_KEEP_ENABLED);
+}
+
+/***************************************************************************//**
+ * IHCIA_hart3_IRQHandler()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint8_t IHCIA_hart3_IRQHandler(void)
+{
+    message_present_isr();
+    return(EXT_IRQ_KEEP_ENABLED);
+}
+
+/***************************************************************************//**
+ * IHCIA_hart4_IRQHandler()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+uint8_t IHCIA_hart4_IRQHandler(void)
+{
+    message_present_isr();
+    return(EXT_IRQ_KEEP_ENABLED);
 }
 
 /******************************************************************************/
+/* Private Functions                                                          */
+/******************************************************************************/
 
-void IHC_CTRL_H0_H1_IRQHandler(void)
-{
-    IHC_ctlr_irqhandler(MIV_IHCIM_H1);
-}
-
-void IHC_CTRL_H0_H2_IRQHandler(void)
-{
-    IHC_ctlr_irqhandler(MIV_IHCIM_H2);
-}
-
-void IHC_CTRL_H0_H3_IRQHandler(void)
-{
-    IHC_ctlr_irqhandler(MIV_IHCIM_H3);
-}
-
-void IHC_CTRL_H0_H4_IRQHandler(void)
-{
-    IHC_ctlr_irqhandler(MIV_IHCIM_H4);
-}
-
-
-void IHC_ctlr_irqhandler(uint8_t module_num)
-{
-    IHC_ASSERT(module_num < MAX_MODULE);
-    IHC_ASSERT(g_ihc.HART_IHCIM[module_num] != NULL);
-
-    uint8_t channel_num = CH_PER_MODULE * module_num;
-    uint32_t local_irq_status =
-        g_ihc.HART_IHCIM[module_num]->IRQ_STATUS & MIV_IHC_REGS_IRQ_STATUS_NS_MASK;
-
-    // Add loop to determine sender
-    if (local_irq_status & MIV_IHC_REGS_MP_IRQ_STATUS_MASK)
-    {
-        message_present_isr(channel_num);
-    }
-    else if (local_irq_status & MIV_IHC_REGS_MC_IRQ_STATUS_MASK)
-    {
-        message_consumed_isr(channel_num);
-    }
-}
-
-/*
+/**
  * message_present_isr()
- * This function is called on receipt of a mp interrupt in a bare metal system.
- * It parses the incoming message and calls the processing function
+ * This function is called on receipt of a MiV-IHCIA interrupt in a bare metal
+ * system. It parses the incoming message and calls the processing function
  * which ends up calling the registered application handler.
  * user registered function:
- * g_ihc[channel].msg_in_handler
+ * IHC[my_hart_id]->local_h_setup.msg_in_handler[origin_hart]
  */
-static int8_t message_present_isr(uint8_t channel)
+static void message_present_isr(void)
 {
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    if (NULL != g_ihc.IHC_Channels[channel].mp_callback_handler)
+    bool is_ack;
+    uint64_t my_hart_id = read_csr(mhartid);
+    /*
+     * Check all our channels
+     */
+    uint32_t origin_hart = parse_incoming_hartid((uint32_t)my_hart_id, &is_ack, false);
+    if(origin_hart != NO_CONTEXT_INCOMING_ACK_OR_DATA)
     {
-        return rx_message(channel, g_ihc.IHC_Channels[channel].mp_callback_handler, IHC_MSG_PRESENT);
-    }
-    else
-    {
-        /* Clear interrupt */
-        g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_MP_MASK);
-        return IHC_CALLBACK_NOT_CONFIG;
-    }
-}
-
-/*
- * message_consumed_isr()
- * This function is called on receipt of a mc interrupt in a bare metal system.
- * It parses the incoming message and calls the processing function
- * which ends up calling the registered application handler.
- * user registered function:
- * g_ihc[channel].msg_in_handler
- */
-static int8_t message_consumed_isr(uint8_t channel)
-{
-    IHC_ASSERT(channel < MAX_CHANNELS);
-    IHC_ASSERT(g_ihc.IHC_Channels[channel].HART_IHCC != NULL);
-
-    if (NULL != g_ihc.IHC_Channels[channel].mc_callback_handler)
-    {
-        return rx_message(channel, g_ihc.IHC_Channels[channel].mc_callback_handler, IHC_MSG_CONSUMED);
-    }
-    else
-    {
-        /* Clear interrupt */
-        g_ihc.IHC_Channels[channel].HART_IHCC->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_ACKCLR_MASK);
-        return IHC_CALLBACK_NOT_CONFIG;
+        /*
+         * process incoming packet
+         */
+        rx_message((uint32_t)my_hart_id, origin_hart, IHC[my_hart_id]->local_h_setup.msg_in_handler[origin_hart], is_ack, NULL );
+        if(is_ack == true)
+        {
+            /* clear the ack */
+            IHC[my_hart_id]->HART_IHCC[origin_hart]->CTR_REG.CTL_REG &= ~ACK_CLR;
+        }
     }
 }
 
 /**
  * rx_message()
  * Called on receipt of message
- * @param channel
+ * @param remote_hart_id
  * @param handle_incoming This is a point to a function that is provided by
  * upper layer. It will read/copy the incoming message.
- * @param msg_type This is inform if its message present or message consumed msg
  * @return
  */
-static int8_t rx_message(uint8_t channel, QUEUE_IHC_INCOMING handle_incoming, uint8_t msg_type)
+static uint32_t rx_message(uint32_t my_hart_id, uint32_t remote_hart_id, QUEUE_IHC_INCOMING handle_incoming, bool is_ack, uint32_t * message_storage_ptr)
 {
-    IHCC_IP_TypeDef *ihcc = (IHCC_IP_TypeDef *) g_ihc.IHC_Channels[channel].HART_IHCC;
-    //uint32_t *local_rx_msg = g_ihc.IHC_Channels[channel].rx_msg;
-    uint32_t msg_size = (g_ihc.IHC_Channels[channel].HART_IHCC->MESSAGE_SIZE &
-                         MIV_IHC_REGS_MESSAGE_SIZE_MESSAGE_IN_MASK);
+    uint32_t ret_value = NO_MESSAGE_RX;
+    uint32_t message_size = IHC[my_hart_id]->HART_IHCC[remote_hart_id]->size_msg;
 
-    msg_size = (msg_size >> MIV_IHC_REGS_MESSAGE_SIZE_MESSAGE_IN_SHIFT);
-
-    if (msg_type != IHC_MSG_CONSUMED && msg_type != IHC_MSG_PRESENT)
+    if (is_ack == true)
     {
-        return IHC_MSG_INVALID;
+        handle_incoming(remote_hart_id, (uint32_t *)&IHC[my_hart_id]->HART_IHCC[remote_hart_id]->mesg_in[0U], message_size, is_ack, message_storage_ptr);
+    }
+    else if (MP_MESSAGE_PRESENT == (IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG & MP_MASK))
+    {
+        /*
+         * check if we have a message
+         */
+        handle_incoming(remote_hart_id, (uint32_t *)&IHC[my_hart_id]->HART_IHCC[remote_hart_id]->mesg_in[0U], message_size, is_ack, message_storage_ptr);
+        {
+            /*
+             * set MP to 0
+             * Note this generates an interrupt on the other hart if it has RMPIE
+             * bit set in the control register
+             */
+
+            volatile uint32_t temp = IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG & ~MP_MASK;
+            /* Check if ACKIE_EN is set*/
+            if(temp & ACKIE_EN)
+            {
+                temp |= ACK_INT;
+            }
+            IHC[my_hart_id]->HART_IHCC[remote_hart_id]->CTR_REG.CTL_REG = temp;
+
+            ret_value = MESSAGE_RX;
+        }
+    }
+    else
+    {
+        /*
+         * report status
+         */
+        ret_value = NO_MESSAGE_RX;
     }
 
-/*     for (uint32_t i = 0; i < msg_size; i++)
+    return (ret_value);
+}
+
+/**
+ * parse_incoming_hartid()
+ * determine origin hartID
+ * @param my_hart_id my hart id
+ * @param is_ack Are we an ack?
+ * @param polling Are we polling true/false
+ * @return returns hart ID of incoming message
+ */
+static uint32_t parse_incoming_hartid(uint32_t my_hart_id, bool *is_ack, bool polling)
+{
+    uint32_t hart_id = 0U;
+    uint32_t return_hart_id = NO_CONTEXT_INCOMING_ACK_OR_DATA;
+
+    while(hart_id < 5U)
     {
-        local_rx_msg[i] = ihcc->MSG_IN[i];
-    } */
+        if (IHC[my_hart_id]->local_h_setup.connected_harts & (0x01U << hart_id))
+        {
+            uint32_t test_int = (0x01U << ((hart_id * 2) + 1));
 
-    handle_incoming(channel, (uint32_t *)&ihcc->MSG_IN[0], msg_size, g_ihc.IHC_Channels[channel].ext_msg_ptr);
-
-    if (msg_type == IHC_MSG_CONSUMED)
-    {
-        ihcc->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_ACKCLR_MASK); // clear msg
-
-        return IHC_MSG_CLR;
+            if(IHC[my_hart_id]->HART_IHCIA->MSG_AVAIL_STAT.MSG_AVAIL & test_int)
+            {
+                if (polling == true)
+                {
+                    return_hart_id = hart_id;
+                    *is_ack = true;
+                    break;
+                }
+                else if(IHC[my_hart_id]->local_h_setup.connected_hart_ints & test_int)
+                {
+                    return_hart_id = hart_id;
+                    *is_ack = true;
+                    break;
+                }
+            }
+            test_int = (0x01U << (hart_id * 2));
+            if(IHC[my_hart_id]->HART_IHCIA->MSG_AVAIL_STAT.MSG_AVAIL & test_int)
+            {
+                if (polling == true)
+                {
+                    return_hart_id = hart_id;
+                    *is_ack = false;
+                    break;
+                }
+                else if(((IHC[my_hart_id]->local_h_setup.connected_hart_ints & test_int) == test_int ) )
+                {
+                    return_hart_id = hart_id;
+                    *is_ack = false;
+                    break;
+                }
+            }
+        }
+        hart_id++;
     }
-    else // IHC_MSG_PRESENT
+    return(return_hart_id);
+}
+
+/***************************************************************************//**
+ * lowest_hart_in_context based on Libero settings()
+ *
+ * See miv_ihc.h for details of how to use this
+ * function.
+ */
+static uint32_t lowest_hart_in_context(uint32_t mask)
+{
+    uint32_t lowest_hart = 0u;
+
+    if(mask == LIBERO_SETTING_CONTEXT_A_HART_EN )
     {
-        // clear MP you should consume msg
-        ihcc->CTR_REG &= ~(MIV_IHC_REGS_CH_CTRL_MP_MASK);
-
-        // Send Ack
-        ihcc->CTR_REG |= (MIV_IHC_REGS_CH_CTRL_ACK_MASK);
-
-        return IHC_MSG_RECEIVED;
+        lowest_hart = (uint32_t) __builtin_ffs(LIBERO_SETTING_CONTEXT_A_HART_EN);
     }
+    else
+    {
+        lowest_hart = (uint32_t) __builtin_ffs(LIBERO_SETTING_CONTEXT_B_HART_EN);
+    }
+
+    if(lowest_hart)
+        return lowest_hart - 1u;
+    else
+        return 0u;
 }
