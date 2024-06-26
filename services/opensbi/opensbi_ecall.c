@@ -27,9 +27,9 @@
 #  error OPENSBI needed for this module
 #endif
 
-#if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IPC)
+#if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IHC)
 #  include "miv_ihc.h"
-#  include "opensbi_ipc_ecall.h"
+#  include "opensbi_ihc_ecall.h"
 #endif
 
 #if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
@@ -49,18 +49,15 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
     uint32_t index;
 
     switch (funcid) {
+        //
         // MiV IHC functions
-        case SBI_EXT_IPC_PROBE:
+        case SBI_EXT_IHC_CTX_INIT:
             __attribute__((fallthrough)); // deliberate fallthrough
-        case SBI_EXT_IPC_CH_INIT:
+        case SBI_EXT_IHC_SEND:
             __attribute__((fallthrough)); // deliberate fallthrough
-        case SBI_EXT_IPC_SEND:
-            __attribute__((fallthrough)); // deliberate fallthrough
-        case SBI_EXT_IPC_RECEIVE:
-            __attribute__((fallthrough)); // deliberate fallthrough
-        case SBI_EXT_IPC_STATUS:
-#if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IPC)
-            result = sbi_ecall_ipc_handler(extid, funcid, regs, out_val, out_trap);
+        case SBI_EXT_IHC_RECEIVE:
+#if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IHC)
+            result = sbi_ecall_ihc_handler(extid, funcid, regs, out_val, out_trap);
 #endif
             break;
 

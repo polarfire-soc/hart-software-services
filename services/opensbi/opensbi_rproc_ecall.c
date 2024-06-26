@@ -34,32 +34,35 @@
 #include "opensbi_rproc_ecall.h"
 #include "hss_boot_service.h"
 
-#define RPROC_DETACHED    0x6
-#define RPROC_OFFLINE     0x0
-
 static struct RemoteProcMsg rproc_data;
 
 int sbi_ecall_rproc_handler(unsigned long extid, unsigned long funcid,
     const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
 {
     int result = SBI_ERR_FAILED;
-    uint32_t index;
-    uint32_t channel = (uint8_t) regs->a0;
-    uint32_t target_hart = (channel % CH_PER_MODULE) + 1;
-    uint32_t msg;
+    uint32_t index, remote_hart_id;
+    uint32_t remote_channel = (uint8_t) regs->a0;
+    uint32_t ihc_tx_message[IHC_MAX_MESSAGE_SIZE];
+
+    if ((remote_channel < IHC_CHANNEL_TO_CONTEXTA) || (remote_channel > IHC_CHANNEL_TO_CONTEXTB)) {
+        result = SBI_EINVAL;
+        goto exit;
+    }
+
+    remote_hart_id = IHC_context_to_context_hart_id(remote_channel);
 
     switch (funcid) {
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
         case SBI_EXT_RPROC_STATE:
-            if (!HSS_SkipBoot_IsSet(target_hart))
-                *out_val = RPROC_DETACHED;
+            if (!HSS_SkipBoot_IsSet(remote_hart_id))
+                *out_val = CONTEXT_RUNNING;
             else
-                *out_val = RPROC_OFFLINE;
+                *out_val = CONTEXT_OFFLINE;
             result = SBI_OK;
             break;
 #endif
         case SBI_EXT_RPROC_START:
-            rproc_data.target = target_hart;
+            rproc_data.target = remote_hart_id;
             if (IPI_MessageAlloc(&index)) {
                 if(IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, RPROC_BOOT, &rproc_data, NULL))
                     result = SBI_OK;
@@ -68,19 +71,17 @@ int sbi_ecall_rproc_handler(unsigned long extid, unsigned long funcid,
             }
             break;
         case SBI_EXT_RPROC_STOP:
-            msg = RPROC_SHUTDOWN_MSG;
-            result = IHC_tx_message(channel, &msg, sizeof(msg));
-            if (result == 0)
-                result = SBI_OK;
-            else {
-                *out_val = result;
+            ihc_tx_message[0] = RPROC_SHUTDOWN_MSG;
+            if (IHC_tx_message_from_context(remote_channel, (uint32_t *) ihc_tx_message))
                 result = SBI_ERR_FAILED;
-            }
+            else
+                result = SBI_OK;
             break;
         default:
             result = SBI_ENOTSUPP;
     };
 
+exit:
     return result;
 }
 

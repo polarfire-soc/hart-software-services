@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -8,31 +8,60 @@
  */
 
  /*========================================================================*//**
-  @mainpage Configuration for the MiV-IHC driver
+  @mainpage Configuration for the MiV-IhC driver
 
     @section intro_sec Introduction
-    Used to configure the driver with base addresses from your Libero Projext.
-    These addresses will not change unless you change the Libero design
-    IHC subsytem design.
-    This file is used for reference only.
-    When usiing in a project copy to
-    src/boards/your-board/platform-config/drivers_config/fpga-ip/miv_ihc
-    and rename dropping the _reference.
+    Used to configure the driver
+
     @section
 
 *//*==========================================================================*/
 
+
 #ifndef MIV_IHC_CONFIG_H_
 #define MIV_IHC_CONFIG_H_
 
+#include "miv_ihc_add_mapping.h"
+
 /*------------------------------------------------------------------------------
- * choose the interrupt mapping used in our system
- * Please see miv_ihc_regs.h for the defaults
+ * define the monitor hart (HSS hart) used in our system
  */
-#define IHC_APP_X_H0_IRQHandler fabric_f2h_63_plic_IRQHandler
-#define IHC_APP_X_H1_IRQHandler fabric_f2h_62_plic_IRQHandler
-#define IHC_APP_X_H2_IRQHandler fabric_f2h_61_plic_IRQHandler
-#define IHC_APP_X_H3_IRQHandler fabric_f2h_60_plic_IRQHandler
-#define IHC_APP_X_H4_IRQHandler fabric_f2h_59_plic_IRQHandler
+#define HSS_HART_MASK               HART0_MASK
+#define HSS_HART_ID                 HART0_ID
+
+/*------------------------------------------------------------------------------
+ * HSS_REMOTE_HARTS_MASK
+ * This is used to define the harts the HSS is communicating with
+ */
+#define HSS_REMOTE_HARTS_MASK 		(HART1_MASK | HART2_MASK |HART3_MASK | HART4_MASK)
+
+#if 0
+/*------------------------------------------------------------------------------
+ * Contex A and B hart ID's used in this system - user defined
+ */
+#define CONTEXTA_HARTID         0x01U
+#define CONTEXTB_HARTID         0x04U
+#endif
+
+/*------------------------------------------------------------------------------
+ * Define which harts are connected via comms channels to a particular hart
+ * user defined
+ */
+#define IHCIA_H0_REMOTE_HARTS	(HSS_REMOTE_HARTS_MASK) /* connected to all harts */
+#define IHCIA_H1_REMOTE_HARTS	(HSS_HART_MASK | HART4_MASK) /* HSS and Context B connected */
+#define IHCIA_H2_REMOTE_HARTS	(HSS_HART_MASK)
+#define IHCIA_H3_REMOTE_HARTS	(HSS_HART_MASK)
+#define IHCIA_H4_REMOTE_HARTS	(HSS_HART_MASK | HART1_MASK) /* HSS and Context A connected */
+
+/*------------------------------------------------------------------------------
+ * interrupts enabled in this system design for a particular hart
+ * User defined
+ */
+#define IHCIA_H0_REMOTE_HARTS_INTS    HSS_HART_DEFAULT_INT_EN  /* connected to all harts */
+#define IHCIA_H1_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN | HART4_MP_INT_EN | HART4_ACK_INT_EN) /* HSS and Context B connected */
+#define IHCIA_H2_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN)
+#define IHCIA_H3_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN)
+#define IHCIA_H4_REMOTE_HARTS_INTS    (HSS_HART_MP_INT_EN | HSS_HART_ACK_INT_EN | HART1_MP_INT_EN | HART1_ACK_INT_EN) /* HSS and Context A connected */
 
 #endif /* MIV_IHC_CONFIG_H_ */
+
