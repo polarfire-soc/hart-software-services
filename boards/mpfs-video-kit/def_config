@@ -134,7 +134,7 @@ CONFIG_SERVICE_WDOG_ENABLE_E51=y
 #
 # Miscellaneous
 #
-CONFIG_USE_PCIE=y
+# CONFIG_USE_PCIE is not set
 
 #
 # Enabled PCIe controllers

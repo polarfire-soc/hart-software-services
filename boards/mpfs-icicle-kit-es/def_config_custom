@@ -142,7 +142,7 @@ CONFIG_USE_PCIE=y
 # Enabled PCIe controllers
 #
 # CONFIG_ENABLE_PCIE_CTRL_0 is not set
-# CONFIG_ENABLE_PCIE_CTRL_1 is not set
+CONFIG_ENABLE_PCIE_CTRL_1=y
 # end of Enabled PCIe controllers
 
 CONFIG_OPENSBI=y
