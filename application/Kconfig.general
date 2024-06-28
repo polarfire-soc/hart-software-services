@@ -192,12 +192,6 @@ config PROVIDE_DTB
                 If this isn't needed, it is possible to save some space by removing it.
 
 		If you don't know what to do here, say Y.
-
-config DEFAULT_DEVICE_TREE
-	string "microchip-mpfs-icicle-kit.dtb"
-	depends on PROVIDE_DTB
-	help
-		This option specifies the default Device Tree to be used.
 endmenu
 
 menu "Memory Options"

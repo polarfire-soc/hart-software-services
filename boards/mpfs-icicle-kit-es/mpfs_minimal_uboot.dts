@@ -1,0 +1,173 @@
+/dts-v1/;
+
+/ {
+	#address-cells = <2>;
+	#size-cells = <2>;
+	model = "Microchip PolarFire-SoC Icicle Kit";
+	compatible = "microchip,mpfs-icicle-reference-rtlv2210", "microchip,mpfs-icicle-kit", "microchip,mpfs";
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		timebase-frequency = <1000000>;
+
+		cpu1: cpu@1 {
+			compatible = "sifive,u54-mc", "sifive,rocket0", "riscv";
+			device_type = "cpu";
+			mmu-type = "riscv,sv39";
+			reg = <1>;
+			riscv,isa = "rv64imafdc";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i\0m\0a\0f\0d\0c\0zicntr\0zicsr\0zifencei\0zihpm";
+			clocks = <&clkcfg 0x00>;
+			status = "okay";
+
+			cpu1_intc: interrupt-controller {
+				#interrupt-cells = <0x01>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+			};
+		};
+	};
+
+	refclk: mssrefclk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <125000000>;
+	};
+
+	soc {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		compatible = "simple-bus";
+		ranges;
+
+		clint@2000000 {
+			compatible = "sifive,clint0";
+			reg = <0x00 0x2000000 0x0 0xC000>;
+			interrupts-extended = <&cpu1_intc 0x03 &cpu1_intc 0x07>;
+		};
+
+		clkcfg: clkcfg@20002000 {
+			compatible = "microchip,mpfs-clkcfg";
+			reg = <0x00 0x20002000 0x00 0x1000 0x00 0x3e001000 0x00 0x1000>;
+			clocks = <&refclk>;
+			#clock-cells = <0x01>;
+			#reset-cells = <0x01>;
+			phandle = <0x01>;
+		};
+
+		plic: interrupt-controller@c000000 {
+			compatible = "sifive,plic-1.0.0";
+			reg = <0x0 0xc000000>, <0x0 0x4000000>;
+			#interrupt-cells = <1>;
+			#address-cells = <2>;
+			riscv,ndev = <186>;
+			interrupt-controller;
+			interrupts-extended = <&cpu1_intc 11 &cpu1_intc 9>;
+		};
+
+		mmc: mmc@20008000 {
+			compatible = "microchip,mpfs-sd4hc","cdns,sd4hc";
+			reg = <0x0 0x20008000 0x0 0x1000>;
+			interrupt-parent = <&plic>;
+			interrupts = <0x58>;
+			clocks = <&clkcfg 0x06>;
+			bus-width = <0x04>;
+			disable-wp;
+			cap-sd-highspeed;
+			cap-mmc-highspeed;
+			mmc-ddr-1_8v;
+			mmc-hs200-1_8v;
+			sd-uhs-sdr12;
+			sd-uhs-sdr25;
+			sd-uhs-sdr50;
+			sd-uhs-sdr104;
+		};
+
+		uart1: serial@20100000 {
+			compatible = "ns16550a";
+			reg = <0x0 0x20100000 0x0 0x400>;
+			reg-io-width = <4>;
+			reg-shift = <2>;
+			interrupt-parent = <&plic>;
+			interrupts = <91>;
+			current-speed = <115200>;
+			clocks = <&clkcfg 9>;
+			status = "okay";
+		};
+
+		mac1: ethernet@20112000 {
+			compatible = "microchip,mpfs-macb", "cdns,macb";
+			reg = <0x00 0x20112000>, <0x00 0x2000>;
+			#address-cells = <0x01>;
+			#size-cells = <0x00>;
+			interrupt-parent = <&plic>;
+			interrupts = <0x46 0x47 0x48 0x49 0x4a 0x4b>;
+			local-mac-address = [00 00 00 00 00 00];
+			clocks = <&clkcfg 0x05>, <&clkcfg 0x02>;
+			clock-names = "pclk", "hclk";
+			status = "okay";
+			phy-mode = "sgmii";
+			phy-handle = <0x07>;
+			ethernet-phy@9 {
+				reg = <0x09>;
+				phandle = <0x07>;
+			};
+			ethernet-phy@8 {
+				reg = <0x08>;
+			};
+		};
+
+		mbox: mailbox@37020000 {
+			compatible = "microchip,mpfs-mailbox";
+			reg = <0x00 0x37020000 0x00 0x58>, <0x00 0x2000318c 0x00 0x40>, <0x00 0x37020800 0x00 0x100>;
+			interrupt-parent = <&plic>;
+			interrupts = <0x60>;
+			#mbox-cells = <1>;
+			status = "okay";
+		};
+
+		syscontroller: syscontroller {
+			compatible = "microchip,mpfs-sys-controller", "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			mboxes = <&mbox 0>;
+			status = "okay";
+		};
+	};
+
+	aliases {
+		ethernet0 = "/soc/ethernet@20112000";
+		serial1 = "/soc/serial@20100000";
+	};
+
+	chosen {
+		stdout-path = "serial1:115200n8";
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000>, <0x0 0x40000000>;
+		status = "okay";
+	};
+
+	memory@1040000000 {
+		device_type = "memory";
+		reg = <0x10 0x40000000>, <0x00 0x40000000>;
+		status = "okay";
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		region@BFC00000 {
+			reg = <0x00 0xbfc00000 0x00 0x400000>;
+			no-map;
+		};
+	};
+};

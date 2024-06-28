@@ -398,11 +398,23 @@ static void register_harts(struct StateMachine * const pMyMachine)
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Registering domain \"%s\" (hart mask 0x%x)\n",
                 pMyMachine->pMachineName, pBootImage->hart[target-1].name, pInstanceData->hartMask);
 
+            void *pArg1 = NULL;
+
+            if (pInstanceData->ancilliaryData) {
+                pArg1 = (void *)pInstanceData->ancilliaryData;
+#if IS_ENABLED(CONFIG_PROVIDE_DTB)
+            } else {
+                extern unsigned long _binary_build_services_opensbi_mpfs_dtb_start;
+                pArg1 = (void *)&_binary_build_services_opensbi_mpfs_dtb_start;
+                mHSS_DEBUG_PRINTF(LOG_WARN, "%s::Using built-in DTB at 0x%p\n",
+                    pMyMachine->pMachineName, pArg1);
+#endif
+            }
+
             mpfs_domains_register_boot_hart(pBootImage->hart[target-1].name,
                 pInstanceData->hartMask, target,
                 pBootImage->hart[target-1].privMode,
-                (void *)pBootImage->hart[target-1].entryPoint,
-                (void *)pInstanceData->ancilliaryData,
+                (void *)pBootImage->hart[target-1].entryPoint, pArg1,
 		pBootImage->hart[target-1].flags & BOOT_FLAG_ALLOW_COLD_REBOOT,
 		pBootImage->hart[target-1].flags & BOOT_FLAG_ALLOW_WARM_REBOOT);
         }

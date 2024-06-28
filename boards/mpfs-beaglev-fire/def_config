@@ -7,6 +7,7 @@
 # BeagleV-Fire Design Configuration Options
 #
 CONFIG_SOC_FPGA_DESIGN_XML="boards/mpfs-beaglev-fire/soc_fpga_design/xml/PF_SOC_MSS_mss_cfg.xml"
+CONFIG_DEFAULT_DEVICE_TREE="boards/mpfs-beaglev-fire/mpfs_minimal_uboot.dtb"
 # end of BeagleV-Fire Design Configuration Options
 # end of Board/Design Configuration Options
 
@@ -181,7 +182,7 @@ CONFIG_COLDREBOOT_TRY_AUTO_UPDATE=y
 #
 # OpenSBI
 #
-# CONFIG_PROVIDE_DTB is not set
+CONFIG_PROVIDE_DTB=y
 # end of OpenSBI
 
 #
@@ -232,6 +233,7 @@ CONFIG_DEBUG_LOOP_TIMES_THRESHOLD=2500000
 # CONFIG_DEBUG_CHUNK_DOWNLOADS is not set
 # CONFIG_DEBUG_MSCGEN_IPI is not set
 # CONFIG_DEBUG_PROFILING_SUPPORT is not set
+# CONFIG_DEBUG_PERF_CTRS is not set
 # CONFIG_DEBUG_RESET_REASON is not set
 # end of Debug Options
 
