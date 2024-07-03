@@ -4,27 +4,102 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2024.06
+
+### Added
+
+ * HSS: hal: updating to mpfs-hal v2.3.102
+
+ * HSS: lockdown: adding lockdown service (allows custom restrictions of HSS after booting)
+
+    - This provides an opportunity/single place in the code to modify behavior
+    once boot has completed and the user wishes to restrict what the E51/HSS can
+    subsequently do using PMPs/restricted set of state machines to service.
+
+ * HSS: info: update print design version info at startup
+
+ * HSS: trigger: add event triggers to allow state machines synchronize with each other
+
+ * HSS: boot: provide minimal common DTB for U-Boot purposes
+
+### Changed
+
+ * HSS: boot: don't delay for DDR training if not needed for a Hart
+
+ * HSS: envm-wrapper: determine HSS UART from BSP rather than hardcoding
+
+ * HSS: sbi: removed unnecessary optimization (O0)
+
+ * HSS: usbdmsc: refactored to make USBDMSC a proper service
+
+### Fixed
+
+ * HSS: build: fixed minor issues related to build directory change
+
+ * HSS: healthmon: throttle messages to prevent output flood
+
+## 2024.02.1
+
+### Added
+
+ * HSS: boards: add support for BeagleV Fire BSP
+
+ * HSS: boards: add support for PolarFire SoC Discovery Kit (MPFS-DISCO-KIT)
+
+ * HSS: info: print design version info at startup
+
+ * HSS: MMC: make MMC/SD speed configurable per BSP
+
+ * HSS: gpio-ui: Add GPIO/LED UI service for platforms without serial console
+
+### Changed
+
+ * HSS: init: turn on all FICs by default
+
+### Fixed
+
+ * HSS: usbdmsc: fix bug in USBDMSC startup
+
+ * HSS: ihc: avoid writes through NULL pointer
+
+ * HSS: scrub: ensure all RAMs can be turned off
+
+ * HSS: spi: fix issues when booting from System Controller SPI Flash
+
 ## 2024.02
 
 ### Added
+
  * HSS: crypto: User Crypto support added - supports AES (ECB, CBC, OFB, CFB and CTR modes)
+
  * HSS: tinycli: Added simple ECC stats to tinyCLI.
+
  * HSS: boot: Restructured early initialization as a state machine, and offloaded DDR training to U54_1 for faster boot-up.
 
 ### Changed
+
  * HSS: scrub: improved scrubbing of LIM, U54 I$/VMA TLBs. Disabled scrubbing by default as it
    is incompatible with non-coherent PCIe speed-ups enabled by default in MPFS Linux.
+
  * HSS: tinycli: Simplified early pre-boot CLI to use regular tinyCLI service.
+
  * HSS: sbi: Tidy-up of ECALL returns
+
  * HSS: boot: Simplified boot logo to save time.
+
  * XML: Updated XML for mpfs-video-kit and mpfs-icicle-kit-es
 
 ### Fixed
+
  * HSS: init: reset reason type is incorrect
+
  * Docs: fixed web link to software flow documentation
+
  * HSS: build: moved build assets to $(BINDIR) directory (from "Default" to "build") and fix make clean on Windows
+
  * HSS: init: Detect if MPU config prevents USBDMSC
- * QSPI: build issue with QSPI-enabled def_config files resolved
+
+ * QSPI: build issue with QSPI-enabled `def_config` files resolved
 
 ## 2023.09
 
