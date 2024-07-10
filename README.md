@@ -119,9 +119,9 @@ Once built, program the HSS to the board:
 
     $ make program
 
-Note: For the PolarFire SoC Video Kit, the DIE argument must be set to MPFS250T to match the device die.
+For programming HSS to PolarFire SoC Video Kit:
 
-    $ make program DIE=MPFS250T
+    $ make program BOARD=mpfs-video-kit
 
 A variety of alternative build options can be seen by running `make help`:
 
