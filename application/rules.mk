@@ -98,8 +98,7 @@ CFLAGS=-std=c11 $(CORE_CFLAGS) $(PLATFORM_CFLAGS) -Wmissing-prototypes
 CFLAGS_GCCEXT=$(CORE_CFLAGS) $(PLATFORM_CFLAGS)
 #OPT-y=-O2
 #OPT-y+=-Os -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las
-OPT-y+=-Os -fno-strict-aliasing -fwhole-program -Wno-lto-type-mismatch
-#OPT-y+=-Os -fno-strict-aliasing
+OPT-y+=-Os -fno-strict-aliasing
 
 ifndef CONFIG_LD_RELAX
 OPT-y+=-Wl,--no-relax
@@ -116,6 +115,7 @@ ifdef CONFIG_CC_STACKPROTECTOR_STRONG
 else
   $(info INFO: NOTICE: enabling -flto (which means stack protection is disabled))
   OPT-y+=-flto=auto -ffat-lto-objects -fno-stack-protector
+  OPT-y+=-fwhole-program -Wno-lto-type-mismatch
 endif
 
 
