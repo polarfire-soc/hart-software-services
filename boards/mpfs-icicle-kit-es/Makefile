@@ -53,6 +53,10 @@ EXTRA_SRCS-y += \
 EXTRA_SRCS-$(CONFIG_USE_LOGO) += \
         init/hss_logo_init.c
 
+EXTRA_SRCS-$(CONFIG_SERVICE_HEALTHMON) += \
+        $(BOARD_DIR)/healthmon_monitors.c \
+
+
 $(BOARD_DIR)/hss_uart_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 
 ifndef CONFIG_SERVICE_BOOT_USE_PAYLOAD_IN_FABRIC

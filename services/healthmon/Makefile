@@ -28,6 +28,7 @@
 
 SRCS-$(CONFIG_SERVICE_HEALTHMON) += \
 	services/healthmon/healthmon_service.c \
+	services/healthmon/healthmon_monitors_weak.c \
 
 INCLUDES +=\
 	-I./services/healthmon \

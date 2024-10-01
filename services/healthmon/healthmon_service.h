@@ -45,7 +45,38 @@ extern "C" {
 extern struct StateMachine healthmon_service;
 
 void HSS_Health_DumpStats(void);
+void healthmon_nop_trigger(uintptr_t pAddr);
 
+enum HealthMon_CheckType
+{
+    ABOVE_THRESHOLD,
+    BELOW_THRESHOLD,
+    ABOVE_OR_BELOW_THRESHOLD,
+    EQUAL_TO_VALUE,
+    NOT_EQUAL_TO_VALUE,
+    CHANGED_SINCE_LAST,
+};
+
+struct HealthMonitor
+{
+    char const * const pName;
+    uintptr_t pAddr;
+    enum HealthMon_CheckType checkType;
+    uint32_t maxValue;
+    uint32_t minValue;
+    uint8_t shift; // shift applied first...
+    uint64_t mask; // then mask
+    void (*triggerCallback)(uintptr_t pAddr);
+    uint32_t throttleScale; // times 1sec, to throttle console messages
+};
+
+struct HealthMonitor_Status
+{
+    HSSTicks_t throttle_startTime;
+    uint32_t lastValue;
+    size_t count;
+    bool initialized;
+};
 #ifdef __cplusplus
 }
 #endif
