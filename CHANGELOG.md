@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2024.09
+
+### Added
+
+ Not applicable for this release.
+
+### Changed
+
+ *  HSS: healthmon: Ensure that health monitoring monitor arrays are board/design specific
+
+ *  HSS: README: update command to program Video Kit
+
+ *  HSS: build: include DIE and PACKAGE arguments for MPFS Video Kit
+
+
+### Fixed
+
+ * HSS: ymodem: Ensuring watchdog doesn't fire if YMODEM is running.
+
+ * HSS: boot: Fixing some build errors when CONFIG_SERVICE_BOOT is not enabled.
+
+ * HSS: build: ensure -fwhole-program optimizations are not enabled when strong stack protection is enabled.
+
 ## 2024.06
 
 ### Added
