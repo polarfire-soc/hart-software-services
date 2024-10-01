@@ -240,7 +240,9 @@ static void copyCacheToFlashBlocks_(size_t byteOffset, size_t byteCount)
 
         HSS_ShowProgress(initialDirtyBlockCount, dirtyBlockCount);
 
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
         HSS_Wdog_E51_Tickle();
+#endif
 
         const size_t physicalBlockOffset = logical_to_physical_block_(column_to_block_(offset));
 

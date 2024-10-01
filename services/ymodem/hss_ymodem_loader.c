@@ -51,8 +51,12 @@
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 #  include "qspi_service.h"
-//#  include "baremetal/drivers/micron_mt25q/micron_mt25q.h"
-#  include "baremetal/drivers/winbond_w25n01gv/winbond_w25n01gv.h"
+#  if IS_ENABLED(CONFIG_SERVICE_QSPI_WINBOND_W25N01GV)
+#    include "winbond_w25n01gv.h"
+#  endif
+#  if IS_ENABLED(CONFIG_SERVICE_QSPI_MICRON_MQ25T)
+#    include "micron_mt25q.h"
+#  endif
 #endif
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
