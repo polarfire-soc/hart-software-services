@@ -102,7 +102,11 @@ static void tinycli_init_handler(struct StateMachine * const pMyMachine)
 #else
         {
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
             pMyMachine->state = TINYCLI_PREBOOT;
+#else
+            pMyMachine->state = TINYCLI_READLINE;
+#endif
         }
     }
 }
@@ -146,10 +150,14 @@ static void tinycli_doboot_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
 
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
     if (!HSS_DDR_IsAddrInDDR(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR) || HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
         if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
         pMyMachine->state = TINYCLI_READLINE;
     }
+#else
+    pMyMachine->state = TINYCLI_READLINE;
+#endif
 }
 
 static void tinycli_readline_onEntry(struct StateMachine * const pMyMachine)

@@ -296,7 +296,9 @@ const struct InitFunction /*@null@*/ globalInitFunctions[] = {
 #if IS_ENABLED(CONFIG_USE_LOGO)
     { "HSS_LogoInit",                  HSS_LogoInit,                  false, false },
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
     { "HSS_PMP_Init",                  HSS_PMP_Init,                  false, false },
+#endif
     { "HSS_BoardInit",                 HSS_BoardInit ,                false, false },
     { "HSS_E51_Banner",                HSS_E51_Banner,                false, false },
     { "Device_Serial_Number_Init",     Device_Serial_Number_Init,     false, false },
