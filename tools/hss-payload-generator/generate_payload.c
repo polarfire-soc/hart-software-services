@@ -2,7 +2,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2020-2024 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -35,6 +35,7 @@
 #include <libgen.h>
 #include "crc32.h"
 #include "debug_printf.h"
+#include "verify_payload.h"
 
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
@@ -118,7 +119,8 @@ static void generate_header(FILE *pFileOut, struct HSS_BootImage *pBootImage) __
 static void generate_chunks(FILE *pFileOut) __attribute__((nonnull));
 static void generate_ziChunks(FILE *pFileOut) __attribute__((nonnull));
 static void generate_blobs(FILE *pFileOut) __attribute__((nonnull));
-static void sign_payload(FILE *pFileOut, char const * const private_key_filename) __attribute__((nonnull(1)));
+static void sign_payload(FILE *pFileOut, char const * const private_key_filename,
+	char const * const public_key_filename) __attribute__((nonnull(1)));
 
 extern struct HSS_BootImage bootImage;
 
@@ -210,7 +212,7 @@ static void generate_chunks(FILE *pFileOut)
 		cumulativeBlobSize += chunkTable[i].chunk.size
 			+ calculate_padding(chunkTable[i].chunk.size, PAD_SIZE);
 
-        	off_t posn = ftello(pFileOut);
+		off_t posn = ftello(pFileOut);
 		debug_printf(4, "\t- Processing chunk %lu (%lu bytes) at file position %lu "
 			"(blob is expected at %lu)\n",
 			i, chunkTable[i].chunk.size, posn, chunkTable[i].chunk.loadAddr);
@@ -259,7 +261,7 @@ static void generate_ziChunks(FILE *pFileOut)
 			+ calculate_padding(sizeof(struct HSS_BootChunkDesc) * (numChunks+1), PAD_SIZE));
 
 	for (size_t i = 0u; i < numZIChunks; i++) {
-        	off_t posn = ftello(pFileOut);
+		off_t posn = ftello(pFileOut);
 		debug_printf(4, "\t- Processing ziChunk %lu (%lu bytes) at file position %lu\n",
 			i, ziChunkTable[i].ziChunk.size, posn);
 
@@ -302,7 +304,7 @@ static void generate_blobs(FILE *pFileOut)
 			+ calculate_padding(sizeof(struct HSS_BootZIChunkDesc) * (numZIChunks +1), PAD_SIZE));
 
 	for (size_t i = 0u; i < numChunks; i++) {
-        	off_t posn = ftello(pFileOut);
+		off_t posn = ftello(pFileOut);
 		debug_printf(4, "\t- Processing blob %lu (%lu bytes) at file position %lu\n",
 			i, chunkTable[i].chunk.size, posn);
 		debug_printf(4, "\t\tCRC32: %x\n",
@@ -323,7 +325,8 @@ static void generate_blobs(FILE *pFileOut)
 	assert(pFileOut);
 }
 
-static void sign_payload(FILE *pFileOut, char const * const private_key_filename)
+static void sign_payload(FILE *pFileOut, char const * const private_key_filename,
+	char const * const public_key_filename)
 {
 	if (private_key_filename) {
 		//
@@ -352,21 +355,28 @@ static void sign_payload(FILE *pFileOut, char const * const private_key_filename
 
 		EVP_PKEY *pPrivKey = PEM_read_PrivateKey(privKeyFileIn, NULL, NULL, NULL);
 		assert(pPrivKey != NULL);
-                fclose(privKeyFileIn);
+		fclose(privKeyFileIn);
 
 		// create the signature by using SHA384 digest and signing with our SECP384r1 private key
 		//
 		EVP_MD_CTX *pCtx = EVP_MD_CTX_new();
 		assert(pCtx != NULL);
 
+		assert(EVP_DigestInit_ex(pCtx, EVP_sha384(), NULL) == 1);
+
+		uint8_t digest[EVP_MAX_MD_SIZE];
+		unsigned int digest_len = 0;
+		assert(EVP_DigestUpdate(pCtx, pEntirePayloadBuffer, bootImage.bootImageLength) == 1);
+		assert(EVP_DigestFinal_ex(pCtx, digest, &digest_len) == 1);
+
 		assert(EVP_DigestSignInit(pCtx, NULL, EVP_sha384(), NULL, pPrivKey) == 1);
+
 		size_t sigLen = 0u;
 		assert(EVP_DigestSign(pCtx, NULL, &sigLen, pEntirePayloadBuffer, bootImage.bootImageLength) == 1);
+
 		unsigned char *pSignatureBuffer = OPENSSL_malloc(sigLen);
 		assert(pSignatureBuffer);
 		assert(EVP_DigestSign(pCtx, pSignatureBuffer, &sigLen, pEntirePayloadBuffer, bootImage.bootImageLength) == 1);
-
-		free(pEntirePayloadBuffer);
 
 		// copy the signature to the boot image header...
 		// OpenSSL will output the signature is in ASN.1 format, as described in
@@ -403,24 +413,26 @@ static void sign_payload(FILE *pFileOut, char const * const private_key_filename
 		ECDSA_SIG *pSig = d2i_ECDSA_SIG(NULL, &sig_ptr, (long)sigLen);
 		assert(pSig != NULL);
 
-                // the signature is in an opaque ECDSA_SIG structure, which contains two
-                // BIGNUMs, r and s.  These are max half the curve size in bytes
-                // => 384 / (8*2) = 48 bytes each... but they may be less, and need to be
-                // zero padded, so extract separately...
-                const BIGNUM *pR = NULL;
-                const BIGNUM *pS = NULL;
-                ECDSA_SIG_get0(pSig, &pR, &pS);
+		// the signature is in an opaque ECDSA_SIG structure, which contains two
+		// BIGNUMs, r and s.  These are max half the curve size in bytes
+		// => 384 / (8*2) = 48 bytes each... but they may be less, and need to be
+		// zero padded, so extract separately...
+		const BIGNUM *pR = NULL;
+		const BIGNUM *pS = NULL;
+		ECDSA_SIG_get0(pSig, &pR, &pS);
 
-                const int rBytes = BN_num_bytes(pR);
-                const int sBytes = BN_num_bytes(pS);
+		const int rBytes = BN_num_bytes(pR);
+		const int sBytes = BN_num_bytes(pS);
 
 		assert(rBytes == sBytes);
 		assert(rBytes == 48);
 
-                memset(pSignatureBuffer, 0, 96);
-                BN_bn2bin(pR, pSignatureBuffer + 48 - rBytes);
-                BN_bn2bin(pS, pSignatureBuffer + 96 - sBytes);
+		memset(pSignatureBuffer, 0, 96);
+		BN_bn2bin(pR, pSignatureBuffer + 48 - rBytes);
+		BN_bn2bin(pS, pSignatureBuffer + 96 - sBytes);
+		//
 
+		memcpy(bootImage.signature.digest, digest, 48u);
 		memcpy(bootImage.signature.ecdsaSig, pSignatureBuffer, 48u);
 		memcpy(bootImage.signature.ecdsaSig + 48u, pSignatureBuffer + 48u, 48u);
 
@@ -435,13 +447,40 @@ static void sign_payload(FILE *pFileOut, char const * const private_key_filename
 		EVP_MD_CTX_free(pCtx);
 		EVP_PKEY_free(pPrivKey);
 		OPENSSL_free(pSignatureBuffer);
+
+		// if a public key was provided, we'll cross-check the signature against it
+		//
+		if (public_key_filename) {
+			// refresh payload from file, as we just rewrote the header to include the signature
+			if (fseek(pFileOut, 0, SEEK_SET) != 0) {
+				perror("fseek()");
+				exit(EXIT_SUCCESS);
+			}
+
+			fileSize = fread((void *)pEntirePayloadBuffer, 1u, bootImage.bootImageLength, pFileOut);
+			assert(fileSize == bootImage.bootImageLength);
+
+			// now perform the cross-check
+			bool result = HSS_Boot_Secure_CheckCodeSigning((struct HSS_BootImage *)pEntirePayloadBuffer, public_key_filename);
+
+			printf("Signature validation using public key ... %s\n\n", result ? "passed":"failed");
+
+		}
+
+		free(pEntirePayloadBuffer);
 	}
 }
 
-void generate_payload(char const * const filename_output, char const * const private_key_filename)
+void generate_payload(char const * const filename_output, char const * const private_key_filename, char const * const public_key_filename)
 {
 	assert(filename_output);
 	printf("Output filename is >>%s<<\n", filename_output);
+	if (private_key_filename) {
+		printf("private_key_filename is >>%s<<\n", private_key_filename);
+	}
+	if (public_key_filename) {
+		printf("public_key_filename is >>%s<<\n", public_key_filename);
+	}
 
 	FILE *pFileOut = fopen(filename_output, "w+");
 	if (!pFileOut) {
@@ -466,7 +505,7 @@ void generate_payload(char const * const filename_output, char const * const pri
 
 	generate_header(pFileOut, &bootImage); // rewrite header for CRC...
 
-	sign_payload(pFileOut, private_key_filename);
+	sign_payload(pFileOut, private_key_filename, public_key_filename);
 
 	if (fclose(pFileOut) != 0) {
 		perror("fclose()");

@@ -2,7 +2,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2020-2024 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -43,6 +43,7 @@
 #include "debug_printf.h"
 #include "dump_payload.h"
 #include "crc32.h"
+#include "verify_payload.h"
 
 #define PRV_U (0u)
 #define PRV_S (1u)
@@ -85,7 +86,7 @@ static char const * privModeToString(uint8_t privMode)
 	return result;
 }
 
-void dump_payload(const char *filename_input)
+void dump_payload(const char *filename_input, const char *public_key_filename)
 {
 	printf("opening >>%s<<\n", filename_input);
 	int fdIn = open(filename_input, O_RDONLY);
@@ -94,8 +95,12 @@ void dump_payload(const char *filename_input)
 	size_t fileSize = getFileSize(filename_input);
 
 	struct HSS_BootImage *pBootImage;
+	void *raw_image;
 
-	pBootImage = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fdIn, 0);
+	raw_image = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fdIn, 0);
+	debug_printf(6, "Mapped %d (%x) bytes at %p (to %p)\n", fileSize, fileSize, raw_image, ((uint8_t*)raw_image) + fileSize);
+
+	pBootImage = (struct HSS_BootImage *)raw_image;
 	assert(pBootImage);
 	if (pBootImage == MAP_FAILED) {
 		perror("mmap()");
@@ -235,6 +240,11 @@ void dump_payload(const char *filename_input)
 		(totalChunkCount != 1u) ? "s":"");
 
 	// skipping binary file array
+
+	if (public_key_filename) {
+		bool result = HSS_Boot_Secure_CheckCodeSigning(raw_image, public_key_filename);
+		printf("Public Key Specified so verifying signature... %s\n\n", result ? "passed" : "failed");
+	}
 
 	munmap(pBootImage, fileSize);
 	close(fdIn);

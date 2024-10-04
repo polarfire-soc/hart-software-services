@@ -2,7 +2,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2020-2024 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -41,7 +41,7 @@
 #include "dump_payload.h"
 #include "debug_printf.h"
 
-#define GEN_VERSION_STRING "0.99.37"
+#define GEN_VERSION_STRING "0.99.42"
 
 struct HSS_BootImage bootImage;
 struct HSS_BootChunkDesc *pChunkDescs;
@@ -57,18 +57,19 @@ static void print_usage(char **argv) __attribute__((nonnull));
 static void intro_banner(void)
 {
 	puts("Hart Software Service formatted boot image generator v" GEN_VERSION_STRING);
-	puts("Copyright (c) 2021-2022 Microchip FPGA Embedded Systems Solutions.\n");
+	puts("Copyright (c) 2021-2024 Microchip FPGA Embedded Systems Solutions.\n");
 }
 
 static void print_usage(char **argv)
 {
-	printf("Usage: %s [-v] [-w] [-h] [[-c <configfile.yaml> <output.bin>] [-p <private-key.pem>] ] [-d <output.bin>]\n\n", argv[0]);
+	printf("Usage: %s [-v] [-w] [-h] [[-c <configfile.yaml> <output.bin>] [-p <private-key.pem>] ] [-d <output.bin> [-u <public-key.pem>]\n\n", argv[0]);
 	printf("\nMultiple '-v' arguments increases verbosity of output.\n\n");
 
 	printf(" -c		Run generator and specify path to configuration YAML\n");
 	printf(" -d		Run analyzer and specify path to payload binary\n");
 	printf(" -h		print this help\n");
 	printf(" -p		enabled secure boot and specify private key\n");
+	printf(" -u		specify public key (only valid with -p or -d)\n");
 	printf(" -v		Increase verbosity of output\n");
 	printf(" -w		Extra-wide output (used with verbosity)\n\n");
 
@@ -91,7 +92,8 @@ int main(int argc, char **argv)
 	char *config_filename = NULL;
 	char *dump_payload_filename = NULL;
 	char *private_key_filename = NULL;
-	while ((opt = getopt(argc, argv, (const char *)"c:d:hp:vw")) != -1) {
+	char *public_key_filename = NULL;
+	while ((opt = getopt(argc, argv, (const char *)"c:d:hp:u:vw")) != -1) {
 		switch (opt) {
 		case 'c':
 			config_filename = optarg;
@@ -110,6 +112,10 @@ int main(int argc, char **argv)
 			private_key_filename = optarg;
 			break;
 
+		case 'u':
+			public_key_filename = optarg;
+			break;
+
 		case 'v':
 			debug_increaseLogLevel();
 			break;
@@ -124,6 +130,11 @@ int main(int argc, char **argv)
 		}
 	}
 
+	if ((public_key_filename) && ((!dump_payload_filename) && (!private_key_filename))) {
+		fprintf(stderr, "%s: -u only allowed in conjunction with -p or -d\n\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
 	if ((config_filename) && (dump_payload_filename)) {
 		fprintf(stderr, "%s: Only one of -c or -d allowed\n\n", argv[0]);
 		exit(EXIT_FAILURE);
@@ -134,9 +145,9 @@ int main(int argc, char **argv)
 	//
 	if ((config_filename) && (argc > optind)) {
 		yaml_parser(config_filename);
-		generate_payload(argv[optind], private_key_filename);
+		generate_payload(argv[optind], private_key_filename, public_key_filename);
 	} else if (dump_payload_filename) {
-		dump_payload(dump_payload_filename);
+		dump_payload(dump_payload_filename, public_key_filename);
 	} else {
 		print_usage(argv);
 		exit(EXIT_FAILURE);

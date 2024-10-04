@@ -5,7 +5,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2020-2024 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -32,6 +32,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void dump_payload(char const * filename);
+void dump_payload(char const * filename, char const * public_key_filename);
 
 #endif
