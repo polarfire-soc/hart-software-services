@@ -23,6 +23,10 @@
 #include "fpga_design_config/fpga_design_config.h"
 #include "sbi_bitops.h"
 
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#    include "wdog_service.h"
+#endif
+
 #define mUART_DEV(x) ( LIBERO_SETTING_APBBUS_CR & (BIT(x)) ? &g_mss_uart##x##_hi : &g_mss_uart##x##_lo )
 
 // UART devices list
@@ -184,6 +188,9 @@ bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick)
 
         if (timeout_sec < 0) {
             ; // blocking until UART data received, so nothing extra to do here...
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+            HSS_Wdog_E51_Tickle();
+#endif
         } else if (timeout_sec > 0) {
             // time limited
             done = HSS_Timer_IsElapsed(start_time, timeout_ticks);

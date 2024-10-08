@@ -414,7 +414,9 @@ void HSS_BootSelectSDCARD(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SDCARD as boot source ...\n");
     pDefaultStorage = &mmcStorage_;
     HSS_MMC_SelectSDCARD();
+#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Register_Boot_Image(NULL);
+#  endif
 #else
     (void)getBootImageFromMMC_;
 #endif
@@ -426,7 +428,9 @@ void HSS_BootSelectMMC(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SDCARD/MMC (fallback) as boot source ...\n");
     pDefaultStorage = &mmcStorage_;
     HSS_MMC_SelectMMC();
+#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Register_Boot_Image(NULL);
+#  endif
 #else
     (void)getBootImageFromMMC_;
 #endif
@@ -438,7 +442,9 @@ void HSS_BootSelectEMMC(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting EMMC as boot source ...\n");
     pDefaultStorage = &mmcStorage_;
     HSS_MMC_SelectEMMC();
+#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Register_Boot_Image(NULL);
+#  endif
 #else
     (void)getBootImageFromMMC_;
 #endif
@@ -497,7 +503,9 @@ void HSS_BootSelectQSPI(void)
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting QSPI as boot source ...\n");
     pDefaultStorage = &qspiStorage_;
+#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Register_Boot_Image(NULL);
+#  endif
 #else
     (void)getBootImageFromQSPI_;
 #endif
@@ -530,7 +538,9 @@ void HSS_BootSelectPayload(void)
 #if IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting Payload as boot source ...\n");
     pDefaultStorage = &payloadStorage_;
+#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
     HSS_Register_Boot_Image(NULL);
+#  endif
 #else
     (void)getBootImageFromPayload_;
 #endif

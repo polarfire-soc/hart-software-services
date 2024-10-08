@@ -25,6 +25,9 @@
 #include "ymodem.h"
 #include "drivers/mss/mss_mmuart/mss_uart.h"
 #include "uart_helper.h"
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#  include "wdog_service.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -450,6 +453,10 @@ size_t ymodem_receive(uint8_t *buffer, size_t bufferSize)
     size_t result = 0u;
     struct XYModem_State state = { 0 };
     memset(state.filename, 0, HSS_XYMODEM_MAX_FILENAME_LENGTH);
+
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+    HSS_Wdog_E51_Tickle();
+#endif
 
     result = XYMODEM_Receive(HSS_XYMODEM_PROTOCOL_YMODEM, &state, (char *)buffer, bufferSize);
 

@@ -202,7 +202,7 @@ bool HSS_E51_Banner(void)
 #endif
         " / BOARD=" STR(BOARD)
         "\n"
-        "(c) Copyright 2017-2022 Microchip FPGA Embedded Systems Solutions.\n\n"
+        "(c) Copyright 2017-2024 Microchip FPGA Embedded Systems Solutions.\n\n"
         "incorporating OpenSBI - version %d.%d\n"
         "(c) Copyright 2019-2022 Western Digital Corporation.\n\n",
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
