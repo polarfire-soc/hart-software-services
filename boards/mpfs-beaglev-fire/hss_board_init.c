@@ -22,7 +22,13 @@
 #include "hss_state_machine.h"
 #include "ssmb_ipi.h"
 #include "hss_registry.h"
-#include <string.h>
+
+#ifndef __IO
+#  define __IO volatile
+#endif
+#include "mss_io_config.h"
+#include "io/hw_mssio_mux.h"
+
 
 /******************************************************************************************************/
 /*!
@@ -72,6 +78,31 @@ bool HSS_BoardInit(void)
 bool HSS_BoardLateInit(void)
 {
     bool result = true;
+
+    return result;
+}
+
+/**
+ * Is there a mux present for the SD-card/eMMC MSS controller?
+ * @return true/false
+ */
+uint8_t fabric_sd_emmc_demux_present(void)
+{
+    return (uint8_t) false; // On BeagleV-Fire SD/eMMC is directly connected to eMMC.
+}
+
+/*
+ * This function is used to switch external demux between SD card and eMMC, and
+ * is board dependent. For the BeagleV-Fire, there are no external switching 
+ * since on eMMC is supported by the SD-card/eMMC controller.
+ * */
+uint8_t switch_demux_using_fabric_ip(MSS_IO_OPTIONS option)
+{
+    uint8_t result = true;
+
+    if (!fabric_sd_emmc_demux_present()) {
+        mHSS_PUTS("BeagleV-Fire: eMMC direct connection to SD/eMMC controller\n");
+    }
 
     return result;
 }
