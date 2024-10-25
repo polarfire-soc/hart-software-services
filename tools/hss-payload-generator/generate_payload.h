@@ -5,7 +5,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2020-2024 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -34,7 +34,7 @@
 
 #include "hss_types.h"
 
-void generate_payload(char const * const filename_output, char const * const private_key_filename);
+void generate_payload(char const * const filename_output, char const * const private_key_filename, char const * const public_key_filename);
 void generate_init(void);
 
 size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *buffer) __attribute__((nonnull));

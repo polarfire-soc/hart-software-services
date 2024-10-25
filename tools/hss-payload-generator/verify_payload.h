@@ -1,5 +1,5 @@
-#ifndef CRC32_H
-#define CRC32_H
+#ifndef VERIFY_PAYLOAD_H
+#define VERIFY_PAYLOAD_H
 
 /******************************************************************************************
  *
@@ -26,13 +26,12 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
  */
 
-#include <stdlib.h>
-#include <stddef.h>
 #include <stdint.h>
+#include "hss_types.h"
 
-uint32_t CRC32_calculate_ex(uint32_t seed, uint8_t const *pInput, size_t numBytes) __attribute__((nonnull));
-uint32_t CRC32_calculate(uint8_t const *pInput, size_t numBytes) __attribute__((nonnull));
+bool HSS_Boot_Secure_CheckCodeSigning(struct HSS_BootImage *pBootImage, char const * public_key_filename);
 
 #endif

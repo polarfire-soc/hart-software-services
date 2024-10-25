@@ -1,5 +1,5 @@
 % HSS Payload Generator
-% 2022-09-02
+% 2024-10-14
 
 # Introduction 
 
@@ -21,9 +21,16 @@ To print diagnostics about a pre-existing image, use `-d`:
 
 To enable secure boot authentication (via image signing), use `-p` to specify the location of an X.509 Private Key for the Elliptic Curve P-384 (SECP384r1):
 
-    $ ./hss-payload-generator -c test/config.yaml payload.bin -p /path/to/private.pem
+    $ ./hss-payload-generator -c test/config.yaml -p /path/to/private.pem payload.bin
 
 See the documentation on secure boot authentication for more details.
+
+To verify secure boot code signing, use the `-u` option to specify the location of a DER format Public Key for the Elliptic Curve P-384 (SECP384r1). This option is compatible with either `-p` (during generation) or `-d` during image inspection - for example:
+
+    $ ./hss-payload-generator -p x509-ec-secp384r1-private.pem -c config.yaml -u x509-ec-secp384r1-public.der payload.bin
+    $ ./hss-payload-generator -u x509-ec-secp384r1-public.der -d payload.bin
+
+NOTE: specifically when on Microsoft Windows, ensure that the `payload.bin` argument is at the end of the command line when creating a payload image. We recommend also making the `payload.bin` argument the last argument on Linux.
 
 ## Config File example
 
