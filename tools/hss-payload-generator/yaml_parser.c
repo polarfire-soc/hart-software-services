@@ -725,6 +725,25 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 			}
 		}
 
+		debug_printf(1, "\tpriv_mode is %u\n", base_priv_mode);
+		debug_printf(2, "\tSetting priv mode for %d to %d\n", base_owner, base_priv_mode);
+
+		bootImage.hart[base_owner-1].privMode = base_priv_mode;
+
+		for (size_t i = 0u; i < ARRAY_SIZE(base_secondary); i++) {
+			if (base_secondary[i] != 0u) {
+				if (bootImage.hart[base_secondary[i]-1].privMode == PRV_ILLEGAL) {
+					debug_printf(2, "\tSetting priv mode for %d to %d\n", base_secondary[i], base_priv_mode);
+					bootImage.hart[base_secondary[i]-1].privMode = base_priv_mode;
+				} else {
+					fprintf(stderr, "Attempted to set U54_%" PRIu64 " to priv_mode %u, but it is already set to %u\n"
+						"Please check configuration file\n",
+						base_secondary[i], base_priv_mode, bootImage.hart[base_secondary[i]-1].privMode);
+					exit(EXIT_FAILURE);
+				}
+			}
+		}
+
 		assert(base_owner);
 		if (strlen(bootImage.hart[base_owner-1].name)) {
 			concatenate(bootImage.hart[base_owner-1].name, "+",
@@ -757,7 +776,7 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 		break;
 
 	case YAML_SCALAR_EVENT:
-		// debug_printf(0, "Parsing scalar >>%s<<\n", pEvent->data.scalar.value);
+		debug_printf(7, "Parsing scalar >>%s<<\n", pEvent->data.scalar.value);
 
 		token_idx = string_to_scalar(pEvent->data.scalar.value);
 		switch (token_idx) {
@@ -891,7 +910,7 @@ static void Handle_STATE_NEW_PAYLOAD_SECONDARY_HART(yaml_event_t *pEvent)
 
 	enum token token_idx;
 
-//printf("%s(): event %d / token %s\n", __func__, pEvent->type, pEvent->data.scalar.value);
+	debug_printf(7, "%s(): event %d / token %s\n", __func__, pEvent->type, pEvent->data.scalar.value);
 	switch (pEvent->type) {
 	case YAML_MAPPING_START_EVENT:
 		break;
@@ -1016,25 +1035,6 @@ static void Handle_STATE_NEW_PAYLOAD_PRIV_MODE(yaml_event_t *pEvent)
 			__attribute__((fallthrough)); // deliberate fallthrough
 		case TOKEN_PRIV_MODE_U:
 			base_priv_mode = map_token_to_priv_mode(token_idx);
-
-			debug_printf(1, "\tpriv_mode is %u\n", base_priv_mode);
-			debug_printf(2, "\tSetting priv mode for %d to %d\n", base_owner, base_priv_mode);
-
-			bootImage.hart[base_owner-1].privMode = base_priv_mode;
-
-			for (size_t i = 0u; i < ARRAY_SIZE(base_secondary); i++) {
-				if (base_secondary[i] != 0u) {
-					if (bootImage.hart[base_secondary[i]-1].privMode == PRV_ILLEGAL) {
-						debug_printf(2, "\tSetting priv mode for %d to %d\n", base_secondary[i], base_priv_mode);
-						bootImage.hart[base_secondary[i]-1].privMode = base_priv_mode;
-					} else {
-						fprintf(stderr, "Attempted to set U54_%" PRIu64 " to priv_mode %u, but it is already set to %u\n"
-							"Please check configuration file\n",
-							base_secondary[i], base_priv_mode, bootImage.hart[base_secondary[i]-1].privMode);
-						exit(EXIT_FAILURE);
-					}
-				}
-			}
 			Do_State_Transition(STATE_NEW_PAYLOAD);
 			break;
 
@@ -1163,7 +1163,7 @@ static void Handle_STATE_NEW_PAYLOAD_ANCILLIARY_DATA(yaml_event_t *pEvent)
 {
 	assert(pEvent);
 
-	//printf("%s(): event %d / token %s\n", __func__, pEvent->type, pEvent->data.scalar.value);
+	debug_printf(7, "%s(): event %d / token %s\n", __func__, pEvent->type, pEvent->data.scalar.value);
 	switch (pEvent->type) {
 	case YAML_MAPPING_START_EVENT:
 		break;
@@ -1210,22 +1210,18 @@ void yaml_parser(char const * const input_filename)
 	}
 
 	strncpy(bootImage.set_name, "PolarFireSOC-HSS::", BOOT_IMAGE_MAX_NAME_LEN-2);
-	bootImage.hart[0].privMode = PRV_ILLEGAL;
-	bootImage.hart[1].privMode = PRV_ILLEGAL;
-	bootImage.hart[2].privMode = PRV_ILLEGAL;
-	bootImage.hart[3].privMode = PRV_ILLEGAL;
 
-	bootImage.hart[0].flags = 0u;
-	bootImage.hart[1].flags = 0u;
-	bootImage.hart[2].flags = 0u;
-	bootImage.hart[3].flags = 0u;
+	for (int i = 0; i < 4; i++) {
+		bootImage.hart[i].privMode = PRV_ILLEGAL;
+		bootImage.hart[i].flags = 0u;
+	}
 
 	yaml_parser_set_input_file(&parser, configFileIn);
 	yaml_event_t event;
 
 	do {
 		if (!yaml_parser_parse(&parser, &event)) {
-			perror("yaml_parser_parse()");
+			fprintf(stderr, "yaml_parser_parse(): %d\n", parser.error);
 			exit(EXIT_FAILURE);
 		}
 
