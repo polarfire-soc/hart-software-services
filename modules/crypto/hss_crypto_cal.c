@@ -45,6 +45,9 @@
 #include "calini.h"
 #include "calenum.h"
 #include "hash.h"
+#include "pk.h"
+#include "pkx.h"
+#include "utils.h"
 
 static void crypto_init_(void)
 {
@@ -150,38 +153,70 @@ bool HSS_Crypto_Verify_ECDSA_P384(const size_t siglen, uint8_t sigBuffer[siglen]
         result = false;
     } else {
 #define SHA384_DIGEST_SIZE  48
-#define P384_MOD 0
-        uint8_t hashBuffer[SHA384_DIGEST_SIZE];
-        retval = CALHash(SATHASHTYPE_SHA384, dataBuf, dataBufSize, hashBuffer);
+#define PARAM_WORD_SIZE     12
+#define PUB_KEY_X_OFFSET    24
+	    /* signature is composed of (r, s) */
+	uint32_t *sigR = (uint32_t *)&sigBuffer[0];
+	uint32_t *sigS = (uint32_t *)&sigBuffer[SHA384_DIGEST_SIZE];
 
-        if (retval == SATR_SUCCESS) {
-            retval = CALPKTrfRes(SAT_TRUE);
+	/* public key, after 24-byte header, is composed of (x, y) */
+	uint32_t *pubKeyX = (uint32_t *)&(SECP384R1_ECDSA_public_key[PUB_KEY_X_OFFSET]);
+	uint32_t *pubKeyY = (uint32_t *)&(SECP384R1_ECDSA_public_key[PUB_KEY_X_OFFSET +
+				SHA384_DIGEST_SIZE]);
 
-            uint32_t u32SigBuffer[96/sizeof(uint32_t)];
-            memcpy(u32SigBuffer, sigBuffer, 96);
+	/* adjust endian of Public Key X & Y components */
+	CALWordReverse(pubKeyX, PARAM_WORD_SIZE);
+	CALByteReverseWord(pubKeyX, PARAM_WORD_SIZE);
+	CALWordReverse(pubKeyY, PARAM_WORD_SIZE);
+	CALByteReverseWord(pubKeyY, PARAM_WORD_SIZE);
 
-            uint32_t u32PubKeyBuffer[96/sizeof(uint32_t)];
-            memcpy(u32PubKeyBuffer, &(x509_asn1_ec_der_p384_root[24]), 96);
+	/* adjust endian of Signature R and S components */
+	CALWordReverse(sigR, PARAM_WORD_SIZE);
+	CALByteReverseWord(sigR, PARAM_WORD_SIZE);
+	CALWordReverse(sigS, PARAM_WORD_SIZE);
+	CALByteReverseWord(sigS, PARAM_WORD_SIZE);
 
-            if (retval == SATR_SUCCESS) {
-                // signature is composed of (r, s)
-                uint32_t *sigR = &(u32SigBuffer[0]), *sigS = &(u32SigBuffer[96/(sizeof(uint32_t)*2)]);
+	retval = CALECPtValidate(pubKeyX, pubKeyY, P384_b, P384_MOD, SAT_NULL,
+					PARAM_WORD_SIZE);
 
-                // public key, after 24-byte header, is composed of (x, y)
-                uint32_t *pubKeyX = &(u32PubKeyBuffer[0]), *pubKeyY = &(u32PubKeyBuffer[96/(sizeof(uint32_t)*2)]);
+	if (retval == SATR_SUCCESS) {
+		retval = CALPKTrfRes(SAT_TRUE);
+		switch (retval) {
+		case SATR_SUCCESS:
+			break;
+		case SATR_VALPARMX:
+			mHSS_DEBUG_PRINTF(LOG_NORMAL, "X parameter not in range \n");
+			break;
+		case SATR_VALPARMY:
+			mHSS_DEBUG_PRINTF(LOG_ERROR, "Y parameter not in range\n");
+			break;
+		case SATR_VALPARMB:
+			mHSS_DEBUG_PRINTF(LOG_ERROR, "B parameter greater than modulus\n");
+			break;
+		case SATR_VALIDATEFAIL:
+			mHSS_DEBUG_PRINTF(LOG_ERROR, "public key is not on the curve\n");
+			break;
+		}
+	} else {
+		mHSS_DEBUG_PRINTF(LOG_ERROR, "public key validation fail \r\n");
+	}
 
-                retval = CALECDSAVerify((const uint32_t *)hashBuffer, P384_Gx, P384_Gy, pubKeyX, pubKeyY,
-                    sigR, sigS, P384_b, P384_MOD, SAT_NULL, P384_n, P384_npc, SHA384_DIGEST_SIZE, SAT_FALSE);
+	if (retval != SATR_SUCCESS) {
+		return result;
+	}
 
-                if (retval == SATR_SUCCESS) {
-                    retval = CALPKTrfRes(SAT_TRUE);
-                    if (retval == SATR_SUCCESS) {
-                        result = true;
-                    }
-                }
-            }
-        }
+	retval = CALECDSAVerifyHash((uint32_t *)&dataBuf[0], SATHASHTYPE_SHA384,
+			dataBufSize, P384_Gx, P384_Gy, pubKeyX, pubKeyY, sigR, sigS,
+			P384_b, P384_MOD, SAT_NULL, P384_n, P384_npc, PARAM_WORD_SIZE,
+			0, SAT_FALSE, X52CCR_DEFAULT);
+
+	if (retval == SATR_SUCCESS) {
+		retval = CALPKTrfRes(SAT_TRUE);
+		if (retval == SATR_SUCCESS) {
+			result = true;
+		}
+	}
     }
-
+    
     return result;
 }

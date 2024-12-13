@@ -32,13 +32,15 @@ INCLUDES +=\
 #
 # Boot Image Signing
 #
+PYTHON=python3
+
 ifdef CONFIG_CRYPTO_SIGNING
 PUBLIC_KEY=$(subst $\",,$(CONFIG_CRYPTO_SIGNING_KEY_PUBLIC))
 ifeq ("$(wildcard $(PUBLIC_KEY))", "")
 $(error "Public key file $(PUBLIC_KEY) specified by CONFIG_CRYPTO_SIGNING_KEY_PUBLIC does not exist")
 endif
 x509-ec-sepc384r1-public.h: $(PUBLIC_KEY)
-	tools/secure-boot/der_to_c_header.py $(PUBLIC_KEY) x509-ec-secp384r1-public.h
+	$(PYTHON) tools/secure-boot/der_to_c_header.py $(PUBLIC_KEY) x509-ec-secp384r1-public.h
 #
 # libecc
 #
@@ -181,6 +183,20 @@ endif
 # User Crypto
 #
 ifdef CONFIG_CRYPTO_USER_CRYPTO
+
+ifeq ($(BOARD), mpfs-video-kit)
+SRC_FILE = boards/$(BOARD)/fpga_design/design_description
+else
+SRC_FILE =  boards/$(BOARD)/soc_fpga_design/xml
+endif
+	
+MPFS_PART_NO := $(shell $(PYTHON) tools/secure-boot/get_mpfs_part_no.py $(SRC_FILE))
+CRYPTO_PART = MPFS250TS
+
+ifneq ($(MPFS_PART_NO), $(CRYPTO_PART))
+$(error "Device $(MPFS_PART_NO) does not support user crypto")
+endif
+
 SRCS-$(CONFIG_CRYPTO_USER_CRYPTO) += \
     modules/crypto/hss_crypto_cal.c
 
