@@ -131,7 +131,7 @@ static void gpio_ui_preboot_handler(struct StateMachine * const pMyMachine)
 #endif
     {
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-        HSS_BootHarts();
+        if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
 #endif
         pMyMachine->state = GPIO_UI_IDLE;
     }
@@ -149,7 +149,7 @@ static void gpio_ui_usbdmsc_handler(struct StateMachine * const pMyMachine)
     {
 #endif
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-        HSS_BootHarts();
+        if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
 #endif
         pMyMachine->state = GPIO_UI_IDLE;
     }
