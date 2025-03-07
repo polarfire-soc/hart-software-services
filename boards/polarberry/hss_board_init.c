@@ -85,10 +85,9 @@ bool HSS_BoardLateInit(void)
  * Is there a mux present, define is true by default
  * @return true/false
  */
-__attribute__((weak)) uint8_t fabric_sd_emmc_demux_present(void)
+uint8_t fabric_sd_emmc_demux_present(void)
 {
-    return (uint8_t) false; // In the PolalBerry board SD/eMMC demuxer is alwqays disabled due to HW architecture
-//FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT;
+    return (uint8_t) false; // In the PolarBerry board SD/eMMC demuxer is always disabled due to HW architecture
 }
 
 /*
