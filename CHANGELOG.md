@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2025.03
+
+### Added
+
+ * HSS: feat(crypto): Add user crypto support
+    
+ * Payload Generator: feat(hss-payload-gen): Update README
+    
+ * Payload Generator: feat(hss-payload-gen): Add verify to code signing
+
+### Changed
+
+ *  HSS: trivial: update copyright to 2025
+
+ *  HSS: chore(polarberry): tidy comment, remove weak bind
+
+ *  HSS: chore(README): update command to program Video Kit
+
+ *  HSS: refactor(build): include DIE and PACKAGE arguments
+
+### Fixed
+
+ *  HSS: fix(hss-payload-gen): Order of YAML issue
+
+ *  HSS: fix(mpfs-beaglev-fire): ensure payload gets initiaized
+
+ *  HSS: fix(mpfs-beaglev-fire): Add SD/emmc demux
+
 ## 2024.09
 
 ### Added
