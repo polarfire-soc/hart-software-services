@@ -2,7 +2,7 @@
 #define MIV_IHC_VERSION_H
 
 /*******************************************************************************
- * Copyright 2021-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2021-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *

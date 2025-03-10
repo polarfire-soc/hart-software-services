@@ -1,7 +1,7 @@
 /*
  * The HSS software is released under the following software license:
  *
- * Copyright 2019-2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *

@@ -1,5 +1,5 @@
 /***************************************************************************//**
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * USB MSC Class Storage Device example application to demonstrate the
  * PolarFire MSS USB operations in device mode.

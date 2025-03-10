@@ -2,7 +2,7 @@
 #define DESIGN_VERSION_INFO_H
 
 /*******************************************************************************
- * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *

@@ -2,7 +2,7 @@
  *
  * MPFS HSS Embedded Software - tools/hss-payload-generator
  *
- * Copyright 2020-2024 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2020-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -57,7 +57,7 @@ static void print_usage(char **argv) __attribute__((nonnull));
 static void intro_banner(void)
 {
 	puts("Hart Software Service formatted boot image generator v" GEN_VERSION_STRING);
-	puts("Copyright (c) 2021-2024 Microchip FPGA Embedded Systems Solutions.\n");
+	puts("Copyright (c) 2021-2025 Microchip FPGA Embedded Systems Solutions.\n");
 }
 
 static void print_usage(char **argv)

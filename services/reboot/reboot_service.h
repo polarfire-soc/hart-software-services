@@ -2,7 +2,7 @@
 #define HSS_REBOOT_SERVICE_H
 
 /*******************************************************************************
- * Copyright 2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2023-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
