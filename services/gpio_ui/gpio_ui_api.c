@@ -84,10 +84,10 @@ bool HSS_GPIO_UI_Preboot_Check_Button(void)
         MSS_GPIO_set_outputs(GPIO2_LO, leds);
 
         // debounce ...
-        uint32_t count=1000000u;
-        while (HSS_GPIO_UI_user_button_pressed() & (--count)) {
-            ;
-        }
+        //uint32_t count=1000000u;
+        //while (HSS_GPIO_UI_user_button_pressed() & (--count)) {
+        //    ;
+        //}
     }
 
     return result;
@@ -140,8 +140,10 @@ void HSS_GPIO_UI_ReportUSBProgress(uint32_t writeCount, uint32_t readCount)
     static uint32_t prev_readCount;
     uint32_t leds;
 
-    if ((writeCount != prev_writeCount) || (readCount != prev_readCount))
-    {
+    if ((writeCount == 0u) && (readCount == 0u)) {
+        leds = MSS_GPIO_get_outputs(GPIO2_LO) & ~REPORT_USBDMSC_MASK;
+        MSS_GPIO_set_outputs(GPIO2_LO, leds);
+    } else if ((writeCount != prev_writeCount) || (readCount != prev_readCount)) {
         leds = MSS_GPIO_get_outputs(GPIO2_LO);
         leds = (leds & ~REPORT_USBDMSC_MASK) | (~leds & REPORT_USBDMSC_MASK);
         MSS_GPIO_set_outputs(GPIO2_LO, leds);

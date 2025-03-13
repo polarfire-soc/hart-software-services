@@ -36,7 +36,6 @@ struct HSS_Triggers
     atomic_t ddr_trained;
     atomic_t startup_complete;
     atomic_t usbdmsc_requested;
-    atomic_t usbdmsc_finished;
     atomic_t post_boot;
     atomic_t boot_complete;
     atomic_t hart_state_changed;
@@ -47,7 +46,6 @@ struct HSS_Triggers
     .ddr_trained =         ATOMIC_INITIALIZER(0),
     .startup_complete =    ATOMIC_INITIALIZER(0),
     .usbdmsc_requested =   ATOMIC_INITIALIZER(0),
-    .usbdmsc_finished =    ATOMIC_INITIALIZER(0),
     .post_boot =           ATOMIC_INITIALIZER(0),
     .boot_complete =       ATOMIC_INITIALIZER(0),
     .hart_state_changed =  ATOMIC_INITIALIZER(0),
@@ -65,7 +63,6 @@ void HSS_Trigger_Notify(enum HSS_Event event)
         [EVENT_DDR_TRAINED] =         "DDR Trained",
         [EVENT_STARTUP_COMPLETE] =    "Initial Startup Complete",
         [EVENT_USBDMSC_REQUESTED] =   "USBDMSC Request",
-        [EVENT_USBDMSC_FINISHED] =    "USBDMSC Complete",
         [EVENT_POST_BOOT] =           "Post First Boot",
         [EVENT_BOOT_COMPLETE] =       "Boot Complete",
         [EVENT_HART_STATE_CHANGED] =  "Hart State Changed",
@@ -95,10 +92,7 @@ void HSS_Trigger_Notify(enum HSS_Event event)
 
     case EVENT_USBDMSC_REQUESTED:
         atomic_write(&triggerStatus.usbdmsc_requested, 1);
-        break;
-
-    case EVENT_USBDMSC_FINISHED:
-        atomic_write(&triggerStatus.usbdmsc_finished, 1);
+//mHSS_DEBUG_PRINTF(LOG_WARN, "Notifying Trigger USBDMSC_REQUESTED\n");
         break;
 
     case EVENT_POST_BOOT:
@@ -157,10 +151,6 @@ bool HSS_Trigger_IsNotified(enum HSS_Event event)
         result = atomic_read(&triggerStatus.usbdmsc_requested) ? true : false;
         break;
 
-    case EVENT_USBDMSC_FINISHED:
-        result = atomic_read(&triggerStatus.usbdmsc_finished) ? true : false;
-        break;
-
     case EVENT_POST_BOOT:
         result = atomic_read(&triggerStatus.post_boot) ? true : false;
         break;
@@ -203,10 +193,7 @@ void HSS_Trigger_Clear(enum HSS_Event event)
 
     case EVENT_USBDMSC_REQUESTED:
         atomic_write(&triggerStatus.usbdmsc_requested, 0);
-        break;
-
-    case EVENT_USBDMSC_FINISHED:
-        atomic_write(&triggerStatus.usbdmsc_finished, 0);
+//mHSS_DEBUG_PRINTF(LOG_WARN, "Clearing Trigger USBDMSC_REQUESTED\n");
         break;
 
     case EVENT_POST_BOOT:

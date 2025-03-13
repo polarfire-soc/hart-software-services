@@ -127,11 +127,20 @@ static HSSTicks_t readlineIdleTime = 0u;
 
 static void tinycli_preboot_handler(struct StateMachine * const pMyMachine)
 {
-   bool keyPressedFlag = false;
-   uint8_t rcv_buf;
+    bool keyPressedFlag = false;
+    uint8_t rcv_buf;
 
-   keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip\n",
-       CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
+    if (HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED)) {
+        keyPressedFlag = true;
+    } else {
+        keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip\n",
+            CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
+
+        if (HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED)) {
+            keyPressedFlag = true;
+        }
+    }
+
 
     pMyMachine->state = TINYCLI_READLINE;
 
@@ -297,6 +306,9 @@ static void tinycli_readline_handler(struct StateMachine * const pMyMachine)
             readStringLen = -1;
             myBuffer[0] = 0;
             pMyMachine->state = TINYCLI_PARSELINE;
+#if IS_ENABLED(CONFIG_SERVICE_USBDMSC)
+            HSS_Trigger_Clear(EVENT_USBDMSC_REQUESTED);
+#endif
             break;
 
         case 0x1Bu: // ESC

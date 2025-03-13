@@ -30,6 +30,7 @@
 #include "flash_drive_app.h"
 
 static void usbdmsc_init_handler(struct StateMachine * const pMyMachine);
+static void usbdmsc_idle_onEntry(struct StateMachine * const pMyMachine);
 static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine);
 static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachine);
 static void usbdmsc_waitForUSBHost_handler(struct StateMachine * const pMyMachine);
@@ -55,7 +56,7 @@ enum UartStatesEnum {
  */
 static const struct StateDesc usbdmsc_state_descs[] = {
     { (const stateType_t)USBDMSC_INITIALIZATION,    (const char *)"Init",             NULL,                            NULL,                   &usbdmsc_init_handler },
-    { (const stateType_t)USBDMSC_IDLE,              (const char *)"Idle",             NULL,                            NULL,                   &usbdmsc_idle_handler },
+    { (const stateType_t)USBDMSC_IDLE,              (const char *)"Idle",             &usbdmsc_idle_onEntry,           NULL,                   &usbdmsc_idle_handler },
     { (const stateType_t)USBDMSC_WAIT_FOR_USB_HOST, (const char *)"WaitForUSBHost",   &usbdmsc_waitForUSBHost_onEntry, NULL,                   &usbdmsc_waitForUSBHost_handler },
     { (const stateType_t)USBDMSC_ACTIVE,            (const char *)"Active",           &usbdmsc_active_onEntry,         &usbdmsc_active_onExit, &usbdmsc_active_handler },
 };
@@ -89,19 +90,27 @@ static void usbdmsc_init_handler(struct StateMachine * const pMyMachine)
         HSS_Trigger_IsNotified(EVENT_DDR_TRAINED) &&
 #endif
         HSS_Trigger_IsNotified(EVENT_STARTUP_COMPLETE)) {
-        pMyMachine->state = USBDMSC_IDLE;
+        if (HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED)) {
+            pMyMachine->state = USBDMSC_WAIT_FOR_USB_HOST;
+        } else {
+            pMyMachine->state = USBDMSC_IDLE;
+        }
     }
 }
-
 /////////////////
+
+static void usbdmsc_idle_onEntry(struct StateMachine * const pMyMachine)
+{
+    HSS_Trigger_Clear(EVENT_USBDMSC_REQUESTED);
+    USBDMSC_Shutdown();
+}
 
 static void usbdmsc_idle_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
 
     if (HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED)) {
-        HSS_Trigger_Clear(EVENT_USBDMSC_REQUESTED);
-        usbdmsc_service.state = USBDMSC_WAIT_FOR_USB_HOST;
+        pMyMachine->state = USBDMSC_WAIT_FOR_USB_HOST;
     }
 }
 
@@ -115,7 +124,7 @@ static void usbdmsc_waitForUSBHost_onEntry(struct StateMachine * const pMyMachin
         mHSS_PUTS("Waiting for USB Host to connect... (CTRL-C to quit)\n");
     } else {
         mHSS_PUTS("USBDMSC_Init() returned false\n");
-        usbdmsc_service.state = USBDMSC_IDLE;
+        pMyMachine->state = USBDMSC_IDLE;
     }
 }
 

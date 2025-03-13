@@ -1033,8 +1033,12 @@ bool HSS_TinyCLI_Parser(void)
     bool keyPressedFlag = false;
     uint8_t rcv_buf;
 
-    keyPressedFlag = HSS_ShowTimeout("Press a key to enter CLI, ESC to skip\n",
-        CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
+    if (HSS_Trigger_IsNotified(EVENT_USBDMSC_REQUESTED)) {
+        keyPressedFlag = true;
+    } else {
+        keyPressedFlag = HSS_ShowTimeout("parser: Press a key to enter CLI, ESC to skip\n",
+            CONFIG_SERVICE_TINYCLI_TIMEOUT, &rcv_buf);
+    }
 
     if (!keyPressedFlag) {
         mHSS_FANCY_PUTS(LOG_NORMAL, "CLI boot interrupt timeout\n");

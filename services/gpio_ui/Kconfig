@@ -1,6 +1,5 @@
 config SERVICE_GPIO_UI
 	bool "GPIO User Interface support"
-        depends on !SERVICE_TINYCLI
 	default n
 	help
 		This feature enables a simple user interface using GPIOs (LEDs and buttons).
