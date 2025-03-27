@@ -201,6 +201,11 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
         // Attempt to synchronize up to HSS_XYMODEM_MAX_SYNC_ATTEMPTS times
         //
         while (!synced && (syncAttempt < HSS_XYMODEM_MAX_SYNC_ATTEMPTS)) {
+
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+            HSS_Wdog_E51_Tickle();
+#endif
+
             int16_t rawStartByte = getchar_with_timeout_(timeout_sec);
 
             if ((rawStartByte >= 0) && (rawStartByte < 256)) {
