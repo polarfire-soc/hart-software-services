@@ -144,7 +144,8 @@ __attribute__((pure)) static inline uint32_t logical_to_physical_address_(const 
 
     const uint16_t logical_block_num = logical_addr / blockSize;
     const uint32_t remainder = logical_addr % blockSize;
-    uint16_t physical_block_number = pLogicalToPhysicalMap[logical_block_num];
+    //uint16_t physical_block_number = pLogicalToPhysicalMap[logical_block_num];
+    uint16_t physical_block_number = 0;
     uint32_t result = (physical_block_number * blockSize) + remainder;
 
     if (physical_block_number > blockCount) {
