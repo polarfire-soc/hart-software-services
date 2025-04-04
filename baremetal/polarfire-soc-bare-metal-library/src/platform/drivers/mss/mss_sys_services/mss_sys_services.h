@@ -2457,16 +2457,16 @@ typedef struct
 
 } SCBCTRL_TypeDef;
 
-#define MSS_SCBCTRL                    ((SCBCTRL_TypeDef*) (0x37020000UL))
+#define MSS_SCBCTRL                    ((SCBCTRL_TypeDef volatile *) (0x37020000UL))
 
 /*2kB bytes long mailbox.*/
-#define MSS_SCBMAILBOX                 ((uint32_t*) (0x37020800UL))
+#define MSS_SCBMAILBOX                 ((uint32_t volatile *) (0x37020800UL))
 
 /*SCB message register*/
-#define MSS_SCBMESSAGE                 ((uint32_t*) (0x20003190UL))
+#define MSS_SCBMESSAGE                 ((uint32_t volatile *) (0x20003190UL))
 
 /*SCB message interrupt register*/
-#define MSS_SCBMESSAGE_INT             ((uint32_t*) (0x2000318CUL))
+#define MSS_SCBMESSAGE_INT             ((uint32_t volatile *) (0x2000318CUL))
 
 #ifdef __cplusplus
 }

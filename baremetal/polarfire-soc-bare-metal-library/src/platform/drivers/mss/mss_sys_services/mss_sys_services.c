@@ -3,8 +3,11 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * PolarFire SoC Microprocessor Subsystem(MSS) System Services bare metal driver
- * implementation.
+ * @file mss_sys_services.c
+ * @author Microchip FPGA Embedded Systems Solutions
+ * @brief PolarFire SoC Microprocessor Subsystem (MSS) System Services bare
+ * metal driver implementation.
+ *
  */
 
 #include "mpfs_hal/mss_hal.h"
@@ -1940,17 +1943,9 @@ uint16_t MSS_SYS_read_response
  * required for that service.
  *
  */
-static uint16_t request_system_service
-(
-    uint8_t cmd_opcode,
-    uint8_t* cmd_data,
-    uint16_t cmd_data_size,
-    uint8_t* p_response,
-    uint16_t response_size,
-    uint16_t mb_offset,
-    uint16_t response_offset
-
-)
+static uint16_t request_system_service(uint8_t cmd_opcode, uint8_t* cmd_data,
+    uint16_t cmd_data_size, uint8_t* p_response, uint16_t response_size,
+    uint16_t mb_offset, uint16_t response_offset)
 {
     uint32_t idx;
     uint16_t ss_command = 0u;
@@ -1958,17 +1953,27 @@ static uint16_t request_system_service
     uint8_t* byte_buf ;
     uint8_t byte_off;
     uint8_t byte_index;
-    uint32_t * mailbox_reg;
+    volatile uint32_t * mailbox_reg;
     uint32_t mailbox_val = 0u;
+
+    /* In 2k mailbox memory, 511 valid offset can be used because each
+     * address has 4 bytes stored.
+     * Note : In case of last mailbox offset precaution of mailbox size
+     * should be taken care for service to work properly.*/
+    const uint16_t total_words_needed_ceiling = (cmd_data_size + 3u)/4u;
+
+    if ((mb_offset > 511) ||                                 // offset exceeds mailbox
+        ((mb_offset + total_words_needed_ceiling) > 512u) || // data overflows mailbox
+        (cmd_data == NULL))
+    {
+        return MSS_SYS_PARAM_ERR;
+    }
 
     if (MSS_SCBCTRL->SERVICES_SR & SCBCTRL_SERVICESSR_BUSY_MASK)
     {
         /* System controller is busy with executing service */
         return MSS_SYS_BUSY;
     }
-
-    /* Code for MSS_SYS_PARAM_ERR is not implemented with this version of
-       driver. */
 
     *MSS_SCBMESSAGE_INT = 0x0u; /* clear message_int reg */
 
@@ -1983,12 +1988,6 @@ static uint16_t request_system_service
     if (cmd_data_size > 0u)
     {
         word_buf = (uint32_t*)cmd_data;
-
-        /* In 2k mailbox memory, 511 valid offset can be used because each
-         * address has 4 bytes stored.
-         * Note : In case of last mailbox offset precaution of mailbox size
-         * should be taken care for service to work properly.*/
-        ASSERT((mb_offset <= 511));
 
         /* Write the user data into mail box. */
         for (idx = 0u; idx < (cmd_data_size / 4u); idx++)
@@ -2013,6 +2012,8 @@ static uint16_t request_system_service
              *mailbox_reg = mailbox_val;
         }
     }
+
+    __asm__ volatile ("fence w,w" ::: "memory"); // flush writes to hardware
 
     /* Form the SS command: bit 0to6 is the opcode, bit 7to15 is the Mailbox
      * offset For some services this field has another meaning.
