@@ -43,7 +43,7 @@ __attribute__((weak)) uint64_t end_l2_scratchpad_address(void)
  */
 __attribute__((weak)) uint32_t num_cache_ways(void)
 {
-   static_assert(LIBERO_SETTING_WAY_ENABLE >
+   static_assert(LIBERO_SETTING_WAY_ENABLE >=
                  LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS,
                  "Invalid way configuration");
    return (uint64_t)((LIBERO_SETTING_WAY_ENABLE + 1U) -

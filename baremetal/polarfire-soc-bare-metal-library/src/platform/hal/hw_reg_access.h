@@ -3,17 +3,15 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
- *
- */
-/***************************************************************************//**
- *
- * Hardware registers access functions.
- * The implementation of these function is platform and toolchain specific.
+ * @file hw_reg_access.h
+ * @author Microchip FPGA Embedded Systems Solutions
+ * @brief Hardware registers access functions.
+ * The implementation of these function is platform and tool-chain specific.
  * The functions declared here are implemented using assembler as part of the
- * processor/toolchain specific HAL.
+ * processor/tool-chain specific HAL.
  *
  */
+
 #ifndef HW_REG_ACCESS
 #define HW_REG_ACCESS
 

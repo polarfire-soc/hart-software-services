@@ -202,6 +202,11 @@ extern "C" {
 
 #define PLL_CTRL_REG_POWERDOWN_B_MASK           0x00000001UL
 
+#define PLL_CTRL_REG_DIVQ0_EN_MASK              (1U<<2U)
+#define PLL_CTRL_REG_DIVQ1_EN_MASK              (1U<<3U)
+#define PLL_CTRL_REG_DIVQ2_EN_MASK              (1U<<4U)
+#define PLL_CTRL_REG_DIVQ3_EN_MASK              (1U<<5U)
+
 typedef enum RTC_CLK_SOURCE_
 {
     SCB_80M_CLOCK                   = 0x00,       /*!< 0 SCB clock source */
@@ -319,6 +324,38 @@ uint8_t sgmii_pll_lock_scb(void);
 
  */
 void ddr_pll_config_scb_turn_off(void);
+
+/***************************************************************************//**
+  ddr_pll_config_scb_turn_off_pll_outputs()
+
+  This routine is used to turn off outputs when PLL is up and running (locked).
+  Note: Turning on/off is glitch-less
+
+  Example:
+  @code
+
+      ddr_pll_config_scb_turn_off_pll_outputs();
+
+  @endcode
+
+ */
+void ddr_pll_config_scb_turn_off_pll_outputs(void);
+
+/***************************************************************************//**
+  ddr_pll_config_scb_turn_on_pll_outputs()
+
+  This routine is used to turn on outputs when PLL is up and running (locked).
+  Note: Turning on/off is glitch-less
+
+  Example:
+  @code
+
+      ddr_pll_config_scb_turn_on_pll_outputs();
+
+  @endcode
+
+ */
+void ddr_pll_config_scb_turn_on_pll_outputs(void);
 
 /***************************************************************************//**
   set_RTC_divisor() Sets the RTC divisor based on values from Libero
