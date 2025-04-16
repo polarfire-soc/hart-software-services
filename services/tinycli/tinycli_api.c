@@ -32,7 +32,6 @@
 #include "hss_progress.h"
 #include "hss_version.h"
 #include "hss_crc32.h"
-#include "uart_helper.h"
 #include "ddr_service.h"
 #include "csr_helper.h"
 #include "reboot_service.h"

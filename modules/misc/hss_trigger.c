@@ -97,11 +97,8 @@ void HSS_Trigger_Notify(enum HSS_Event event)
 
     case EVENT_POST_BOOT:
         atomic_write(&triggerStatus.post_boot, 1);
-#if IS_ENABLED(CONFIG_SERVICE_BOOT) // TODO - move all this into uart_helper function
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
 #  if IS_ENABLED(CONFIG_UART_SURRENDER)
-#    if IS_ENABLED(CONFIG_SERVICE_TINYCLI)
-        HSS_TinyCLI_SurrenderUART();
-#    endif
 #    if IS_ENABLED(CONFIG_OPENSBI)
         mpfs_uart_surrender();
 #    endif

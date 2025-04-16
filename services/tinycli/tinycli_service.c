@@ -161,8 +161,15 @@ static void tinycli_doboot_handler(struct StateMachine * const pMyMachine)
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
     if (!HSS_DDR_IsAddrInDDR(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR) || HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
-        if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
+        if (!HSS_Trigger_IsNotified(EVENT_POST_BOOT)) {
+            if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
+        }
+
+#    if IS_ENABLED(CONFIG_UART_SURRENDER)
+        pMyMachine->state = TINYCLI_UART_SURRENDER;
+#    else
         pMyMachine->state = TINYCLI_READLINE;
+#    endif
     }
 #else
     pMyMachine->state = TINYCLI_READLINE;
@@ -354,9 +361,12 @@ static void tinycli_parseline_handler(struct StateMachine * const pMyMachine)
         }
     }
 
-    if (pMyMachine->state == TINYCLI_PARSELINE) {
-        pMyMachine->state = TINYCLI_READLINE;
-    }
+#if IS_ENABLED(CONFIG_UART_SURRENDER)
+    if (HSS_Trigger_IsNotified(EVENT_POST_BOOT)) {
+        pMyMachine->state = TINYCLI_UART_SURRENDER;
+    } else
+#endif
+    pMyMachine->state = TINYCLI_READLINE;
 }
 
 /////////////////
@@ -379,10 +389,10 @@ static void tinycli_usbdmsc_handler(struct StateMachine * const pMyMachine)
 
     if (done) {
         USBDMSC_Deactivate();
-        pMyMachine->state = TINYCLI_READLINE;
+        pMyMachine->state = TINYCLI_DOBOOT;
     }
 #else
-    pMyMachine->state = TINYCLI_READLINE;
+    pMyMachine->state = TINYCLI_DOBOOT;
 #endif
 }
 
