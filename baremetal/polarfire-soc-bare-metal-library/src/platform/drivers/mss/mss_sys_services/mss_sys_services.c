@@ -1964,7 +1964,7 @@ static uint16_t request_system_service(uint8_t cmd_opcode, uint8_t* cmd_data,
 
     if ((mb_offset > 511) ||                                 // offset exceeds mailbox
         ((mb_offset + total_words_needed_ceiling) > 512u) || // data overflows mailbox
-        (cmd_data == NULL))
+        ((cmd_data_size) && (cmd_data == NULL)))
     {
         return MSS_SYS_PARAM_ERR;
     }
