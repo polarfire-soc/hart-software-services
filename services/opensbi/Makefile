@@ -101,11 +101,16 @@ $(BINDIR)/$(BINDIR)/services/opensbi/opensbi_ecall_exts.d: $(BINDIR)/services/op
 
 ifdef CONFIG_USE_IHC
 SRCS-$(CONFIG_SERVICE_OPENSBI_IHC) += \
-	services/opensbi/opensbi_ihc_ecall.c \
-
+	services/opensbi/opensbi_ihc_ecall.c
 SRCS-$(CONFIG_SERVICE_OPENSBI_RPROC) += \
-    services/opensbi/opensbi_rproc_ecall.c \
+    services/opensbi/opensbi_rproc_ecall.c
+endif
 
+ifdef CONFIG_USE_IHC_V2
+SRCS-$(CONFIG_SERVICE_OPENSBI_IPC) += \
+	services/opensbi/opensbi_ipc_ecall.c
+SRCS-$(CONFIG_SERVICE_OPENSBI_RPROC_IPC) += \
+    services/opensbi/opensbi_rproc_ipc_ecall.c
 endif
 
 ifdef CONFIG_USE_USER_CRYPTO
@@ -146,6 +151,7 @@ endif
 
 $(BINDIR)/services/opensbi/opensbi_service.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/services/opensbi/opensbi_ihc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/opensbi/opensbi_ipc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/services/opensbi/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/irqchip/plic.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_rw.o: CFLAGS=$(CFLAGS_GCCEXT)

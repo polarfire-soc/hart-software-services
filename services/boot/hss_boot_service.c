@@ -71,6 +71,10 @@
 #  include "opensbi_rproc_ecall.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
+#  include "opensbi_rproc_ipc_ecall.h"
+#endif
+
 #if IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
 #  include "gpio_ui_service.h"
 #endif
@@ -988,7 +992,7 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
        Elf file loaded by Linux using rproc elf loader, so
        no need to reload the payload on the HSS
     */
-#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
+#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC) || IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
     if(immediate_arg == RPROC_BOOT)
     {
         struct RemoteProcMsg *rproc_data = (struct RemoteProcMsg *)p_extended_buffer_in_ddr;

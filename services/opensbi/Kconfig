@@ -2,25 +2,47 @@ config SERVICE_OPENSBI
 	def_bool y
 	depends on OPENSBI
 	help
-                This feature enables support for OPENSBI.
+        This feature enables support for OPENSBI.
                 
 		If you do not know what to do here, say Y.
 
+config SERVICE_OPENSBI_IPC
+	bool "OpenSBI IPC ecall support"
+	default y
+	depends on OPENSBI && USE_IHC_V2
+	help
+        This feature enables support for IPC ecall service compatible
+		with the Mi-V IHC IP v2.
+
+		If you do not know what to do here, say Y.
+
+config SERVICE_OPENSBI_RPROC_IPC
+	bool "Remote Proc ecall service support"
+	default yd
+	depends on SERVICE_OPENSBI_IPC
+	help
+        This feature enables support for the IPC RemoteProc ecall service
+		compatible with the Mi-V IHC IP v2.
+      
+		If you do not know what to do here, say Y.
+
 config SERVICE_OPENSBI_IHC
-	bool "OpenSBI IHC ecall support"
+	bool "OpenSBI IHC legacy ecall support"
 	default y
 	depends on OPENSBI && USE_IHC
 	help
-                This feature enables support for IHC ecall service.
+        This feature enables support for IHC ecall service
+		compatible with the legacy Mi-V IHC subsystem.
                 
 		If you do not know what to do here, say Y.
 
 config SERVICE_OPENSBI_RPROC
-	bool "Remote Proc ecall service support"
+	bool "Remote Proc legacy ecall service support"
 	default y
 	depends on SERVICE_OPENSBI_IHC
 	help
-                This feature enables support for Remote Proc ecall service.
+        This feature enables support for RemoteProc ecall service
+		compatible with the legacy Mi-V IHC subsystem.
                 
 		If you do not know what to do here, say Y.
 

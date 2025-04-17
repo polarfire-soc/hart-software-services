@@ -36,6 +36,15 @@
 #  include "opensbi_rproc_ecall.h"
 #endif
 
+#if IS_ENABLED(CONFIG_USE_IHC_V2) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IPC)
+#  include "miv_ihc.h"
+#  include "opensbi_ipc_ecall.h"
+#endif
+
+#if IS_ENABLED(CONFIG_USE_IHC_V2) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
+#  include "opensbi_rproc_ipc_ecall.h"
+#endif
+
 #if IS_ENABLED(CONFIG_USE_USER_CRYPTO) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_CRYPTO)
 #  include "opensbi_crypto_ecall.h"
 #endif
@@ -61,6 +70,20 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
 #endif
             break;
 
+        case SBI_EXT_IPC_PROBE:
+            __attribute__((fallthrough)); // deliberate fallthrough
+        case SBI_EXT_IPC_CH_INIT:
+            __attribute__((fallthrough)); // deliberate fallthrough
+        case SBI_EXT_IPC_SEND:
+            __attribute__((fallthrough)); // deliberate fallthrough
+        case SBI_EXT_IPC_RECEIVE:
+            __attribute__((fallthrough)); // deliberate fallthrough
+        case SBI_EXT_IPC_STATUS:
+#if IS_ENABLED(CONFIG_USE_IHC_V2) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IPC)
+            result = sbi_ecall_ipc_handler(extid, funcid, regs, out_val, out_trap);
+#endif
+            break;   
+
         case SBI_EXT_RPROC_STATE:
             __attribute__((fallthrough)); // deliberate fallthrough
         case SBI_EXT_RPROC_START:
@@ -68,6 +91,9 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
         case SBI_EXT_RPROC_STOP:
 #if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
             result = sbi_ecall_rproc_handler(extid, funcid, regs, out_val, out_trap);
+#endif
+#if IS_ENABLED(CONFIG_USE_IHC_V2) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
+            result = sbi_ecall_rproc_ipc_handler(extid, funcid, regs, out_val, out_trap);
 #endif
             break;
 

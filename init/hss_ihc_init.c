@@ -25,6 +25,22 @@
 
 #include "mss_plic.h"
 #include "miv_ihc.h"
+#include "miv_ihc_version.h"
+
+#if IS_ENABLED(CONFIG_USE_IHC_V2)
+enum {
+    IHC_CHAN_ID_H0_H1,
+    IHC_CHAN_ID_H0_H2,
+    IHC_CHAN_ID_H0_H3,
+    IHC_CHAN_ID_H0_H4,
+    IHC_CHAN_ID_H0_HX_MAX = IHC_CHAN_ID_H0_H4,
+    IHC_CHAN_ID_H1_H0 = 5,
+    IHC_CHAN_ID_H2_H0 = 10,
+    IHC_CHAN_ID_H3_H0 = 15,
+    IHC_CHAN_ID_H4_H0 = 20,
+    IHC_CHAN_ID_HX_H0_MAX = IHC_CHAN_ID_H4_H0,
+};
+#endif
 
 #if IS_ENABLED(CONFIG_HSS_USE_IHC)
 static uint32_t hss_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in, uint32_t message_size, bool is_ack_required, uint32_t *p_message_storage)
@@ -50,6 +66,7 @@ static uint32_t u54_ihc_incoming_(uint32_t remote_hartid, uint32_t *p_message_in
 
 bool HSS_IHCInit(void)
 {
+#if IS_ENABLED(CONFIG_USE_IHC)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Mi-V IHC\n");
 
     IHC_global_init();
@@ -71,6 +88,24 @@ bool HSS_IHCInit(void)
         IHC_local_remote_config(remote_hartid, local_hartid, u54_ihc_incoming_, u54_mp_enable, ack_disable);
 #endif
     }
+
+#else
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Mi-V IHC V2\n");
+
+    uint32_t version = *((volatile uint32_t *)IHC_IP_VERSION);
+
+    if ((version & GENMASK(23, 0)) != MIV_IHC_VERSION_MAJOR) {
+        return false;
+    }
+
+    for (uint32_t chan_id = IHC_CHAN_ID_H0_H1; chan_id <= IHC_CHAN_ID_H0_HX_MAX; chan_id++) {
+        IHC_init(chan_id);
+    }
+
+    for (uint32_t chan_id = IHC_CHAN_ID_H1_H0; chan_id <= IHC_CHAN_ID_HX_H0_MAX; chan_id+=5) {
+        IHC_init(chan_id);
+    }
+#endif
 
     return true;
 }

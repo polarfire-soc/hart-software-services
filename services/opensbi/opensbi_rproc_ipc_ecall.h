@@ -1,5 +1,5 @@
-#ifndef HSS_INIT_H
-#define HSS_INIT_H
+#ifndef OPENSBI_RPROC_SERVICE_H
+#define OPENSBI_RPROC_SERVICE_H
 
 /*******************************************************************************
  * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
@@ -25,63 +25,28 @@
  * IN THE SOFTWARE.
  *
  *
- * Hart Software Services - Toplevel Init Routines
  *
  */
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void HSS_Init(void);
+#include "opensbi_ecall.h"
 
-bool HSS_ZeroTIMs(void);
-bool HSS_ZeroDDR(void);
-bool HSS_Init_RWDATA_BSS(void);
-bool HSS_WakeSleepingHarts(void);
-bool HSS_E51_Banner(void);
+# define RPROC_BOOT 0x80
+# define RPROC_SHUTDOWN_MSG 0xFFFFFF02
 
-bool HSS_QueuesInit(void);
+#define CONTEXT_OFFLINE 0
+#define CONTEXT_RUNNING 1
 
-#if IS_ENABLED(CONFIG_SERVICE_QSPI)
-#  include "qspi_service.h"
-#endif
+struct RemoteProcMsg {
+    enum HSSHartId target;
+};
 
-#if IS_ENABLED(CONFIG_SERVICE_MMC)
-#  include "mmc_service.h"
-#endif
-
-#if IS_ENABLED(CONFIG_OPENSBI)
-bool HSS_OpenSBIInit(void);
-#endif
-
-bool HSS_DDRInit(void);
-bool HSS_DDRPrintSegConfig(void);
-bool HSS_DDRPrintL2CacheWaysConfig(void);
-bool HSS_DDRPrintL2CacheWayMasks(void);
-bool HSS_UARTInit(void);
-#if IS_ENABLED(CONFIG_USE_LOGO)
-bool HSS_LogoInit(void);
-#endif
-
-#if IS_ENABLED(CONFIG_USE_IHC) || IS_ENABLED(CONFIG_USE_IHC_V2)
-bool HSS_IHCInit(void);
-void HSS_IHCInit_U54(void);
-#endif
-
-#ifdef CONFIG_USE_PCIE
-bool HSS_PCIeInit(void);
-#endif
-
-#ifdef CONFIG_USE_TAMPER
-bool HSS_TamperInit(void);
-#endif
-
-bool HSS_USBInit(void);
-
-bool HSS_PDMAInit(void);
-
-bool HSS_ResetReasonInit(void);
+int sbi_ecall_rproc_ipc_handler(unsigned long extid, unsigned long funcid,
+    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
 
 #ifdef __cplusplus
 }
