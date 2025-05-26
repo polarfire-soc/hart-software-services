@@ -1,4 +1,3 @@
-
 /******************************************************************************************
  *
  * MPFS HSS Embedded Software
@@ -512,9 +511,7 @@ static int mpfs_domains_init(void)
                 struct sbi_scratch * const pScratch = sbi_scratch_thishart_ptr();
 
                 pDom->regions = mpfs_domains_root_regions();
-                pDom->regions[0].order = log2roundup(pScratch->fw_size);
-                pDom->regions[0].base = pScratch->fw_start & ~((1UL << pDom->regions[0].order) - 1UL);
-                pDom->regions[0].flags = 0u;
+                sbi_domain_memregion_init(pScratch->fw_start, pScratch->fw_size, 0u, &(pDom->regions[0]));
 
                 pDom->next_arg1 = hart_ledger[boot_hartid].next_arg1;
                 pDom->next_addr = hart_ledger[boot_hartid].next_addr;
