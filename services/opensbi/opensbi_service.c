@@ -270,10 +270,17 @@ enum IPIStatusCode HSS_OpenSBI_IPIHandler(TxId_t transaction_id, enum HSSHartId 
     return result;
 }
 
-void HSS_OpenSBI_Reboot(void)
+int HSS_OpenSBI_Reboot(void)
 {
+    int result = SBI_ERR_FAILED;
     uint32_t index;
 
     IPI_MessageAlloc(&index);
-    IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL);
+    if (IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, NULL, NULL)) {
+        result = SBI_OK;
+    } else {
+        IPI_MessageFree(index);
+    }
+
+    return result;
 }

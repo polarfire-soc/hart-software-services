@@ -90,6 +90,7 @@ carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_RFENCE) += ecall_rfence
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_SRST) += ecall_srst
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_TIME) += ecall_time
 carray-sbi_ecall_exts-$(CONFIG_SBI_ECALL_VENDOR) += ecall_vendor
+carray-sbi_ecall_exts-$(CONFIG_SERVICE_OPENSBI) += ecall_susp
 
 $(BINDIR)/services/opensbi/opensbi_ecall_exts.c: $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_exts.carray $(DOT_CONFIG)
 	echo " CARRAY    $<"
@@ -117,6 +118,8 @@ ifdef CONFIG_USE_USER_CRYPTO
 SRCS-$(CONFIG_SERVICE_OPENSBI_CRYPTO) += \
 	services/opensbi/opensbi_crypto_ecall.c
 endif
+
+SRCS-$(CONFIG_SERVICE_OPENSBI) += services/opensbi/opensbi_suspend_ecall.c
 
 ASM_SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	$(OPENSBI_SRC_DIR)/lib/sbi/riscv_hardfp.S \
@@ -150,8 +153,8 @@ endif
 endif
 
 $(BINDIR)/services/opensbi/opensbi_service.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(BINDIR)/services/opensbi/opensbi_ihc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/services/opensbi/opensbi_ipc_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
+$(BINDIR)/services/opensbi/opensbi_suspend_ecall.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/services/opensbi/platform.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/irqchip/plic.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/$(OPENSBI_SRC_DIR)/lib/utils/libfdt/fdt_rw.o: CFLAGS=$(CFLAGS_GCCEXT)

@@ -36,13 +36,14 @@
 #include <assert.h>
 
 #include <sbi/sbi_types.h>
-#define false FALSE
-#define true TRUE
+/* sbi_types.h already defines true/false as TRUE/FALSE aliases — no
+ * redefinition needed here. */
 
 #include <libfdt.h>
 #include <sbi/riscv_atomic.h>
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_encoding.h>
+#include <sbi/riscv_io.h>
 #include <sbi/sbi_hart.h>
 #include <sbi/sbi_console.h>
 #include <sbi/sbi_const.h>
@@ -66,7 +67,9 @@
 #include "mpfs_reg_map.h"
 
 #include "reboot_service.h"
+#include "hss_boot_service.h"
 #include "clocks/hw_mss_clks.h"    // LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
+#include "hss_clock.h"
 
 #define MPFS_HART_COUNT            5
 #define MPFS_HART_STACK_SIZE       8192
@@ -76,6 +79,10 @@
 #define MPFS_PLIC_ADDR             0xc000000
 #define MPFS_PLIC_NUM_SOURCES      186
 #define MPFS_PLIC_NUM_PRIORITIES   7
+
+/* PLIC memory map offsets — mirrors the file-scoped defines in plic.c */
+#define PLIC_CONTEXT_BASE          0x200000
+#define PLIC_CONTEXT_STRIDE        0x1000
 
 #define MPFS_ACLINT_MTIMER_FREQ    LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
 #define MPFS_ACLINT_MTIMER_ADDR    (0x02004000)
@@ -87,8 +94,6 @@
 #ifndef MPFS_ENABLED_HART_MASK
 #  define MPFS_ENABLED_HART_MASK    (1 << 1 | 1 << 2 | 1 << 3 | 1 << 4)
 #endif
-
-#define MPFS_HARITD_DISABLED            ~(MPFS_ENABLED_HART_MASK)
 
 static struct plic_data plicInfo = {
     .addr = MPFS_PLIC_ADDR,
@@ -125,9 +130,15 @@ static struct {
     int reset_reason;
     bool allow_cold_reboot;
     bool allow_warm_reboot;
+    bool has_stopped;   /* secondary hart has taken j _start; now in HSS SSMB loop, not OpenSBI WFI */
 } hart_ledger[MAX_NUM_HARTS] = { { { 0, }, } };
 
-extern unsigned long STACK_SIZE_PER_HART;
+static size_t num_sbi_domains = 0u;
+
+/* plic_set_ie() and plic_set_thresh() have their static qualifier commented
+ * out in plic.c to allow external use; declare them here at file scope. */
+extern void plic_set_ie(const struct plic_data *plic, u32 cntxid, u32 word_index, u32 val);
+extern void plic_set_thresh(const struct plic_data *plic, u32 cntxid, u32 val);
 
 static void mpfs_modify_dt(void *fdt)
 {
@@ -138,9 +149,6 @@ static void mpfs_modify_dt(void *fdt)
 
 static void __attribute__((__noreturn__)) mpfs_system_reset(u32 reset_type, u32 reset_reason)
 {
-    (void)reset_type;
-    (void)reset_reason;
-
     const u32 hartid = current_hartid();
     struct sbi_scratch * const scratch = sbi_hartid_to_scratch(hartid);
 
@@ -315,9 +323,6 @@ static int mpfs_irqchip_init(bool cold_boot)
             //    }
             //}
 
-            extern void plic_set_ie(const struct plic_data *plic, u32 cntxid, u32 word_index, u32 val);
-            extern void plic_set_thresh(const struct plic_data *plic, u32 cntxid, u32 val);
-
             /* By default, disable all IRQs for S-mode of target HART */
             if (s_cntx_id > -1) {
                 for (i = 0; i < ie_words; i++) {
@@ -414,6 +419,11 @@ __extension__ static u32 mpfs_hart_index2id[MPFS_HART_COUNT] = {
     [4] = 4,
 };
 
+size_t mpfs_domains_get_count(void)
+{
+    return num_sbi_domains;
+}
+
 void mpfs_domains_register_hart(int hartid, int boot_hartid)
 {
     hart_ledger[hartid].owner_hartid = boot_hartid;
@@ -421,6 +431,7 @@ void mpfs_domains_register_hart(int hartid, int boot_hartid)
 
     hart_ledger[hartid].reset_reason = 0;
     hart_ledger[hartid].reset_type = 0;
+    hart_ledger[hartid].has_stopped = false;
 }
 
 void mpfs_domains_deregister_hart(int hartid)
@@ -516,7 +527,7 @@ static int mpfs_domains_init(void)
         if (boot_hartid) {
             struct sbi_domain * const pDom = &dom_table[boot_hartid];
 
-            if (!pDom->index) { // { pDom->boot_hartid != boot_hartid) {
+            if (!pDom->index) { // not yet registered for this boot hart
                 pDom->boot_hartid = boot_hartid;
 
                 memcpy(pDom->name, hart_ledger[boot_hartid].name, ARRAY_SIZE(dom_table[0].name)-1);
@@ -537,6 +548,8 @@ static int mpfs_domains_init(void)
                 if (result) {
                     sbi_printf("%s(): sbi_domain_register() failed for %s\n", __func__, pDom->name);
                     break;
+                } else {
+                    num_sbi_domains++;
                 }
             }
         } else {
@@ -549,20 +562,50 @@ static int mpfs_domains_init(void)
 
 static int mpfs_hart_start(u32 hartid, ulong saddr)
 {
-    (void)hartid;
     (void)saddr;
 
-    return 0;
+    if (hart_ledger[hartid].owner_hartid != hartid && hart_ledger[hartid].has_stopped) {
+        /*
+         * Secondary hart took j _start on a previous HART_STOP and is now
+         * sitting in HSS's IPI loop.  Ask E51 to send IPI_MSG_GOTO to it.
+         * We advance HSM state START_PENDING -> STARTED here because the hart
+         * will not go through OpenSBI init_warm_startup() path.
+         */
+        hart_ledger[hartid].has_stopped = false;
+        struct sbi_scratch *rscratch = sbi_hartid_to_scratch(hartid);
+        sbi_hsm_prepare_next_jump(rscratch, hartid);
+
+        return HSS_Boot_SendResumeGOTO((enum HSSHartId)hartid,
+            rscratch->next_addr, rscratch->next_arg1) ? SBI_OK : SBI_ERR_FAILED;
+    }
+
+    /*
+     * Hart is in sbi_hsm_hart_wait() WFI loop (either the boot hart
+     * parked by Linux, or a secondary hart on its first Linux start).
+     * Wake it with a raw software IPI; OpenSBI init_warm_startup() will
+     * call sbi_hsm_prepare_next_jump() and jump to next_addr.
+     */
+    return sbi_ipi_raw_send(hartid);
 }
 
 static int mpfs_hart_stop(void)
 {
     const u32 hartid = current_hartid();
+    struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
+    void (*jump_warmboot)(void) = (void (*)(void))scratch->warmboot_addr;
+
     /* re-enable IPIs */
     csr_write(CSR_MSTATUS, MIP_MSIP);
     csr_write(CSR_MIE, MIP_MSIP);
 
-    if (hart_ledger[hartid].owner_hartid == hartid) {
+    if (hart_ledger[hartid].owner_hartid == hartid && hart_ledger[hartid].boot_pending) {
+        /*
+         * Reached via mpfs_system_reset() (SBI_EXT_SRST path): boot_pending
+         * is set only from mpfs_system_reset().  Re-enter HSS so the hart
+         * is back in the SSMB loop and available to the E51 for the next
+         * boot.  On PolarFire SoC there is no actual hardware power-off, so
+         * shutdown and reboot are treated identically here.
+         */
         switch (hart_ledger[hartid].reset_reason) {
         case SBI_SRST_RESET_REASON_SYSFAIL:
             mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d reported SYSTEM FAILURE\n", hartid);
@@ -595,11 +638,35 @@ static int mpfs_hart_stop(void)
             HSS_OpenSBI_Reboot();
             break;
         }
+
+        /* Re-enter HSS: hart rejoins the SSMB loop, ready for E51 */
+        asm("j _start");
+        __builtin_unreachable();
     }
 
-    asm("j _start");
+    if (hart_ledger[hartid].owner_hartid != hartid) {
+        /*
+         * Secondary hart stopped via plain SBI_EXT_HSM_HART_STOP.
+         * Re-enter HSS so E51 can coordinate its relaunch - either as
+         * part of a system reboot (E51 will send IPI_MSG_GOTO to the
+         * payload) or after system suspend resume (mpfs_hart_start() will
+         * ask E51 to send IPI_MSG_GOTO with the Linux resume address).
+          *
+         * Using j _start here instead of jump_warmboot() is necessary
+         * because E51 communicates via SSMB, not via raw software IPIs,
+         * so the hart must be in HSS IPI processing loop to receive it.
+         */
+        hart_ledger[hartid].has_stopped = true;
+        asm("j _start");
+        __builtin_unreachable();
+    }
 
-    // never reached
+    /*
+     * Boot hart, plain SBI_EXT_HSM_HART_STOP (parked by Linux):
+     * use the * warmboot path so it blocks in sbi_hsm_hart_wait().
+     * mpfs_hart_start() wakes it with sbi_ipi_raw_send().
+     */
+    jump_warmboot();
     __builtin_unreachable();
 }
 
@@ -609,6 +676,32 @@ bool mpfs_is_first_boot(void);
 bool mpfs_is_first_boot(void)
 {
     return (atomic_xchg(&coldboot_lottery, 1) == 0);
+}
+
+extern void mpfs_hal_turn_ddr_selfrefresh_on(void);
+extern void mpfs_hal_turn_ddr_selfrefresh_off(void);
+
+void mpfs_system_suspend(void)
+{
+    volatile uint32_t * const self_refresh_status_reg =
+        (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
+    mpfs_hal_turn_ddr_selfrefresh_on();
+    while ((*self_refresh_status_reg & MSS_DDRC_SELF_REFRESH_ACK_BIT) == 0u) {
+        ; // poll INIT_SELF_REFRESH_STATUS bit until DDRC ACKs entry
+    }
+    mHSS_DEBUG_PRINTF(LOG_WARN, "%s: self_refresh active\n", __func__);
+}
+
+void mpfs_system_resume(void)
+{
+    volatile uint32_t * const self_refresh_status_reg =
+        (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
+    mpfs_hal_turn_ddr_selfrefresh_off();
+    while ((*self_refresh_status_reg & MSS_DDRC_SELF_REFRESH_ACK_BIT) != 0u) {
+        ;
+    }
+
+    mHSS_DEBUG_PRINTF(LOG_WARN, "%s: self_refresh inactive\n", __func__);
 }
 
 const struct sbi_hsm_device mpfs_hsm = {

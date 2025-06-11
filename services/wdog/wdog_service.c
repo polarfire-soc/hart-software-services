@@ -17,6 +17,7 @@
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 #include "hss_clock.h"
+#include "hss_trigger.h"
 
 #include <assert.h>
 
@@ -157,7 +158,7 @@ static void wdog_monitoring_handler(struct StateMachine * const pMyMachine)
     wdog_status = (wdog_status >> 4) & mHSS_BITMASK_ALL_U54; // move bits[8:4] to [4:0]
     wdog_status &= hartBitmask.uint;
 
-    if (wdog_status)
+    if (wdog_status && !HSS_Trigger_IsNotified(EVENT_SYSTEM_SUSPEND_RESUME))
         HSS_reboot(wdog_status);
 }
 

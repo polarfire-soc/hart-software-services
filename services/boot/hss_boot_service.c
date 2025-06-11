@@ -1005,8 +1005,29 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
         pMachine->state = (stateType_t)BOOT_OPENSBI_INIT;
     }
 #endif
-
+    if (immediate_arg == RESUME_HART) {
+        struct ResumeMsg const * const resume_data =
+            (struct ResumeMsg const *)p_extended_buffer_in_ddr;
+        /* Send IPI_MSG_GOTO from E51 to the target hart with the Linux
+         * resume address.  E51 is the only permitted originator of GOTO
+         * messages (goto_service security policy). */
+        return IPI_Send(resume_data->target, IPI_MSG_GOTO, 0u, PRV_S,
+            (void *)resume_data->resume_pc, (void *)resume_data->resume_arg1)
+            ? IPI_SUCCESS : IPI_FAIL;
+    }
     return HSS_Boot_RestartCore(source);
+}
+
+bool HSS_Boot_SendResumeGOTO(enum HSSHartId target, uint64_t resume_pc, uint64_t resume_arg1)
+{
+    static struct ResumeMsg msg;
+    msg.target = target;
+    msg.resume_pc = resume_pc;
+    msg.resume_arg1 = resume_arg1;
+
+    bool result = IPI_Send(HSS_HART_E51, IPI_MSG_BOOT_REQUEST, 0u, RESUME_HART, &msg, NULL);
+
+    return result;
 }
 
 

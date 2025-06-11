@@ -50,6 +50,20 @@ bool HSS_Boot_PMPSetupRequest(enum HSSHartId target, uint32_t *indexOut);
 bool HSS_Boot_SBISetupRequest(enum HSSHartId target, uint32_t *indexOut);
 enum IPIStatusCode HSS_Boot_RestartCore(enum HSSHartId source);
 enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask testartHartBitmask);
+
+/* Used by mpfs_hart_start() in platform.c to resume secondary harts that
+ * re-entered HSS via j _start after SBI_EXT_HSM_HART_STOP.  Only E51 is
+ * permitted to originate IPI_MSG_GOTO messages (goto_service security
+ * policy), so the request is routed through E51 via IPI_MSG_BOOT_REQUEST. */
+#define RESUME_HART 0xc0u
+
+struct ResumeMsg {
+    enum HSSHartId target;
+    uint64_t resume_pc;
+    uint64_t resume_arg1;   /* OpenSBI scratch next_arg1 (e.g., FDT address passed in a1) */
+};
+
+bool HSS_Boot_SendResumeGOTO(enum HSSHartId target, uint64_t resume_pc, uint64_t resume_arg1);
 bool HSS_SkipBoot_IsSet(enum HSSHartId target);
 
 void HSS_Register_Boot_Image(struct HSS_BootImage *pImage);

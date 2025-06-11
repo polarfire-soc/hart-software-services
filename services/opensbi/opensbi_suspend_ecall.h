@@ -1,5 +1,5 @@
-#ifndef OPENSBI_IHC_ECALL_H
-#define OPENSBI_IHC_ECALL_H
+#ifndef OPENSBI_RESUME_ECALL_H
+#define OPENSBI_RESUME_ECALL_H
 
 /*******************************************************************************
  * Copyright 2019-2021 Microchip FPGA Embedded Systems Solutions.
@@ -33,23 +33,7 @@
 extern "C" {
 #endif
 
-#include "opensbi_ecall.h"
-
-enum {
-    MP_IRQ = 0x0,
-    ACK_IRQ = 0x1,
-};
-
-struct mpfs_ihc_msg {
-    uint32_t msg[IHC_MAX_MESSAGE_SIZE];
-};
-
-struct ihc_sbi_rx_msg {
-    struct mpfs_ihc_msg ihc_msg;
-    uint8_t irq_type;
-};
-
-int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
+int sbi_ecall_susp_handler(unsigned long extid, unsigned long funcid,
     const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
 
 #ifdef __cplusplus

@@ -126,18 +126,16 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             pMsg->msg_type = IPI_MSG_NO_MESSAGE;
 
             mHSS_DEBUG_PRINTF(LOG_NORMAL, "Address to execute is %p\n", (void *)p_extended_buffer);
+            /* Clear the GOTO IPI that woke us; leave CSR_MIE intact so that
+             * M-mode software interrupts (TLB shootdown IPIs from OpenSBI)
+             * continue to be delivered once the hart is back in Linux S-mode. */
             CSR_ClearMSIP();
-
-            uint32_t mstatus_val = csr_read(CSR_MSTATUS);
-            mstatus_val = EXTRACT_FIELD(mstatus_val, MSTATUS_MPIE);
-            csr_write(CSR_MSTATUS, mstatus_val);
-            csr_write(CSR_MIE, 0u);
 
             result = IPI_SUCCESS;
         }
 
         if (result != IPI_FAIL) {
-            // From the v1.10 RISC-V Priileged Spec:
+            // From the v1.10 RISC-V Privileged Spec:
             // The MRET, SRET, or URET instructions are used to return from traps in M-mode, S-mode,
             // or U-mode respectively. When executing an xRET instruction, supposing x PP holds the
             // value y, x IE is set to x PIE; the privilege mode is changed to y; x PIE is set to 1;
@@ -146,7 +144,8 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             HSS_U54_SetState(HSS_State_Running);
 
 #if IS_ENABLED(CONFIG_OPENSBI)
-            sbi_hart_switch_mode(hartid, 0u, (unsigned long)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
+            sbi_hart_switch_mode(hartid, (unsigned long)p_ancilliary_buffer_in_ddr,
+                (unsigned long)p_extended_buffer, next_mode, false /*next_virt -> required hypervisor */);
 #else
             // set MSTATUS.MPP to Supervisor mode, and set MSTATUS.MPIE to 1
             uint32_t mstatus_val = csr_read(mstatus);
@@ -172,11 +171,9 @@ enum IPIStatusCode HSS_GOTO_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
             // set MEPC to function address (smuggled in p_extended_buffer argument)
             csr_write(mepc, *((void **)p_extended_buffer));
 
-
-
             // execute MRET, causing MIE <= MPIE, new priv mode <= PRV_S, MPIE <= 1, MPP <= U
             register unsigned long a0 asm("a0") = hartid;
-            register unsigned long a1 asm("a1") = 0u;
+            register unsigned long a1 asm("a1") = p_ancilliary_buffer_in_ddr;
             asm("mret" : : "r"(a0), "r"(a1));
             __builtin_unreachable();
 #endif

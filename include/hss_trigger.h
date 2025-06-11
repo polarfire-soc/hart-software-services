@@ -21,6 +21,7 @@ enum HSS_Event {
     EVENT_BOOT_COMPLETE,
     EVENT_HART_STATE_CHANGED,
     EVENT_HEALTHMON,
+    EVENT_SYSTEM_SUSPEND_RESUME,
 };
 
 void HSS_Trigger_Notify(enum HSS_Event event);

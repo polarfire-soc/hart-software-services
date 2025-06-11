@@ -153,6 +153,7 @@ static void tinyCLI_MMC_(void);
 static void tinyCLI_SDCARD_(void);
 static void tinyCLI_Payload_(void);
 static void tinyCLI_SPI_(void);
+static void tinyCLI_Resume_(void);
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
 static void tinyCLI_USBDMSC_(void);
 #endif
@@ -191,6 +192,7 @@ enum CmdId {
     CMD_PAYLOAD,
     CMD_SPI,
     CMD_USBDMSC,
+    CMD_RESUME,
     CMD_SCRUB,
     CMD_ECC,
     CMD_INVALID,
@@ -301,6 +303,7 @@ static const struct tinycli_cmd toplevelCmds[] = {
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_USBDMSC, "USBDMSC", "Export eMMC as USBD Mass Storage Class.", tinyCLI_USBDMSC_ },
 #endif
+    { CMD_RESUME, "RESUME", "Resume after suspending", tinyCLI_Resume_ },
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
     { CMD_SCRUB,   "SCRUB",   "Dump Scrub service stats.", tinyCLI_Scrub_ },
 #endif
@@ -333,6 +336,7 @@ static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_USBDMSC, true },
 #endif
+    { CMD_RESUME, true },
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
     { CMD_SCRUB,   false },
 #endif
@@ -1117,3 +1121,8 @@ static void tinyCLI_ECC_(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "% 45s:  %" PRIu64 "\n", "L2 ECCDataFailCount", data);
 }
 #endif
+
+static void tinyCLI_Resume_(void)
+{
+    HSS_Trigger_Notify(EVENT_SYSTEM_SUSPEND_RESUME);
+}

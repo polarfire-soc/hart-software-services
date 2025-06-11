@@ -40,6 +40,7 @@ struct HSS_Triggers
     atomic_t boot_complete;
     atomic_t hart_state_changed;
     atomic_t healthmon;
+    atomic_t system_suspend;
 } triggerStatus = {
     .opensbi_initialized = ATOMIC_INITIALIZER(0),
     .ipi_initialized =      ATOMIC_INITIALIZER(0),
@@ -50,6 +51,7 @@ struct HSS_Triggers
     .boot_complete =       ATOMIC_INITIALIZER(0),
     .hart_state_changed =  ATOMIC_INITIALIZER(0),
     .healthmon =           ATOMIC_INITIALIZER(0),
+    .system_suspend =      ATOMIC_INITIALIZER(0),
 };
 
 void HSS_Trigger_Notify(enum HSS_Event event)
@@ -116,6 +118,10 @@ void HSS_Trigger_Notify(enum HSS_Event event)
     case EVENT_HEALTHMON:
         break;
 
+    case EVENT_SYSTEM_SUSPEND_RESUME:
+        atomic_write(&triggerStatus.system_suspend, 1);
+        break;
+
     default:
         break;
     }
@@ -162,6 +168,10 @@ bool HSS_Trigger_IsNotified(enum HSS_Event event)
     case EVENT_HEALTHMON:
         break;
 
+    case EVENT_SYSTEM_SUSPEND_RESUME:
+        result = atomic_read(&triggerStatus.system_suspend) ? true : false;
+        break;
+
     default:
         break;
     }
@@ -205,6 +215,10 @@ void HSS_Trigger_Clear(enum HSS_Event event)
         break;
 
     case EVENT_HEALTHMON:
+        break;
+
+    case EVENT_SYSTEM_SUSPEND_RESUME:
+        atomic_write(&triggerStatus.system_suspend, 0);
         break;
 
     default:

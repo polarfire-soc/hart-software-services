@@ -77,6 +77,16 @@ extern "C" {
 #define SYSREGSCB_BASE_ADDR                     (0x20003000u)
 #define SYSREGSCB_MSS_STATUS_OFFSET             (0x0104u)
 
+#define MSS_DDRC_BASE_ADDR                      (0x20080000u)
+#define MSS_DDRC_SELF_REFRESH_OFFSET            (0x4234u)
+#define MSS_DDRC_SELF_REFRESH_STATUS_OFFSET     (0x4238u)
+#define MSS_DDRC_SELF_REFRESH_ACK_BIT           (0x1u)         /* bit 0: CS0 in self-refresh */
+
+#define MSS_SCB_DDR_PLL_BASE_ADDR               (0x3e010000u)
+#define MSS_SCB_DDR_PLL_CTRL_OFFSET             (0x0004u)
+#define MSS_SCB_DDR_PLL_CTRL_CLKOUT_EN_BITS     (0x0000003cu)  /* bits[5:2]: PLL output clock enables */
+#define MSS_SCB_DDR_PLL_CTRL_LOCK_BIT           (1u << 25u)    /* bit 25: PLL locked */
+
 #define MPU_BASE_ADDR                           (0x2000E000u)
 #define MPU_FIC0_OFFSET                         (0x0000u)
 #define MPU_FIC1_OFFSET                         (0x0100u)

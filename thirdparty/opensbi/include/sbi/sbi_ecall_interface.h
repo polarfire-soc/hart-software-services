@@ -28,6 +28,7 @@
 #define SBI_EXT_RFENCE				0x52464E43
 #define SBI_EXT_HSM				0x48534D
 #define SBI_EXT_SRST				0x53525354
+#define SBI_EXT_SUSP				0x53555350
 #define SBI_EXT_PMU				0x504D55
 
 /* SBI function IDs for BASE extension*/
@@ -59,6 +60,8 @@
 #define SBI_EXT_HSM_HART_STOP			0x1
 #define SBI_EXT_HSM_HART_GET_STATUS		0x2
 #define SBI_EXT_HSM_HART_SUSPEND		0x3
+
+#define SBI_EXT_SUSP_SYSTEM_SUSPEND		0x0
 
 #define SBI_HSM_STATE_STARTED			0x0
 #define SBI_HSM_STATE_STOPPED			0x1
