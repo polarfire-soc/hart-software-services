@@ -56,14 +56,21 @@ static void check_mpu_(const mss_mpu_mport_t master_port, const char * master_po
     }
 }
 
-bool USBDMSC_Init(void)
+static void reset_usb_block_(void)
 {
-    bool result;
-
     SYSREG->SUBBLK_CLOCK_CR &= ~SUBBLK_CLOCK_CR_USB_MASK;
     SYSREG->SUBBLK_CLOCK_CR |= SUBBLK_CLOCK_CR_USB_MASK;
     SYSREG->SOFT_RESET_CR &= ~SOFT_RESET_CR_USB_MASK;
     SYSREG->SOFT_RESET_CR |= SOFT_RESET_CR_USB_MASK;
+
+    HSS_USBInit();
+}
+
+bool USBDMSC_Init(void)
+{
+    bool result = true;
+
+    reset_usb_block_();
 
     PLIC_init();
 
@@ -73,12 +80,13 @@ bool USBDMSC_Init(void)
     PLIC_EnableIRQ(PLIC_USB_DMA_INT_OFFSET);
     PLIC_EnableIRQ(PLIC_USB_MC_INT_OFFSET);
 
+#if IS_ENABLED(CONFIG_SERVICE_MMC)
     PLIC_SetPriority(MMC_main_PLIC, 2u);
     PLIC_SetPriority(MMC_wakeup_PLIC, 2u);
     PLIC_EnableIRQ(MMC_main_PLIC);
     PLIC_EnableIRQ(MMC_wakeup_PLIC);
+#endif
 
-    result = HSS_USBInit();
 
     // we'll check the MPU configuration and ensure that we have sufficient
     // privileges to implement USBDMSC (and optionally MMC access) and if not we'll
@@ -155,20 +163,12 @@ bool USBDMSC_Poll(void)
         }
     }
 
-//    if (idle) {
-//        // clear any residual MMC / main USB / DMA USB interrupts
-//        PLIC_ClearPendingIRQ();
-//    }
-
     return idle;
 }
 
 void USBDMSC_Shutdown(void)
 {
-    SYSREG->SUBBLK_CLOCK_CR &= ~SUBBLK_CLOCK_CR_USB_MASK;
-    SYSREG->SUBBLK_CLOCK_CR |= SUBBLK_CLOCK_CR_USB_MASK;
-    SYSREG->SOFT_RESET_CR &= ~SOFT_RESET_CR_USB_MASK;
-    SYSREG->SOFT_RESET_CR |= SOFT_RESET_CR_USB_MASK;
+    reset_usb_block_();
 
     // clear any residual MMC / main USB / DMA USB interrupts
     PLIC_ClearPendingIRQ();

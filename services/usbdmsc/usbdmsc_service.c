@@ -197,9 +197,7 @@ void USBDMSC_Activate(void)
 
 void USBDMSC_Deactivate(void)
 {
-    if (usbdmsc_service.state != USBDMSC_IDLE) {
-        usbdmsc_service.state = USBDMSC_IDLE;
-    }
+    usbdmsc_service.state = USBDMSC_IDLE;
 }
 
 bool USBDMSC_IsActive(void)

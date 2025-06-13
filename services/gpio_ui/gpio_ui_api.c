@@ -82,12 +82,6 @@ bool HSS_GPIO_UI_Preboot_Check_Button(void)
         leds = MSS_GPIO_get_outputs(GPIO2_LO);
         leds = (leds & ~REPORT_USBDMSC_MASK) | REPORT_USBDMSC;
         MSS_GPIO_set_outputs(GPIO2_LO, leds);
-
-        // debounce ...
-        //uint32_t count=1000000u;
-        //while (HSS_GPIO_UI_user_button_pressed() & (--count)) {
-        //    ;
-        //}
     }
 
     return result;
