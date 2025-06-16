@@ -216,4 +216,5 @@ The HSS includes a scrubbing service (running on the E51) to scrub ECC protected
 
 As a consequence, scrubbing is currently off by default in provided `def_config` files.
 
-   # CONFIG_SERVICE_SCRUB is not set
+    # CONFIG_SERVICE_SCRUB is not set
+ 
