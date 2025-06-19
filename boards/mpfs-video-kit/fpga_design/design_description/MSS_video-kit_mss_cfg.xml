@@ -1,10 +1,10 @@
   <mss xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mpfs_hw_description.xsd">
     <design_information>
-      <libero_version>2023.2</libero_version>
-      <design_name>MSS_VIDEO_KIT_H264</design_name>
+      <libero_version>2022.3</libero_version>
+      <design_name>MSS_VIDEO_KIT_1</design_name>
       <mpfs_part_no>MPFS250TS</mpfs_part_no>
       <mpfs_package>FCG1152</mpfs_package>
-      <creation_date_time>02-01-2024_11:19:22</creation_date_time>
+      <creation_date_time>10-31-2023_14:15:59</creation_date_time>
       <xml_format_version>0.6.8</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -1236,14 +1236,14 @@
             <field Type="RW" name="SPI0_FABRIC" offset="0" width="1">0x0</field>
             <field Type="RW" name="SPI1_FABRIC" offset="1" width="1">0x0</field>
             <field Type="RW" name="I2C0_FABRIC" offset="2" width="1">0x1</field>
-            <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x0</field>
+            <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x1</field>
             <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x0</field>
             <field Type="RW" name="CAN1_FABRIC" offset="5" width="1">0x0</field>
             <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x0</field>
             <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x1</field>
             <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x1</field>
-            <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x0</field>
-            <field Type="RW" name="MMUART3_FABRIC" offset="10" width="1">0x0</field>
+            <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x1</field>
+            <field Type="RW" name="MMUART3_FABRIC" offset="10" width="1">0x1</field>
             <field Type="RW" name="MMUART4_FABRIC" offset="11" width="1">0x0</field>
             <field Type="RW" name="MDIO0_FABRIC" offset="12" width="1">0x0</field>
             <field Type="RW" name="MDIO1_FABRIC" offset="13" width="1">0x0</field>
@@ -1482,14 +1482,14 @@
             <field Type="RW" name="SPI0_FABRIC" offset="0" width="1">0x0</field>
             <field Type="RW" name="SPI1_FABRIC" offset="1" width="1">0x0</field>
             <field Type="RW" name="I2C0_FABRIC" offset="2" width="1">0x1</field>
-            <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x0</field>
+            <field Type="RW" name="I2C1_FABRIC" offset="3" width="1">0x1</field>
             <field Type="RW" name="CAN0_FABRIC" offset="4" width="1">0x0</field>
             <field Type="RW" name="CAN1_FABRIC" offset="5" width="1">0x0</field>
             <field Type="RW" name="QSPI_FABRIC" offset="6" width="1">0x0</field>
             <field Type="RW" name="MMUART0_FABRIC" offset="7" width="1">0x1</field>
             <field Type="RW" name="MMUART1_FABRIC" offset="8" width="1">0x1</field>
-            <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x0</field>
-            <field Type="RW" name="MMUART3_FABRIC" offset="10" width="1">0x0</field>
+            <field Type="RW" name="MMUART2_FABRIC" offset="9" width="1">0x1</field>
+            <field Type="RW" name="MMUART3_FABRIC" offset="10" width="1">0x1</field>
             <field Type="RW" name="MMUART4_FABRIC" offset="11" width="1">0x0</field>
             <field Type="RW" name="MDIO0_FABRIC" offset="12" width="1">0x0</field>
             <field Type="RW" name="MDIO1_FABRIC" offset="13" width="1">0x0</field>
@@ -2598,7 +2598,7 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x0</field>
           </register>
           <register address="0x00000008" description="Non-Cached access at 0x00_c000_0000" name="SEG1_2">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7F40</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7F40</field><!-- from 2023.02.1 to psrc: 0x7FB8 to 0x7FB0 -->
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
@@ -2608,7 +2608,7 @@
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
           <register address="0x00000016" description="Non-Cached WCB access at 0x00_d000_0000" name="SEG1_4">
-            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7F30</field>
+            <field Type="RW" name="ADDRESS_OFFSET" offset="0" width="15">0x7F30</field><!-- from 2023.02.1 to psrc: 0x7FA8 to 0x7FA0 -->
             <field Type="RW" name="RESERVED" offset="15" width="16">0x0</field>
             <field Type="RW" name="LOCKED" offset="31" width="1">0x1</field>
           </register>
@@ -4310,11 +4310,11 @@
             <field Type="RW" name="SPI1" offset="7" width="1">0x0</field>
             <field Type="RW" name="MMUART0" offset="8" width="1">0x1</field>
             <field Type="RW" name="MMUART1" offset="9" width="1">0x1</field>
-            <field Type="RW" name="MMUART2" offset="10" width="1">0x0</field>
-            <field Type="RW" name="MMUART3" offset="11" width="1">0x0</field>
+            <field Type="RW" name="MMUART2" offset="10" width="1">0x1</field>
+            <field Type="RW" name="MMUART3" offset="11" width="1">0x1</field>
             <field Type="RW" name="MMUART4" offset="12" width="1">0x0</field>
             <field Type="RW" name="I2C0" offset="13" width="1">0x1</field>
-            <field Type="RW" name="I2C1" offset="14" width="1">0x0</field>
+            <field Type="RW" name="I2C1" offset="14" width="1">0x1</field>
             <field Type="RW" name="CAN0" offset="15" width="1">0x0</field>
             <field Type="RW" name="CAN1" offset="16" width="1">0x0</field>
             <field Type="RW" name="GPIO0" offset="17" width="1">0x0</field>

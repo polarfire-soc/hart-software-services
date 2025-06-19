@@ -108,7 +108,7 @@ BIN_FILE-envm-wrapper: $(TARGET-envm-wrapper)
 
 BOOTMODE?=1
 PACKAGE?=FCVG484
-DIE?=MPFS250T_ES
+DIE?=MPFS250T
 FPGENPROG?=/opt/microsemi/Libero_SoC_v2021.2/Libero/bin64/fpgenprog
 FPGENPROG:=$(FPGENPROG:_bin=)
 
