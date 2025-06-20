@@ -34,8 +34,15 @@ EXTRA_SRCS-y += \
 EXTRA_SRCS-y += \
 	init/hss_usb_init.c
 
+ifdef CONFIG_USE_IHC
 EXTRA_SRCS-$(CONFIG_USE_IHC) += \
 	init/hss_ihc_init.c
+endif
+
+ifdef CONFIG_USE_IHC_V2
+EXTRA_SRCS-$(CONFIG_USE_IHC_V2) += \
+	init/hss_ihc_init.c
+endif
 
 EXTRA_SRCS-$(CONFIG_USE_PCIE) += \
 	init/hss_pcie_init.c

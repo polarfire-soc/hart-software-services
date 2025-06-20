@@ -44,10 +44,17 @@ config OPENSBI
 		If you don't know what to do here, say Y.
 
 config USE_IHC
-	bool "Use MiV Inter-hart Communication"
+	bool "Use the legacy Mi-V Inter-hart Communication Subsystem"
+	default n
+	help
+		Enable the legacy Mi-V Inter-Hart Communication (IHC) Subsystem
+
+config USE_IHC_V2
+	bool "Use MiV Inter-hart Communication IP v2"
+	depends on !USE_IHC
 	default y
 	help
-		Enable MiV Inter-Hart Communication (IHC)
+		Enable the Mi-V Inter-Hart Communication (IHC) IP v2
 
 config USE_USER_CRYPTO
 	bool "Use User Crypto"

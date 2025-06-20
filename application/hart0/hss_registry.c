@@ -288,9 +288,9 @@ const size_t spanOfPGlobalStateMachines = ARRAY_SIZE(pGlobalStateMachines);
 const struct InitFunction /*@null@*/ globalInitFunctions[] = {
     // Name                            FunctionPointer                Halt   Restart
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-#  if IS_ENABLED(CONFIG_USE_IHC)
+#if IS_ENABLED(CONFIG_USE_IHC) || IS_ENABLED(CONFIG_USE_IHC_V2)
     { "HSS_IHCInit",                   HSS_IHCInit,                   false, false },
-#  endif
+#endif
 #endif
     { "IPI_QueuesInit",                IPI_QueuesInit,                false, false },
 #if IS_ENABLED(CONFIG_USE_LOGO)

@@ -3,10 +3,10 @@ menu "SSMB Options"
 config HSS_USE_IHC
 	bool "IHC Support"
 	default n
-	depends on USE_IHC
+	depends on USE_IHC && !USE_IHC_V2
 	help
 		This feature enables support for signalling to the E51 monitor
-		core via IHC. The alternative is to use a shared memory buffer
+		core via the legacy Mi-V IHC. The alternative is to use a shared memory buffer
 		and IPIs for signalling.
 
 		If you don't know what to do here, say N.
