@@ -4,7 +4,7 @@
 	#address-cells = <2>;
 	#size-cells = <2>;
 	model = "Microchip PolarFire-SoC Icicle Kit";
-	compatible = "microchip,mpfs-icicle-reference-rtlv2210", "microchip,mpfs-icicle-kit", "microchip,mpfs";
+	compatible = "microchip,mpfs-icicle-reference-rtlv2507", "microchip,mpfs-icicle-kit", "microchip,mpfs";
 
 	cpus {
 		#address-cells = <1>;
