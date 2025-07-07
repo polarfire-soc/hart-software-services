@@ -93,8 +93,9 @@ bool HSS_IHCInit(void)
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Initializing Mi-V IHC V2\n");
 
     uint32_t version = *((volatile uint32_t *)IHC_IP_VERSION);
+    uint32_t major_version = (version & GENMASK(31, 24)) >> 24;
 
-    if ((version & GENMASK(23, 0)) != MIV_IHC_VERSION_MAJOR) {
+    if (major_version != MIV_IHC_VERSION_MAJOR) {
         return false;
     }
 
