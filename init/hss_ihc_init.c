@@ -24,8 +24,11 @@
 #include "ssmb_ipi.h"
 
 #include "mss_plic.h"
+
+#if IS_ENABLED(CONFIG_USE_IHC) || IS_ENABLED(CONFIG_USE_IHC_V2)
 #include "miv_ihc.h"
 #include "miv_ihc_version.h"
+#endif
 
 #if IS_ENABLED(CONFIG_USE_IHC_V2)
 enum {

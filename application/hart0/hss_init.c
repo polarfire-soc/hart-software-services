@@ -47,9 +47,12 @@
 
 #include "hss_memcpy_via_pdma.h"
 #include "mpfs_hal_version.h"
-#include "miv_ihc_version.h"
 #include "mss_sys_services.h"
 #include "mss_sysreg.h"
+
+#if IS_ENABLED(CONFIG_USE_IHC) || IS_ENABLED(CONFIG_USE_IHC_V2)
+#include "miv_ihc_version.h"
+#endif
 
 /**
  * \brief Main Initialization Function
