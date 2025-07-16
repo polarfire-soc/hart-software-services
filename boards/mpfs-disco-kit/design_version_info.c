@@ -29,7 +29,7 @@
 #include <string.h>
 
 static uint8_t design_info_[76];
-__attribute__((weak)) bool Design_Version_Info_Init(void)
+bool Design_Version_Info_Init(void)
 {
     bool result = false;
 
@@ -43,8 +43,17 @@ __attribute__((weak)) bool Design_Version_Info_Init(void)
         }
         mHSS_PUTC('\n');
 
+	const int version = ((int)design_info_[33] << 8) + design_info_[32];
+	const int year = version / 1000;
+	const int month = (version / 10) % 100;
+	const int patch = (version % 10);
+
         mHSS_FANCY_PRINTF(LOG_STATUS, "DESIGNVER: ");
-        mHSS_FANCY_PRINTF_EX("%02x%02x\n", design_info_[32], design_info_[33]);
+        mHSS_FANCY_PRINTF_EX("%02d.%02d", year, month);
+	if (patch) {
+	    mHSS_FANCY_PRINTF_EX(".%d", patch);
+	}
+        mHSS_PUTC('\n');
 
         mHSS_FANCY_PRINTF(LOG_STATUS, "BACKLEVEL: ");
         mHSS_FANCY_PRINTF_EX("%02x%02x\n", design_info_[34], design_info_[35]);
@@ -57,7 +66,7 @@ __attribute__((weak)) bool Design_Version_Info_Init(void)
     return result;
 }
 
-__attribute__((weak)) bool Get_Design_Version_Info(uint8_t **ppBuffer, size_t* pLen)
+bool Get_Design_Version_Info(uint8_t **ppBuffer, size_t* pLen)
 {
     bool result = false;
     assert(ppBuffer);
