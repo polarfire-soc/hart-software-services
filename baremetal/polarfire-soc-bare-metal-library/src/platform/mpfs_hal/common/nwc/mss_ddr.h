@@ -361,14 +361,6 @@ typedef enum DDR_MEMORY_ACCESS_
 #define DDR_DPC_VRGEN_EN_V_MASK               (0x1U << DDR_DPC_VRGEN_EN_V_SHIFT)
 #define DDR_DPC_MOVE_EN_V_MASK                (0x1U << DDR_DPC_MOVE_EN_V_SHIFT)
 
-#define DDR_DPC_VRGEN_V       ((LIBERO_SETTING_DPC_BITS & DDR_DPC_VRGEN_V_MASK)\
-                               >>DDR_DPC_VRGEN_V_SHIFT)
-#define DDR_VREF_CA                     DDR_DPC_VRGEN_V
-#define DDR_DPC_VRGEN_H       ((LIBERO_SETTING_DPC_BITS & DDR_DPC_VRGEN_H_MASK)\
-                               >>DDR_DPC_VRGEN_H_SHIFT)
-#define DDR_VREF_DATA                   DDR_DPC_VRGEN_H
-
-
 /* masks and associated values used with  DDRPHY_MODE register */
 #define DDRPHY_MODE_MASK                0x7U
 /* ECC */
@@ -384,23 +376,6 @@ typedef enum DDR_MEMORY_ACCESS_
 
 #define DMI_DBI_MASK                    (~(0x1U<<8U))
 
-#define DDR_MODE (LIBERO_SETTING_DDRPHY_MODE & DDRPHY_MODE_MASK)
-#define DDR_DATA_WIDTH ((LIBERO_SETTING_DDRPHY_MODE & (0x7U<<5U))>>5U)
-#define DDR_ECC ((LIBERO_SETTING_DDRPHY_MODE & (0x1U<<3U))>>3U)
-#define DDR_CRC ((LIBERO_SETTING_DDRPHY_MODE & (0x1U<<4U))>>4U)
-#define DDR_DM ((LIBERO_SETTING_DDRPHY_MODE & (0x1U<<8U))>>8U)
-#define DDR_RANKS ((LIBERO_SETTING_DDRPHY_MODE & (0x1U<<26U))>>26U)
-
-#define DDR_FPGA_DQ_DRIVE ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<9U))>>9U)
-#define DDR_FPGA_DQS_DRIVE ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<11U))>>11U)
-#define DDR_FPGA_ADD_CMD_DRIVE ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<13U))>>13U)
-#define DDR_FPGA_CLOCK_OUT_DRIVE ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<15U))>>15U)
-
-#define DDR_FPGA_DQ_TERMINATION ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<17U))>>17U)
-#define DDR_FPGA_DQS_TERMINATION ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<19U))>>19U)
-#define DDR_FPGA_ADD_CMD_TERMINATION ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<21U))>>21U)
-#define DDR_FPGA_PRESET_ODT_CLK ((LIBERO_SETTING_DDRPHY_MODE & (0x3U<<23U))>>23U)
-
 /* Write latency min/max settings If write calibration fails
  * For Libero setting, we iterate through these values looking for a
  * Calibration pass */
@@ -414,12 +389,6 @@ typedef enum DDR_MEMORY_ACCESS_
 #define DDR_CALIBRATION_PASSED          0xFF
 #define DDR_CALIBRATION_FAILED          0xFE
 #define DDR_CALIBRATION_SUCCESS         0xFC
-
-#define PARSE_LANE(q) (((LIBERO_SETTING_DATA_LANES_USED==3U)&&\
-                                                          (q==2U)) ? (4U) : (q))
-#define PARSE_LANE_SHIFT(q,r) (((LIBERO_SETTING_DATA_LANES_USED==3U)\
-                                                       &&(q==2U)) ? (16U) : (r))
-
 
 /*
  * Some settings that are only used during testing in new DDR setup
@@ -457,10 +426,6 @@ typedef enum DDR_MEMORY_ACCESS_
 /* for the board design by performing a manual sweep. */
 #define LIBERO_SETTING_MANUAL_REF_CLK_PHASE_OFFSET    0x00000006UL
     /* CA_BUS_RX_OFF_POST_TRAINING       [0:1]   RW value= 0x1 */
-#endif
-
-#ifndef NUM_WRITES_DDR_MODE_REG
-#define NUM_WRITES_DDR_MODE_REG 10U
 #endif
 
 #ifndef TRANSITION_A5_THRESHOLD
@@ -920,15 +885,9 @@ typedef enum DDR_MEMORY_ACCESS_
 #if !defined (RPC_OVERRIDE_166_LANE_FIFO)
 #define RPC_OVERRIDE_166_LANE_FIFO 0
 #endif
- /*
-  * 2 power size is used by the MTC. If using these in your code, the number of
-  * lanes used must be subtracted from this number. x16, subtract 1, x32
-  * subtract 2.
-  */
+
 #define ONE_GB_MTC      30U
 #define HALF_GB_MTC     29U
-#define FOUR_MB_MTC     22U
-#define TWO_MB_MTC      21U
 #define ONE_MB_MTC      20U
 
 
@@ -1081,6 +1040,8 @@ typedef enum DDR_TRAINING_SM_
 {
     DDR_TRAINING_INIT,              /*!< DDR_TRAINING_INIT */
     DDR_TRAINING_FAIL,
+    DDR_CHECK_TRAINING_SWEEP,
+    DDR_TRAINING_SWEEP,
     DDR_TRAINING_CHECK_FOR_OFFMODE, /*!< DDR_TRAINING_OFFMODE */
     DDR_TRAINING_SET_MODE_VS_BITS,
     DDR_TRAINING_FLASH_REGS,
@@ -1095,7 +1056,7 @@ typedef enum DDR_TRAINING_SM_
     DDR_TRAINING_ROTATE_CLK,
     DDR_TRAINING_SET_TRAINING_PARAMETERS,
     DDR_TRAINING_IP_SM_BCLKSCLK_SW,
-    DDR_TRAINING_MANUAL_ADDCMD_TRAINING_SW,
+    DDR_MANUAL_ADDCMD_TRAINING_SW,
     DDR_TRAINING_IP_SM_START,
     DDR_TRAINING_IP_SM_START_CHECK,
     DDR_TRAINING_IP_SM_BCLKSCLK,
@@ -1107,6 +1068,7 @@ typedef enum DDR_TRAINING_SM_
     DDR_TRAINING_SET_FINAL_MODE,
     DDR_TRAINING_WRITE_CALIBRATION,
     DDR_TRAINING_WRITE_CALIBRATION_RETRY, /*!< Retry on calibration fail */
+    DDR_SWEEP_CHECK,
     DDR_SANITY_CHECKS,
     DDR_FULL_MTC_CHECK,
     DDR_FULL_32BIT_NC_CHECK,
@@ -1137,6 +1099,7 @@ typedef enum DDR_TRAINING_SM_
     DDR_TRAINING_FAIL_START_CHECK,
     DDR_TRAINING_FAIL_PLL_LOCK,
     DDR_TRAINING_FAIL_DDR_SANITY_CHECKS,
+    DDR_SWEEP_AGAIN
 } DDR_TRAINING_SM;
 
 
@@ -1193,15 +1156,6 @@ typedef enum SEG_SETUP_{
     DEFAULT_SEG_SETUP    = 0x00,
     LIBERO_SEG_SETUP
 } SEG_SETUP;
-
-/***************************************************************************//**
-
- */
-typedef enum DDR_LP_OPTION_{
-    DDR_LOW_POWER       = 0x00U,
-    DDR_NORMAL_POWER    = 0x01U
-} DDR_LP_OPTION;
-
 
 /***************************************************************************//**
 
@@ -1429,38 +1383,6 @@ void mpfs_hal_turn_ddr_selfrefresh_off(void);
 
  */
 uint32_t mpfs_hal_ddr_selfrefresh_status(void);
-
-/***************************************************************************//**
-  The mpfs_hal_ddr_logic_power_state(uint32_t lp_state, uint32_t lp_options)
-
-  @param lp_state 0 => low power, 1 => normal
-
-  @param lp_options bit 0 => pll_outputs
-                    bit 1 => addcmd_pins
-                    bit 2 => clk_pin
-                    bit 3 => dq_pins
-                    bit 4 => dqs_pins
-                    bit 5 => dqs_pins
-                    bit 6 => odt
-
-  @return
-    none
-
-  Example:
-  @code
-      lp_state = 0U;        // low power state
-      lp_options = 0x7FU;   // All options chosen
-      mpfs_hal_sw_ddr_power_state(lp_state, lp_options);
-
-      if(status != 0U)
-      {
-          printf("self refresh is on\n");
-      }
-
-  @endcode
-
- */
-void mpfs_hal_ddr_logic_power_state(uint32_t lp_state, uint32_t lp_options);
 
 
 #ifdef __cplusplus

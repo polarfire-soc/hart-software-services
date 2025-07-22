@@ -3,12 +3,15 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * @file hw_macros.h
- * @author Microchip FPGA Embedded Systems Solutions
- * @brief Hardware registers access macros.
+ * MPFS HAL Embedded Software
  *
- * THE MACROS DEFINED IN THIS FILE ARE DEPRECATED. DO NOT USE FOR NEW
- * DEVELOPMENT.
+ */
+/*******************************************************************************
+ *
+ *  Hardware registers access macros.
+ *
+ *  THE MACROS DEFINED IN THIS FILE ARE DEPRECATED. DO NOT USE FOR NEW
+ *  DEVELOPMENT.
  *
  * These macros are used to access peripheral registers. They allow access to
  * 8, 16 and 32 bit wide registers. All accesses to peripheral registers should
