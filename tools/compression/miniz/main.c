@@ -10,6 +10,7 @@
 #include "hss_types.h"
 #include "hss_crc32.h"
 
+#define mHSS_COMPRESSED_VERSION_MINIZ 2u
 
 int main(int argc, char **argv)
 {

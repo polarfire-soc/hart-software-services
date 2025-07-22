@@ -161,3 +161,4 @@ $(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
+DIE=MPFS250T_ES

@@ -5,6 +5,7 @@
 #include "../../../include/hss_types.h"
 #include "miniz.h"
 
+#define mHSS_COMPRESSED_VERSION_MINIZ  2u
 
 int main(int argc, char **argv)
 {

@@ -126,6 +126,71 @@ bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCoun
 }
 #endif
 
+#include <stdlib.h>
+#define HEADROOM_SZ 0x20000000
+volatile int malloc_count = 0;
+void *malloc(size_t size)
+{
+  volatile uint8_t *pMallocBuffer;
+
+  pMallocBuffer = (uint8_t *)(HSS_DDRHi_GetStart() + HEADROOM_SZ*3);
+
+  mHSS_DEBUG_PRINTF(LOG_NORMAL, "malloc() stub invoked... 0x%p size %d\n", pMallocBuffer, size);
+
+  return (void *)pMallocBuffer;
+}
+
+void free(void *ptr)
+{
+  mHSS_DEBUG_PRINTF(LOG_NORMAL, "free() stub invoked... 0x%p\n", ptr);
+  (void)ptr;
+}
+
+void *realloc(void *ptr, size_t size)
+{
+  free(ptr);
+  return malloc(size);
+}
+
+#include "hss_decompress.h"
+static size_t __decompress_data(uint8_t* src, uint8_t* dest);
+static size_t __decompress_data(uint8_t* src, uint8_t* dest)
+{
+  return HSS_Decompress(src, dest);
+}
+
+static size_t jtag_receive(uint8_t *buffer, uint32_t bufferSize);
+static size_t jtag_receive(uint8_t *buffer, uint32_t bufferSize)
+{
+  volatile size_t result = 0u;
+  volatile int is_waiting_jtag = 1;
+  volatile int is_compressed = 0;
+  uint8_t *compressedBuffer = buffer + bufferSize - HEADROOM_SZ;
+
+  mHSS_PRINTF("[%s] receive_buffer(0x%p) end of buffer addr(0x%p) bufferSize(%d) headRoomSize(0x%08X) result(%d)\n",
+      __func__, buffer, compressedBuffer, bufferSize, HEADROOM_SZ, result);
+  do {
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    result = 0;
+    is_compressed = 0;
+    asm("nop");
+    asm("nop");
+    asm("nop");
+  } while (is_waiting_jtag);
+
+  if (is_compressed)
+    result = __decompress_data(compressedBuffer, buffer);
+
+  mHSS_PRINTF("[%s] receive_buffer(0x%p) is_compressed(%d) compressedBuffer(0x%p) bufferSize(%d) \n",
+      __func__, buffer, is_compressed, compressedBuffer, bufferSize);
+  mHSS_PRINTF("[%s] headRoomSize(0x%08X) result(%d)\n",
+      __func__, HEADROOM_SZ, result);
+
+  return result;
+}
+
 void hss_loader_ymodem_loop(void);
 void hss_loader_ymodem_loop(void)
 {
@@ -133,8 +198,8 @@ void hss_loader_ymodem_loop(void)
     bool done = false;
 
     uint32_t receivedCount = 0u;
-    uint8_t *pBuffer = (uint8_t *)HSS_DDR_GetStart();
-    uint32_t g_rx_size = HSS_DDR_GetSize();
+    uint8_t *pBuffer = (uint8_t *)(HSS_DDRHi_GetStart() + HEADROOM_SZ);
+    uint32_t g_rx_size = HSS_DDRHi_GetSize();
 
     while (!done) {
 #if IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_MMC)
@@ -164,7 +229,9 @@ void hss_loader_ymodem_loop(void)
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
             " 5. MMC Write -- write application file to the Device\n"
 #endif
-            " 6. Quit -- quit QSPI Utility\n\n"
+            " 6. Quit -- quit QSPI Utility\n"
+            " 7. JTAG Receive -- receive data via JTAG interface\n"
+            " 8. YMODEM Receive(Compressed File) -- receive compressed application file\n"
             " Select a number:\n";
 
         mHSS_PUTS(menuText);
@@ -275,6 +342,36 @@ void hss_loader_ymodem_loop(void)
             case '6':
                 done = true;
                 break;
+
+            case '7':
+                mHSS_PUTS("\nAttempting to receive .bin file using JTAG\n");
+                receivedCount = jtag_receive(pBuffer, g_rx_size);
+                if (receivedCount == 0) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS("\nYMODEM failed to receive file successfully\n\n");
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
+                break;
+
+            case '8':
+                mHSS_PUTS("\nAttempting to receive compressed .bin file using YMODEM (CTRL-C to cancel)"
+                    "\n");
+                receivedCount = ymodem_receive(pBuffer+HEADROOM_SZ, g_rx_size);
+                if (receivedCount == 0) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS("\nYMODEM failed to receive file successfully\n\n");
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
+                mHSS_PRINTF("Received comression data size : %d\n", receivedCount);
+                receivedCount = __decompress_data(pBuffer+HEADROOM_SZ, pBuffer);
+                if (receivedCount == 0) {
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
+                    mHSS_PUTS("\nDecompression failed to receive file successfully\n\n");
+                    HSS_Debug_Highlight(HSS_DEBUG_LOG_NORMAL);
+                }
+                mHSS_PRINTF("Decompressed data size : %d\n", receivedCount);
+                break;
+
 
             default: // ignore
                 break;

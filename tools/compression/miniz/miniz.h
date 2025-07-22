@@ -526,9 +526,15 @@ typedef struct mz_dummy_time_t_tag
 #define MZ_FREE(x) (void)x, ((void)0)
 #define MZ_REALLOC(p, x) NULL
 #else
+#if 0
 #define MZ_MALLOC(x) my_malloc(x)
 #define MZ_FREE(x) my_free(x)
 #define MZ_REALLOC(p, x) realloc(p, x)
+#else
+#define MZ_MALLOC(x) malloc(x)
+#define MZ_FREE(x) free(x)
+#define MZ_REALLOC(p, x) realloc(p, x)
+#endif
 #endif
 
 #define MZ_MAX(a, b) (((a) > (b)) ? (a) : (b))

@@ -71,12 +71,14 @@ int HSS_Decompress(const void* pInputBuffer, void* pOutputBuffer)
             result = mz_uncompress(
                 (void *)pOutputBuffer, &decompressedOutputSize,
                 (const void *)pByteOffset, (int)compressedImageHdr.compressedImageLen);
+            result = (result == 0) ? decompressedOutputSize : result;
         }
     }
 
     return result;
 }
 
+#ifndef CONFIG_SERVICE_YMODEM
 #include <stdlib.h>
 
 void *malloc(size_t size)
@@ -92,3 +94,4 @@ void free(void *ptr)
     mHSS_DEBUG_PRINTF(LOG_ERROR, "free() stub invoked...\n");
     (void)ptr;
 }
+#endif

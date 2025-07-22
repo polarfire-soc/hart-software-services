@@ -6,6 +6,8 @@
 
 int main(int argc, char **argv)
 {
+  int i;
+
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s <input>\n\n", argv[0]);
 		exit(-1);
@@ -49,8 +51,17 @@ int main(int argc, char **argv)
 	printf("offsetof(originalCrc):		%lu\n", offsetof(struct HSS_CompressedImage, originalCrc));
 	printf("offsetof(compressedImageLen):	%lu\n", offsetof(struct HSS_CompressedImage, compressedImageLen));
 	printf("offsetof(originalImageLen):	%lu\n", offsetof(struct HSS_CompressedImage, originalImageLen));
+#if 0
 	printf("offsetof(hash):			%lu\n", offsetof(struct HSS_CompressedImage, hash));
 	printf("offsetof(ecdsaSig):		%lu\n", offsetof(struct HSS_CompressedImage, ecdsaSig));
+#else
+  for (i=0; i<32; i++)
+    printf("offsetof(pad1[%d]):			0x%02X(%c)\n",
+        i, (unsigned int)offsetof(struct HSS_CompressedImage, pad1[i]), (char)offsetof(struct HSS_CompressedImage, pad1[i]));
+  for (i=0; i<32; i++)
+    printf("offsetof(pad2[%d]):			0x%02X(%c)\n",
+        i, (unsigned int)offsetof(struct HSS_CompressedImage, pad2[i]), (char)offsetof(struct HSS_CompressedImage, pad2[i]));
+#endif
 
 	printf("Magic:				0x%08X (expected 0x%08X)\n", imgHdr.magic, mHSS_COMPRESSED_MAGIC);
 	printf("Version:			0x%08X (expected 0x%08X)\n", imgHdr.version,
