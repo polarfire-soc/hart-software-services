@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2025.07
+
+### Added
+
+ * HSS: feat(IHC): Add support for Mi-V IHC v2 IP (available from Libero catalog),
+                   deprecate support for IHC v1.
+   
+ * HSS: feat(BSP): add boards directory for mpfs-icicle-kit with production silicon 
+    
+ * HSS: feat(dtb): add minimal device trees for qspi NAND and NOR flash (for use with U-Boot)
+
+ * HSS: feat(ihc): add support for the the Mi-V IHC IP driver v2
+
+    - Starting from the 2025.07 release and onwards, the Icicle Kit reference
+      design will use the Mi-V IHC IP available in the Libero catalog.
+    
+      The Mi-V IHC IP version 2 is not backwards compatible with the Mi-V IHC
+      subsystem used in the Icicle Kit reference design 2025.03 or earlier. For
+      this reason, the AMP support in the v2025.07 release will not be backwards
+      compatible with previous releases.
+
+     - Update the compatible string in the Icicle Kit device tree source and
+       blob to the latest 2025.07 reference design, which includes the new
+       MiV-IHC IP v2.
+    
+### Changed
+
+ * HSS: chore(README): update README for Windows build (python details)
+   
+ * HSS: refactor(design_version_info): make functions weak
+    
+### Fixed
+
+ * HSS: fix(USBDMSC): ensure USB OTG is re-initialized correctly when block is reset.
+   
+ * HSS: fix(SBI): fix mismatch in domain memory region order
+   
+ * HSS: fix(UART): Fix issue with UART_SURRENDER state transitions
+    
+ * HSS: fix(SC-SPI): Fix data corruption on System Controller SPI
+    
+
 ## 2025.03
 
 ### Added
@@ -16,21 +58,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
- *  HSS: trivial: update copyright to 2025
+ * HSS: trivial: update copyright to 2025
 
- *  HSS: chore(polarberry): tidy comment, remove weak bind
+ * HSS: chore(polarberry): tidy comment, remove weak bind
 
- *  HSS: chore(README): update command to program Video Kit
+ * HSS: chore(README): update command to program Video Kit
 
- *  HSS: refactor(build): include DIE and PACKAGE arguments
+ * HSS: refactor(build): include DIE and PACKAGE arguments
 
 ### Fixed
 
- *  HSS: fix(hss-payload-gen): Order of YAML issue
+ * HSS: fix(hss-payload-gen): Order of YAML issue
 
- *  HSS: fix(mpfs-beaglev-fire): ensure payload gets initiaized
+ * HSS: fix(mpfs-beaglev-fire): ensure payload gets initiaized
 
- *  HSS: fix(mpfs-beaglev-fire): Add SD/emmc demux
+ * HSS: fix(mpfs-beaglev-fire): Add SD/emmc demux
 
 ## 2024.09
 
@@ -40,11 +82,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
- *  HSS: healthmon: Ensure that health monitoring monitor arrays are board/design specific
+ * HSS: healthmon: Ensure that health monitoring monitor arrays are board/design specific
 
- *  HSS: README: update command to program Video Kit
+ * HSS: README: update command to program Video Kit
 
- *  HSS: build: include DIE and PACKAGE arguments for MPFS Video Kit
+ * HSS: build: include DIE and PACKAGE arguments for MPFS Video Kit
 
 
 ### Fixed
