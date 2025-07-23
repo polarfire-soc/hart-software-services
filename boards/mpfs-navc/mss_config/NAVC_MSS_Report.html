@@ -1,0 +1,2528 @@
+<!DOCTYPE html><html>
+<head>
+ <style>
+  body { font-family:arial; font-size:10pt; text-align:left; }
+  h1, h2 {
+   padding-top: 30px;
+  }
+  h3 {
+   padding-top: 20px;
+  }
+  h4, h5, h6 {
+   padding-top: 10px;
+   font-size:12pt;
+  }
+  table {
+   font-family:arial; font-size:10pt; text-align:left;
+   border-color:#B0B0B0;
+   border-style:solid;
+   border-width:1px;
+   border-collapse:collapse;
+  }
+  table th, table td {
+   font-family:arial; font-size:10pt; text-align:left;
+   border-color:#B0B0B0;
+   border-style:solid;
+   border-width:1px;
+   padding: 4px;
+  }
+ </style>
+</head>
+<body>
+<h1 align="center">Configuration Report for PolarFireSoC MSS Configurator</h1>
+<h2>Design Information</h2>
+<table>
+<tr>
+ <th>Design Parameter Name</th>
+ <th>Design Parameter Value</th>
+</tr>
+<tr>
+ <td>Family</td>
+ <td>PolarFireSoC</td>
+</tr>
+<tr>
+ <td>Die</td>
+ <td>MPFS460TS</td>
+</tr>
+<tr>
+ <td>Package</td>
+ <td>FCG1152</td>
+</tr>
+<tr>
+ <td>Version</td>
+ <td>2024.2</td>
+</tr>
+<tr>
+ <td>Date</td>
+ <td>Tue Jul 22 17:52:35 2025
+</td>
+</tr>
+</table>
+<p></p>
+<h2>FPGA Fabric</h2>
+<table>
+<tr>
+ <th>FPGA Fabric Programming</th>
+ <th>Required</th>
+</tr>
+</table>
+<p></p>
+<h2>MSS to/from Fabric Interface Controllers</h2>
+<table>
+<tr>
+ <th>Interface Controller Name</th>
+ <th>Enabled</th>
+</tr>
+<tr>
+ <td>FIC_0 AXI4 Initiator Interface</td>
+ <td>true</td>
+</tr>
+<tr>
+ <td>FIC_0 AXI4 Target Interface</td>
+ <td>true</td>
+</tr>
+<tr>
+ <td>FIC_1 AXI4 Initiator Interface</td>
+ <td>true</td>
+</tr>
+<tr>
+ <td>FIC_1 AXI4 Target Interface</td>
+ <td>true</td>
+</tr>
+<tr>
+ <td>FIC_2 AXI4 Target Interface</td>
+ <td>true</td>
+</tr>
+<tr>
+ <td>FIC_3 APB Initiator Interface</td>
+ <td>true</td>
+</tr>
+</table>
+<p></p>
+<h2>Peripherals</h2>
+<table>
+<tr>
+ <th>Peripheral Name</th>
+ <th>Enabled</th>
+</tr>
+<tr>
+ <td>eMMC</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>USB</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>SD/SDIO</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>Gigabit Ethernet MAC_0</td>
+ <td>SGMII_IO_B5</td>
+</tr>
+<tr>
+ <td>Gigabit Ethernet MAC_1</td>
+ <td>SGMII_IO_B5</td>
+</tr>
+<tr>
+ <td>QSPI</td>
+ <td>MSSIO_B2</td>
+</tr>
+<tr>
+ <td>SPI_0</td>
+ <td>FABRIC</td>
+</tr>
+<tr>
+ <td>SPI_1</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>MMUART_0</td>
+ <td>MSSIO_B4_B</td>
+</tr>
+<tr>
+ <td>MMUART_1</td>
+ <td>MSSIO_B4</td>
+</tr>
+<tr>
+ <td>MMUART_2</td>
+ <td>MSSIO_B2</td>
+</tr>
+<tr>
+ <td>MMUART_3</td>
+ <td>MSSIO_B2</td>
+</tr>
+<tr>
+ <td>MMUART_4</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>I2C_0</td>
+ <td>MSSIO_B4</td>
+</tr>
+<tr>
+ <td>I2C_1</td>
+ <td>MSSIO_B4</td>
+</tr>
+<tr>
+ <td>CAN_0</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>CAN_1</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_0</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_1</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_2</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_3</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_4</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_5</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_6</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_7</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_8</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_9</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_10</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_11</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_12</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_0_13</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_0</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_1</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_2</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_3</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_4</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_5</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_6</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_7</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_8</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_9</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_10</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_11</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_12</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_13</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_14</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_15</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_16</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_17</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_18</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_19</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_20</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_21</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_22</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_1_23</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_0</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_1</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_2</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_3</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_4</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_5</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_6</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_7</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_8</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_9</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_10</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_11</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_12</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_13</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_14</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_15</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_16</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_17</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_18</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_19</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_20</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_21</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_22</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_23</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_24</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_25</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_26</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_27</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_28</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_29</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_30</td>
+ <td>UNUSED</td>
+</tr>
+<tr>
+ <td>GPIO_2_31</td>
+ <td>UNUSED</td>
+</tr>
+</table>
+<p></p>
+<h2>DDR Memory</h2>
+<table>
+<tr>
+ <th>DDR</th>
+ <th>Protocol</th>
+</tr>
+<tr>
+ <td>Memory Type</td>
+ <td>DDR4</td>
+</tr>
+</table>
+<p></p>
+<h2>List of Ports</h2>
+<table>
+<tr>
+ <th>Port Name</th>
+ <th>Direction</th>
+</tr>
+<tr>
+ <td>FIC_0_ACLK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_WREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_BID[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_BRESP[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_BVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_RID[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_RDATA[63:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_RRESP[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_RLAST</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_RVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWID[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWADDR[37:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWLEN[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWSIZE[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWBURST[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWQOS[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWLOCK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWCACHE[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWPROT[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_WDATA[63:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_WSTRB[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_WLAST</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_WVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_BREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARID[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARADDR[37:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARLEN[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARSIZE[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARBURST[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARQOS[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARLOCK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARCACHE[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARPROT[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_RREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_ACLK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_WREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_BID[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_BRESP[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_BVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_RID[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_RDATA[63:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_RRESP[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_RLAST</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_RVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWID[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWADDR[37:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWLEN[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWSIZE[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWBURST[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWLOCK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWCACHE[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWQOS[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWPROT[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_WDATA[63:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_WSTRB[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_WLAST</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_WVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_BREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARID[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARADDR[37:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARLEN[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARSIZE[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARBURST[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARQOS[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARLOCK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARCACHE[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARPROT[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_RREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_ACLK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWID[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWADDR[37:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWLEN[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWSIZE[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWBURST[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWLOCK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWCACHE[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWQOS[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWPROT[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_WDATA[63:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_WSTRB[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_WLAST</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_WVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_BREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARID[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARADDR[37:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARLEN[7:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARSIZE[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARBURST[1:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARLOCK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARCACHE[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARQOS[3:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARPROT[2:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARVALID</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_RREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_PCLK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PRDATA[31:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PREADY</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PSLVERR</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_SS_F2M</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_DI_F2M</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_CLK_F2M</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>MSS_INT_F2M[63:0]</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>MSS_RESET_N_F2M</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_DLL_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_DLL_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_DLL_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_DLL_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWID[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWADDR[37:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWLEN[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWSIZE[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWBURST[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWLOCK</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWQOS[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWCACHE[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWPROT[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_AWVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_WDATA[63:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_WSTRB[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_WLAST</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_WVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_BREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARID[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARADDR[37:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARLEN[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARSIZE[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARBURST[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARLOCK</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARQOS[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARCACHE[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARPROT[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_ARVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_M_RREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_AWREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_WREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_BID[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_BRESP[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_BVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_ARREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_RID[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_RDATA[63:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_RRESP[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_RLAST</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_0_AXI4_S_RVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWID[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWADDR[37:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWLEN[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWSIZE[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWBURST[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWLOCK</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWQOS[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWCACHE[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWPROT[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_AWVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_WDATA[63:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_WSTRB[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_WLAST</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_WVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_BREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARID[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARADDR[37:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARLEN[7:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARSIZE[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARBURST[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARLOCK</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARQOS[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARCACHE[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARPROT[2:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_ARVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_M_RREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_AWREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_WREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_BID[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_BRESP[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_BVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_ARREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_RID[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_RDATA[63:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_RRESP[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_RLAST</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_1_AXI4_S_RVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_AWREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_WREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_BID[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_BRESP[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_BVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_ARREADY</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_RID[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_RDATA[63:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_RRESP[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_RLAST</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_2_AXI4_S_RVALID</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PSEL</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PADDR[31:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PWRITE</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PENABLE</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PSTRB[3:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>FIC_3_APB_M_PWDATA[31:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_SS1_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_SS1_OE_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_DO_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_DO_OE_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_CLK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SPI_0_CLK_OE_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MSS_INT_M2F[15:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>PLL_CPU_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>PLL_DDR_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>PLL_SGMII_LOCK_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MSS_RESET_N_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_SOF_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_SYNC_FRAME_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_DELAY_REQ_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_PDELAY_REQ_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_PDELAY_RESP_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_SOF_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_SYNC_FRAME_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_DELAY_REQ_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_PDELAY_REQ_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_PDELAY_RESP_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_0_TSU_TIMER_CNT_M2F[93:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_SOF_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_SYNC_FRAME_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_DELAY_REQ_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_PDELAY_REQ_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_PDELAY_RESP_TX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_SOF_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_SYNC_FRAME_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_DELAY_REQ_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_PDELAY_REQ_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_PDELAY_RESP_RX_M2F</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MAC_1_TSU_TIMER_CNT_M2F[93:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MMUART_0_RXD</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>MMUART_0_TXD</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MMUART_1_RXD</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>MMUART_1_TXD</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MMUART_2_RXD</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>MMUART_2_TXD</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>MMUART_3_RXD</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>MMUART_3_TXD</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>I2C_0_SCL</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>I2C_0_SDA</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>I2C_1_SCL</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>I2C_1_SDA</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>QSPI_DATA0</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>QSPI_DATA1</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>QSPI_DATA2</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>QSPI_DATA3</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>QSPI_SS0</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>QSPI_CLK</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SGMII_RX1_P</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SGMII_RX1_N</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SGMII_RX0_P</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SGMII_RX0_N</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>SGMII_TX1_P</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SGMII_TX1_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SGMII_TX0_P</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>SGMII_TX0_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>REFCLK</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>REFCLK_N</td>
+ <td>INPUT</td>
+</tr>
+<tr>
+ <td>BA[1:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>DQ[31:0]</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>DQ_ECC[35:32]</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>DQS[4:0]</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>DQS_N[4:0]</td>
+ <td>INOUT</td>
+</tr>
+<tr>
+ <td>A[13:0]</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>RESET_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>CKE0</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>CS0_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>ODT0</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>CK0</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>CK0_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>RAS_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>WE_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>CAS_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>ACT_N</td>
+ <td>OUTPUT</td>
+</tr>
+<tr>
+ <td>BG0</td>
+ <td>OUTPUT</td>
+</tr>
+</table>
+<p></p>
+<h2>I/O REFCLK Port settings</h2>
+<table>
+<tr>
+ <th>Port Name</th>
+ <th>Package Pin Name</th>
+ <th>Direction</th>
+ <th>I/O Standard</th>
+ <th>Schmitt Trigger</th>
+ <th>On Die Termination</th>
+ <th>Thevenin Termination</th>
+ <th>Pull Up</th>
+</tr>
+<tr>
+ <td>REFCLK_N</td>
+ <td>W3</td>
+ <td>INPUT</td>
+ <td>LVDS25</td>
+ <td>OFF</td>
+ <td>100</td>
+ <td>OFF</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>REFCLK</td>
+ <td>V3</td>
+ <td>INPUT</td>
+ <td>LVDS25</td>
+ <td>OFF</td>
+ <td>100</td>
+ <td>OFF</td>
+ <td>OFF</td>
+</tr>
+</table>
+<p></p>
+<h2>MSSIO Port Settings</h2>
+<table>
+<tr>
+ <th>Port Name</th>
+ <th>MSS I/O Number</th>
+ <th>Package Pin Name</th>
+ <th>Direction</th>
+ <th>Resistor Pull</th>
+ <th>Persist</th>
+ <th>Clamp Diode</th>
+ <th>Schmitt Trigger</th>
+ <th>Low Power Mode Input Receiver</th>
+ <th>Output Drive (mA)</th>
+ <th>Low Power Mode Output Buffer</th>
+</tr>
+<tr>
+ <td>I2C_0_SCL</td>
+ <td>MSSIO1</td>
+ <td>AA9</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>I2C_0_SDA</td>
+ <td>MSSIO2</td>
+ <td>AA7</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>I2C_1_SCL</td>
+ <td>MSSIO7</td>
+ <td>Y7</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>I2C_1_SDA</td>
+ <td>MSSIO8</td>
+ <td>Y14</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>MMUART_0_RXD</td>
+ <td>MSSIO9</td>
+ <td>Y13</td>
+ <td>INPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>MMUART_0_TXD</td>
+ <td>MSSIO10</td>
+ <td>Y8</td>
+ <td>OUTPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>MMUART_1_RXD</td>
+ <td>MSSIO11</td>
+ <td>Y11</td>
+ <td>INPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>MMUART_1_TXD</td>
+ <td>MSSIO12</td>
+ <td>AA12</td>
+ <td>OUTPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>MMUART_2_RXD</td>
+ <td>MSSIO21</td>
+ <td>U7</td>
+ <td>INPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>MMUART_2_TXD</td>
+ <td>MSSIO22</td>
+ <td>U6</td>
+ <td>OUTPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>MMUART_3_RXD</td>
+ <td>MSSIO23</td>
+ <td>V7</td>
+ <td>INPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>MMUART_3_TXD</td>
+ <td>MSSIO24</td>
+ <td>V9</td>
+ <td>OUTPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>QSPI_CLK</td>
+ <td>MSSIO30</td>
+ <td>W14</td>
+ <td>OUTPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>QSPI_SS0</td>
+ <td>MSSIO31</td>
+ <td>W13</td>
+ <td>OUTPUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>--</td>
+ <td>--</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>QSPI_DATA0</td>
+ <td>MSSIO32</td>
+ <td>U11</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>QSPI_DATA1</td>
+ <td>MSSIO33</td>
+ <td>U12</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>QSPI_DATA2</td>
+ <td>MSSIO34</td>
+ <td>V11</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+<tr>
+ <td>QSPI_DATA3</td>
+ <td>MSSIO35</td>
+ <td>U10</td>
+ <td>INOUT</td>
+ <td>UP</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>OFF</td>
+ <td>8</td>
+ <td>OFF</td>
+</tr>
+</table>
+<p></p>
+<h2>DDRIO Port Settings</h2>
+<table>
+<tr>
+ <th>Port Name</th>
+ <th>Package Pin Name</th>
+ <th>Direction</th>
+ <th>On Die Termination</th>
+ <th>Output Drive (mA)</th>
+</tr>
+<tr>
+ <td>BA[0]</td>
+ <td>AD4</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>BA[1]</td>
+ <td>AD5</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>DQ[0]</td>
+ <td>AF8</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[1]</td>
+ <td>AF7</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[2]</td>
+ <td>AE8</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[3]</td>
+ <td>AE7</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[4]</td>
+ <td>AH7</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[5]</td>
+ <td>AH8</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[6]</td>
+ <td>AF5</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[7]</td>
+ <td>AF4</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[8]</td>
+ <td>AF3</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[9]</td>
+ <td>AF2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[10]</td>
+ <td>AE2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[11]</td>
+ <td>AE1</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[12]</td>
+ <td>AG1</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[13]</td>
+ <td>AH1</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[14]</td>
+ <td>AH3</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[15]</td>
+ <td>AJ3</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[16]</td>
+ <td>AJ6</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[17]</td>
+ <td>AG5</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[18]</td>
+ <td>AH6</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[19]</td>
+ <td>AH4</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[20]</td>
+ <td>AG6</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[21]</td>
+ <td>AG4</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[22]</td>
+ <td>AK5</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[23]</td>
+ <td>AL5</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[24]</td>
+ <td>AK3</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[25]</td>
+ <td>AL3</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[26]</td>
+ <td>AK2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[27]</td>
+ <td>AK1</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[28]</td>
+ <td>AL2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[29]</td>
+ <td>AM1</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[30]</td>
+ <td>AM2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ[31]</td>
+ <td>AN2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ_ECC[32]</td>
+ <td>AE10</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ_ECC[33]</td>
+ <td>AE11</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ_ECC[34]</td>
+ <td>AG10</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQ_ECC[35]</td>
+ <td>AF10</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS[0]</td>
+ <td>AE6</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS[1]</td>
+ <td>AG2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS[2]</td>
+ <td>AJ4</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS[3]</td>
+ <td>AL4</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS[4]</td>
+ <td>AG9</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS_N[0]</td>
+ <td>AE5</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS_N[1]</td>
+ <td>AH2</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS_N[2]</td>
+ <td>AJ5</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS_N[3]</td>
+ <td>AM4</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>DQS_N[4]</td>
+ <td>AF9</td>
+ <td>INOUT</td>
+ <td>120</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>A[0]</td>
+ <td>AB1</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[1]</td>
+ <td>AB2</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[2]</td>
+ <td>AE3</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[3]</td>
+ <td>AD1</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[4]</td>
+ <td>AA2</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[5]</td>
+ <td>AA3</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[6]</td>
+ <td>AB4</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[7]</td>
+ <td>AC3</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[8]</td>
+ <td>AA4</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[9]</td>
+ <td>AD3</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[10]</td>
+ <td>AC6</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[11]</td>
+ <td>AB5</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[12]</td>
+ <td>AB6</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>A[13]</td>
+ <td>AB7</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>RESET_N</td>
+ <td>AB12</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>CKE0</td>
+ <td>AC11</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>CS0_N</td>
+ <td>AC14</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>ODT0</td>
+ <td>AB11</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>CK0</td>
+ <td>AC1</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>CK0_N</td>
+ <td>AC2</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>48</td>
+</tr>
+<tr>
+ <td>RAS_N</td>
+ <td>AC4</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>WE_N</td>
+ <td>AD8</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>CAS_N</td>
+ <td>AD9</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>ACT_N</td>
+ <td>AC9</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+<tr>
+ <td>BG0</td>
+ <td>AC12</td>
+ <td>OUTPUT</td>
+ <td>--</td>
+ <td>34</td>
+</tr>
+</table>
+<p></p>
+<h2>SGMII I/O Port settings</h2>
+<table>
+<tr>
+ <th>Port Name</th>
+ <th>Package Pin Name</th>
+ <th>Direction</th>
+ <th>I/O Standard</th>
+ <th>Resistor Pull</th>
+ <th>VCM Input Range</th>
+ <th>On Die Termination (Ohm)</th>
+ <th>Output Drive (mA)</th>
+ <th>Source Termination (Ohm)</th>
+</tr>
+<tr>
+ <td>SGMII_RX0_P</td>
+ <td>W1</td>
+ <td>INPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>MID</td>
+ <td>100</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>SGMII_RX0_N</td>
+ <td>Y1</td>
+ <td>INPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>MID</td>
+ <td>100</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>SGMII_TX0_P</td>
+ <td>Y5</td>
+ <td>OUTPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>--</td>
+ <td>--</td>
+ <td>6</td>
+ <td>100</td>
+</tr>
+<tr>
+ <td>SGMII_TX0_N</td>
+ <td>AA5</td>
+ <td>OUTPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>--</td>
+ <td>--</td>
+ <td>6</td>
+ <td>100</td>
+</tr>
+<tr>
+ <td>SGMII_RX1_P</td>
+ <td>Y2</td>
+ <td>INPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>MID</td>
+ <td>100</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>SGMII_RX1_N</td>
+ <td>Y3</td>
+ <td>INPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>MID</td>
+ <td>100</td>
+ <td>--</td>
+ <td>--</td>
+</tr>
+<tr>
+ <td>SGMII_TX1_P</td>
+ <td>W4</td>
+ <td>OUTPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>--</td>
+ <td>--</td>
+ <td>6</td>
+ <td>100</td>
+</tr>
+<tr>
+ <td>SGMII_TX1_N</td>
+ <td>W5</td>
+ <td>OUTPUT</td>
+ <td>LVDS33</td>
+ <td>NONE</td>
+ <td>--</td>
+ <td>--</td>
+ <td>6</td>
+ <td>100</td>
+</tr>
+</table>
+<p></p>
+</body></html>
