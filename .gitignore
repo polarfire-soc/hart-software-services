@@ -15,5 +15,7 @@ services/opensbi/opensbi_ecall_exts.c
 compile_commands.json
 .cache/
 
+build/
+
 # VSCode workspace settings
 .vscode/
