@@ -4,7 +4,7 @@
       <design_name>NAVC_MSS</design_name>
       <mpfs_part_no>MPFS460TS</mpfs_part_no>
       <mpfs_package>FCG1152</mpfs_package>
-      <creation_date_time>07-22-2025_17:52:35</creation_date_time>
+      <creation_date_time>08-16-2025_15:32:13</creation_date_time>
       <xml_format_version>0.6.8</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -1766,7 +1766,7 @@
             <field Type="RW" name="REG_PLL_RFDIV" offset="8" width="6">0x1</field>
             <field Type="RW" name="REG_PLL_REG_RFCLK_SEL" offset="14" width="1">0x0</field>
             <field Type="RW" name="REG_PLL_LP_REQUIRES_LOCK" offset="15" width="1">0x0</field>
-            <field Type="RW" name="REG_PLL_INTIN" offset="16" width="12">0x14</field>
+            <field Type="RW" name="REG_PLL_INTIN" offset="16" width="12">0x19</field>
             <field Type="RW" name="REG_PLL_BWI" offset="28" width="2">0x0</field>
             <field Type="RW" name="REG_PLL_BWP" offset="30" width="2">0x2</field>
           </register>
@@ -3748,7 +3748,7 @@
             <field Type="RW" name="VERSION" offset="0" width="32">0x1</field>
           </register>
           <register address="4" description="Ref Clock rate in Hz" name="MSS_EXT_SGMII_REF_CLK">
-            <field Type="RW" name="MSS_EXT_SGMII_REF_CLK" offset="0" width="32">125000000</field>
+            <field Type="RW" name="MSS_EXT_SGMII_REF_CLK" offset="0" width="32">100000000</field>
           </register>
           <register address="8" description="CPU Clock rate in Hz" name="MSS_COREPLEX_CPU_CLK">
             <field Type="RW" name="MSS_COREPLEX_CPU_CLK" offset="0" width="32">600000000</field>
@@ -3787,7 +3787,7 @@
             <field Type="RW" name="RESERVED2" offset="18" width="14">0x0</field>
           </register>
           <register address="0x00000008" description="RTC clock divider" name="RTC_CLOCK_CR">
-            <field Type="RW" name="PERIOD" offset="0" width="12">0x7D</field>
+            <field Type="RW" name="PERIOD" offset="0" width="12">0x64</field>
           </register>
           <register address="0x0000000C" description="ENVM AHB Controller setup - - Clock period = (Value+1) * (1000/AHBFREQMHZ) e.g. 7 will generate a 40ns period 25MHz clock if the AHB clock is 200MHz" name="ENVM_CR">
             <field Type="RW" name="CLOCK_PERIOD" offset="0" width="6">0x5</field>
@@ -3830,7 +3830,7 @@
             <field Type="RW" name="FBCK_SEL" offset="1" width="2">0x0</field>
             <field Type="RW" name="FOUTFB_SELMUX_EN" offset="3" width="1">0x0</field>
             <field Type="RSVD" name="RESERVE12" offset="4" width="4">0x0</field>
-            <field Type="RW" name="RFDIV" offset="8" width="6">0x5</field>
+            <field Type="RW" name="RFDIV" offset="8" width="6">0x1</field>
             <field Type="RSVD" name="RESERVE13" offset="14" width="2">0x0</field>
             <field Type="RSVD" name="RESERVE14" offset="16" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE15" offset="28" width="4">0x0</field>
@@ -3909,7 +3909,7 @@
             <field Type="RSVD" name="RESERVE01" offset="30" width="2">0x0</field>
           </register>
           <register address="0x0000002C" description="SSCG registers 2" name="SSCG_REG_2">
-            <field Type="RW" name="INTIN" offset="0" width="12">0x60</field>
+            <field Type="RW" name="INTIN" offset="0" width="12">0x18</field>
             <field Type="RO" name="INTMOD" offset="12" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE02" offset="24" width="8">0x0</field>
           </register>
@@ -4040,7 +4040,7 @@
             <field Type="RSVD" name="RESERVE01" offset="30" width="2">0x0</field>
           </register>
           <register address="0x0000002C" description="SSCG registers 2" name="SSCG_REG_2">
-            <field Type="RW" name="INTIN" offset="0" width="12">0x14</field>
+            <field Type="RW" name="INTIN" offset="0" width="12">0x19</field>
             <field Type="RO" name="INTMOD" offset="12" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE02" offset="24" width="8">0x0</field>
           </register>
@@ -4092,13 +4092,13 @@
             <field Type="RW" name="FBCK_SEL" offset="1" width="2">0x0</field>
             <field Type="RW" name="FOUTFB_SELMUX_EN" offset="3" width="1">0x0</field>
             <field Type="RSVD" name="RESERVE12" offset="4" width="4">0x0</field>
-            <field Type="RW" name="RFDIV" offset="8" width="6">0x1</field>
+            <field Type="RW" name="RFDIV" offset="8" width="6">0x19</field>
             <field Type="RSVD" name="RESERVE13" offset="14" width="2">0x0</field>
             <field Type="RSVD" name="RESERVE14" offset="16" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE15" offset="28" width="4">0x0</field>
           </register>
           <register address="0x0000000C" description="PLL fractional register" name="PLL_FRACN">
-            <field Type="RW" name="FRACN_EN" offset="0" width="1">0x1</field>
+            <field Type="RW" name="FRACN_EN" offset="0" width="1">0x0</field>
             <field Type="RW" name="FRACN_DAC_EN" offset="1" width="1">0x0</field>
             <field Type="RSVD" name="RESERVE16" offset="2" width="6">0x0</field>
             <field Type="RSVD" name="RESERVE17" offset="8" width="24">0x0</field>
@@ -4161,7 +4161,7 @@
           </register>
           <register address="0x00000024" description="SSCG registers 0" name="SSCG_REG_0">
             <field Type="RW" name="DIVVAL" offset="0" width="6">0x0</field>
-            <field Type="RW" name="FRACIN" offset="6" width="24">0x4FDF3B</field>
+            <field Type="RW" name="FRACIN" offset="6" width="24">0x0</field>
             <field Type="RSVD" name="RESERVE00" offset="30" width="2">0x0</field>
           </register>
           <register address="0x00000028" description="SSCG registers 1" name="SSCG_REG_1">
@@ -4171,7 +4171,7 @@
             <field Type="RSVD" name="RESERVE01" offset="30" width="2">0x0</field>
           </register>
           <register address="0x0000002C" description="SSCG registers 2" name="SSCG_REG_2">
-            <field Type="RW" name="INTIN" offset="0" width="12">0x15</field>
+            <field Type="RW" name="INTIN" offset="0" width="12">0x29A</field>
             <field Type="RO" name="INTMOD" offset="12" width="12">0x0</field>
             <field Type="RSVD" name="RESERVE02" offset="24" width="8">0x0</field>
           </register>
