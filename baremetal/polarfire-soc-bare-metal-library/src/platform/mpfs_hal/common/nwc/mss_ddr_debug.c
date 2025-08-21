@@ -36,6 +36,7 @@ static uint32_t g_test_buffer_not_cached[765];
  */
 extern const uint32_t ddr_test_pattern[768];
 extern const uint32_t ddr_init_pattern[64U];
+extern const char DDR_DRIVER_VERSION[];
 
 /*******************************************************************************
  * External function declarations
@@ -90,7 +91,6 @@ __attribute__((weak))\
     return(0U);
 #endif
 }
-
 
 /***************************************************************************//**
  * Print in number hex format
@@ -175,6 +175,175 @@ void print_reg_array(mss_uart_instance_t * uart, uint32_t *reg_pointer,\
 #endif
 }
 
+/**
+ * hex_num_to_decimal_string()
+ *
+ * @param value
+ * @param string
+ */
+void hex_num_to_decimal_string(uint32_t value, uint8_t *string)
+{
+    uint8_t index = 0U;
+    uint8_t index_temp = 0U;
+    uint8_t temp_string[12];
+    while(value > 0)
+    {
+        temp_string[index] = (value % 10U) + 0x30U;
+        value /= 10U;
+        index++;
+    }
+    /* reverse */
+    while(index > 0)
+    {
+        string[index_temp++] = temp_string[--index];
+    }
+    string[index_temp] = 0U;
+}
+
+/**
+ * display_driver_info()
+ *
+ * @param debug_uart
+ */
+void display_ddr_driver_info(mss_uart_instance_t *debug_uart)
+{
+    const char*ddr_mode_string[5U] = {"DDR3","DDR3L","DDR4","LPDDR3","LPDDR4"};
+    const char*ddr_data_width[2U] = {"16 bit","32 bit"};
+    const char*ddr_off_on_str[2U] = {"OFF ","ON"};
+    const char*ddr_ranks[2U] = {"ONE","TWO"};
+    const char *ddr_drive_str[5U][4U] = {{"34","30","24","48"},
+                                        {"34","30","24","48"},
+                                        {"48","34","27","60"},
+                                        {"48","40","34","60"},
+                                        {"48","40","34","60"}};
+    const char *ddr_term_str[5U][6U] =
+                                    {{"invalid","120","60","40","30","invalid"},
+                                     {"invalid","120","60","40","30","invalid"},
+                                     {"invalid","120","80","60","40","30"},
+                                     {"invalid","120","80","60","40","30"},
+                                     {"invalid","120","80","60","40","30"}};
+#if(DDR_MODE == 2U) /* DDR4*/
+    const char *ddr_mem_drive_str[5U][6U] =     {{"RZQ/6","RZQ/7"},
+                                                {"RZQ/6","RZQ/7"},
+                                                {"RZQ/7","RZQ/5"},
+                                                {"NS","NS"},
+                                                {"NS","NS"},};
+    const char*ddr4_mem_odt_str[8U] = {"Disabled","RZQ/4","RZQ/2","RZQ/6",
+                                        "RZQ/1","RZQ/5","RZQ/3","RZQ/7"};
+#endif
+    const char*ddr_cmdadd_order[2U] = {"C-R-B-C","C-B-R-C"};
+
+    uint8_t *dec_string[12U];
+
+    uprint(debug_uart,"\n\r****************************************\n\r");
+
+    uprint(debug_uart,"\n\rMPFS HAL version: ");
+    uprint(debug_uart, MPFS_HAL_VERSION_STRING);
+
+    uprint(debug_uart,"\n\rDDR Training version: ");
+    uprint(debug_uart, DDR_DRIVER_VERSION);
+
+    uprint(debug_uart, (const char*)"\n\rGenerated from MSS Configurator: ");
+    uprint(debug_uart, LIBERO_SETTING_MSS_CONFIGURATOR_VERSION);
+
+    uprint(debug_uart, (const char*)"\n\rMSS Configurator part: ");
+    uprint(debug_uart, LIBERO_SETTING_MPFS_PART);
+
+    uprint(debug_uart, (const char*)"\n\rConfigurator XML version");
+    uprint(debug_uart, (const char*)"\n\rLIBERO_SETTING_XML_VERSION: ");
+
+    uprint(debug_uart, (const char*)
+            "\n\rHeader generation script version: ");
+    uprint(debug_uart, LIBERO_SETTING_HEADER_GENERATOR_VERSION);
+
+    uprint(debug_uart, (const char*)"\n\rMSS Configurator design name: ");
+    uprint(debug_uart, LIBERO_SETTING_DESIGN_NAME);
+
+    uprint(debug_uart,
+            (const char*)"\n\r\n\rSome basic DDR setup info\n\r");
+    uprint(debug_uart, (const char*)"DDR mode: ");
+    uprint(debug_uart, (const char*)ddr_mode_string[DDR_MODE]);
+
+    uprint(debug_uart, (const char*)"\n\rData width: ");
+    uprint(debug_uart, (const char*)ddr_data_width[DDR_DATA_WIDTH]);
+
+    uprint(debug_uart, (const char*)"\n\rECC: ");
+    uprint(debug_uart, (const char*)ddr_off_on_str[DDR_ECC]);
+
+    uprint(debug_uart, (const char*)"\n\rCRC: ");
+    uprint(debug_uart, (const char*)ddr_off_on_str[DDR_CRC]);
+
+    uprint(debug_uart, (const char*)"\n\rDMI_DBI: ");
+    uprint(debug_uart, (const char*)ddr_off_on_str[DDR_DM]);
+
+    uprint(debug_uart, (const char*)"\n\rRANKS: ");
+    uprint(debug_uart, (const char*)ddr_ranks[DDR_RANKS]);
+
+    hex_num_to_decimal_string((uint32_t)LIBERO_SETTING_DDR_CLK,
+            (uint8_t *)dec_string);
+    uprint(debug_uart, (const char*)"\n\rCMD ADDRESS ORDER: ");
+    uprint(debug_uart, (const char*)ddr_cmdadd_order
+            [LIBERO_SETTING_CFG_MANUAL_ADDRESS_MAP&0x1]);
+
+    uprint(debug_uart, (const char*)"\n\rDDR FREQ: ");
+    uprint(debug_uart, (const char*)dec_string);
+    uprint(debug_uart, (const char*)"Hz\n\r");
+
+    uprint(debug_uart,
+               (const char*)"\n\r\n\rFPGA electrical settings\n\r");
+    uprint(debug_uart, (const char*)"\n\rFPGA DQ_DRIVE: ");
+    uprint(debug_uart, (const char*)ddr_drive_str[DDR_MODE][DDR_FPGA_DQ_DRIVE]);
+
+    uprint(debug_uart, (const char*)"\n\rFPGA DQS_DRIVE(mV): ");
+    uprint(debug_uart, (const char*)ddr_drive_str[DDR_MODE]
+                                                 [DDR_FPGA_DQS_DRIVE]);
+
+    uprint(debug_uart, (const char*)"\n\rFPGA ADD_CMD_DRIV(mV): ");
+    uprint(debug_uart, (const char*)ddr_drive_str[DDR_MODE]
+                                                 [DDR_FPGA_ADD_CMD_DRIVE]);
+
+    uprint(debug_uart, (const char*)"\n\rFPGA ADD_CMD_DRIVE(mV): ");
+    uprint(debug_uart, (const char*)ddr_drive_str[DDR_MODE]
+                                                 [DDR_FPGA_CLOCK_OUT_DRIVE]);
+
+    uprint(debug_uart, (const char*)"\n\rFPGA DQ_TERMINATION(Ohm): ");
+    uprint(debug_uart, (const char*)ddr_term_str[DDR_MODE]
+                                                [LIBERO_SETTING_RPC_ODT_DQ]);
+    uprint(debug_uart, (const char*)"\n\rFPGA DQS_TERMINATION(Ohm): ");
+    uprint(debug_uart, (const char*)ddr_term_str[DDR_MODE]
+                                                [LIBERO_SETTING_RPC_ODT_DQS]);
+
+    uprint32(g_debug_uart,"\n\rDQDQS training window offset delay: 0x",
+                                        (uint32_t)LIBERO_SETTING_RPC_156_VALUE);
+
+#if(DDR_MODE == 2) /* DDR4 */
+    hex_num_to_decimal_string((uint32_t)((DDR_VREF_CA)*2.5 + 10),
+            (uint8_t *)dec_string);
+    uprint(debug_uart, (const char*)"\n\rVref CA (% bank Vddi): ");
+    uprint(debug_uart, (const char*)dec_string);
+
+    hex_num_to_decimal_string((uint32_t)((DDR_VREF_DATA)*2.5 + 10),
+            (uint8_t *)dec_string);
+    uprint(debug_uart, (const char*)"\n\rVref Data (% bank Vddi): ");
+    uprint(debug_uart, (const char*)dec_string);
+#endif
+
+#if(DDR_MODE == 2) /* DDR4 */
+    uprint(debug_uart,
+               (const char*)"\n\r\n\rMemory electrical settings\n\r");
+
+    uprint(debug_uart, (const char*)"\n\rMemory drive strength: ");
+    uprint(debug_uart, (const char*)ddr_mem_drive_str[DDR_MODE]
+                                                     [LIBERO_SETTING_CFG_DS &
+                                                      0x01]);
+
+    uprint(debug_uart, (const char*)"\n\rODT Rtt nominal value: ");
+    uprint(debug_uart, (const char*)ddr4_mem_odt_str[LIBERO_SETTING_CFG_RTT &
+                                                      0x0F]);
+#endif
+
+    uprint(debug_uart,"\n\r****************************************\n\r");
+}
 #endif
 
 /***************************************************************************//**
@@ -585,6 +754,7 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
                 (const uint8_t*)"\n\n\r lane_select \t gt_err_comb \t gt_txdly \t gt_steps_180 \t gt_state \t wl_delay_0 \t dqdqs_err_done \t dqdqs_state \t delta0 \t delta1");
         for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED; ddr_lane_sel++)
         {
+            ddr_lane_sel = PARSE_LANE(ddr_lane_sel);
             CFG_DDR_SGMII_PHY->lane_select.lane_select = ddr_lane_sel;
             uprint32(g_mss_uart_debug_pt, "\n\r ", CFG_DDR_SGMII_PHY->lane_select.lane_select);
             delay(DELAY_CYCLES_50_MICRO);
@@ -630,6 +800,7 @@ uint32_t tip_register_status (mss_uart_instance_t *g_mss_uart_debug_pt)
         for (ddr_lane_sel=0U; ddr_lane_sel < LIBERO_SETTING_DATA_LANES_USED;\
                                                                     ddr_lane_sel++)
         {
+            ddr_lane_sel = PARSE_LANE(ddr_lane_sel);
             CFG_DDR_SGMII_PHY->lane_select.lane_select = ddr_lane_sel;
             uprint32(g_mss_uart_debug_pt, "\n\r ",\
                                         CFG_DDR_SGMII_PHY->lane_select.lane_select);

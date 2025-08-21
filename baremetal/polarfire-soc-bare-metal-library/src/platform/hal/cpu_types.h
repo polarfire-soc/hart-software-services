@@ -1,20 +1,24 @@
 /*******************************************************************************
- * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * MPFS HAL Embedded Software
+ * @file cpu_types.h
+ * @author Microchip FPGA Embedded Systems Solutions
+ * @brief
  *
  */
 
 #ifndef CPU_TYPES_H
 #define CPU_TYPES_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
+typedef unsigned long size_t;
 
 /*------------------------------------------------------------------------------
  * addr_t: address type.

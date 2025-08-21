@@ -22,6 +22,7 @@ typedef long            ssize_t;
 #endif
 #endif
 
+#include "mpfs_hal_version.h"
 #include "common/mss_assert.h"
 #include "common/mss_legacy_defines.h"
 #include "common/mss_beu_def.h"

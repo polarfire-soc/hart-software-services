@@ -726,6 +726,28 @@ void ddr_pll_config_scb_turn_off(void)
     MSS_SCB_DDR_PLL->PLL_CTRL       &= (uint32_t)~0x00000001UL;
 }
 
+/***************************************************************************//**
+ * This routine is used to turn off outputs when PLL is up and running. Used by
+ * power saving routine.
+ * Note: Turning on/off is glitch-less
+ ******************************************************************************/
+void ddr_pll_config_scb_turn_off_pll_outputs(void)
+{
+    MSS_SCB_DDR_PLL->PLL_CTRL       &= (uint32_t)~(PLL_CTRL_REG_DIVQ0_EN_MASK |
+                                                   PLL_CTRL_REG_DIVQ1_EN_MASK |
+                                                   PLL_CTRL_REG_DIVQ2_EN_MASK |
+                                                   PLL_CTRL_REG_DIVQ3_EN_MASK);
+}
+
+/***************************************************************************//**
+ * This routine is used to turn on outputs when PLL is up and running (locked)
+ * Note: Turning on/off is glitch-less
+ ******************************************************************************/
+void ddr_pll_config_scb_turn_on_pll_outputs(void)
+{
+    MSS_SCB_DDR_PLL->PLL_CTRL      = (LIBERO_SETTING_SGMII_PLL_CTRL) |
+                                       0x01U;  /* bit 0 == REG_POWERDOWN_B */
+}
 
 /***************************************************************************//**
  * sgmii_pll_config_scb(uint8_t option)
