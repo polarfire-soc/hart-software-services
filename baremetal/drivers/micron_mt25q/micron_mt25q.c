@@ -17,6 +17,11 @@
  */
 #include "drivers/micron_mt25q/micron_mt25q.h"
 #include "drivers/mss/mss_mmuart/mss_uart.h"
+#include "config.h"
+#include "hss_types.h"
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#  include "wdog_service.h"
+#endif
 
 
 /*Following constant must be defined if you want to use the interrupt mode
@@ -348,6 +353,9 @@ Flash_program
     uint8_t status = 0xFF;
     while(remaining_length > 0)
     {
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+        HSS_Wdog_E51_Tickle();
+#endif
         uint32_t page_length;
 
         if(remaining_length >= PAGE_LENGTH)
