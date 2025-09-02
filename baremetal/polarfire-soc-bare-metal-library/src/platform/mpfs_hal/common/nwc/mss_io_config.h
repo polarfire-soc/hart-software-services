@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+#include "config.h"
+
 #define CMD_SD_EMMC_DEMUX_EMMC_ON   0U
 #define CMD_SD_EMMC_DEMUX_SD_ON     1U
 
@@ -31,12 +33,12 @@ extern "C" {
  * Please note in Icicle kit reference design pre 2022.09, the address below
  * was 0x4F000000UL
  */
-#ifndef FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS
-#define FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS 0x4FFFFF00UL /*!< This is design
+#ifndef CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS
+#define CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_ADDRESS 0x4FFFFF00UL /*!< This is design
                                                             dependent */
 #endif
-#ifndef FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT
-#define FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT true /*!< true/false This is design
+#ifndef CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT
+#define CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT false /*!< true/false This is design
                                                       dependent */
 #endif
 
