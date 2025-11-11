@@ -709,8 +709,10 @@ static void boot_opensbi_init_handler(struct StateMachine * const pMyMachine)
 
     assert(pBootImage != NULL);
 
-    // if target has a valid entry point, allocate a message for it and send a OPENSBI_INIT IPI
-    bool const primary_boot_hart = (pBootImage->hart[target-1].numChunks) && (pBootImage->hart[target-1].entryPoint);
+    bool const primary_boot_hart = 
+        ((pBootImage->hart[target - 1].flags & BOOT_FLAG_SKIP_AUTOBOOT) || 
+        pBootImage->hart[target - 1].numChunks) &&
+        pBootImage->hart[target - 1].entryPoint;
 
     if (primary_boot_hart) {
         if (pInstanceData->iterator < ARRAY_SIZE(bootMachine)) {
@@ -952,8 +954,10 @@ enum IPIStatusCode HSS_Boot_RestartCores_Using_Bitmask(union HSSHartBitmask rest
 
             localRestartHartBitmask.uint |= (1u << source);
 
-            if (pBootImage->hart[source-1].numChunks && boot_using_hart_bitmask_(localRestartHartBitmask)) {
-                    result = IPI_SUCCESS;
+            if (((pBootImage->hart[source - 1].flags & BOOT_FLAG_SKIP_AUTOBOOT) ||
+                pBootImage->hart[source - 1].numChunks) &&
+                boot_using_hart_bitmask_(localRestartHartBitmask)) {
+                result = IPI_SUCCESS;
             }
 
             restartHartBitmask.uint &= (~localRestartHartBitmask.uint);
