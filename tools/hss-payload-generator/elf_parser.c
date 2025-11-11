@@ -287,43 +287,47 @@ bool elf_parser(char const * const filename, size_t owner, uintptr_t base_entry_
 
 	assert(filename);
 
-	debug_printf(1, "\nProcessing ELF >>%s<<\n", filename);
-	if (!bootImage.hart[owner-1].firstChunk) {
-		bootImage.hart[owner-1].firstChunk= numChunks;
-	}
-
-	int fd = open(filename, O_RDONLY, 0);
-	if (fd < 0) {
-		char buffer[300];
-		snprintf(buffer, 299, "open(\"%s\")", filename);
-		buffer[299] = 0;
-		perror(buffer);
-		exit(EXIT_FAILURE);
-	}
-
-	Elf *pElf = elf_begin(fd, ELF_C_READ, NULL);
-	if (!pElf) {
-		fprintf(stderr, "elf_begin() failed: %s\n", elf_errmsg(-1));
-		exit(EXIT_FAILURE);
-	}
-
-	if (elf_kind(pElf) != ELF_K_ELF) {
-		fprintf(stderr, ">>%s<< is not an ELF object\n", filename);
+	if (!strcmp(filename, "null")) {
+		debug_printf(1, "\nSkipping ELF processing >>%s<<\n", filename);
 		result = false;
 	} else {
-		if (base_entry_point) {
-			fprintf(stderr, "NOTICE: %s: ignoring >>exec-addr=0x%" PRIx64 "<< as payload is an ELF file\n\n", filename, base_entry_point);
+		debug_printf(1, "\nProcessing ELF >>%s<<\n", filename);
+		if (!bootImage.hart[owner-1].firstChunk) {
+			bootImage.hart[owner-1].firstChunk= numChunks;
 		}
 
-		parse_elf_program_headers(pElf, owner);
+		int fd = open(filename, O_RDONLY, 0);
+		if (fd < 0) {
+			char buffer[300];
+			snprintf(buffer, 299, "open(\"%s\")", filename);
+			buffer[299] = 0;
+			perror(buffer);
+			exit(EXIT_FAILURE);
+		}
 
-		bootImage.hart[owner-1].lastChunk = numChunks - 1u;
-		bootImage.hart[owner-1].numChunks = bootImage.hart[owner-1].lastChunk - bootImage.hart[owner-1].firstChunk + 1u;
+		Elf *pElf = elf_begin(fd, ELF_C_READ, NULL);
+		if (!pElf) {
+			fprintf(stderr, "elf_begin() failed: %s\n", elf_errmsg(-1));
+			exit(EXIT_FAILURE);
+		}
 
-		elf_end(pElf);
+		if (elf_kind(pElf) != ELF_K_ELF) {
+			fprintf(stderr, ">>%s<< is not an ELF object\n", filename);
+			result = false;
+		} else {
+			if (base_entry_point) {
+				fprintf(stderr, "NOTICE: %s: ignoring >>exec-addr=0x%" PRIx64 "<< as payload is an ELF file\n\n", filename, base_entry_point);
+			}
+
+			parse_elf_program_headers(pElf, owner);
+			bootImage.hart[owner-1].lastChunk = numChunks - 1u;
+			bootImage.hart[owner-1].numChunks = bootImage.hart[owner-1].lastChunk - bootImage.hart[owner-1].firstChunk + 1u;
+
+			elf_end(pElf);
+		}
+
+		close(fd);
 	}
-
-	close(fd);
 
 	return result;
 }

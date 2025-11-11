@@ -92,17 +92,12 @@ void blob_handler_init(void)
 	; // nothing to do
 }
 
-bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner, bool ancilliary_data_present, char const * const ancilliary_filename)
+bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner, bool skip_autoboot, char const * const ancilliary_filename)
 {
 	bool result = true;
 
 	assert(filename);
 
-	if (ancilliary_data_present) {
-		assert(ancilliary_filename);
-	}
-
-	debug_printf(1, "\nProcessing blob >>%s<< - placing at %p\n", filename, exec_addr);
 	if (!bootImage.hart[owner-1].firstChunk) {
 		bootImage.hart[owner-1].firstChunk = numChunks;
 	}
@@ -110,7 +105,20 @@ bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner
 	size_t size;
 
 	// main blob
-	{
+  	if (!strcmp(filename, "null")) {
+		if (skip_autoboot) {
+			debug_printf(1, "\nSkipping blob processing >>%s<<\n", filename);
+			bootImage.hart[owner-1].lastChunk = bootImage.hart[owner-1].firstChunk;
+			bootImage.hart[owner-1].numChunks = 0u;
+			size = 0u;
+		} else {
+			fprintf(stderr, "%s(): Special filename null is missing >>skip_autoboot: true<<\n\n", __func__);
+			exit(EXIT_FAILURE);
+		}
+
+		debug_printf(1, "lastChunk is %d, numChunks is %d\n", bootImage.hart[owner-1].lastChunk, bootImage.hart[owner-1].numChunks);
+	} else {
+		debug_printf(1, "\nProcessing blob >>%s<< - placing at %p\n", filename, exec_addr);
 		FILE *fileIn = fopen(filename, "r+");
 		if (!fileIn) {
 			fprintf(stderr, "%s(): File: %s -", __func__, filename);
@@ -140,7 +148,7 @@ bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner
 	}
 
 	// ancilliary data (e.g., a DTB)
-	if (ancilliary_data_present) {
+	if (ancilliary_filename) {
 		exec_addr += size; // increment past main blob
 		debug_printf(1, "\nProcessing blob >>%s<< - placing at %p\n", ancilliary_filename, exec_addr);
 

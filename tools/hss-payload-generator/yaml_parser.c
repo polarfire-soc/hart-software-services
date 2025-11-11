@@ -763,9 +763,9 @@ static void Handle_STATE_NEW_PAYLOAD(yaml_event_t *pEvent)
 			// assume it is a binary file, so just embed the entire thing...
 			if (entitlement_flags.ancilliary_data_present) {
 				// legacy: smuggle this into owner highest bit...
-				blob_handler(base_name, base_exec_addr, base_owner, true, ancilliary_name);
+				blob_handler(base_name, base_exec_addr, base_owner, entitlement_flags.skip_autoboot_flag, ancilliary_name);
 			} else {
-				blob_handler(base_name, base_exec_addr, base_owner, false, NULL);
+				blob_handler(base_name, base_exec_addr, base_owner, entitlement_flags.skip_autoboot_flag, NULL);
 			}
 
 		}
