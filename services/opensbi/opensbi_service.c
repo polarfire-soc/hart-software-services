@@ -180,6 +180,9 @@ void HSS_OpenSBI_Setup(void)
 	int rc = sbi_console_init(&(pScratches[hartid].scratch));
 	if (rc)
 		sbi_hart_hang();
+
+	extern bool HSS_PLIC_Init(void);
+	HSS_PLIC_Init();
     } else {
         ;
     }
