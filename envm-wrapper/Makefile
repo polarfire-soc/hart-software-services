@@ -77,7 +77,7 @@ define common-boot-mode-programmer
 endef
 
 
-MPFS_BOOTMODE_PROGRAMMER_VERSION := $(findstring v3.6,$(shell $(MPFS_BOOTMODE_PROGRAMMER) --help))
+MPFS_BOOTMODE_PROGRAMMER_VERSION := $(shell $(MPFS_BOOTMODE_PROGRAMMER) --help 2>/dev/null | awk '/mpfsBootmodeProgrammer/{for(i=1;i<=NF;i++){if($$i ~ /^v[0-9]+\.[0-9]+$$/) print $$i}}')
 EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION := v3.6
 ifneq ($(MPFS_BOOTMODE_PROGRAMMER_VERSION),$(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION))
   ifeq ($(MAKE_RESTARTS),)
