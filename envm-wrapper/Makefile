@@ -80,8 +80,10 @@ endef
 MPFS_BOOTMODE_PROGRAMMER_VERSION := $(findstring v3.6,$(shell $(MPFS_BOOTMODE_PROGRAMMER) --help))
 EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION := v3.6
 ifneq ($(MPFS_BOOTMODE_PROGRAMMER_VERSION),$(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION))
-  $(info INFO: Expected mpfsBootmodeProgrammer.jar version $(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION) but found $(MPFS_BOOTMODE_PROGRAMMER_VERSION))
-  $(info INFO: This version of the HSS relies on SoftConsole v2021.3 or later)
+  ifeq ($(MAKE_RESTARTS),)
+    $(info INFO: Expected mpfsBootmodeProgrammer.jar version $(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_VERSION) but found $(MPFS_BOOTMODE_PROGRAMMER_VERSION))
+    $(info INFO: This version of the HSS relies on SoftConsole v2021.3 or later)
+  endif
 endif
 
 $(TARGET-envm-wrapper): LIBS:=

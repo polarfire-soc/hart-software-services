@@ -30,7 +30,9 @@
 #
 # The ARIES Embedded module M100PFS on the board M100PFSEVP
 #
-$(info aries-m100pfsevp selected)
+ifeq ($(MAKE_RESTARTS),)
+  $(info aries-m100pfsevp selected)
+endif
 
 TARGET-l2scratch=hss-l2scratch.elf
 TARGET-envm-wrapper=hss-envm-wrapper.elf
@@ -146,7 +148,7 @@ endif
 endif
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
+$(SOC_CONFIG_FILES) &: $(SOC_FPGA_DESIGN_XML_FILE)
 	@mkdir -p $(BINDIR)/$(BOARD_DIR)
 	@$(ECHO) " MPFSCFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)

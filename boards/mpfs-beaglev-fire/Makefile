@@ -30,7 +30,9 @@
 #
 # BeagleV-Fire
 #
-$(info mpfs-beaglev-fire selected)
+ifeq ($(MAKE_RESTARTS),)
+  $(info mpfs-beaglev-fire selected)
+endif
 
 PACKAGE=FCVG484
 DIE=MPFS025T
@@ -157,7 +159,7 @@ endif
 endif
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
+$(SOC_CONFIG_FILES) &: $(SOC_FPGA_DESIGN_XML_FILE)
 	@mkdir -p $(BINDIR)/$(BOARD_DIR)
 	@$(ECHO) " MPFSCFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)
