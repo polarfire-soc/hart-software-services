@@ -1,18 +1,24 @@
 /*******************************************************************************
- * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * @file hal_irq.c
- * @author Microchip FPGA Embedded Systems Solutions
- * @brief Legacy interrupt control functions for the Microchip driver library
- * hardware abstraction layer.
+ * MPFS HAL Embedded Software
  *
  */
-
+/***************************************************************************//**
+ *
+ * Legacy interrupt control functions for the Microchip driver library hardware
+ * abstraction layer.
+ *
+ */
 #include <stdio.h>
 #include "hal/hal.h"
-#include "mpfs_hal/common/mss_util.h"
+#include "atomic.h"
+#include "encoding.h"
+//#include "mpfs_hal/mcall.h"
+#include "mss_util.h"
+#include "mss_mtrap.h"
 
 #ifdef __cplusplus
 extern "C" {

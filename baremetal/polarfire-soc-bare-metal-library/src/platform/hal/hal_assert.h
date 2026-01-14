@@ -1,16 +1,13 @@
 /*******************************************************************************
- * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * @file hal_assert.h
- * @author Microchip FPGA Embedded Systems Solutions
- * @brief
+ * MPFS HAL Embedded Software
  *
  */
-
-#ifndef HAL_ASSERT_HEADER
-#define HAL_ASSERT_HEADER
+#ifndef ASSERT_HEADER
+#define ASSERT_HEADER
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,17 +33,17 @@ extern "C" {
 
 #if defined(NDEBUG)
 /***************************************************************************//**
- * HAL_ASSERT() is defined out when the NDEBUG symbol is used.
+ * ASSERT() is defined out when the NDEBUG symbol is used.
  ******************************************************************************/
-#define HAL_ASSERT(CHECK)
+#define ASSERT(CHECK)
 
 #else
 /***************************************************************************//**
- * Default behaviour for HAL_ASSERT() macro:
+ * Default behaviour for ASSERT() macro:
  *------------------------------------------------------------------------------
   The behaviour is toolchain specific and project setting specific.
  ******************************************************************************/
-#define HAL_ASSERT(CHECK)     ASSERT(CHECK);
+#define ASSERT(CHECK)     ASSERT(CHECK);
 
 #endif  /* NDEBUG */
 
@@ -54,5 +51,5 @@ extern "C" {
 }
 #endif
 
-#endif  /* HAL_ASSERT_HEADER */
+#endif  /* ASSERT_HEADER */
 
