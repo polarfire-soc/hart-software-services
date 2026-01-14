@@ -1,17 +1,19 @@
 /*******************************************************************************
- * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
- * @file hw_reg_access.h
- * @author Microchip FPGA Embedded Systems Solutions
- * @brief Hardware registers access functions.
- * The implementation of these function is platform and tool-chain specific.
- * The functions declared here are implemented using assembler as part of the
- * processor/tool-chain specific HAL.
+ * MPFS HAL Embedded Software
  *
  */
-
+/***************************************************************************//**
+ *
+ * Hardware registers access functions.
+ * The implementation of these function is platform and toolchain specific.
+ * The functions declared here are implemented using assembler as part of the
+ * processor/toolchain specific HAL.
+ *
+ */
 #ifndef HW_REG_ACCESS
 #define HW_REG_ACCESS
 
