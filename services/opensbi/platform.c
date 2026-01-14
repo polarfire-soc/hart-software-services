@@ -264,15 +264,29 @@ static int mpfs_console_init(void)
     return 0;
 }
 
+bool HSS_PLIC_Init(void);
+bool HSS_PLIC_Init(void)
+{
+    static bool plic_initialized = false;
+
+    if (!plic_initialized && (0 == plic_cold_irqchip_init(&plicInfo))) {
+        plic_initialized = true;
+    }
+
+    return plic_initialized;
+}
+
 
 static int mpfs_irqchip_init(bool cold_boot)
 {
     int rc = 0;
     u32 hartid = current_hartid();
 
-    if (cold_boot) {
-        rc = plic_cold_irqchip_init(&plicInfo);
-    }
+    // To ensure we don't have AMP interference, global PLIC setup is done once as part of HSS init,
+    // and not as part of the OpenSBI platform setup. So the following code does not run here...
+    //     if (cold_boot) {
+    //         rc = plic_cold_irqchip_init(&plicInfo);
+    //     }
 
     if (!rc) {
         // instead of calling plic_warm_irqchip_init ...
