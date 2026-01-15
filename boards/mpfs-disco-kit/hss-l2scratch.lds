@@ -263,7 +263,7 @@ SECTIONS
     .data.payload : ALIGN(16)
     {
       _payload_start = .;
-      KEEP(boards/mpfs-icicle-kit-es/payload.o(.*))
+      KEEP(boards/mpfs-disco-kit/payload.o(.*))
       _payload_end = .;
     }
 #endif
