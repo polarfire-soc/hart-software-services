@@ -109,11 +109,15 @@ endif
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
 #
 ifdef CONFIG_CC_STACKPROTECTOR_STRONG
-  $(info INFO: Not enabling -flto as stack protector enabled)
+  ifeq ($(MAKE_RESTARTS),)
+    $(info INFO: Not enabling -flto as stack protector enabled)
+  endif
   CORE_CFLAGS+=-fstack-protector-strong
   # CORE_CFLAGS+=-fstack-clash-protection  # currently does nothing on RISC-V
 else
-  $(info INFO: NOTICE: enabling -flto (which means stack protection is disabled))
+  ifeq ($(MAKE_RESTARTS),)
+    $(info INFO: NOTICE: enabling -flto (which means stack protection is disabled))
+  endif
   OPT-y+=-flto=auto -ffat-lto-objects -fno-stack-protector
   OPT-y+=-fwhole-program -Wno-lto-type-mismatch
 endif
@@ -132,13 +136,17 @@ ifeq ($(HOST_LINUX), true)
   CC_VERSION = $(strip $(shell $(CC) -dumpversion))
   EXPECTED_CC_VERSION := 8.3.0
   ifneq ($(CC_VERSION),$(EXPECTED_CC_VERSION))
-    $(info INFO: Expected $(CC) version $(EXPECTED_CC_VERSION) but found $(CC_VERSION))
+    ifeq ($(MAKE_RESTARTS),)
+      $(info INFO: Expected $(CC) version $(EXPECTED_CC_VERSION) but found $(CC_VERSION))
+    endif
   endif
 
   CC_MACHINE = $(strip $(shell $(CC) -dumpmachine))
   EXPECTED_CC_MACHINE := riscv64-unknown-elf
   ifneq ($(CC_MACHINE),$(EXPECTED_CC_MACHINE))
-    $(info INFO: Expected $(CC) version $(EXPECTED_CC_MACHINE) but found $(CC_MACHINE))
+    ifeq ($(MAKE_RESTARTS),)
+      $(info INFO: Expected $(CC) version $(EXPECTED_CC_MACHINE) but found $(CC_MACHINE))
+    endif
   endif
 endif
 
