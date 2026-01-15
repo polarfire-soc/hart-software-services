@@ -27,7 +27,9 @@
 # Defines target-specific build-rules variables, extra sources and include paths
 #
 
-$(info polarberry selected)
+ifeq ($(MAKE_RESTARTS),)
+  $(info polarberry selected)
+endif
 
 
 TARGET-l2scratch=hss-l2scratch.elf
@@ -152,7 +154,7 @@ endif
 endif
 
 config.h: $(SOC_CONFIG_FILES)
-$(SOC_CONFIG_FILES): $(SOC_FPGA_DESIGN_XML_FILE)
+$(SOC_CONFIG_FILES) &: $(SOC_FPGA_DESIGN_XML_FILE)
 	@mkdir -p $(BINDIR)/$(BOARD_DIR)
 	@$(ECHO) " MPFSCFGGEN    $<";
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)

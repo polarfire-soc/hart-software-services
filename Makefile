@@ -51,7 +51,9 @@ else
   ifndef BOARD
     BOARD:=mpfs-icicle-kit-es
     export BOARD
-    $(info INFO: BOARD not specified, defaulting to ${BOARD}) # default to icicle if nothing found
+    ifeq ($(MAKE_RESTARTS),)
+      $(info INFO: BOARD not specified, defaulting to ${BOARD}) # default to icicle if nothing found
+    endif
     include boards/${BOARD}/Makefile
   else
     $(error Board >>${BOARD}<< not found)
