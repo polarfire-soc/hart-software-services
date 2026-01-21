@@ -44,7 +44,7 @@ typedef unsigned long long	uint64_t;
 #error "Unexpected __riscv_xlen"
 #endif
 
-typedef int			bool;
+#define bool			_Bool /* bool is a reserved keyword as of C23, so don't typedef it */
 typedef unsigned long		ulong;
 typedef unsigned long		uintptr_t;
 typedef unsigned long		size_t;

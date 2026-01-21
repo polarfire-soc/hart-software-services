@@ -77,27 +77,40 @@ Both Linux and Windows are supported by Kconfiglib.
 
 The HSS currently support PolarFire SoC-based icicle kit (mpfs-icicle-kit-es) as a board build target.
 
+### Compiler Toolchain
+
+
+The HSS now relies on xPack GNU RISC-V Embedded GCC, a binary distribution of GNU RISC-V Embedded GCC toolchain.
+
+SoftConsole v2021.3 or later can still be used to build the HSS, but you'll need to set `CONFIG_CC_USE_SOFTCONSOLE` in your toplevel `.config` file. Note that this support for the older SoftConsole GCC toolchain is considered deprecated and will be removed from a future release of the HSS.
+
+You can get xPack from https://xpack-dev-tools.github.io/riscv-none-elf-gcc-xpack/
+
+Untar the release somewhere convenient (e.g. /opt) and add it to your PATH:
+
+    $ export PATH=/opt/xpack-riscv-none-elf-gcc-15.2.0-1/bin:$PATH
+
 ### Building on Linux
 
-The HSS relies on SoftConsole v2021.3 or later to build on Linux. It also needs tkinter installed for the KConfiglib guiconfig tool. To install this on Ubuntu/Debian:
+The HSS needs tkinter installed for the KConfiglib guiconfig tool. To install this on Ubuntu/Debian:
 
     $ sudo apt install python3-tk
 
-First, ensure that the environment variable `$SC_INSTALL_DIR` is set to the location of SoftCOnsole on your system. For example, assuming that SoftConsole is installed at  `/home/user/Microchip/SoftConsole-v2022.2`:
+First, ensure that the environment variable `$SC_INSTALL_DIR` is set to the location of SoftCOnsole on your system. For example, assuming that SoftConsole is installed at  `/home/$USER/Microchip/SoftConsole-v2022.2`:
 
-    $ export SC_INSTALL_DIR=/home/user/Microchip/SoftConsole-v2022.2
+    $ export SC_INSTALL_DIR=/home/$USER/Microchip/SoftConsole-v2022.2
 
 For building on Linux from the command line, configure the path appropriately. For example, the following will add the SoftConsole provided Python and RISC-V compiler toolchain to the path:
 
     $ export PATH=$PATH:$SC_INSTALL_DIR/python3/bin:$SC_INSTALL_DIR/riscv-unknown-elf-gcc/bin
 
-Next, set the environment variable `$FPGENPROG` to the location of the fpgenprog tool installed by Libero -- this is used to program the eNVM ('make program') and also to generate hex files suitable for programming by Libero, or inclusion in the fabric design with Libero. For example, assuming that Libero is installed at `/usr/local/microchip/Libero_SoC_v2023.2/`:
+Next, set the environment variable `$FPGENPROG` to the location of the fpgenprog tool installed by Libero -- this is used to program the eNVM ('make program') and also to generate hex files suitable for programming by Libero, or inclusion in the fabric design with Libero. For example, assuming that Libero is installed at `/usr/local/microchip/Libero_SoC_v2025.2/`:
 
-    $ export FPGENPROG=/usr/local/microchip/Libero_SoC_v2023.2/Libero/bin64/fpgenprog
+    $ export FPGENPROG=/usr/local/microchip/Libero_SoC_v2025.2/Libero_SoC/Designer/bin64/fpgenprog
 
-Note: Older versions of Libero are installed at `/usr/local/microsemi/<Libero_Version>`.
+Note: Older versions of Libero are (typically) installed at `/usr/local/microsemi/<Libero_Version>`.
 
-To make these persistent upon logging in, these three environment variables - `$SC_INSTALL_DIR`, `$FPGENPROG` and the additions to `$PATH` - should be updated in your user shell initialization file (for example, `/home/user/.bashrc` for those running the bash shell).
+To make these persistent upon logging in, these three environment variables - `$SC_INSTALL_DIR`, `$FPGENPROG` and the additions to `$PATH` - should be updated in your user shell initialization file (for example, `/home/$USER/.bashrc` for those running the bash shell).
 
 You can enter an interactive Kconfiglib configuration selection by running `make BOARD=mpfs-icicle-kit-es config`. This will generate a `.config` file (which is used to configure the Make build system) and a `config.h` header file (which is used to configure the source code):
 
@@ -135,7 +148,9 @@ Verbose builds (which show each individual command) are possible by adding V=1 t
 
 ### Building on Windows
 
-The HSS relies only on SoftConsole v2021.3 or later to build on Windows.
+As with Linux, the HSS now by default relies on the xPack GNU RISC-V Embedded GCC toolchain. Please download it and add it to your path. (In this documentation, we will assume it has been downloaded and decompressed to `C:\xpack-riscv-none-elf-gcc-15.2.0-1\bin`).
+
+The HSS also needs SoftConsole v2021.3 or later to build on Windows.
 
 For more detailed build instructions, particular with regards to using SoftConsole on Windows, see https://mi-v-ecosystem.github.io/redirects/software-development_polarfire-soc-software-tool-flow
 
@@ -145,15 +160,15 @@ First, ensure that the `%SC_INSTALL_DIR%` environment variable is correctly set 
 
 For building on Windows from the command line, you must configure the path appropriately to add (Micro) Python, GNU build tools, and the RISC-V compiler toolchain. For example:
 
-    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin
+    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;C:\xpack-riscv-none-elf-gcc-15.2.0-1\bin
 
 Ensure the `%SC_INSTALL_DIR%` variable correctly matches your system.
 
 Next, set the environment variable `%FPGENPROG%` to the location of the fpgenprog tool installed by Libero -- this is used to program the eNVM ('make program') and also to generate hex files suitable for programming by Libero, or inclusion in the fabric design with Libero. For example, assuming that Libero is installed at `C:\Microchip\Libero_SoC_v2022.2\Designer\bin64\fpgenprog.exe`:
 
-    C:\> set FPGENPROG=C:\Microchip\Libero_SoC_v2022.2\Designer\bin64\fpgenprog.exe
+    C:\> set FPGENPROG=C:\Microchip\Libero_SoC_v2025.2\Libero_SoC\Designer\bin64\fpgenprog.exe
 
-To make these persistent, set them via the Control Panel or via the Settings App.
+To make these persistent, set these environment variables via the Control Panel or via the Settings App.
 
 #### MicroPython
 

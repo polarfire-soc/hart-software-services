@@ -28,9 +28,27 @@
 # basic build rules (.c to .o, etc)
 #
 
-CROSS_COMPILE?=riscv64-unknown-elf-
-#CROSS_COMPILE?=riscv-none-elf-
+ifdef CONFIG_CC_USE_SOFTCONSOLE
+  COMPILER_CHOICE=SoftConsole-bundled GCC
+  CROSS_COMPILE?=riscv64-unknown-elf-
+  EXPECTED_CC_VERSION := 8.3.0
+  EXPECTED_CC_MACHINE := riscv64-unknown-elf
+  PLATFORM_RISCV_ISA=rv64imac
+else
+  COMPILER_CHOICE=xPack GNU RISC-V Embedded GCC
+  CROSS_COMPILE?=riscv-none-elf-
+  OPT-y+=-Wl,--no-warn-rwx-segments
+  PLATFORM_RISCV_ISA=rv64imac_zicsr_zifencei
+endif
+
+PLATFORM_RISCV_ABI=lp64
+
 CC=$(CROSS_COMPILE)gcc
+
+CC_VERSION = $(strip $(shell $(CC) -dumpversion))
+CC_MACHINE = $(strip $(shell $(CC) -dumpmachine))
+$(info INFO: Using $(COMPILER_CHOICE) ($(CC_MACHINE) $(CC_VERSION)))
+
 RANLIB=$(CROSS_COMPILE)ranlib
 CPP=$(CROSS_COMPILE)cpp
 LD=$(CROSS_COMPILE)ld
@@ -50,10 +68,6 @@ GUICONFIG:=thirdparty/Kconfiglib/guiconfig.py
 
 #
 #
-PLATFORM_RISCV_ABI=lp64
-#PLATFORM_RISCV_ISA=rv64imac_zicsr_zifencei
-PLATFORM_RISCV_ISA=rv64imac
-
 CORE_CFLAGS+=$(MCMODEL) -mstrict-align
 
 CORE_CFLAGS+=-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
@@ -104,6 +118,7 @@ ifndef CONFIG_LD_RELAX
 OPT-y+=-Wl,--no-relax
 endif
 
+
 #
 # for some reason, -flto isn't playing nicely currently with -fstack-protector-strong...
 # Stack protection is really useful, but if it is enabled, for now disabling LTO optimisation
@@ -133,18 +148,12 @@ ifeq ($(HOST_LINUX), true)
   ifeq ($, $(shell which $(CC)))
     $(error "No $(CC) in $(PATH)")
   endif
-  CC_VERSION = $(strip $(shell $(CC) -dumpversion))
-  EXPECTED_CC_VERSION := 8.3.0
-  ifneq ($(CC_VERSION),$(EXPECTED_CC_VERSION))
-    ifeq ($(MAKE_RESTARTS),)
+  ifdef CONFIG_CC_USE_SOFTCONSOLE
+    ifneq ($(CC_VERSION),$(EXPECTED_CC_VERSION))
       $(info INFO: Expected $(CC) version $(EXPECTED_CC_VERSION) but found $(CC_VERSION))
     endif
-  endif
 
-  CC_MACHINE = $(strip $(shell $(CC) -dumpmachine))
-  EXPECTED_CC_MACHINE := riscv64-unknown-elf
-  ifneq ($(CC_MACHINE),$(EXPECTED_CC_MACHINE))
-    ifeq ($(MAKE_RESTARTS),)
+    ifneq ($(CC_MACHINE),$(EXPECTED_CC_MACHINE))
       $(info INFO: Expected $(CC) version $(EXPECTED_CC_MACHINE) but found $(CC_MACHINE))
     endif
   endif
