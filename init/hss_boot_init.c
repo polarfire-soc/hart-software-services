@@ -325,7 +325,7 @@ static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootIm
 
     // if we are using MMC, then we need to do an initial copy of the
     // boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from MMC to DDR ...\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from MMC to destination 0x%08x...\n", CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
     size_t srcLBAOffset = 0u;
     assert(pStorage);
@@ -458,7 +458,7 @@ static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootI
     assert(ppBootImage);
 
     // need to do an initial copy of the boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI to DDR ...\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI to destination 0x%08x...\n", CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
     size_t srcLBAOffset = 0u;
     assert(pStorage);
@@ -568,7 +568,7 @@ static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_B
 
     size_t srcOffset = CONFIG_SERVICE_BOOT_SPI_FLASH_OFFSET;
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from SPI Flash +0x%lx to DDR ...\n", srcOffset);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from SPI Flash +0x%lx to destination 0x%08x...\n", srcOffset, CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ...\n",
         sizeof(struct HSS_BootImage));
 
