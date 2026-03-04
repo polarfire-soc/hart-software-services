@@ -62,4 +62,48 @@ config SERVICE_BOOT_MMC_USE_GPT
                 parsing of a GUID Partition Table (GPT) in search of the boot image starting
                 sector..
 
+config SERVICE_BOOT_SNVM
+    bool "Boot from sNVM"
+    default n
+    depends on SERVICE_BOOT
+    help
+                This feature enables reading an HSS payload from Secure NVM (sNVM)
+                pages at boot time. The payload is assembled from sequential sNVM
+                pages into an L2-LIM staging area, then processed by the standard
+                HSS boot service. Each sNVM page holds 252 bytes (non-authenticated).
+
+config SERVICE_BOOT_SNVM_START_PAGE
+    int "sNVM start page"
+    default 0
+    depends on SERVICE_BOOT_SNVM
+    help
+                First sNVM page (module index) where the HSS payload is stored.
+                Valid range: 0-220.
+
+config SERVICE_BOOT_SNVM_PAGE_COUNT
+    int "sNVM page count"
+    default 221
+    depends on SERVICE_BOOT_SNVM
+    help
+                Number of sNVM pages to read. Maximum 221 pages (55,692 bytes
+                at 252 bytes per page for non-authenticated format).
+
+config SERVICE_BOOT_SNVM_STAGING_ADDR
+    hex "L2-LIM staging address for sNVM payload"
+    default 0x08100000
+    depends on SERVICE_BOOT_SNVM
+    help
+                Address in L2-LIM where sNVM pages are assembled into a
+                contiguous HSS payload image before boot processing.
+                Must not overlap with HSS resident area or wolfBoot target.
+
+config SERVICE_BOOT_SNVM_MAX_SIZE
+    hex "Maximum sNVM payload size (bytes)"
+    default 0xE000
+    depends on SERVICE_BOOT_SNVM
+    help
+                Maximum size of sNVM payload. Used as YMODEM receive buffer
+                size when DDR is disabled. 221 pages * 252 bytes = 55,692
+                bytes. Default 0xE000 (57,344 bytes) provides headroom.
+
 endmenu
