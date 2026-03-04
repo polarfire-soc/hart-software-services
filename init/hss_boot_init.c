@@ -23,8 +23,11 @@
 #include "hss_trigger.h"
 #include "u54_state.h"
 
-#if IS_ENABLED(CONFIG_SERVICE_SPI)
+#if IS_ENABLED(CONFIG_SERVICE_SPI) || IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
 #  include <mss_sys_services.h>
+#endif
+
+#if IS_ENABLED(CONFIG_SERVICE_SPI)
 #  define SPI_FLASH_BOOT_ENABLED (CONFIG_SERVICE_BOOT_SPI_FLASH_OFFSET != 0xFFFFFFFF)
 #else
 #  define SPI_FLASH_BOOT_ENABLED 0
@@ -71,18 +74,20 @@
 // local module functions
 
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
+static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
+static bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t getBootImageFunction);
+#if IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI)
 typedef bool (*HSS_BootImageCopyFnPtr_t)(void *pDest, size_t srcOffset, size_t byteCount);
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction);
-
-static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage);
-static bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t getBootImageFunction);
+#endif
 #endif
 
 static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 static bool getBootImageFromPayload_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
+static bool getBootImageFromSNVM_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage);
 
 
 //
@@ -132,9 +137,23 @@ static struct HSS_Storage payloadStorage_ = {
     .flushWriteBuffer = NULL
 };
 #endif
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
+static struct HSS_Storage snvmStorage_ = {
+    .name = "SNVM",
+    .getBootImage = getBootImageFromSNVM_,
+    .init = NULL,
+    .readBlock = NULL,
+    .writeBlock = NULL,
+    .getInfo = NULL,
+    .flushWriteBuffer = NULL
+};
+#endif
 
 static struct HSS_Storage *pStorages[] =
 {
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
+	&snvmStorage_,
+#endif
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
 	&qspiStorage_,
 #endif
@@ -153,7 +172,7 @@ static struct HSS_Storage *pDefaultStorage = NULL;
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || (IS_ENABLED(CONFIG_SERVICE_SPI) && (SPI_FLASH_BOOT_ENABLED))
 struct HSS_BootImage bootImage __attribute__((aligned(8)));
-#elif IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD)
+#elif IS_ENABLED(CONFIG_SERVICE_BOOT_USE_PAYLOAD) || IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
 //
 #else
 #    error Unable to determine boot mechanism
@@ -300,7 +319,7 @@ static void printBootImageDetails_(struct HSS_BootImage const * const pBootImage
 }
 #endif
 
-#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_SPI))
 static bool copyBootImageToDDR_(struct HSS_BootImage *pBootImage, char *pDest,
     size_t srcOffset, HSS_BootImageCopyFnPtr_t pCopyFunction)
 {
@@ -600,6 +619,99 @@ void HSS_BootSelectSPI(void)
     HSS_Register_Boot_Image(NULL);
 #else
     (void)getBootImageFromSpiFlash_;
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// sNVM Boot Support
+//
+// Read HSS payload from sNVM pages into L2-LIM staging area.
+// Each sNVM page holds 252 bytes (non-authenticated) or 236 bytes (authenticated).
+// Pages are read sequentially and assembled into a contiguous image.
+//
+
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
+#define SNVM_PAGE_SIZE_NON_AUTH  252u
+#define SNVM_MAX_PAGES           221u
+#endif
+
+static bool getBootImageFromSNVM_(struct HSS_Storage *pStorage, struct HSS_BootImage **ppBootImage)
+{
+    bool result = false;
+    (void)pStorage;
+
+#if IS_ENABLED(CONFIG_SERVICE_BOOT) && IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
+    assert(ppBootImage);
+
+    const uint8_t startPage = (uint8_t)CONFIG_SERVICE_BOOT_SNVM_START_PAGE;
+    const uint8_t pageCount = (uint8_t)CONFIG_SERVICE_BOOT_SNVM_PAGE_COUNT;
+    uint8_t *pDest = (uint8_t *)(CONFIG_SERVICE_BOOT_SNVM_STAGING_ADDR);
+    uint8_t admin[4];
+    uint16_t status;
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Reading %u sNVM pages (%u bytes) to 0x%lx ...\n",
+        pageCount, (unsigned)(pageCount * SNVM_PAGE_SIZE_NON_AUTH), (uintptr_t)pDest);
+
+    MSS_SYS_select_service_mode(MSS_SYS_SERVICE_POLLING_MODE, NULL);
+
+    int perf_ctr_index = PERF_CTR_UNINITIALIZED;
+    HSS_PerfCtr_Allocate(&perf_ctr_index, "Boot Image SNVM Read");
+
+    for (uint8_t page = 0u; page < pageCount; page++) {
+        uint8_t moduleIdx = startPage + page;
+
+        if (moduleIdx >= SNVM_MAX_PAGES) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "sNVM page %u exceeds max (%u)\n",
+                moduleIdx, SNVM_MAX_PAGES);
+            break;
+        }
+
+        status = MSS_SYS_secure_nvm_read(
+            moduleIdx,
+            NULL,           /* p_user_key: NULL for non-authenticated */
+            admin,          /* p_admin: 4-byte page admin data */
+            pDest,          /* p_data: destination buffer */
+            SNVM_PAGE_SIZE_NON_AUTH,  /* data_len: 252 for non-auth */
+            0u              /* mb_offset */
+        );
+
+        if (status != MSS_SYS_SUCCESS) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "sNVM read page %u failed (status=%u)\n",
+                moduleIdx, status);
+            return false;
+        }
+
+        pDest += SNVM_PAGE_SIZE_NON_AUTH;
+    }
+
+    HSS_PerfCtr_Lap(perf_ctr_index);
+
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "sNVM read complete, verifying magic ...\n");
+
+    *ppBootImage = (struct HSS_BootImage *)(CONFIG_SERVICE_BOOT_SNVM_STAGING_ADDR);
+    result = HSS_Boot_VerifyMagic(*ppBootImage);
+
+    if (result) {
+        printBootImageDetails_(*ppBootImage);
+    } else {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "sNVM payload magic verification failed\n");
+    }
+#endif
+
+    return result;
+}
+
+void HSS_BootSelectSNVM(void)
+{
+#if IS_ENABLED(CONFIG_SERVICE_BOOT_SNVM)
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Selecting SNVM as boot source ...\n");
+    pDefaultStorage = &snvmStorage_;
+#  if IS_ENABLED(CONFIG_SERVICE_BOOT)
+    HSS_Register_Boot_Image(NULL);
+#  endif
+#else
+    (void)getBootImageFromSNVM_;
 #endif
 }
 
