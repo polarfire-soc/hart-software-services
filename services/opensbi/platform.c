@@ -678,6 +678,18 @@ bool mpfs_is_first_boot(void)
     return (atomic_xchg(&coldboot_lottery, 1) == 0);
 }
 
+static uint32_t suspended_hartid = 0u;
+
+void mpfs_set_suspended_hartid(uint32_t hartid)
+{
+    suspended_hartid = hartid;
+}
+
+u32 mpfs_get_suspended_hartid(void)
+{
+    return suspended_hartid;
+}
+
 extern void mpfs_hal_turn_ddr_selfrefresh_on(void);
 extern void mpfs_hal_turn_ddr_selfrefresh_off(void);
 

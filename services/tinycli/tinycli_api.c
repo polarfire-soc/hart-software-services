@@ -45,6 +45,8 @@
 #include "assert.h"
 
 #include "clocks/hw_mss_clks.h" // LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
+#include "mpfs_reg_map.h"
+#include "opensbi_service.h"
 
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
 #    include "usbdmsc_service.h"
@@ -1125,4 +1127,9 @@ static void tinyCLI_ECC_(void)
 static void tinyCLI_Resume_(void)
 {
     HSS_Trigger_Notify(EVENT_SYSTEM_SUSPEND_RESUME);
+    /* Wake the suspended boot hart from WFI via its MSIP register. */
+    const u32 hartid = mpfs_get_suspended_hartid();
+    volatile uint32_t * const msip =
+       (volatile uint32_t *)((uintptr_t)CLINT_BASE_ADDR + 4u * hartid);
+    *msip = 1u;
 }
