@@ -13,7 +13,12 @@
 #include <sbi/sbi_types.h>
 #include <sbi/sbi_list.h>
 
-#define SBI_ECALL_VERSION_MAJOR		1
+/* We're fooling the world into thinking we are SBI v2.0 as we have
+ * added the SUSP 0x53555350 ecall and Linux checks SBI version before
+ * probing.  Other SBI v2.0 features are optional and probed.
+ *    #define SBI_ECALL_VERSION_MAJOR		1
+ */
+#define SBI_ECALL_VERSION_MAJOR		2
 #define SBI_ECALL_VERSION_MINOR		0
 #define SBI_OPENSBI_IMPID		1
 
