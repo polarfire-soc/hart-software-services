@@ -138,12 +138,19 @@ __attribute__((pure)) static inline uint32_t column_to_block_(const uint32_t col
     return result;
 }
 
-__attribute__((pure)) static inline uint32_t logical_to_physical_address_(const uint32_t logical_addr)
+static inline uint32_t logical_to_physical_address_(const uint32_t logical_addr)
 {
     assert(blockSize); // avoid divide by zero
 
     const uint16_t logical_block_num = logical_addr / blockSize;
     const uint32_t remainder = logical_addr % blockSize;
+
+    if (logical_block_num >= blockCount) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "logical_block_num %u >= blockCount %u\n",
+            logical_block_num, blockCount);
+        return 0u;
+    }
+
     uint16_t physical_block_number = pLogicalToPhysicalMap[logical_block_num];
     uint32_t result = (physical_block_number * blockSize) + remainder;
 
@@ -159,8 +166,14 @@ __attribute__((pure)) static inline uint32_t logical_to_physical_address_(const 
     return result;
 }
 
-__attribute__((pure)) static inline uint32_t logical_to_physical_block_(const uint32_t logical_block)
+static inline uint32_t logical_to_physical_block_(const uint32_t logical_block)
 {
+    if (logical_block >= blockCount) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "logical_block %u >= blockCount %u\n",
+            logical_block, blockCount);
+        return 0u;
+    }
+
     uint32_t result = pLogicalToPhysicalMap[logical_block];
     if (result > blockCount) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Corruption in logical to physical block mapping: %d\n", result);
