@@ -70,6 +70,7 @@ _start:
 
 .setup_stack:
 	mul	a2, s8, a0
+	bge	a0, s7, _start_hang // validate_hart_id
 	add	tp, tp, a2
         la	sp, STACK_SIZE_PER_HART
 	add	sp, sp, tp
@@ -84,9 +85,6 @@ _start:
 	// Disable and clear all interrupts
 	csrw	CSR_MIE, zero
 	csrw	CSR_MIP, zero
-
-.validate_hart_id:
-	bge	a0, s7, _start_hang
 
 .find_my_scratch_space:
 	la	tp, scratches // find the scratch space for this hart
