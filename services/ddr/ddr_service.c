@@ -41,7 +41,7 @@ enum DDRStatesEnum {
     DDR_TRAIN,
     DDR_IDLE,
     DDR_RETRAIN,
-    DDR_NUM_STATES = DDR_IDLE+1
+    DDR_NUM_STATES = DDR_RETRAIN+1
 };
 
 /*!
