@@ -40,6 +40,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include <stdatomic.h>
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -303,6 +304,8 @@ bool IPI_Send(enum HSSHartId target, enum IPIMessagesEnum message, TxId_t transa
             result = true;
 	}
 #else
+        atomic_thread_fence(memory_order_release);
+
         result = CLINT_Raise_MSIP(target);
 #endif
     } else {
@@ -665,7 +668,7 @@ void IPI_DebugDumpStats(void)
         mHSS_DEBUG_PRINTF(LOG_STATUS, "message_delivers: %" PRIu64 "\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].message_delivers);
         mHSS_DEBUG_PRINTF(LOG_STATUS, "message_frees:    %" PRIu64 "\n",
-            IPI_DATA.mpfs_ipi_privateData[myHartId].message_allocs);
+            IPI_DATA.mpfs_ipi_privateData[myHartId].message_frees);
         mHSS_DEBUG_PRINTF(LOG_STATUS, "consume_intents:  %" PRIu64 "\n",
             IPI_DATA.mpfs_ipi_privateData[myHartId].consume_intents);
         mHSS_DEBUG_PRINTF(LOG_STATUS, "ipi_sends:        %" PRIu64 "\n\n",
