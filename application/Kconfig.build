@@ -93,4 +93,13 @@ config LOG_FUNCTION_NAMES
 
 		If you do not know what to do here, say Y.
 
+config CC_USE_SOFTCONSOLE
+	bool "Support SoftConsole-bundled gcc 8.3"
+	default n
+	help
+		This features supports the older GCC 8.3 bundled with SoftConsole. This is
+                deprecated, and will be removed in a future release of the HSS.
+
+		If you do not know what to do here, say N.
+
 endmenu

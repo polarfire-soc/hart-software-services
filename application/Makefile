@@ -27,7 +27,6 @@
 #
 
 all: $(TARGETS) $(CONFIG_H)
-include $(DOT_CONFIG)
 
 SRCS-y += \
     application/hart0/hss_state_machine.c \

@@ -42,8 +42,8 @@ CONFIG_H=config.h
 
 include application/os.mk
 
-include application/Makefile
 include $(DOT_CONFIG)
+include application/Makefile
 
 ifneq ("$(wildcard boards/${BOARD}/Makefile)","")
   include boards/${BOARD}/Makefile
