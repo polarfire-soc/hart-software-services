@@ -259,15 +259,18 @@ static void physical_device_read(uint64_t byte_address, uint8_t *p_rx_buffer,
 
 static uint32_t usb_flash_media_read(uint8_t lun, uint8_t **buf, uint64_t lba_addr, uint32_t len)
 {
-    if (lun == 0) {
-        if (len > SD_RD_WR_SIZE) {
-            len = SD_RD_WR_SIZE;
-        }
+    *buf = NULL;
 
-        physical_device_read(lba_addr, lun0_data_buffer, len);
-
-        *buf = lun0_data_buffer;
+    if (lun != 0u) {
+        return 0u;
     }
+
+    if (len > SD_RD_WR_SIZE) {
+        len = SD_RD_WR_SIZE;
+    }
+
+    physical_device_read(lba_addr, lun0_data_buffer, len);
+    *buf = lun0_data_buffer;
 
     return len;
 }
@@ -277,7 +280,7 @@ static uint8_t* usb_flash_media_acquire_write_buf(uint8_t lun, uint64_t blk_addr
     uint8_t *result = NULL;
     *len = 0u;
 
-    if ((blk_addr <= ((uint64_t)lun_data[0].number_of_blocks * lun_data[0].lba_block_size)) && (lun == 0u)) {
+    if ((blk_addr < ((uint64_t)lun_data[0].number_of_blocks * lun_data[0].lba_block_size)) && (lun == 0u)) {
         *len = SD_RD_WR_SIZE;
         result = lun0_data_buffer;
     }

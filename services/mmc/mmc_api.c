@@ -323,9 +323,9 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     char *pCSrc = (char *)pSrc;
 
     // if byte count is not a multiple of the sector size, round it up...
+    // Use division to avoid integer overflow near SIZE_MAX.
     if (byteCount & (HSS_MMC_SECTOR_SIZE-1)) {
-        byteCount = byteCount + HSS_MMC_SECTOR_SIZE;
-        byteCount &= ~(HSS_MMC_SECTOR_SIZE-1);
+        byteCount = ((byteCount / HSS_MMC_SECTOR_SIZE) + 1u) * HSS_MMC_SECTOR_SIZE;
     }
 
     // source and byteCount must be multiples of the sector size

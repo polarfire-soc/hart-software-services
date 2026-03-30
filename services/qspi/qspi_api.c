@@ -400,14 +400,21 @@ bool HSS_QSPIInit(void)
 __attribute__((nonnull)) bool HSS_QSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
     bool result = true;
-    const uint32_t read_addr = logical_to_physical_address_((uint32_t)srcOffset);
 
-    Flash_init(MSS_QSPI_QUAD_FULL);
-    Flash_read((uint8_t *)pDest, read_addr, (uint32_t) byteCount);
-    /* Configure the QSPI and Flash back to default values, so that
-     * rest of the applications will access the flash with defaults.
-     */
-    Flash_init(MSS_QSPI_NORMAL);
+    if (srcOffset > (size_t)dieSize || byteCount > (size_t)dieSize - srcOffset) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "QSPI Read Block: offset/size out of bounds\n");
+        result = false;
+    } else {
+        const uint32_t read_addr = logical_to_physical_address_((uint32_t)srcOffset);
+
+        Flash_init(MSS_QSPI_QUAD_FULL);
+        Flash_read((uint8_t *)pDest, read_addr, (uint32_t) byteCount);
+
+        /* Configure the QSPI and Flash back to default values, so that
+         * rest of the applications will access the flash with defaults.
+         */
+        Flash_init(MSS_QSPI_NORMAL);
+    }
 
     return result;
 }
@@ -416,8 +423,14 @@ __attribute__((nonnull)) bool HSS_QSPI_WriteBlock(size_t dstOffset, void *pSrc, 
 {
     bool result = true;
 
-    const uint32_t write_addr = logical_to_physical_address_((uint32_t)dstOffset);
-    Flash_program((uint8_t *)pSrc, write_addr, (uint32_t)byteCount);
+    if (dstOffset > (size_t)dieSize || byteCount > (size_t)dieSize - dstOffset) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "QSPI Write Block: offset/size out of bounds\n");
+        result = false;
+    } else {
+        const uint32_t write_addr = logical_to_physical_address_((uint32_t)dstOffset);
+        Flash_program((uint8_t *)pSrc, write_addr, (uint32_t)byteCount);
+    }
+
     return result;
 }
 
