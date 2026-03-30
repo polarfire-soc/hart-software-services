@@ -126,12 +126,17 @@ uint64_t readmcycle(void)
     return (read_csr(mcycle));
 }
 
+#define TICKS_PER_SEC         ((unsigned long long)LIBERO_SETTING_MSS_RTC_TOGGLE_CLK)
+#define TICKS_PER_MILLISEC    (TICKS_PER_SEC/1000llu)
+#define ONE_SEC               (1llu * TICKS_PER_SEC)
+#define ONE_MILLISEC          (1llu * TICKS_PER_MILLISEC)
+
 void sleep_ms(uint64_t msecs)
 {
     uint64_t starttime = readmtime();
     volatile uint64_t endtime = 0U;
 
-    while(endtime < (starttime+msecs)) {
+    while(endtime < (starttime + (ONE_MILLISEC * msecs))) {
         endtime = readmtime();
     }
 }
