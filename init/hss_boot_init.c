@@ -264,7 +264,7 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
         int outputSize = HSS_Decompress(pInput, pOutputInDDR);
         mHSS_DEBUG_PRINTF(LOG_NORMAL, "decompressed %d bytes ...\n", outputSize);
 
-        if (outputSize) {
+        if (outputSize > 0) {
             pBootImage = (struct HSS_BootImage *)pOutputInDDR;
         } else {
             pBootImage = NULL;
