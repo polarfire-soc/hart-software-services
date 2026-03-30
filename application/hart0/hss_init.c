@@ -128,11 +128,11 @@ bool HSS_ZeroDDR(void)
 bool HSS_ZeroTIMs(void)
 {
 #if IS_ENABLED(CONFIG_INITIALIZE_MEMORIES)
-    memset((void*)E51_DTIM_START, 0, E51_DTIM_END - E51_DTIM_START);       /* 8KiB */
-    memset((void*)U54_1_ITIM_START, 0, U54_1_ITIM_END - U54_1_ITIM_START); /* 28KiB */
-    memset((void*)U54_2_ITIM_START, 0, U54_2_ITIM_END - U54_2_ITIM_START); /* 28KiB */
-    memset((void*)U54_3_ITIM_START, 0, U54_3_ITIM_END - U54_3_ITIM_START); /* 28KiB */
-    memset((void*)U54_4_ITIM_START, 0, U54_4_ITIM_END - U54_4_ITIM_START); /* 28KiB */
+    memset((void*)E51_DTIM_START, 0, (char*)E51_DTIM_END - (char*)E51_DTIM_START);       /* 8KiB */
+    memset((void*)U54_1_ITIM_START, 0, (char*)U54_1_ITIM_END - (char*)U54_1_ITIM_START); /* 28KiB */
+    memset((void*)U54_2_ITIM_START, 0, (char*)U54_2_ITIM_END - (char*)U54_2_ITIM_START); /* 28KiB */
+    memset((void*)U54_3_ITIM_START, 0, (char*)U54_3_ITIM_END - (char*)U54_3_ITIM_START); /* 28KiB */
+    memset((void*)U54_4_ITIM_START, 0, (char*)U54_4_ITIM_END - (char*)U54_4_ITIM_START); /* 28KiB */
 #endif
 
     __sync_synchronize();
