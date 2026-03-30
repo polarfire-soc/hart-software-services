@@ -45,7 +45,6 @@ include services/sgdma/Makefile
 include services/spi/Makefile
 include services/startup/Makefile
 include services/tinycli/Makefile
-include services/uart/Makefile
 include services/usbdmsc/Makefile
 include services/wdog/Makefile
 include services/ymodem/Makefile

@@ -160,13 +160,6 @@ const struct IPI_Handler ipiRegistry[] = {
     { IPI_MSG_WDOG_INIT,         HSS_Null_IPIHandler },
 #endif
     { IPI_MSG_GPIO_SET,          HSS_Null_IPIHandler },
-#if IS_ENABLED(CONFIG_SERVICE_UART)
-    { IPI_MSG_UART_TX,           HSS_UartTx_IPIHandler },
-    { IPI_MSG_UART_POLL_RX,      HSS_UartPollRx_IPIHandler },
-#else
-    { IPI_MSG_UART_TX,           HSS_Null_IPIHandler },
-    { IPI_MSG_UART_POLL_RX,      HSS_Null_IPIHandler },
-#endif
 #if IS_ENABLED(CONFIG_SERVICE_POWERMODE)
     { IPI_MSG_POWERMODE,         HSS_Null_IPIHandler },
 #else
