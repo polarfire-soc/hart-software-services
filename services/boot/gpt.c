@@ -153,48 +153,45 @@ bool GPT_GetBootPartitionIndex(HSS_GPT_t *pGpt, size_t *pIndex)
 //
 bool GPT_ValidateHeader(HSS_GPT_t *pGpt)
 {
-    bool result = true;
+    bool result = false;
 
     assert(pGpt != NULL);
 
     HSS_GPT_Header_t * const pGptHeader = &(pGpt->h.header);
 
-    result = (!strncmp(pGptHeader->s.c, (char *)GPT_EXPECTED_SIGNATURE, 8));
-    if (!result) {
-        //mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT signature not as expected\n");
-    } else {
-        result = (pGptHeader->revision == GPT_EXPECTED_REVISION);
 
-        if (!result) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x\n",
-                pGptHeader->revision, GPT_EXPECTED_REVISION);
-        } else {
+    if (strncmp(pGptHeader->s.c, (char *)GPT_EXPECTED_SIGNATURE, 8)) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT signature not as expected\n");
+    } else if (pGptHeader->revision != GPT_EXPECTED_REVISION) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x\n",
+            pGptHeader->revision, GPT_EXPECTED_REVISION);
+    } else if ((pGptHeader->headerSize < sizeof(HSS_GPT_Header_t))
+        || (pGptHeader->headerSize > GPT_MAX_LBA_SIZE)) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header size out of bounds\n");
+    } else {
             uint32_t origChecksum = pGptHeader->headerCrc32;
             pGptHeader->headerCrc32 = 0u;
             uint32_t checksum = CRC32_calculate((const uint8_t *)pGptHeader, pGptHeader->headerSize);
             pGptHeader->headerCrc32 = origChecksum;
 
-            result = (checksum == origChecksum);
-
-            if (!result) {
+            if (checksum != origChecksum) {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header CRC32 is %08x vs expected %08x\n",
                     checksum, origChecksum);
+            } else if (pGptHeader->currentLBA != 1u) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT current LBA is %lu vs expected %u\n",
+                    pGptHeader->currentLBA, 1u);
+            } else if (pGptHeader->partitionEntriesStartingLBA != 2u) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT starting LBA of array of partition entries is %lu"
+                    " vs expected %u\n", pGptHeader->currentLBA, 2u);
+            } else if (pGptHeader->numPartitions > GPT_MAX_NUM_PARTITIONS) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT numPartitions %u exceeds maximum %u\n",
+                    pGptHeader->numPartitions, GPT_MAX_NUM_PARTITIONS);
+            } else if (pGptHeader->sizeOfPartitionEntry > GPT_MAX_SIZE_OF_PARTITION_ENTRY) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT sizeOfPartitionEntry %u exceeds maximum %u\n",
+                    pGptHeader->sizeOfPartitionEntry, GPT_MAX_SIZE_OF_PARTITION_ENTRY);
             } else {
-                result = (pGptHeader->currentLBA == 1u);
-
-                if (!result) {
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT current LBA is %lu vs expected %u\n",
-                        pGptHeader->currentLBA, 1u);
-                } else {
-                    result = (pGptHeader->partitionEntriesStartingLBA == 2u);
-
-                    if (!result) {
-                        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT starting LBA of array of partition entries is %lu"
-                            " vs expected %u\n", pGptHeader->currentLBA, 2u);
-                    }
-                }
+                result = true;
             }
-        }
     }
 
     if (result) {
@@ -333,10 +330,12 @@ bool GPT_PartitionIdToLBAOffset(HSS_GPT_t const * const pGpt, size_t partitionIn
     HSS_GPT_PartitionEntry_t const * const pGptPartitionEntry =
         ReadPartitionEntryIntoBuffer_(pGpt, lbaIndex, partitionIndex);
 
-    result = partitionIndex < pGptHeader->numPartitions;
+    if (pGptPartitionEntry != NULL) {
+        result = partitionIndex < pGptHeader->numPartitions;
 
-    if (result) {
-        *pFirstLBA = pGptPartitionEntry->firstLBA;
+        if (result) {
+            *pFirstLBA = pGptPartitionEntry->firstLBA;
+        }
     }
 
     return result;
@@ -383,12 +382,22 @@ static bool FindPartitionById_(HSS_GPT_t const * const pGpt,
 
     HSS_GPT_Header_t const * const pGptHeader = &(pGpt->h.header);
 
+    if (pGptHeader->numPartitions > GPT_MAX_NUM_PARTITIONS) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT numPartitions %u exceeds maximum %u\n",
+            pGptHeader->numPartitions, GPT_MAX_NUM_PARTITIONS);
+        return false;
+    }
+
     //
     // Read Partition Entries
     for (size_t partitionIndex = 0u; partitionIndex < pGptHeader->numPartitions;
         partitionIndex++) {
         HSS_GPT_PartitionEntry_t const * pPartitionEntry;
-	assert(GPT_ReadPartitionEntryByIndex(pGpt, partitionIndex, &pPartitionEntry));
+	if (!(GPT_ReadPartitionEntryByIndex(pGpt, partitionIndex, &pPartitionEntry)
+            || (pPartitionEntry == NULL))) {
+            result = false;
+            break;
+        }
 
         // if we've passed the starting LBA of this parameter into the search, we already know
         // about it so look for another...
@@ -521,7 +530,7 @@ bool GPT_FindBootSectorIndex(HSS_GPT_t *pGpt, size_t *srcIndex,
         result = GPT_ValidateHeader(pGpt);
     }
 
-    result = pGpt->partitionEntriesValid;
+    result = result & pGpt->partitionEntriesValid;
     if (!result) {
         result = GPT_ValidatePartitionEntries(pGpt);
     }

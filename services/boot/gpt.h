@@ -38,6 +38,9 @@ extern "C" {
 #  define GPT_MAX_LBA_SIZE 512u
 #endif
 
+#define GPT_MAX_NUM_PARTITIONS 128u
+#define GPT_MAX_SIZE_OF_PARTITION_ENTRY 128u
+
 typedef struct HSS_GPT_GUID_s {
     uint32_t data1;
     uint16_t data2;
