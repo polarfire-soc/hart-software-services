@@ -38,6 +38,7 @@ extern "C" {
 #  define GPT_MAX_LBA_SIZE 512u
 #endif
 
+#define GPT_MIN_HEADER_SIZE 92
 #define GPT_MAX_NUM_PARTITIONS 128u
 #define GPT_MAX_SIZE_OF_PARTITION_ENTRY 128u
 
@@ -67,7 +68,7 @@ typedef struct HSS_GPT_Header_s {
      uint32_t numPartitions;
      uint32_t sizeOfPartitionEntry;
      uint32_t partitionEntriesArrayCrc32;
-} HSS_GPT_Header_t;
+} __attribute__((packed)) HSS_GPT_Header_t;
 
 typedef struct HSS_GPT_s {
     union {

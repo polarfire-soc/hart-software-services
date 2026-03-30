@@ -165,9 +165,9 @@ bool GPT_ValidateHeader(HSS_GPT_t *pGpt)
     } else if (pGptHeader->revision != GPT_EXPECTED_REVISION) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header revision is %08x vs expected %08x\n",
             pGptHeader->revision, GPT_EXPECTED_REVISION);
-    } else if ((pGptHeader->headerSize < sizeof(HSS_GPT_Header_t))
+    } else if ((pGptHeader->headerSize < GPT_MIN_HEADER_SIZE)
         || (pGptHeader->headerSize > GPT_MAX_LBA_SIZE)) {
-        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header size out of bounds\n");
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "GPT header size (%u) out of bounds\n", pGptHeader->headerSize);
     } else {
             uint32_t origChecksum = pGptHeader->headerCrc32;
             pGptHeader->headerCrc32 = 0u;
