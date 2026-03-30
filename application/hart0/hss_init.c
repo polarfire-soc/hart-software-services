@@ -258,7 +258,7 @@ bool HSS_ResetReasonInit(void)
         mHSS_DEBUG_PRINTF(LOG_WARN, "NOTICE: Reboot reason = 0x%x\n", reset_reason);
 
         for (int bitPosn = 0; bitPosn <= RESET_SR_CPU_SOFT_RESET_OFFSET; bitPosn++) {
-            if (reset_reason & (1 << bitPosn)) {
+            if (reset_reason & (1u << bitPosn)) {
                 mHSS_DEBUG_PRINTF_EX("\t=> %s\n", reset_reason_string[bitPosn]);
             }
         }
