@@ -482,7 +482,7 @@ void generate_payload(char const * const filename_output, char const * const pri
 		printf("public_key_filename is >>%s<<\n", public_key_filename);
 	}
 
-	FILE *pFileOut = fopen(filename_output, "w+");
+	FILE *pFileOut = fopen(filename_output, "wb+");
 	if (!pFileOut) {
 		perror("fopen()");
 		exit(EXIT_FAILURE);

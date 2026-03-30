@@ -119,7 +119,7 @@ bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner
 		debug_printf(1, "lastChunk is %d, numChunks is %d\n", bootImage.hart[owner-1].lastChunk, bootImage.hart[owner-1].numChunks);
 	} else {
 		debug_printf(1, "\nProcessing blob >>%s<< - placing at %p\n", filename, exec_addr);
-		FILE *fileIn = fopen(filename, "r+");
+		FILE *fileIn = fopen(filename, "rb+");
 		if (!fileIn) {
 			fprintf(stderr, "%s(): File: %s -", __func__, filename);
 			perror("fopen()");
@@ -152,7 +152,7 @@ bool blob_handler(char const * const filename, uintptr_t exec_addr, size_t owner
 		exec_addr += size; // increment past main blob
 		debug_printf(1, "\nProcessing blob >>%s<< - placing at %p\n", ancilliary_filename, exec_addr);
 
-		FILE *fileIn = fopen(ancilliary_filename, "r+");
+		FILE *fileIn = fopen(ancilliary_filename, "rb+");
 		if (!fileIn) {
 			fprintf(stderr, "%s(): File: %s -", __func__, ancilliary_filename);
 			perror("fopen()");
