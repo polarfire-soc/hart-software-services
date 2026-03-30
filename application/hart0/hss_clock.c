@@ -41,7 +41,7 @@ HSSTicks_t HSS_GetTickCount(void)
 
 bool HSS_Timer_IsElapsed(HSSTicks_t startTick, HSSTicks_t durationInTicks)
 {
-    return (HSS_GetTime() > (startTick + durationInTicks));
+    return ((HSS_GetTime() - startTick) >= durationInTicks);
 }
 
 void HSS_SpinDelay_MilliSecs(uint32_t milliseconds)
