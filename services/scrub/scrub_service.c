@@ -113,7 +113,7 @@ const struct {
     { (uintptr_t)&__ddr_start,           (uintptr_t)&__ddr_end,        false },
     { (uintptr_t)&__ddrhi_start,         (uintptr_t)&__ddrhi_end,      false },
 #  endif
-#  if IS_ENABLED(CONFIG_SERVICE_SCRUB_NONCACHE_DDDR)
+#  if IS_ENABLED(CONFIG_SERVICE_SCRUB_NONCACHE_DDR)
     //{ (uintptr_t)&__ncddrhi_start,       (uintptr_t)&__ncddrhi_end,    false },
 #  endif
 #endif
