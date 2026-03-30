@@ -31,10 +31,6 @@
 #include "hss_memcpy_via_pdma.h"
 #include "startup_service.h"
 
-#ifndef PRIx64
-#  define PRIx64 "llu"
-#endif
-
 static void startup_init_handler(struct StateMachine * const pMyMachine);
 static void startup_boot_handler(struct StateMachine * const pMyMachine);
 static void startup_idle_handler(struct StateMachine * const pMyMachine);
@@ -76,13 +72,13 @@ struct StateMachine startup_service = {
 };
 
 
-size_t i = 0u;
 // --------------------------------------------------------------------------------------------------
 // Handlers for each state in the state machine
 //
 static void startup_init_handler(struct StateMachine * const pMyMachine)
 {
     //if (HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) { }
+    static size_t i = 0u;
 
     assert(globalInitFunctions[i].handler);
 
@@ -122,9 +118,9 @@ static void startup_boot_handler(struct StateMachine * const pMyMachine)
 #if !IS_ENABLED(CONFIG_SERVICE_TINYCLI) && !IS_ENABLED(CONFIG_SERVICE_GPIO_UI)
     if (!HSS_DDR_IsAddrInDDR(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR) || HSS_Trigger_IsNotified(EVENT_DDR_TRAINED)) {
         if (HSS_BootInit()) { HSS_BootHarts(); } // attempt boot
-        pMyMachine->state++;
     }
 #endif
+    pMyMachine->state = STARTUP_IDLE;
 }
 
 static void startup_idle_handler(struct StateMachine * const pMyMachine)
