@@ -58,6 +58,7 @@ int get_random(unsigned char *buf, unsigned short len)
     while (!result && (slen > NONCE_CHUNK_SIZE)) {
         result = get_random_chunk_(&buf[offset], NONCE_CHUNK_SIZE);
         slen = slen - NONCE_CHUNK_SIZE;
+        offset += NONCE_CHUNK_SIZE;
     }
 
     if (!result && (slen > 0)) {
