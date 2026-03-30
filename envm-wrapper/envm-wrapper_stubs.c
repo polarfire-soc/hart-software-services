@@ -83,12 +83,15 @@ size_t sbi_strlen(const char *s)
 
 
 extern uint64_t __l2lim_heap_base;
+extern uint64_t __l2lim_heap_end;
 uintptr_t malloc_base = (uintptr_t)&__l2lim_heap_base;
+uintptr_t malloc_end = (uintptr_t)&__l2lim_heap_end;
 void *malloc(size_t size);
 void *malloc(size_t size)
 {
     void *result = (void *)malloc_base;
     malloc_base += size;
+    if (malloc_base > malloc_end) { result = NULL; }
     return result;
 }
 
