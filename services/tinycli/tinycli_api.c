@@ -1085,7 +1085,7 @@ void HSS_TinyCLI_RunMonitors(void)
             && HSS_Timer_IsElapsed(monitors[i].time, monitors[i].interval_sec * ONE_SEC)) {
             mHSS_DEBUG_PRINTF(LOG_STATUS,": ");
             HSS_TinyCLI_HexDump((uint8_t *)monitors[i].startAddr, monitors[i].count);
-            monitors[0].time = HSS_GetTime();
+            monitors[i].time = HSS_GetTime();
        }
     }
 }
