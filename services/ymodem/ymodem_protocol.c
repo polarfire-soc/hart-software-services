@@ -119,6 +119,7 @@ struct XYModem_State {
         int done;
     } status;
     bool eotReceived;
+    bool firstEotNAKd;  // true after first EOT has been NAK'd, awaiting second EOT
     uint8_t lastReceivedBlkNum;
     uint8_t expectedBlkNum;
     size_t totalReceivedSize;
@@ -201,6 +202,10 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
         // Attempt to synchronize up to HSS_XYMODEM_MAX_SYNC_ATTEMPTS times
         //
         while (!synced && (syncAttempt < HSS_XYMODEM_MAX_SYNC_ATTEMPTS)) {
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+            HSS_Wdog_E51_Tickle();
+#endif
+
             int16_t rawStartByte = getchar_with_timeout_(timeout_sec);
 
             if ((rawStartByte >= 0) && (rawStartByte < 256)) {
@@ -267,32 +272,32 @@ static bool XYMODEM_ReadPacket(struct XYModem_Packet *pPacket, struct XYModem_St
         if (pState->status.s.endOfSession) {
             result = true;
         } else if (synced) {
-            timeout_sec = HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC;
-            pPacket->blkNum = getchar_with_timeout_(timeout_sec);
-            pPacket->blkNumOnesComplement = getchar_with_timeout_(timeout_sec);
-            ++(pState->numReceivedPackets);
+            if (!pState->eotReceived) {
+                /* Regular data packet: read header, payload and CRC */
+                timeout_sec = HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC;
+                pPacket->blkNum = getchar_with_timeout_(timeout_sec);
+                pPacket->blkNumOnesComplement = getchar_with_timeout_(timeout_sec);
+                ++(pState->numReceivedPackets);
 
-            size_t i = 0u;
-            while (i < pPacket->length) {
-                pPacket->buffer[i] = getchar_with_timeout_(timeout_sec);
-                ++i;
-            }
+                size_t i = 0u;
+                while (i < pPacket->length) {
+                    pPacket->buffer[i] = getchar_with_timeout_(timeout_sec);
+                    ++i;
+                }
 
-            pPacket->buffer[i] = getchar_with_timeout_(timeout_sec); ++i; //crc_hi
-            pPacket->buffer[i] = getchar_with_timeout_(timeout_sec); ++i; //crc_lo
+                pPacket->buffer[i] = getchar_with_timeout_(timeout_sec); ++i; //crc_hi
+                pPacket->buffer[i] = getchar_with_timeout_(timeout_sec); ++i; //crc_lo
 
-            if (pState->status.done) {
-                ;
-            } else {
-                if (pState->eotReceived)  {
-                    ;
-                } else if (XYMODEM_ValidatePacket(pPacket, pState)) {
-                    pState->lastReceivedBlkNum = pPacket->blkNum;
-                    ++(pState->expectedBlkNum);
-                } else { // corrupt packet?
-                    result = false;
+                if (!pState->status.done) {
+                    if (XYMODEM_ValidatePacket(pPacket, pState)) {
+                        pState->lastReceivedBlkNum = pPacket->blkNum;
+                        ++(pState->expectedBlkNum);
+                    } else { // corrupt packet?
+                        result = false;
+                    }
                 }
             }
+            /* else EOT carries no header, data, or CRC, so return success immediately */
         } else { // not synchronized
             if (pState->status.s.abort) {
                 result = true;
@@ -326,7 +331,13 @@ static size_t XYMODEM_GetFileSize(char *pStart, char *pEnd)
 
         case '0' ... '9':
             if (!hunting) {
-                fileSize = (fileSize * 10u) + (uint8_t)(*pChar - '0');
+                uint8_t digit = (uint8_t)(*pChar - '0');
+                if (fileSize <= ((size_t)-1u - digit) / 10u) {
+                    fileSize = (fileSize * 10u) + digit;
+                } else {
+                    fileSize = (size_t)-1u; // saturate; maxSize check will reject the transfer
+                    finished = true;
+                }
             }
             break;
 
@@ -363,9 +374,11 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
     pState->expectedSize = 0u;
     pState->maxSize = bufferSize;
     pState->protocol = protocol;
+    pState->eotReceived = false;
+    pState->firstEotNAKd = false;
 
     //
-    // Protocol starts with receiver sending a character to indicate to the sender that it is ready...
+    // protocol starts with receiver sending a character to indicate to the sender that it is ready...
     //
     XYMODEM_SendReadyChar(pState);
     if (pState->protocol != HSS_XYMODEM_PROTOCOL_YMODEM) {
@@ -373,7 +386,7 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
     }
 
     static struct XYModem_Packet packet; // make this static, as it is contains a large buffer,
-                                         //which is not friendly to the stack
+                                         // which is not friendly to the stack
     memset(&packet, 0, sizeof(packet));
 
     //
@@ -382,11 +395,11 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
     retries = 0u;
     while (!pState->status.done && (retries < HSS_XYMODEM_BAD_PACKET_RETRIES)) {
         if (XYMODEM_ReadPacket(&packet, pState)) {
-            putchar_(XYMODEM_ACK);
-
             if (!pState->status.done) {
                 if ((pState->protocol == HSS_XYMODEM_PROTOCOL_YMODEM) && (pState->lastReceivedBlkNum == 0) && (pState->numReceivedPackets == 1u)) {
+                    putchar_(XYMODEM_ACK);
                     memcpy(pState->filename, packet.buffer, HSS_XYMODEM_MAX_FILENAME_LENGTH-1);
+                    pState->filename[HSS_XYMODEM_MAX_FILENAME_LENGTH-1] = 0;
                     pState->expectedSize = XYMODEM_GetFileSize(packet.buffer, packet.buffer + ARRAY_SIZE(packet.buffer));
 
                     // if expected file size is known a priori, ensure we have enough buffer
@@ -397,11 +410,35 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
                         XYMODEM_SendCAN();
                         break;
                     }
-                } else if (pState->eotReceived) { // end of session
-                    pState->status.s.endOfSession = true;
+                } else if (pState->eotReceived && !pState->firstEotNAKd) {
+                    /*
+                     * first EOT: YMODEM spec requires NAK to prompt the sender to
+                     * retransmit EOT once for confirmation before we ACK
+                     */
+                    pState->firstEotNAKd = true;
+                    pState->eotReceived = false;    // reset to receive the second EOT
+                    pState->numNAKs++;
+                    putchar_(XYMODEM_NAK);
+                } else if (pState->eotReceived) {
+                    /*
+                     * second EOT: acknowledge end-of-file, then exchange the null
+                     * batch-terminator block so the sender exits cleanly
+                     */
                     putchar_(XYMODEM_ACK);
+                    putchar_(XYMODEM_C);   // request the null batch-end block
+
+                    pState->eotReceived = false;
+                    pState->expectedBlkNum = 0u;  // null block always uses sequence 0
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+                    HSS_Wdog_E51_Tickle();
+#endif
+                    if (XYMODEM_ReadPacket(&packet, pState)) {
+                        putchar_(XYMODEM_ACK);
+                    }
+                    pState->status.s.endOfSession = true;
                 } else if ((pState->totalReceivedSize + packet.length) < pState->maxSize) {
                     // dynamically ensure we have enough buffer space to receive, on each received chunk
+                    putchar_(XYMODEM_ACK);
                     memcpy(buffer + pState->totalReceivedSize, packet.buffer, packet.length);
                     pState->totalReceivedSize += packet.length;
                 } else {
@@ -409,15 +446,6 @@ static size_t XYMODEM_Receive(int protocol, struct XYModem_State *pState, char *
                     pState->totalReceivedSize = 0u;
                     XYMODEM_SendCAN();
                     break;
-                }
-            } else { // transfer is done
-                if (pState->status.s.abort) {
-                    pState->totalReceivedSize = 0u;
-                    XYMODEM_SendCAN();
-                    break;
-                } else if (pState->status.s.endOfSession) {
-                    putchar_(XYMODEM_ACK);
-                    XYMODEM_Purge(HSS_XYMODEM_POST_SYNC_TIMEOUT_SEC);
                 }
             }
         } else { // bad packet read

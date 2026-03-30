@@ -64,6 +64,10 @@
 #  include "mss_mmc.h"
 #endif
 
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#  include "wdog_service.h"
+#endif
+
 
 //
 // Local prototypes
@@ -94,6 +98,9 @@ static bool hss_loader_qspi_init(void)
 
 static bool hss_loader_qspi_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
 {
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+    HSS_Wdog_E51_Tickle();
+#endif
     bool result = HSS_QSPI_WriteBlock(wrAddr, pBuffer, receivedCount);
     return result;
 }
@@ -121,6 +128,9 @@ bool hss_loader_mmc_init(void)
 
 bool hss_loader_mmc_program(uint8_t *pBuffer, size_t wrAddr, size_t receivedCount)
 {
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+    HSS_Wdog_E51_Tickle();
+#endif
     bool result = HSS_MMC_WriteBlock(wrAddr, pBuffer, receivedCount);
     return result;
 }
@@ -132,9 +142,9 @@ void hss_loader_ymodem_loop(void)
     uint8_t rx_byte;
     bool done = false;
 
-    uint32_t receivedCount = 0u;
+    size_t receivedCount = 0u;
     uint8_t *pBuffer = (uint8_t *)HSS_DDR_GetStart();
-    uint32_t g_rx_size = HSS_DDR_GetSize();
+    size_t g_rx_size = HSS_DDR_GetSize();
 
     while (!done) {
 #if IS_ENABLED(CONFIG_SERVICE_QSPI) || IS_ENABLED(CONFIG_SERVICE_MMC)
@@ -224,7 +234,7 @@ void hss_loader_ymodem_loop(void)
 
 #if IS_ENABLED(CONFIG_SERVICE_QSPI)
             case '4':
-                mHSS_PRINTF("\nAttempting to flash received data (%u bytes)\n", receivedCount);
+                mHSS_PRINTF("\nAttempting to flash received data (%lu bytes)\n", (unsigned long)receivedCount);
                 mHSS_PUTS("\nInitializing QSPI ... ");
                 result = hss_loader_qspi_init();
 
@@ -249,7 +259,7 @@ void hss_loader_ymodem_loop(void)
 
 #if IS_ENABLED(CONFIG_SERVICE_MMC)
             case '5':
-                mHSS_PRINTF("\nAttempting to flash received data (%u bytes)\n", receivedCount);
+                mHSS_PRINTF("\nAttempting to flash received data (%lu bytes)\n", (unsigned long)receivedCount);
                 mHSS_PUTS("\nInitializing MMC ... ");
                 result = hss_loader_mmc_init();
 

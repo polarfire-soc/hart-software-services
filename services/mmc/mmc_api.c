@@ -54,6 +54,10 @@
 
 #include "mss_sysreg.h"
 
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+#  include "wdog_service.h"
+#endif
+
 extern uint8_t PLIC_mmc_main_IRQHandler(void);
 
 static enum {
@@ -337,6 +341,9 @@ bool HSS_MMC_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
     mss_mmc_status_t result = MSS_MMC_TRANSFER_SUCCESS;
 
     while ((result == MSS_MMC_TRANSFER_SUCCESS) && (byteCount)) {
+#if IS_ENABLED(CONFIG_SERVICE_WDOG)
+        HSS_Wdog_E51_Tickle();
+#endif
         result = MSS_MMC_single_block_write((uint32_t *)pCSrc, dst_sector_num);
 
         if (result != MSS_MMC_TRANSFER_SUCCESS) {

@@ -151,10 +151,13 @@ static inline uint32_t logical_to_physical_address_(const uint32_t logical_addr)
         return 0u;
     }
 
-    uint16_t physical_block_number = pLogicalToPhysicalMap[logical_block_num];
+    uint16_t physical_block_number = (uint16_t)logical_block_num; // identity fallback
+    if (pLogicalToPhysicalMap != NULL) {
+        physical_block_number = pLogicalToPhysicalMap[logical_block_num];
+    }
     uint32_t result = (physical_block_number * blockSize) + remainder;
 
-    if (physical_block_number > blockCount) {
+    if (pLogicalToPhysicalMap != NULL && physical_block_number > blockCount) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Corruption in logical to physical block mapping: %d\n", physical_block_number);
         build_bad_block_map_();
         // retry
@@ -174,8 +177,11 @@ static inline uint32_t logical_to_physical_block_(const uint32_t logical_block)
         return 0u;
     }
 
-    uint32_t result = pLogicalToPhysicalMap[logical_block];
-    if (result > blockCount) {
+    uint32_t result = (uint32_t)logical_block; // identity fallback
+    if (pLogicalToPhysicalMap != NULL) {
+        result = pLogicalToPhysicalMap[logical_block];
+    }
+    if (pLogicalToPhysicalMap != NULL && result > blockCount) {
         mHSS_DEBUG_PRINTF(LOG_ERROR, "Corruption in logical to physical block mapping: %d\n", result);
         build_bad_block_map_();
         // retry
