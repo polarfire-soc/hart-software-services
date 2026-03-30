@@ -286,7 +286,7 @@ static uint32_t sgmii_channel_setup(void)
              */
             /* the mac clocks need to be turned on when setting up the sgmii */
             (void)mss_config_clk_rst(MSS_PERIPH_MAC0, (uint8_t) MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
-            (void)mss_config_clk_rst(MSS_PERIPH_MAC0, (uint8_t) MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
+            (void)mss_config_clk_rst(MSS_PERIPH_MAC1, (uint8_t) MPFS_HAL_FIRST_HART, PERIPHERAL_ON);
             GEM_A_LO->network_config |= (0x01U << 10U) | (0x01U << 11U);   /* GEM0 */
             GEM_B_LO->network_config |= (0x01U << 10U) | (0x01U << 11U);   /* GEM1 */
             sgmii_training_state = SGMII_DETERMINE_SILICON_VARIANT;
