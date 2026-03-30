@@ -55,6 +55,7 @@ enum HealthMon_CheckType
     EQUAL_TO_VALUE,
     NOT_EQUAL_TO_VALUE,
     CHANGED_SINCE_LAST,
+    LAST_CHECKTYPE = CHANGED_SINCE_LAST
 };
 
 struct HealthMonitor

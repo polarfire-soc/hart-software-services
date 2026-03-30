@@ -158,8 +158,10 @@ static void healthmon_monitoring_handler(struct StateMachine * const pMyMachine)
                 if (triggered && value != monitor_status[i].lastValue) {
                     monitor_status[i].count++;
 
-                    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s %s ",
-                        monitors[i].pName, checkName[monitors[i].checkType]);
+                    if (monitors[i].checkType <= LAST_CHECKTYPE) {
+                        mHSS_DEBUG_PRINTF(LOG_ERROR, "%s %s ",
+                            monitors[i].pName, checkName[monitors[i].checkType]);
+                    }
                     HSS_Debug_Highlight(HSS_DEBUG_LOG_ERROR);
                     if (checkType != CHANGED_SINCE_LAST) {
                         mHSS_DEBUG_PRINTF_EX("0x%x ", monitors[i].maxValue);
