@@ -61,6 +61,12 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
         stateType_t prevState = pCurrentMachine->prevState;
         stateType_t currentState = pCurrentMachine->state;
 
+        if (!IsValidState(pCurrentMachine, currentState)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "%s: invalid state %d - halting\n",
+                pMachineName, currentState);
+            while (1) {}
+        }
+
         struct StateDesc const * const pCurrentStateDesc =
             &(pCurrentMachine->pStateDescs[currentState]);
 
