@@ -1,5 +1,5 @@
 /*******************************************************************************
- * (c) Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
+ * (c) Copyright 2019-2026 Microchip FPGA Embedded Systems Solutions.
  * All rights reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -25,8 +25,6 @@
  * PolarFire SoC Microprocessor Subsystem I2C bare metal software driver
  * public API.
  *
- * SVN $Revision$
- * SVN $Date$
  */
 /*=========================================================================*//**
   @mainpage PolarFire SoC MSS I2C Bare Metal Driver.
@@ -2105,6 +2103,10 @@ void MSS_I2C_register_transfer_completion_handler
     mss_i2c_instance_t * this_i2c,
     mss_i2c_transfer_completion_t completion_handler
 );
+
+
+bool MSS_I2C_poll_complete(mss_i2c_instance_t *this_i2c, mss_i2c_status_t *out_status);
+mss_i2c_status_t MSS_I2C_poll(mss_i2c_instance_t *this_i2c);
 
 #ifdef __cplusplus
 }
