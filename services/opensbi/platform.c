@@ -439,7 +439,7 @@ void mpfs_domains_deregister_hart(int hartid)
     hart_ledger[hartid].owner_hartid = 0;
     hart_ledger[hartid].boot_pending = 0;
 
-    assert((hartid > 0) & (hartid < ARRAY_SIZE(mpfs_hart_index2id)));
+    assert((hartid > 0) && (hartid < ARRAY_SIZE(mpfs_hart_index2id)));
     mpfs_hart_index2id[hartid] = -1;
 }
 
@@ -447,7 +447,7 @@ bool mpfs_is_hart_using_opensbi(int hartid)
 {
     bool result = true;
 
-    assert((hartid > 0) & (hartid < ARRAY_SIZE(mpfs_hart_index2id)));
+    assert((hartid > 0) && (hartid < ARRAY_SIZE(mpfs_hart_index2id)));
 
     if (mpfs_hart_index2id[hartid] == -1) {
         result = false;
@@ -458,7 +458,7 @@ bool mpfs_is_hart_using_opensbi(int hartid)
 
 void mpfs_mark_hart_as_booted(int hartid)
 {
-    assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_ledger)));
+    assert((hartid >= 0) && (hartid < ARRAY_SIZE(hart_ledger)));
 
     if (hartid < ARRAY_SIZE(hart_ledger)) {
         hart_ledger[hartid].boot_pending = 0;
@@ -469,8 +469,8 @@ bool mpfs_are_harts_in_same_domain(int hartid1, int hartid2)
 {
     bool result = false;
 
-    assert((hartid1 >= 0) & (hartid1 < ARRAY_SIZE(hart_ledger)));
-    assert((hartid2 >= 0) & (hartid2 < ARRAY_SIZE(hart_ledger)));
+    assert((hartid1 >= 0) && (hartid1 < ARRAY_SIZE(hart_ledger)));
+    assert((hartid2 >= 0) && (hartid2 < ARRAY_SIZE(hart_ledger)));
 
     result = (hart_ledger[hartid1].owner_hartid == hart_ledger[hartid2].owner_hartid);
 
@@ -479,13 +479,13 @@ bool mpfs_are_harts_in_same_domain(int hartid1, int hartid2)
 
 bool mpfs_is_cold_reboot_allowed(int hartid)
 {
-    assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_ledger)));
+    assert((hartid >= 0) && (hartid < ARRAY_SIZE(hart_ledger)));
     return hart_ledger[hartid].allow_cold_reboot;
 }
 
 bool mpfs_is_warm_reboot_allowed(int hartid)
 {
-    assert((hartid >= 0) & (hartid < ARRAY_SIZE(hart_ledger)));
+    assert((hartid >= 0) && (hartid < ARRAY_SIZE(hart_ledger)));
     return hart_ledger[hartid].allow_warm_reboot;
 }
 

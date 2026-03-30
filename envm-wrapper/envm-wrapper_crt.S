@@ -16,23 +16,12 @@
 #include <sbi/sbi_trap.h>
 
 /*
- * These must match the definition in include/hss_types.h!
- *
+ * Struct offsets and version constants are generated from include/hss_types.h
+ * by the build system. See envm-wrapper/asm_offsets.c and envm-wrapper/Makefile.
  */
-#define mHSS_COMPRESSED_VERSION_FASTLZ 1u
-#define mHSS_COMPRESSED_VERSION_DEFLATE  2u
+#include "asm_offsets.h"
 
 #define OFFSET_OF(TYPE, FIELD) TYPE##_##FIELD##_##OFFSET
-#define HSS_CompressedImage_magic_OFFSET		0u
-#define HSS_CompressedImage_version_OFFSET		4u
-#define HSS_CompressedImage_headerLength_OFFSET		8u
-#define HSS_CompressedImage_headerCrc_OFFSET		16u
-#define HSS_CompressedImage_compressedCrc_OFFSET	20u
-#define HSS_CompressedImage_originalCrc_OFFSET		24u
-#define HSS_CompressedImage_compressedImageLen_OFFSET	32u
-#define HSS_CompressedImage_originalImageLen_OFFSET	40u
-#define HSS_CompressedImage_hash_OFFSET			48u
-#define HSS_CompressedImage_ecdsaSig_OFFSET		80u
 
 /*
  */
@@ -166,7 +155,22 @@ _start:
 	li	a2, mHSS_COMPRESSED_VERSION_DEFLATE
 	beq	a1, a2, .e51_miniz_decompress
 .spin_unknown_compressor:
+	GET_HSS_UART
+	la	a1, bad_decompression_msg
+	call	MSS_UART_polled_tx_string
 	j	.spin_unknown_compressor
+
+.spin_image_too_large:
+	GET_HSS_UART
+	la	a1, image_too_large_msg
+	call	MSS_UART_polled_tx_string
+	j	.spin_image_too_large
+
+.spin_bad_decompression:
+	GET_HSS_UART
+	la	a1, bad_decompression_msg
+	call	MSS_UART_polled_tx_string
+	j	.spin_bad_decompression
 
 .e51_miniz_decompress:
 	// a3 => compressed length...
@@ -178,12 +182,20 @@ _start:
 
 	// a1 => pointer to store decompressed size, seeded with inital value from image header
 	REG_L	a0, OFFSET_OF(HSS_CompressedImage, originalImageLen)(a0)
+
+	// Bound check: reject if originalImageLen exceeds L2 scratchpad capacity
+	la	t0, __l2_end
+	la	t1, __l2_start
+	sub	t0, t0, t1			// t0 = sizeof(L2 scratchpad)
+	bgtu	a0, t0, .spin_image_too_large
+
 	la	a1, decompressed_size
 	REG_S	a0, 0(a1)
 
 	// a0 => pointer to destination (where to decompress to)
 	la	a0, __l2_start		// destination
 	call 	mz_uncompress
+	bnez	a0, .spin_bad_decompression	// MZ_OK == 0 so any other value is an error
 	j	.clear_progress
 
 .clear_progress:
@@ -465,6 +477,10 @@ passed_msg:
        .asciz "Passed\r\n"
 failed_msg:
        .asciz "Failed\r\n\0"
+image_too_large_msg:
+       .asciz "HSS: eNVM image originalImageLen exceeds L2 scratchpad - halting\r\n\0"
+bad_decompression_msg:
+       .asciz "HSS: decompression failed - halting\r\n\0"
 
        .globl __sc_start, __sc_load, __sc_end
 __sc_start:

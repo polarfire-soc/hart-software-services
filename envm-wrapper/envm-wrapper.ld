@@ -150,8 +150,6 @@ SECTIONS
         *(.note.gnu.build-id)
     } >envm
 
-    PROVIDE(_hss_end = .);
-
     .sdata : ALIGN(0x40)
     {
         __sdata_load = LOADADDR(.sdata);

@@ -64,7 +64,15 @@ LINKER_SCRIPT-envm-wrapper = envm-wrapper/envm-wrapper.ld
 
 COMPRESSED_TARGET=$(BINDIR)/$(TARGET-l2scratch:.elf=.bin.deflate)
 
-$(BINDIR)/envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) 
+$(BINDIR)/envm-wrapper/asm_offsets.h: envm-wrapper/asm_offsets.c
+	if [ ! -d $(dir $@) ]; then mkdir -p $(dir $@); fi
+	$(ECHO) " OFFSETS   $@"
+	$(CC) $(CFLAGS_GCCEXT) $(INCLUDES) -I. -S -o - $< | \
+		grep "^->" | \
+		awk '{ gsub(/^\$$/, "", $$3); print "#define", $$3, $$2 }' > $@
+
+$(BINDIR)/envm-wrapper/envm-wrapper_crt.o: $(COMPRESSED_TARGET) $(BINDIR)/envm-wrapper/asm_offsets.h
+$(BINDIR)/envm-wrapper/envm-wrapper_crt.o: CFLAGS += -I$(BINDIR)/envm-wrapper
 $(BINDIR)/thirdparty/miniz/miniz.o: CFLAGS=$(CFLAGS_GCCEXT) -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
 $(BINDIR)/envm-wrapper/envm-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/$(BOARD_DIR)/uart_device_list.o: CFLAGS=$(CFLAGS_GCCEXT)
