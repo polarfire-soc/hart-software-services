@@ -25,6 +25,11 @@
 #include "hss_memcpy_via_pdma.h"
 #include "sgdma_service.h"
 #include "sgdma_types.h"
+#include "ddr_service.h"
+
+// maximum number of block descriptors accepted in a single SGDMA chain
+// prevents a compromised U54 walking the descriptor pointer into M-mode memory
+#define HSS_SGDMA_MAX_BLOCK_DESCS 64u
 
 static void sgdma_init_handler(struct StateMachine * const pMyMachine);
 static void sgdma_idle_handler(struct StateMachine * const pMyMachine);
@@ -70,7 +75,7 @@ struct StateMachine sgdma_service = {
 static struct HSS_SGDMA_BlockDesc *pBlockDesc = NULL;
 static enum HSSHartId activeHart = HSS_HART_E51; // set to signify no U54 active...
 
-// --------------------------------------------------------------------------------------------------
+// 
 // Handlers for each state in the state machine
 //
 static void sgdma_init_handler(struct StateMachine * const pMyMachine)
@@ -118,22 +123,26 @@ static void sgdma_transferring_handler(struct StateMachine * const pMyMachine)
 
        if (chunk_size > MAX_SGDMA_SIZE_PER_LOOP_ITER) {
            chunk_size = MAX_SGDMA_SIZE_PER_LOOP_ITER;
-       }
-
-       // check PMPs - todo - check MPRs also
+       } else if (chunk_size == 0) {
+            pMyMachine->state = SGDMA_IDLE;
+            pBlockDesc = NULL;
+            activeHart = HSS_HART_E51; // set to signify no U54 active...
+       } else {
+           // check PMPs - todo - check MPRs also
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
-       if (HSS_PMP_CheckWrite(activeHart, (ptrdiff_t)pBlockDesc->dest_phys_addr, chunk_size)
-           && HSS_PMP_CheckRead(activeHart, (ptrdiff_t)pBlockDesc->src_phys_addr, chunk_size)) {
-           memcpy_via_pdma(pBlockDesc->dest_phys_addr, pBlockDesc->src_phys_addr, chunk_size);
-       }
+           if (HSS_PMP_CheckWrite(activeHart, (ptrdiff_t)pBlockDesc->dest_phys_addr, chunk_size)
+               && HSS_PMP_CheckRead(activeHart, (ptrdiff_t)pBlockDesc->src_phys_addr, chunk_size)) {
+               memcpy_via_pdma(pBlockDesc->dest_phys_addr, pBlockDesc->src_phys_addr, chunk_size);
+           }
 #endif
 
-       assert(remaining_in_current_block >= chunk_size);
-       remaining_in_current_block -= chunk_size;
+           assert(remaining_in_current_block >= chunk_size);
+           remaining_in_current_block -= chunk_size;
 
-       if (remaining_in_current_block == 0u) {
-           // finished current block, move to next
-           pBlockDesc++;
+           if (remaining_in_current_block == 0u) {
+               // finished current block, move to next
+               pBlockDesc++;
+           }
        }
     } else {
         pMyMachine->state = SGDMA_IDLE;
@@ -151,12 +160,70 @@ enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId so
     // scatter gather DMA IPI received from one of the U54s...
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "called (sgdma_service.state is %u)\n", sgdma_service.state);
 
-
     // the following should always be true if we have consumed intents for SGDMA...
     assert(p_extended_buffer_in_ddr != NULL);
     assert(sgdma_service.state == SGDMA_IDLE);
 
-    // setup the transfer -- the state machine will execute it in chunks
+    // validate the entire descriptor chain before accepting it
+    //
+    // A compromised U54 could craft a chain that walks pBlockDesc++ into M-mode
+    // memory, so we reject it here rather than discovering the problem mid-transfer
+    struct HSS_SGDMA_BlockDesc *pDesc = (struct HSS_SGDMA_BlockDesc *)p_extended_buffer_in_ddr;
+    size_t descCount = 0u;
+    bool chainValid = false;
+
+    while (true) {
+        // ensure the descriptor struct itself lies within DDR before reading any field
+        if (!HSS_DDR_IsAddrInDDR((uintptr_t)pDesc)
+                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc + sizeof(*pDesc))) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "SGDMA: descriptor %zu not in DDR (hart %d) - rejecting\n", descCount, source);
+            break;
+        }
+
+        if (!pDesc->ext) {
+            chainValid = true; // valid terminator reached
+            break;
+        }
+
+        if (descCount >= HSS_SGDMA_MAX_BLOCK_DESCS) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "SGDMA: chain exceeds %u descriptor limit (hart %d) - rejecting\n",
+                HSS_SGDMA_MAX_BLOCK_DESCS, source);
+            break;
+        }
+
+        // validate that src and dest ranges lie within DDR
+        if (!HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->src_phys_addr)
+                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->src_phys_addr + pDesc->size)
+                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->dest_phys_addr)
+                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->dest_phys_addr + pDesc->size)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "SGDMA: descriptor %zu src/dest not in DDR (hart %d) - rejecting\n",
+                descCount, source);
+            break;
+        }
+
+#if IS_ENABLED(CONFIG_SERVICE_BOOT)
+        // Per-hart PMP check: verify this hart is permitted to read src and write dest
+        if (!HSS_PMP_CheckRead(source, (ptrdiff_t)pDesc->src_phys_addr, pDesc->size)
+                || !HSS_PMP_CheckWrite(source, (ptrdiff_t)pDesc->dest_phys_addr, pDesc->size)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "SGDMA: descriptor %zu fails PMP check (hart %d) - rejecting\n",
+                descCount, source);
+            break;
+        }
+#endif
+
+        descCount++;
+        pDesc++;
+    }
+
+    if (!chainValid) {
+        return IPI_FAIL;
+    }
+
+    // chain is now validated so set up the transfer for the state machine to execute
     pBlockDesc = (struct HSS_SGDMA_BlockDesc *)p_extended_buffer_in_ddr;
     activeHart = source;
     sgdma_service.state = SGDMA_TRANSFERRING;
