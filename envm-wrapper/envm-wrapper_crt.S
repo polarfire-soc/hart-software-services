@@ -93,7 +93,7 @@ _start:
 	csrw	CSR_MIP, zero			// clear all interrupts
 
 .check_if_e51:
-    beqz	a0, .e51_decompress
+	beqz	a0, .e51_decompress
 
 .wait_for_decompress_done:
 	la	a1, decompress_done_flag
@@ -154,22 +154,28 @@ _start:
 	lw	a1, OFFSET_OF(HSS_CompressedImage, version)(a0)	// version
 	li	a2, mHSS_COMPRESSED_VERSION_DEFLATE
 	beq	a1, a2, .e51_miniz_decompress
+.unknown_compressor:
+	GET_HSS_UART
+	la	a1, failed_msg
+	call	MSS_UART_polled_tx_string
 .spin_unknown_compressor:
 	GET_HSS_UART
 	la	a1, bad_decompression_msg
 	call	MSS_UART_polled_tx_string
 	j	.spin_unknown_compressor
 
-.spin_image_too_large:
+.image_too_large:
 	GET_HSS_UART
-	la	a1, image_too_large_msg
+	la	a1, failed_msg
 	call	MSS_UART_polled_tx_string
+.spin_image_too_large:
 	j	.spin_image_too_large
 
-.spin_bad_decompression:
+.bad_decompression:
 	GET_HSS_UART
-	la	a1, bad_decompression_msg
+	la	a1, failed_msg
 	call	MSS_UART_polled_tx_string
+.spin_bad_decompression:
 	j	.spin_bad_decompression
 
 .e51_miniz_decompress:
@@ -187,7 +193,7 @@ _start:
 	la	t0, __l2_end
 	la	t1, __l2_start
 	sub	t0, t0, t1			// t0 = sizeof(L2 scratchpad)
-	bgtu	a0, t0, .spin_image_too_large
+	bgtu	a0, t0, .image_too_large
 
 	la	a1, decompressed_size
 	REG_S	a0, 0(a1)
@@ -195,7 +201,7 @@ _start:
 	// a0 => pointer to destination (where to decompress to)
 	la	a0, __l2_start		// destination
 	call 	mz_uncompress
-	bnez	a0, .spin_bad_decompression	// MZ_OK == 0 so any other value is an error
+	bnez	a0, .bad_decompression	// MZ_OK == 0 so any other value is an error
 	j	.clear_progress
 
 .clear_progress:
