@@ -24,6 +24,7 @@
 
 #include "hss_memcpy_via_pdma.h"
 #include "beu_service.h"
+#include "reboot_service.h"
 #include "sbi_bitops.h"
 
 #include "mss_beu_def.h"
@@ -126,10 +127,20 @@ static void beu_init_handler(struct StateMachine * const pMyMachine)
         BEU->regs[hartid].ENABLE = (unsigned long long)BEU_ENABLE_MASK;
     }
 
-    pMyMachine->state++;
+    pMyMachine->state = BEU_MONITORING;
 }
 
 /////////////////
+
+__attribute__((weak)) void beu_handle_double_fault(enum HSSHartId hartid);
+__attribute__((weak)) void beu_handle_double_fault(enum HSSHartId hartid)
+{
+    // for Safety-critical systems where a degraded-but-running system is more
+    // dangerous than a restart, we'll do a reset by default but BSP can override...
+
+    HSS_reboot_cold(hartid);
+}
+
 static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
@@ -149,8 +160,10 @@ static void beu_monitoring_handler(struct StateMachine * const pMyMachine)
                         accrued, value);
                 }
 
-                // hart has experienced fatal error, so stop checking for BEU errors for this hart...
-                BEU->regs[hartid].ENABLE = 0llu;
+                // hart has experienced fatal error
+                // clear only the bits that fired, keep ENABLE set
+                BEU->regs[hartid].ACCRUED &= ~(BEU_ENABLE_UNCORRECTABLE_MASK);
+                beu_handle_double_fault(hartid);
             } else {
                 (void)(shadow_accrued_[hartid]); // reference to avoid compiler warning...
             }
