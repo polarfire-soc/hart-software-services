@@ -250,14 +250,14 @@ bool tryBootFunction_(struct HSS_Storage *pStorage, HSS_GetBootImageFnPtr_t cons
     result = bootImageFunction(pStorage, &pBootImage);
     //
     // check if this image is compressed...
-    // if so, decompress it to DDR
+    // if so, decompress it
     //
     // for now, compression only works with a source already in DDR
 #  if IS_ENABLED(CONFIG_COMPRESSION)
     if (result && pBootImage && (pBootImage->magic == mHSS_COMPRESSED_MAGIC)) {
         decompressedFlag = true;
 
-        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to decompress to DDR ...\n");
+        mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to decompress ...\n");
         void* const pInput = (void*)pBootImage;
         void * const pOutputInDDR = (void *)(CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR);
 
@@ -325,7 +325,7 @@ static bool getBootImageFromMMC_(struct HSS_Storage *pStorage, struct HSS_BootIm
 
     // if we are using MMC, then we need to do an initial copy of the
     // boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from MMC to DDR ...\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from MMC ...\n");
 
     size_t srcLBAOffset = 0u;
     assert(pStorage);
@@ -458,7 +458,7 @@ static bool getBootImageFromQSPI_(struct HSS_Storage *pStorage, struct HSS_BootI
     assert(ppBootImage);
 
     // need to do an initial copy of the boot header into our structure, for subsequent use
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI to DDR ...\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from QSPI ...\n");
 
     size_t srcLBAOffset = 0u;
     assert(pStorage);
@@ -568,7 +568,7 @@ static bool getBootImageFromSpiFlash_(struct HSS_Storage *pStorage, struct HSS_B
 
     size_t srcOffset = CONFIG_SERVICE_BOOT_SPI_FLASH_OFFSET;
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from SPI Flash +0x%lx to DDR ...\n", srcOffset);
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "Preparing to copy from SPI Flash +0x%lx ...\n", srcOffset);
     mHSS_DEBUG_PRINTF(LOG_NORMAL, "Attempting to read image header (%d bytes) ...\n",
         sizeof(struct HSS_BootImage));
 
