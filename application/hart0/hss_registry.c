@@ -114,7 +114,7 @@ static enum IPIStatusCode HSS_Null_IPIHandler(TxId_t transaction_id, enum HSSHar
     (void)p_extended_buffer_in_ddr;
     (void)p_ancilliary_buffer_in_ddr;
 
-    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s() called -- ignoring\n");
+    mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s() called -- ignoring\n", __func__);
     return IPI_SUCCESS;
 }
 
