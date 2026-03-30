@@ -111,7 +111,7 @@ void RunStateMachine(struct StateMachine *const pCurrentMachine)
 
         if (pCurrentMachine->lastDeltaExecutionTime > pCurrentMachine->maxExecutionTime) {
             pCurrentMachine->maxExecutionTime = pCurrentMachine->lastDeltaExecutionTime;
-            pCurrentMachine->maxState = pCurrentMachine->prevState;
+            pCurrentMachine->maxState = pCurrentMachine->state;
         }
 
         if (IS_ENABLED(CONFIG_DEBUG_LOG_STATE_TRANSITIONS)) {
