@@ -468,31 +468,32 @@ bool HSS_CachedQSPIInit(void)
     return result;
 }
 
-__attribute__((nonnull)) bool HSS_CachedQSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
+bool HSS_CachedQSPI_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 {
     bool result = true;
 
-    assert(pDest);
-    assert((srcOffset + byteCount) <= dieSize);
-
-    demandCopyFlashBlocksToCache_(srcOffset, byteCount, false);
-
-    memcpy(pDest, pCacheDataBuffer + srcOffset, byteCount);
+    if ((pDest != NULL) && (byteCount <= dieSize) && (srcOffset <= (dieSize - byteCount))) {
+        demandCopyFlashBlocksToCache_(srcOffset, byteCount, false);
+        memcpy(pDest, pCacheDataBuffer + srcOffset, byteCount);
+    } else {
+        result = false;
+    }
 
     return result;
 }
 
-__attribute__((nonnull)) bool HSS_CachedQSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
+bool HSS_CachedQSPI_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 {
     bool result = true;
 
-    assert(pSrc);
-    assert((dstOffset + byteCount) <= dieSize);
-
-    cacheDirtyFlag = true;
-    demandCopyFlashBlocksToCache_(dstOffset, byteCount, true);
-
-    memcpy(pCacheDataBuffer + dstOffset, pSrc, byteCount);
+    if ((pSrc != NULL) && (byteCount <= dieSize) && (dstOffset <= (dieSize - byteCount))) {
+        cacheDirtyFlag = true;
+        demandCopyFlashBlocksToCache_(dstOffset, byteCount, true);
+        memcpy(pCacheDataBuffer + dstOffset, pSrc, byteCount);
+    } else {
+        result = false;
+    }
+    
     return result;
 }
 
