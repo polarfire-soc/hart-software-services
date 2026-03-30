@@ -639,10 +639,15 @@ bool HSS_Storage_ReadBlock(void *pDest, size_t srcOffset, size_t byteCount)
 
 bool HSS_Storage_WriteBlock(size_t dstOffset, void *pSrc, size_t byteCount)
 {
+    bool result = true;
+
     struct HSS_Storage *pStorage = pDefaultStorage ? pDefaultStorage : pStorages[0];
     assert(pStorage);
 
-    return pStorage->writeBlock(dstOffset, pSrc, byteCount);
+    if (pStorage->writeBlock) {
+        result = pStorage->writeBlock(dstOffset, pSrc, byteCount);
+    }
+    return result;
 }
 
 void HSS_Storage_GetInfo(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount)
