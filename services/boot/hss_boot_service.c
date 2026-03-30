@@ -278,7 +278,8 @@ static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk, ptrdi
 
     const uintptr_t execAddr = (uintptr_t)pChunk->execAddr + subChunkOffset;
     const uintptr_t loadAddr = (uintptr_t)pBootImage + (uintptr_t)pChunk->loadAddr + subChunkOffset;
-    memcpy_via_pdma((void *)execAddr, (void*)loadAddr, subChunkSize);
+    const size_t actualSize = MIN(subChunkSize, pChunk->size - subChunkOffset);
+    memcpy_via_pdma((void *)execAddr, (void*)loadAddr, actualSize);
 }
 
 static void boot_do_zero_init_chunk(struct HSS_BootZIChunkDesc const *pZiChunk)
@@ -602,7 +603,7 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
 
 #ifdef BOOT_SUB_CHUNK_SIZE
                 pInstanceData->subChunkOffset += BOOT_SUB_CHUNK_SIZE;
-                if (pInstanceData->subChunkOffset > pChunk->size) {
+                if (pInstanceData->subChunkOffset >= pChunk->size) {
 #  if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
                     mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::%d:sub-chunk finished at 0x%x\n",
                         pMyMachine->pMachineName, pInstanceData->chunkCount, pInstanceData->subChunkOffset);
@@ -751,14 +752,13 @@ static void boot_wait_onEntry(struct StateMachine * const pMyMachine)
 {
     (void)pMyMachine;
     //mHSS_DEBUG_PRINTF(LOG_NORMAL, "%s::Checking for IPI ACKs: - -\n", pMyMachine->pMachineName);
+    pMyMachine->startTime = HSS_GetTime();
 }
 
 static void boot_wait_handler(struct StateMachine * const pMyMachine)
 {
     struct HSS_Boot_LocalData * const pInstanceData = pMyMachine->pInstanceData;
     enum HSSHartId const target = pInstanceData->target;
-
-    pMyMachine->startTime = HSS_GetTime();
 
     if (!pBootImage->hart[target-1].entryPoint) {
         // nothing for me to do, not expecting GOTO ack...
@@ -1031,12 +1031,14 @@ bool HSS_Boot_SendResumeGOTO(enum HSSHartId target, uint64_t resume_pc, uint64_t
 }
 
 
+static struct HSS_BootImage shadowHdr; // make static to avoid placing on stack...
+
 static bool validateCrc_(struct HSS_BootImage *pImageHdr)
 {
     bool result = false;
     uint32_t headerCrc;
 
-    struct HSS_BootImage shadowHdr = *pImageHdr;
+    shadowHdr = *pImageHdr;
 
     shadowHdr.headerCrc = 0u;
     memset(&(shadowHdr.signature), 0, sizeof(shadowHdr.signature));
@@ -1122,6 +1124,12 @@ bool HSS_Boot_VerifyMagic(struct HSS_BootImage const * const pImage)
             pImage->magic, mHSS_BOOT_MAGIC, mHSS_COMPRESSED_MAGIC);
     }
 
+    if (result && (pImage->bootImageLength > mHSS_MAX_BOOT_IMAGE_SIZE)) {
+        mHSS_DEBUG_PRINTF(LOG_ERROR, "bootImageLength 0x%lx exceeds maximum 0x%x\n",
+            pImage->bootImageLength, mHSS_MAX_BOOT_IMAGE_SIZE);
+        result = false;
+    }
+
     return result;
 }
 
@@ -1189,7 +1197,7 @@ bool HSS_Boot_Custom(void)
             boot_do_download_chunk(pChunk, subChunkOffset, BOOT_SUB_CHUNK_SIZE);
 
             subChunkOffset += BOOT_SUB_CHUNK_SIZE;
-            if (subChunkOffset > pChunk->size) {
+            if (subChunkOffset >= pChunk->size) {
                 subChunkOffset = 0u;
                 chunkNum++;
                 pChunk++;

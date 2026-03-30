@@ -59,6 +59,10 @@ extern "C" {
 #define mHSS_COMPRESSED_MAGIC	(0xC08B8355u)
 
 #define mHSS_BOOT_VERSION       1u
+#define mHSS_MAX_BOOT_IMAGE_SIZE (2u * 1024u * 1024u)
+
+#define mHSS_COMPRESSED_VERSION_DEFLATE  1u
+
 
 #ifndef CONFIG_OPENSBI
 #  ifndef MIN
@@ -232,8 +236,6 @@ struct HSS_Storage {
     void (* const getInfo)(uint32_t *pBlockSize, uint32_t *pEraseSize, uint32_t *pBlockCount);
     void (* const flushWriteBuffer)(void);
 };
-
-#define mHSS_COMPRESSED_VERSION_DEFLATE  1u
 
 
 #ifdef __cplusplus
