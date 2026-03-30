@@ -31,6 +31,7 @@
 #include "miv_ihc.h"
 #include "opensbi_ecall.h"
 #include "opensbi_ihc_ecall.h"
+#include "ddr_service.h"
 
 static uint32_t message_present_handler(uint32_t remote_hart_id, uint32_t * message,
     uint32_t message_size , bool is_ack, uint32_t *message_storage_ptr)
@@ -43,6 +44,9 @@ static uint32_t message_present_handler(uint32_t remote_hart_id, uint32_t * mess
         msg.irq_type = ACK_IRQ;
     } else {
         msg.irq_type = MP_IRQ;
+        if (message_size > IHC_MAX_MESSAGE_SIZE) {
+            message_size = IHC_MAX_MESSAGE_SIZE;
+        }
         memcpy((uint32_t *) &msg.ihc_msg, message, message_size * (sizeof(uint32_t)));
     }
 
@@ -61,6 +65,11 @@ int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
     uint32_t * message_ptr = (uint32_t *) regs->a1;
 
     if ((remote_channel < IHC_CHANNEL_TO_CONTEXTA) || (remote_channel > IHC_CHANNEL_TO_CONTEXTB)) {
+        result = SBI_EINVAL;
+        goto exit;
+    }
+
+    if (message_ptr == NULL || !HSS_DDR_IsAddrInDDR((uintptr_t)message_ptr)) {
         result = SBI_EINVAL;
         goto exit;
     }

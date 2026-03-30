@@ -997,10 +997,26 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
        no need to reload the payload on the HSS
     */
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC) || IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
-    if(immediate_arg == RPROC_BOOT)
-    {
-        struct RemoteProcMsg *rproc_data = (struct RemoteProcMsg *)p_extended_buffer_in_ddr;
-        source = rproc_data->target;
+    if (immediate_arg == RPROC_BOOT) {
+        if (p_extended_buffer_in_ddr == NULL
+                || !HSS_DDR_IsAddrInDDR((uintptr_t)p_extended_buffer_in_ddr)
+                || !HSS_DDR_IsAddrInDDR((uintptr_t)p_extended_buffer_in_ddr
+                                        + sizeof(struct RemoteProcMsg))) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_Boot_IPIHandler: rproc buffer not in DDR\n");
+            return IPI_FAIL;
+        }
+
+        struct RemoteProcMsg const * const rproc_data =
+            (struct RemoteProcMsg const *)p_extended_buffer_in_ddr;
+        enum HSSHartId const target = rproc_data->target;
+
+        if ((target < HSS_HART_U54_1) || (target > HSS_HART_U54_4)) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "HSS_Boot_IPIHandler: rproc target hart %d out of range\n", target);
+            return IPI_FAIL;
+        }
+
+        source = target;
         struct StateMachine * const pMachine = bootMachine[source - 1].pMachine;
         pMachine->state = (stateType_t)BOOT_OPENSBI_INIT;
     }
