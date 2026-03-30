@@ -2,7 +2,7 @@
 #define HSS_CRYPTO_H
 
 /*******************************************************************************
- * Copyright 2021 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2021-2026 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *

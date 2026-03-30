@@ -1,11 +1,11 @@
-/*******************************************************************************
- * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+/**
+ * Copyright 2019-2026 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
  * @file mss_ddr_defs.h
  * @author Microchip FPGA Embedded Systems Solutions
- * @brief mss_ddr_debug related defines
+ * @brief mss_ddr_debug-related header file
  *
  */
 

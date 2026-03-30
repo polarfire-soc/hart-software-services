@@ -2,13 +2,13 @@
 # mpfs_hal
 ===============================================================================
 
-The PolarFire-SoC MSS HAL provides the initial boot code, interrupt handling, 
-and hardware access methods for the MPFS MSS. The terms PolarFire-SoC HAL and 
-MPFS HAL are used interchangeably but in the main the term PolarFire-SoC MSS HAL 
+The PolarFire-SoC MSS HAL provides the initial boot code, interrupt handling,
+and hardware access methods for the MPFS MSS. The terms PolarFire-SoC HAL and
+MPFS HAL are used interchangeably but in the main the term PolarFire-SoC MSS HAL
 is preferred.
 The PolarFire-SoC MSS hal is a combination of C and assembly source code.
 
-The mpfs_hal folder is included in an PolarFire Embedded project under the 
+The mpfs_hal folder is included in an PolarFire Embedded project under the
 platform directory.
 
 It contains :
@@ -22,16 +22,16 @@ It contains :
 * MSSIO setup
 
 ## Inputs to the mss_hal
-There are two configuration sources. 
+There are two configuration sources.
 
 1. Libero design
-   
-   Libero input through header files located in the config/hardware under the 
-   platform directory. These files are generated using the PF SoC embedded 
-   software configuration generator. It takes an xml file generated in the Libero 
-   design flow and produces header files based on the xml content in a suitable 
+
+   Libero input through header files located in the config/hardware under the
+   platform directory. These files are generated using the PF SoC embedded
+   software configuration generator. It takes an xml file generated in the Libero
+   design flow and produces header files based on the xml content in a suitable
    form for consumption by the hal.
-  
+
 2. Software configuration
    Software configuration settings are located in the mpfs_hal_config folder.
 
@@ -116,6 +116,6 @@ There are two configuration sources.
                                     +---------+|soc_config_generator |
                                                +---------------------+
 ~~~~
-  
-Please see the user guide for further details on 
+
+Please see the user guide for further details on
 use.

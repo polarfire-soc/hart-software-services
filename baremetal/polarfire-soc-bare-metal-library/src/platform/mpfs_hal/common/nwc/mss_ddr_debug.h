@@ -1,11 +1,11 @@
-/*******************************************************************************
- * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+/**
+ * Copyright 2019-2026 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
  * @file mss_ddr_debug.h
  * @author Microchip FPGA Embedded Systems Solutions
- * @brief mss_ddr_debug related defines
+ * @brief mss_ddr_debug header file
  *
  */
 
@@ -31,8 +31,8 @@
 #include <stdint.h>
 
 
-#ifndef __MSS_DDr_DEBUG_H_
-#define __MSS_DDr_DEBUG_H_ 1
+#ifndef __MSS_DDR_DEBUG_H_
+#define __MSS_DDR_DEBUG_H_ 1
 
 #ifdef DEBUG_DDR_INIT
 #include "drivers/mss/mss_mmuart/mss_uart.h"
@@ -222,6 +222,15 @@ mss_uart_instance_t * uart,
 uint32_t *reg_pointer,
 uint32_t no_of_regs
 );
+
+/***************************************************************************//**
+ *
+ */
+void
+display_ddr_driver_info
+(
+mss_uart_instance_t *debug_uart
+);
 #endif
 
 /***************************************************************************//**
@@ -252,12 +261,10 @@ execute_ddr_pattern
 uint64_t start_addr
 );
 
-
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __MSS_DDRC_H_ */
+#endif /* __MSS_DDR_DEBUG_H_ */
 
 

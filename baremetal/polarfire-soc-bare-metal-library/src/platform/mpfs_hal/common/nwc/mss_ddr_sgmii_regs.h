@@ -1,11 +1,12 @@
-/*******************************************************************************
- * Copyright 2019 Microchip FPGA Embedded Systems Solutions.
+/**
+ * Copyright 2019-2026 Microchip FPGA Embedded Systems Solutions.
  *
  * SPDX-License-Identifier: MIT
  *
  * @file mss_ddr_sgmii_regs.h
  * @author Microchip FPGA Embedded Systems Solutions
- * @brief Register bit offsets and masks definitions for MPFS MSS DDR
+ * @brief Register bit offset and masks definition header file
+ *
  * This was generated directly from the RTL
  *
  */
