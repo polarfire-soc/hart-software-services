@@ -338,7 +338,7 @@ static struct tinycli_toplevel_cmd_safe toplevelCmdsSafeAfterBootFlags[] = {
 #if IS_ENABLED(CONFIG_SERVICE_USBDMSC) && (IS_ENABLED(CONFIG_SERVICE_MMC) || IS_ENABLED(CONFIG_SERVICE_QSPI))
     { CMD_USBDMSC, true },
 #endif
-    { CMD_RESUME, true },
+    { CMD_RESUME,  false },
 #if IS_ENABLED(CONFIG_SERVICE_SCRUB)
     { CMD_SCRUB,   false },
 #endif
@@ -1014,9 +1014,7 @@ static bool dispatch_command_(struct tinycli_cmd const * const pCmds, size_t arr
                 if (toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit && HSS_Trigger_IsNotified(EVENT_POST_BOOT)) {
                     mHSS_DEBUG_PRINTF(LOG_WARN,
                         "Command %s may cause problems post boot.\n"
-                        "Please type it again if you definitely want to execute it"
                         "\n\n", pCmds[cmdIndex].name);
-                    matchFoundFlag = false;
                     toplevelCmdsSafeAfterBootFlags[cmdIndex].warnIfPostInit = false; // disarming warning
                 } else {
                     tokenId = pCmds[cmdIndex].tokenId;
