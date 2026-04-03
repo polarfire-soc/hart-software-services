@@ -160,7 +160,8 @@ First, ensure that the `%SC_INSTALL_DIR%` environment variable is correctly set 
 
 For building on Windows from the command line, you must configure the path appropriately to add (Micro) Python, GNU build tools, and the RISC-V compiler toolchain. For example:
 
-    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;C:\xpack-riscv-none-elf-gcc-15.2.0-1\bin
+    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin
+    C:\> path %SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin;%PATH%
 
 Ensure the `%SC_INSTALL_DIR%` variable correctly matches your system.
 
