@@ -169,7 +169,9 @@ static bool mmc_init_emmc(void)
     MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 0);
 #else
     /* we will attempt to switch anyway as default may be eMMC */
-    switch_demux_using_fabric_ip(EMMC_MSSIO_CONFIGURATION);
+    if (IS_ENABLED(CONFIG_SERVICE_MMC_FABRIC_SD_EEMC_DEMUX_SELECTED_PRESENT)) {
+        switch_demux_using_fabric_ip(SD_MSSIO_CONFIGURATION);
+    }
 #endif
 
     /* Initialize eMMC/SD */
@@ -207,7 +209,9 @@ static bool mmc_init_sdcard(void)
 #if IS_ENABLED(CONFIG_MODULE_M100PFS)
     MSS_GPIO_set_output(GPIO0_LO, MSS_GPIO_12, 1);
 #else
-    switch_demux_using_fabric_ip(SD_MSSIO_CONFIGURATION);
+    if (IS_ENABLED(CONFIG_SERVICE_MMC_FABRIC_SD_EEMC_DEMUX_SELECTED_PRESENT)) {
+        switch_demux_using_fabric_ip(SD_MSSIO_CONFIGURATION);
+    }
 #endif
 
     /* Initialize eMMC/SD */
