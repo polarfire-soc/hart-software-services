@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The PolarFire SoC platform is released under the following software license:
  *
- * Copyright 2023 Microchip Corporation.
+ * Copyright 2023-2026 Microchip Corporation.
  *
  * SPDX-License-Identifier: MIT
  *

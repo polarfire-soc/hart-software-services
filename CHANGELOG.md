@@ -135,6 +135,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
     -  all SBI 2.0 feature extensions are optional so existing clients are unaffected
 
+<<<<<<< HEAD
  * HSS: revert(mpfs-hal): revert MPFS HAL to v2.3.102
 
     -  intermittent memory corruption observed with HAL v2.3.109 on DDR4 configurations
@@ -143,6 +144,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
  * HSS: fix(scrub): fix typo in scrub service
 
+=======
+ * HSS: upgrade(mpfs-hal): updating to mpfs-hal v2.3.110
+
+    -  fixes display of unit for DDR DRV settings
+
+    -  fixes write latency retry causing failure to boot
+
+    -  fixes typos in comments and other minor fixes
+
+ * HSS: fix(scrub): fix typo in scrub service
+
+ * HSS: fix(tinycli): post-boot RESUME command warning
+
+>>>>>>> 593df768 (chore(CHANGELOG): Update changelog and version)
 ## 2025.07
 
 ### Added

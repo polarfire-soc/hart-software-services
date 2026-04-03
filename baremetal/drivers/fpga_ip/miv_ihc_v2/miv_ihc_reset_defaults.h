@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2023 Microchip FPGA Embedded Systems Solutions.
+ * Copyright 2023-2026 Microchip FPGA Embedded Systems Solutions.
  * Script version: develop-1.0.017
  * Register specification version: v1.0
  * Register specification Date: 2023-03-14 00:00:00
