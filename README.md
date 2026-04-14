@@ -79,7 +79,6 @@ The HSS currently support PolarFire SoC-based icicle kit (mpfs-icicle-kit-es) as
 
 ### Compiler Toolchain
 
-
 The HSS now relies on xPack GNU RISC-V Embedded GCC, a binary distribution of GNU RISC-V Embedded GCC toolchain.
 
 SoftConsole v2021.3 or later can still be used to build the HSS, but you'll need to set `CONFIG_CC_USE_SOFTCONSOLE` in your toplevel `.config` file. Note that this support for the older SoftConsole GCC toolchain is considered deprecated and will be removed from a future release of the HSS.
@@ -96,7 +95,7 @@ The HSS needs tkinter installed for the KConfiglib guiconfig tool. To install th
 
     $ sudo apt install python3-tk
 
-First, ensure that the environment variable `$SC_INSTALL_DIR` is set to the location of SoftCOnsole on your system. For example, assuming that SoftConsole is installed at  `/home/$USER/Microchip/SoftConsole-v2022.2`:
+First, ensure that the environment variable `$SC_INSTALL_DIR` is set to the location of SoftConsole on your system. For example, assuming that SoftConsole is installed at  `/home/$USER/Microchip/SoftConsole-v2022.2`:
 
     $ export SC_INSTALL_DIR=/home/$USER/Microchip/SoftConsole-v2022.2
 
@@ -160,8 +159,7 @@ First, ensure that the `%SC_INSTALL_DIR%` environment variable is correctly set 
 
 For building on Windows from the command line, you must configure the path appropriately to add (Micro) Python, GNU build tools, and the RISC-V compiler toolchain. For example:
 
-    C:\> path %SystemRoot%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin
-    C:\> path %SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin;%PATH%
+    C:\> path C:\xpack-riscv-none-elf-gcc-15.2.0-1\bin;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\python3;%PATH%
 
 Ensure the `%SC_INSTALL_DIR%` variable correctly matches your system.
 
@@ -187,7 +185,7 @@ This should take you to the Microsoft Store to install Python3... Click install.
 
 Make sure that the MicroPython tools are not in your path (e.g. do not have `%SC_INSTALL_DIR%\python3` in your path), and setup your environment as follows:
 
-    C:\work\hart-software-services> path %PATH%;%SC_INSTALL_DIR%\build_tools\bin;%SC_INSTALL_DIR%\riscv-unknown-elf-gcc\bin
+    C:\> path C:\xpack-riscv-none-elf-gcc-15.2.0-1\bin;%SC_INSTALL_DIR%\build_tools\bin;%PATH%
 
 Back to the console (no need to restart it if installing Python from the Microsoft Store), and type:
 
