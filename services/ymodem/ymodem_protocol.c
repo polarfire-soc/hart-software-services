@@ -73,8 +73,6 @@ enum XYModem_Signals {
 
 /***************************************************************************/
 
-mss_uart_instance_t *g_my_uart = &g_mss_uart0_lo;
-
 static int16_t getchar_with_timeout_(int32_t timeout_sec)
 {
     uint8_t rx_byte = 0;
@@ -93,7 +91,8 @@ static int16_t getchar_with_timeout_(int32_t timeout_sec)
 
 static void putchar_(uint8_t tx_byte)
 {
-    MSS_UART_polled_tx(g_my_uart, &tx_byte, 1);
+    mss_uart_instance_t *pUart = HSS_UART_GetInstance(HSS_HART_E51);
+    MSS_UART_polled_tx(pUart, &tx_byte, 1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
