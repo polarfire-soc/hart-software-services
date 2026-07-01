@@ -690,14 +690,14 @@ u32 mpfs_get_suspended_hartid(void)
     return suspended_hartid;
 }
 
-#ifndef CONFIG_SKIP_DDR
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
 extern void mpfs_hal_turn_ddr_selfrefresh_on(void);
 extern void mpfs_hal_turn_ddr_selfrefresh_off(void);
 #endif
 
 void mpfs_system_suspend(void)
 {
-#ifndef CONFIG_SKIP_DDR
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
     volatile uint32_t * const self_refresh_status_reg =
         (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
     mpfs_hal_turn_ddr_selfrefresh_on();
@@ -710,7 +710,7 @@ void mpfs_system_suspend(void)
 
 void mpfs_system_resume(void)
 {
-#ifndef CONFIG_SKIP_DDR
+#if !IS_ENABLED(CONFIG_SKIP_DDR)
     volatile uint32_t * const self_refresh_status_reg =
         (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
     mpfs_hal_turn_ddr_selfrefresh_off();
