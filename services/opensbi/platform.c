@@ -695,25 +695,29 @@ extern void mpfs_hal_turn_ddr_selfrefresh_off(void);
 
 void mpfs_system_suspend(void)
 {
-    volatile uint32_t * const self_refresh_status_reg =
-        (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
-    mpfs_hal_turn_ddr_selfrefresh_on();
-    while ((*self_refresh_status_reg & MSS_DDRC_SELF_REFRESH_ACK_BIT) == 0u) {
-        ; // poll INIT_SELF_REFRESH_STATUS bit until DDRC ACKs entry
+    if (!IS_ENABLED(CONFIG_SKIP_DDR)) {
+        volatile uint32_t * const self_refresh_status_reg =
+            (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
+        mpfs_hal_turn_ddr_selfrefresh_on();
+        while ((*self_refresh_status_reg & MSS_DDRC_SELF_REFRESH_ACK_BIT) == 0u) {
+            ; // poll INIT_SELF_REFRESH_STATUS bit until DDRC ACKs entry
+        }
+        mHSS_DEBUG_PRINTF(LOG_WARN, "%s: self_refresh active\n", __func__);
     }
-    mHSS_DEBUG_PRINTF(LOG_WARN, "%s: self_refresh active\n", __func__);
 }
 
 void mpfs_system_resume(void)
 {
-    volatile uint32_t * const self_refresh_status_reg =
-        (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
-    mpfs_hal_turn_ddr_selfrefresh_off();
-    while ((*self_refresh_status_reg & MSS_DDRC_SELF_REFRESH_ACK_BIT) != 0u) {
-        ;
-    }
+    if (!IS_ENABLED(CONFIG_SKIP_DDR)) {
+        volatile uint32_t * const self_refresh_status_reg =
+            (volatile uint32_t *)(MSS_DDRC_BASE_ADDR + MSS_DDRC_SELF_REFRESH_STATUS_OFFSET);
+        mpfs_hal_turn_ddr_selfrefresh_off();
+        while ((*self_refresh_status_reg & MSS_DDRC_SELF_REFRESH_ACK_BIT) != 0u) {
+            ;
+        }
 
-    mHSS_DEBUG_PRINTF(LOG_WARN, "%s: self_refresh inactive\n", __func__);
+        mHSS_DEBUG_PRINTF(LOG_WARN, "%s: self_refresh inactive\n", __func__);
+    }
 }
 
 const struct sbi_hsm_device mpfs_hsm = {
