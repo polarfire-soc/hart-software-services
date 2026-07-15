@@ -62,6 +62,7 @@ extern "C" {
 #define MMC_SOFTWARE_RESET_SHIFT        0x3u
 #define DEBOUNCING_TIME                 0x300000u
 #define MMC_RESET_DATA_CMD_LINE         0x06000000u
+#define CMD_TYPE_ABORT                  0xC0u
 /* SDMA boundary is 512k */
 #define SIZE_32MB                       0x02000000u
 #define SIZE_64KB                       0x00010000u
@@ -1370,11 +1371,9 @@ static mss_mmc_status_t phy_training_mmc(uint8_t delay_type, uint32_t clk_rate)
     uint8_t pos, length, curr_length;
     uint8_t rx_buff[BLK_SIZE];
     uint32_t read_srs11;
-    uint32_t cmd_response;
-    mMMC_DECLARE_TIMEOUT(mmc_spin_timeout);
+    uint32_t read_srs12;
 
     mss_mmc_status_t ret_status = MSS_MMC_NO_ERROR;
-    cif_response_t response_status = TRANSFER_IF_FAIL;
 
     if (clk_rate <= MSS_MMC_CLOCK_12_5MHZ)
     {
@@ -1406,33 +1405,35 @@ static mss_mmc_status_t phy_training_mmc(uint8_t delay_type, uint32_t clk_rate)
         }
         else
         {
+            mMMC_DECLARE_TIMEOUT(mmc_spin_timeout);
             mMMC_ARM_TIMEOUT(mmc_spin_timeout);
+            /* Reset Data and cmd line */
+            MMC->SRS11 |= MMC_RESET_DATA_CMD_LINE;
             do
             {
-                if (TRANSFER_IF_FAIL == response_status)
-                {
-                    /* Reset Data and cmd line */
-                    MMC->SRS11 |= MMC_RESET_DATA_CMD_LINE;
-
-                    mMMC_DECLARE_TIMEOUT(mmc_spin_timeout2);
-                    mMMC_ARM_TIMEOUT(mmc_spin_timeout2);
-                    do
-                    {
-                        read_srs11 = MMC->SRS11;
-                        mMMC_CHECK_TIMEOUT(mmc_spin_timeout2, MSS_MMC_NOT_INITIALISED);
-                    } while ((read_srs11 & MMC_RESET_DATA_CMD_LINE) != MMC_CLEAR);
-                }
-
-                response_status = cif_send_cmd(sdcard_RCA << RCA_SHIFT_BIT,
-                                            MMC_CMD_13_SEND_STATUS,
-                                            MSS_MMC_RESPONSE_R1);
-                cmd_response = MMC->SRS04;
+                read_srs11 = MMC->SRS11;
                 mMMC_CHECK_TIMEOUT(mmc_spin_timeout, MSS_MMC_NOT_INITIALISED);
-            } while ((TRANSFER_IF_SUCCESS != response_status) ||
-                    ((cmd_response & DEVICE_STATE_MASK) != DEVICE_STATE_TRANS));
+            } while ((read_srs11 & MMC_RESET_DATA_CMD_LINE) != MMC_CLEAR);
 
+            /* Execute CMD12 command to abort command */
+            send_mmc_cmd(sdcard_RCA << RCA_SHIFT_BIT,
+                            MMC_CMD_12_STOP_TRANSMISSION | CMD_TYPE_ABORT,
+                            MSS_MMC_RESPONSE_R1B, CHECK_IF_CMD_SENT_POLL);
+            read_srs12 = MMC->SRS12;
+            if ((SRS12_COMMAND_COMPLETE != (read_srs12 & SRS12_COMMAND_COMPLETE)) ||
+                (MMC_CLEAR != (read_srs12 & SRS12_ERROR_INTERRUPT)))
+            {
+                mMMC_DECLARE_TIMEOUT(mmc_spin_timeout2);
+                mMMC_ARM_TIMEOUT(mmc_spin_timeout2);
+                /* Reset Data and cmd line */
+                MMC->SRS11 |= MMC_RESET_DATA_CMD_LINE;
+                do
+                {
+                    read_srs11 = MMC->SRS11;
+                    mMMC_CHECK_TIMEOUT(mmc_spin_timeout2, MSS_MMC_NOT_INITIALISED);
+                } while ((read_srs11 & MMC_RESET_DATA_CMD_LINE) != MMC_CLEAR);
+            }
             curr_length = MMC_CLEAR;
-            response_status = TRANSFER_IF_FAIL;
         }
     }
 
@@ -2027,14 +2028,14 @@ static mss_mmc_status_t sdcard_oper_config(const mss_mmc_cfg_t * cfg)
                                                         response_status = TRANSFER_IF_FAIL;
                                                     }
                                                     break;
-                                                case MSS_MMC_PHY_DELAY_INPUT_HIGH_SPEED:
+                                                case MSS_SDCARD_MODE_HIGH_SPEED:
                                                     ret_status = phy_training_mmc(MSS_MMC_PHY_DELAY_INPUT_HIGH_SPEED, cfg->clk_rate);
                                                     if (ret_status != MSS_MMC_TRANSFER_SUCCESS)
                                                     {
                                                         response_status = TRANSFER_IF_FAIL;
                                                     }
                                                     break;
-
+                                                case MSS_SDCARD_MODE_DEFAULT_SPEED:
                                                 default:
                                                     ret_status = phy_training_mmc(MSS_MMC_PHY_DELAY_INPUT_DEFAULT_SPEED, cfg->clk_rate);
                                                     if (ret_status != MSS_MMC_TRANSFER_SUCCESS)
