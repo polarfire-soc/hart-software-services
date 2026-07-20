@@ -1,0 +1,229 @@
+
+#
+# Board/Design Configuration Options
+#
+
+#
+# Custom Board Design Configuration Options
+#
+CONFIG_SOC_FPGA_DESIGN_XML="boards/no_som1soc/soc_fpga_design/xml/no_som1soc.xml"
+# end of Custom Board Design Configuration Options
+# end of Board/Design Configuration Options
+
+#
+# Services
+#
+CONFIG_SERVICE_BEU=y
+CONFIG_SERVICE_BOOT=y
+
+#
+# Boot Service
+#
+# CONFIG_SERVICE_BOOT_USE_PAYLOAD is not set
+# CONFIG_SERVICE_BOOT_CUSTOM_FLOW is not set
+CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR=0x103FC00000
+# CONFIG_SERVICE_BOOT_MMC_USE_GPT is not set
+# end of Boot Service
+
+CONFIG_SERVICE_DDR=y
+CONFIG_SERVICE_GOTO=y
+# CONFIG_SERVICE_HEALTHMON is not set
+CONFIG_SERVICE_IPI_POLL=y
+CONFIG_SERVICE_MMC=y
+
+#
+# MMC
+#
+
+#
+# MMC Mode
+#
+CONFIG_SERVICE_MMC_MODE_EMMC=y
+# CONFIG_SERVICE_MMC_MODE_SDCARD is not set
+# end of MMC Mode
+
+#
+# MMC Voltage
+#
+# CONFIG_SERVICE_MMC_BUS_VOLTAGE_1V8 is not set
+CONFIG_SERVICE_MMC_BUS_VOLTAGE_3V3=y
+# end of MMC Voltage
+
+#
+# SDIO Control
+#
+# CONFIG_SERVICE_MMC_FABRIC_SD_EMMC_DEMUX_SELECT_PRESENT is not set
+# end of SDIO Control
+
+CONFIG_SERVICE_MMC_SPIN_TIMEOUT=y
+# CONFIG_SERVICE_MMC_SPIN_TIMEOUT_ASSERT is not set
+CONFIG_SERVICE_MMC_SPIN_TIMEOUT_MAX_SPINS=1000000
+# end of MMC
+
+CONFIG_SERVICE_OPENSBI=y
+
+#
+# SBI Extension Support
+#
+CONFIG_SBI_ECALL_TIME=y
+CONFIG_SBI_ECALL_RFENCE=y
+CONFIG_SBI_ECALL_IPI=y
+CONFIG_SBI_ECALL_HSM=y
+CONFIG_SBI_ECALL_SRST=y
+CONFIG_SBI_ECALL_PMU=y
+CONFIG_SBI_ECALL_LEGACY=y
+CONFIG_SBI_ECALL_VENDOR=y
+# end of SBI Extension Support
+
+CONFIG_FDT_IPI=y
+CONFIG_FDT_IPI_MSWI=y
+CONFIG_FDT_IPI_PLICSW=y
+CONFIG_FDT_IRQCHIP=y
+CONFIG_FDT_IRQCHIP_PLIC=y
+CONFIG_FDT_RESET=y
+CONFIG_FDT_SERIAL=y
+CONFIG_FDT_SERIAL_UART8250=y
+CONFIG_FDT_TIMER=y
+CONFIG_FDT_TIMER_MTIMER=y
+# CONFIG_SERVICE_POWERMODE is not set
+# CONFIG_SERVICE_QSPI is not set
+CONFIG_SERVICE_REBOOT=y
+# CONFIG_SERVICE_SCRUB is not set
+CONFIG_SERVICE_SGDMA=y
+# CONFIG_SERVICE_SPI is not set
+CONFIG_SERVICE_TINYCLI=y
+
+#
+# Tiny Command Line Interface
+#
+CONFIG_SERVICE_TINYCLI_TIMEOUT=2
+# CONFIG_SERVICE_TINYCLI_REGISTER is not set
+# CONFIG_SERVICE_TINYCLI_ENABLE_PREBOOT_TIMEOUT is not set
+# end of Tiny Command Line Interface
+
+# CONFIG_SERVICE_UART is not set
+CONFIG_SERVICE_USBDMSC=y
+
+#
+# USB Device Mass Storage Class
+#
+CONFIG_SERVICE_USBDMSC_REGISTER=y
+# CONFIG_SERVICE_USBDMSC_ENABLE_MAX_SESSION_TIMEOUT is not set
+# end of USB Device Mass Storage Class
+
+CONFIG_SERVICE_WDOG=y
+
+#
+# Watchdog Service
+#
+# CONFIG_SERVICE_WDOG_DEBUG is not set
+CONFIG_SERVICE_WDOG_DEBUG_TIMEOUT_SEC=240
+CONFIG_SERVICE_WDOG_ENABLE_E51=y
+# end of Watchdog Service
+
+CONFIG_SERVICE_YMODEM=y
+# end of Services
+
+#
+# General Configuration Options
+#
+
+#
+# Miscellaneous
+#
+# CONFIG_USE_PCIE is not set
+# CONFIG_UART_SURRENDER is not set
+CONFIG_OPENSBI=y
+# CONFIG_USE_IHC is not set
+
+#
+# Serial Port
+#
+CONFIG_UART_POST_BOOT=0
+# end of Serial Port
+
+#
+# Tamper
+#
+# CONFIG_USE_TAMPER is not set
+# end of Tamper
+
+CONFIG_ALLOW_COLDREBOOT=y
+
+#
+# Cold Reboot
+#
+CONFIG_ALLOW_COLDREBOOT_ALWAYS=y
+# CONFIG_COLDREBOOT_TRY_AUTO_UPDATE is not set
+# CONFIG_ALLOW_COLDREBOOT_ON_OPENSBI_FAULT is not set
+# end of Cold Reboot
+# end of Miscellaneous
+
+#
+# OpenSBI
+#
+# CONFIG_PROVIDE_DTB is not set
+# end of OpenSBI
+
+#
+# Memory Options
+#
+# CONFIG_SKIP_DDR is not set
+ #CONFIG_MEMTEST is not set
+# CONFIG_USE_PDMA is not set
+# CONFIG_INITIALIZE_MEMORIES is not set
+# end of Memory Options
+# end of General Configuration Options
+
+#
+# Build Options
+#
+# CONFIG_COLOR_OUTPUT is not set
+# CONFIG_USE_LOGO is not set
+
+#
+# Logo
+#
+# end of Logo
+
+# CONFIG_CC_STACKPROTECTOR_STRONG is not set
+# CONFIG_CC_DUMP_STACKSIZE is not set
+# CONFIG_LD_RELAX is not set
+# CONFIG_CC_USE_MAKEDEP is not set
+# CONFIG_CC_USE_GNU_BUILD_ID is not set
+CONFIG_CC_HAS_INTTYPES=y
+CONFIG_DISPLAY_TOOL_VERSIONS=y
+# CONFIG_LOG_FUNCTION_NAMES is not set
+# end of Build Options
+
+#
+# Compression
+#
+CONFIG_COMPRESSION=y
+CONFIG_COMPRESSION_MINIZ=y
+# end of Compression
+
+#
+# Crypto
+#
+# CONFIG_CRYPTO_SIGNING is not set
+# end of Crypto
+
+#
+# Debug Options
+#
+# CONFIG_DEBUG_LOG_STATE_TRANSITIONS is not set
+# CONFIG_DEBUG_LOOP_TIMES is not set
+# CONFIG_DEBUG_IPI_STATS is not set
+# CONFIG_DEBUG_CHUNK_DOWNLOADS is not set
+# CONFIG_DEBUG_MSCGEN_IPI is not set
+# CONFIG_DEBUG_PERF_CTRS is not set
+# CONFIG_DEBUG_RESET_REASON is not set
+# end of Debug Options
+
+#
+# SSMB Options
+#
+CONFIG_IPI_MAX_NUM_QUEUE_MESSAGES=8
+# CONFIG_IPI_FIXED_BASE is not set
+# end of SSMB Options

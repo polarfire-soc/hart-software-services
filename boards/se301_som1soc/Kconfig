@@ -1,0 +1,9 @@
+menu "Custom Board Design Configuration Options"
+
+config SOC_FPGA_DESIGN_XML
+	string "Enter path to Libero XML file"
+	default "boards/se301_som1soc/soc_fpga_design/xml/se301_som1soc.xml"
+	help
+		This option specifies the design XML file to use.
+endmenu
+
