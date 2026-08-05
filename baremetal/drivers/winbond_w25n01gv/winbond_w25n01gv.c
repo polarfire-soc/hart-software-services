@@ -261,9 +261,9 @@ uint8_t Flash_erase_block(uint16_t block_index)
     disable_write_protect();
 
     status = erase_block(block_index);
-    //if (status & STATUS_REG_3_EFAIL) {
-    //    mark_block_as_bad(block_index);
-    //}
+    if (status & STATUS_REG_3_EFAIL) {
+        mark_block_as_bad(block_index);
+    }
 
     return(status);
 }
@@ -287,10 +287,9 @@ uint8_t Flash_program(uint8_t* buf, uint32_t addr, uint32_t len)
 
         status = program_page(buf, target_page_offset, length);
 
-        //if (status & STATUS_REG_3_PFAIL) {
-        //    mark_block_as_bad(target_page_offset / NUM_PAGES_PER_BLOCK);
-        //}
-        (void)mark_block_as_bad;
+        if (status & STATUS_REG_3_PFAIL) {
+            mark_block_as_bad(target_page_offset / NUM_PAGES_PER_BLOCK);
+        }
 
         remaining_length -= length;
         target_page_offset += 1u;
@@ -309,7 +308,7 @@ uint8_t Flash_add_entry_to_bb_lut(uint16_t lba, uint16_t pba)
 
     if ((status & STATUS_REG_3_LUTF) == 0) {
         uint8_t command_buf[5] __attribute__ ((aligned (4))) = {
-            BAD_BLOCK_MANAGEMENT_OPCODE, (lba >> 8) & 0xFF, lba & 0xFF, (pba >> 8) & 0xFF, lba & 0xFF
+            BAD_BLOCK_MANAGEMENT_OPCODE, (lba >> 8) & 0xFF, lba & 0xFF, (pba >> 8) & 0xFF, pba & 0xFF
         };
 
         send_write_enable_command();
@@ -675,7 +674,7 @@ static uint8_t read_page(uint8_t* p_rx_buf, uint32_t page, uint16_t column, uint
     g_qspi_config.io_format = temp;
 
     read_statusreg(STATUS_REG_3, (uint8_t *)&result);
-    result &= (STATUS_REG_3_ECC1 & STATUS_REG_3_ECC0);
+    result &= (STATUS_REG_3_ECC1 | STATUS_REG_3_ECC0);
 
     return result;
 }
