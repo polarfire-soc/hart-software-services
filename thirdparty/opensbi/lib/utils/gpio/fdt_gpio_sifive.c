@@ -9,10 +9,9 @@
 
 #include <sbi/riscv_io.h>
 #include <sbi/sbi_error.h>
+#include <sbi/sbi_heap.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/gpio/fdt_gpio.h>
-
-#define SIFIVE_GPIO_CHIP_MAX	2
 
 #define SIFIVE_GPIO_PINS_MIN	1
 #define SIFIVE_GPIO_PINS_MAX	32
@@ -26,9 +25,6 @@ struct sifive_gpio_chip {
 	unsigned long addr;
 	struct gpio_chip chip;
 };
-
-static unsigned int sifive_gpio_chip_count;
-static struct sifive_gpio_chip sifive_gpio_chip_array[SIFIVE_GPIO_CHIP_MAX];
 
 static int sifive_gpio_direction_output(struct gpio_pin *gp, int value)
 {
@@ -64,34 +60,37 @@ static void sifive_gpio_set(struct gpio_pin *gp, int value)
 	writel(v, (volatile void *)(chip->addr + SIFIVE_GPIO_OUTVAL));
 }
 
-extern struct fdt_gpio fdt_gpio_sifive;
+const struct fdt_gpio fdt_gpio_sifive;
 
-static int sifive_gpio_init(void *fdt, int nodeoff, u32 phandle,
+static int sifive_gpio_init(const void *fdt, int nodeoff,
 			    const struct fdt_match *match)
 {
 	int rc;
 	struct sifive_gpio_chip *chip;
 	uint64_t addr;
 
-	if (SIFIVE_GPIO_CHIP_MAX <= sifive_gpio_chip_count)
-		return SBI_ENOSPC;
-	chip = &sifive_gpio_chip_array[sifive_gpio_chip_count];
+	chip = sbi_zalloc(sizeof(*chip));
+	if (!chip)
+		return SBI_ENOMEM;
 
 	rc = fdt_get_node_addr_size(fdt, nodeoff, 0, &addr, NULL);
-	if (rc)
+	if (rc) {
+		sbi_free(chip);
 		return rc;
+	}
 
 	chip->addr = addr;
 	chip->chip.driver = &fdt_gpio_sifive;
-	chip->chip.id = phandle;
+	chip->chip.id = nodeoff;
 	chip->chip.ngpio = SIFIVE_GPIO_PINS_DEF;
 	chip->chip.direction_output = sifive_gpio_direction_output;
 	chip->chip.set = sifive_gpio_set;
 	rc = gpio_chip_add(&chip->chip);
-	if (rc)
+	if (rc) {
+		sbi_free(chip);
 		return rc;
+	}
 
-	sifive_gpio_chip_count++;
 	return 0;
 }
 
@@ -100,8 +99,10 @@ static const struct fdt_match sifive_gpio_match[] = {
 	{ },
 };
 
-struct fdt_gpio fdt_gpio_sifive = {
-	.match_table = sifive_gpio_match,
+const struct fdt_gpio fdt_gpio_sifive = {
+	.driver = {
+		.match_table = sifive_gpio_match,
+		.init = sifive_gpio_init,
+	},
 	.xlate = fdt_gpio_simple_xlate,
-	.init = sifive_gpio_init,
 };

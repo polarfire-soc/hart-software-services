@@ -13,71 +13,31 @@
 #include <sbi_utils/gpio/fdt_gpio.h>
 
 /* List of FDT gpio drivers generated at compile time */
-extern struct fdt_gpio *fdt_gpio_drivers[];
-extern unsigned long fdt_gpio_drivers_size;
+extern const struct fdt_driver *const fdt_gpio_drivers[];
 
-static struct fdt_gpio *fdt_gpio_driver(struct gpio_chip *chip)
+static int fdt_gpio_init(const void *fdt, int nodeoff)
 {
-	int pos;
-
-	if (!chip)
-		return NULL;
-
-	for (pos = 0; pos < fdt_gpio_drivers_size; pos++) {
-		if (chip->driver == fdt_gpio_drivers[pos])
-			return fdt_gpio_drivers[pos];
-	}
-
-	return NULL;
-}
-
-static int fdt_gpio_init(void *fdt, u32 phandle)
-{
-	int pos, nodeoff, rc;
-	struct fdt_gpio *drv;
-	const struct fdt_match *match;
-
-	/* Find node offset */
-	nodeoff = fdt_node_offset_by_phandle(fdt, phandle);
-	if (nodeoff < 0)
-		return nodeoff;
-
 	/* Check "gpio-controller" property */
-	if (!fdt_getprop(fdt, nodeoff, "gpio-controller", &rc))
+	if (!fdt_getprop(fdt, nodeoff, "gpio-controller", NULL))
 		return SBI_EINVAL;
 
-	/* Try all GPIO drivers one-by-one */
-	for (pos = 0; pos < fdt_gpio_drivers_size; pos++) {
-		drv = fdt_gpio_drivers[pos];
-
-		match = fdt_match_node(fdt, nodeoff, drv->match_table);
-		if (match && drv->init) {
-			rc = drv->init(fdt, nodeoff, phandle, match);
-			if (rc == SBI_ENODEV)
-				continue;
-			if (rc)
-				return rc;
-			return 0;
-		}
-	}
-
-	return SBI_ENOSYS;
+	return fdt_driver_init_by_offset(fdt, nodeoff, fdt_gpio_drivers);
 }
 
-static int fdt_gpio_chip_find(void *fdt, u32 phandle,
+static int fdt_gpio_chip_find(const void *fdt, int nodeoff,
 			      struct gpio_chip **out_chip)
 {
 	int rc;
-	struct gpio_chip *chip = gpio_chip_find(phandle);
+	struct gpio_chip *chip = gpio_chip_find(nodeoff);
 
 	if (!chip) {
 		/* GPIO chip not found so initialize matching driver */
-		rc = fdt_gpio_init(fdt, phandle);
+		rc = fdt_gpio_init(fdt, nodeoff);
 		if (rc)
 			return rc;
 
 		/* Try to find GPIO chip again */
-		chip = gpio_chip_find(phandle);
+		chip = gpio_chip_find(nodeoff);
 		if (!chip)
 			return SBI_ENOSYS;
 	}
@@ -88,12 +48,11 @@ static int fdt_gpio_chip_find(void *fdt, u32 phandle,
 	return 0;
 }
 
-int fdt_gpio_pin_get(void *fdt, int nodeoff, int index,
+int fdt_gpio_pin_get(const void *fdt, int nodeoff, int index,
 		     struct gpio_pin *out_pin)
 {
 	int rc;
-	u32 phandle;
-	struct fdt_gpio *drv;
+	const struct fdt_gpio *drv;
 	struct gpio_chip *chip = NULL;
 	struct fdt_phandle_args pargs;
 
@@ -107,12 +66,11 @@ int fdt_gpio_pin_get(void *fdt, int nodeoff, int index,
 	if (rc)
 		return rc;
 
-	phandle = fdt_get_phandle(fdt, pargs.node_offset);
-	rc = fdt_gpio_chip_find(fdt, phandle, &chip);
+	rc = fdt_gpio_chip_find(fdt, pargs.node_offset, &chip);
 	if (rc)
 		return rc;
 
-	drv = fdt_gpio_driver(chip);
+	drv = chip->driver;
 	if (!drv || !drv->xlate)
 		return SBI_ENOSYS;
 

@@ -10,6 +10,7 @@
 #ifndef __SBI_HSM_H__
 #define __SBI_HSM_H__
 
+#include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_types.h>
 
 /** Hart state managment device */
@@ -21,8 +22,12 @@ struct sbi_hsm_device {
 	int (*hart_start)(u32 hartid, ulong saddr);
 
 	/**
-	 * Stop (or power-down) the current hart from running. This call
-	 * doesn't expect to return if success.
+	 * Stop (or power-down) the current hart from running.
+	 *
+	 * Return SBI_ENOTSUPP if the hart does not support platform-specific
+	 * stop actions.
+	 *
+	 * For successful stop, the call won't return.
 	 */
 	int (*hart_stop)(void);
 
@@ -35,8 +40,12 @@ struct sbi_hsm_device {
 	 *
 	 * For successful non-retentive suspend, the hart will resume from
 	 * the warm boot entry point.
+	 *
+	 * NOTE: mmode_resume_addr(resume address) is optional hence it
+	 * may or may not be honored by the platform. If its not honored
+	 * then platform must ensure to resume from the warmboot address.
 	 */
-	int (*hart_suspend)(u32 suspend_type);
+	int (*hart_suspend)(u32 suspend_type, ulong mmode_resume_addr);
 
 	/**
 	 * Perform platform-specific actions to resume from a suspended state.
@@ -54,20 +63,27 @@ const struct sbi_hsm_device *sbi_hsm_get_device(void);
 
 void sbi_hsm_set_device(const struct sbi_hsm_device *dev);
 
-int sbi_hsm_init(struct sbi_scratch *scratch, u32 hartid, bool cold_boot);
+int sbi_hsm_init(struct sbi_scratch *scratch, bool cold_boot);
 void __noreturn sbi_hsm_exit(struct sbi_scratch *scratch);
 
 int sbi_hsm_hart_start(struct sbi_scratch *scratch,
 		       const struct sbi_domain *dom,
-		       u32 hartid, ulong saddr, ulong smode, ulong priv);
+		       u32 hartid, ulong saddr, ulong smode, ulong arg1);
 int sbi_hsm_hart_stop(struct sbi_scratch *scratch, bool exitnow);
 void sbi_hsm_hart_resume_start(struct sbi_scratch *scratch);
-void sbi_hsm_hart_resume_finish(struct sbi_scratch *scratch);
+void __noreturn sbi_hsm_hart_resume_finish(struct sbi_scratch *scratch,
+					   u32 hartid);
 int sbi_hsm_hart_suspend(struct sbi_scratch *scratch, u32 suspend_type,
-			 ulong raddr, ulong rmode, ulong priv);
+			 ulong raddr, ulong rmode, ulong arg1);
+bool sbi_hsm_hart_change_state(struct sbi_scratch *scratch, long oldstate,
+			       long newstate);
+int __sbi_hsm_hart_get_state(u32 hartindex);
 int sbi_hsm_hart_get_state(const struct sbi_domain *dom, u32 hartid);
 int sbi_hsm_hart_interruptible_mask(const struct sbi_domain *dom,
-				    ulong hbase, ulong *out_hmask);
-void sbi_hsm_prepare_next_jump(struct sbi_scratch *scratch, u32 hartid);
+				    struct sbi_hartmask *mask);
+void __sbi_hsm_suspend_non_ret_save(struct sbi_scratch *scratch);
+void __noreturn sbi_hsm_hart_start_finish(struct sbi_scratch *scratch,
+					  u32 hartid);
+void sbi_hsm_hart_start_complete_for(struct sbi_scratch *rscratch);
 
 #endif

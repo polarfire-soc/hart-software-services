@@ -12,10 +12,10 @@
 #include <sbi/sbi_ecall_interface.h>
 #include <sbi/sbi_error.h>
 #include <sbi/sbi_hart.h>
-#include <sbi/sbi_platform.h>
 #include <sbi/sbi_system.h>
+#include <sbi_utils/fdt/fdt_driver.h>
 #include <sbi_utils/fdt/fdt_helper.h>
-#include <sbi_utils/reset/fdt_reset.h>
+#include <sbi_utils/sys/atcsmu.h>
 
 #define ATCWDT200_WP_NUM 0x5aa5
 #define WREN_REG 0x18
@@ -41,14 +41,8 @@
 #define CLK_PCLK (1 << 1)
 #define WDT_EN (1 << 0)
 
-#define FLASH_BASE 0x80000000ULL
-#define SMU_RESET_VEC_LO_OFF 0x50
-#define SMU_RESET_VEC_HI_OFF 0x60
-#define SMU_HARTn_RESET_VEC_LO(n) (SMU_RESET_VEC_LO_OFF + (n * 0x4))
-#define SMU_HARTn_RESET_VEC_HI(n) (SMU_RESET_VEC_HI_OFF + (n * 0x4))
-
-static volatile char *wdt_addr;
-static volatile char *smu_addr;
+static volatile char *wdt_addr = NULL;
+static struct smu_data smu = { 0 };
 
 static int ae350_system_reset_check(u32 type, u32 reason)
 {
@@ -64,18 +58,16 @@ static int ae350_system_reset_check(u32 type, u32 reason)
 
 static void ae350_system_reset(u32 type, u32 reason)
 {
-	const struct sbi_platform *plat = sbi_platform_thishart_ptr();
-
-	for (int i = 0; i < sbi_platform_hart_count(plat); i++) {
-		writel(FLASH_BASE, smu_addr + SMU_HARTn_RESET_VEC_LO(i));
-		writel(FLASH_BASE >> 32, smu_addr + SMU_HARTn_RESET_VEC_HI(i));
-	}
+	sbi_for_each_hartindex(i)
+		if (smu_set_reset_vector(&smu, FLASH_BASE, i))
+			goto fail;
 
 	/* Program WDT control register  */
 	writew(ATCWDT200_WP_NUM, wdt_addr + WREN_REG);
 	writel(INT_CLK_32768 | INT_EN | RST_CLK_128 | RST_EN | WDT_EN,
 	       wdt_addr + CTRL_REG);
 
+fail:
 	sbi_hart_hang();
 }
 
@@ -85,7 +77,7 @@ static struct sbi_system_reset_device atcwdt200_reset = {
 	.system_reset	    = ae350_system_reset,
 };
 
-static int atcwdt200_reset_init(void *fdt, int nodeoff,
+static int atcwdt200_reset_init(const void *fdt, int nodeoff,
 				const struct fdt_match *match)
 {
 	uint64_t reg_addr;
@@ -104,7 +96,7 @@ static int atcwdt200_reset_init(void *fdt, int nodeoff,
 	if (fdt_parse_compat_addr(fdt, &reg_addr, "andestech,atcsmu"))
 		return SBI_ENODEV;
 
-	smu_addr = (volatile char *)(unsigned long)reg_addr;
+	smu.addr = (unsigned long)reg_addr;
 
 	sbi_system_reset_add_device(&atcwdt200_reset);
 
@@ -116,7 +108,7 @@ static const struct fdt_match atcwdt200_reset_match[] = {
 	{},
 };
 
-struct fdt_reset fdt_reset_atcwdt200 = {
+const struct fdt_driver fdt_reset_atcwdt200 = {
 	.match_table = atcwdt200_reset_match,
 	.init	     = atcwdt200_reset_init,
 };

@@ -10,7 +10,7 @@
 #include <sbi_utils/serial/fdt_serial.h>
 #include <sbi_utils/serial/cadence-uart.h>
 
-static int serial_cadence_init(void *fdt, int nodeoff,
+static int serial_cadence_init(const void *fdt, int nodeoff,
 			       const struct fdt_match *match)
 {
 	int rc;
@@ -24,12 +24,13 @@ static int serial_cadence_init(void *fdt, int nodeoff,
 }
 
 static const struct fdt_match serial_cadence_match[] = {
+	{ .compatible = "cdns,uart-r1p8", },
 	{ .compatible = "cdns,uart-r1p12" },
 	{ .compatible = "starfive,jh8100-uart" },
 	{ },
 };
 
-struct fdt_serial fdt_serial_cadence = {
+const struct fdt_driver fdt_serial_cadence = {
 	.match_table = serial_cadence_match,
 	.init = serial_cadence_init
 };

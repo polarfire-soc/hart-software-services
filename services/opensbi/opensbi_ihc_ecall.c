@@ -55,8 +55,8 @@ static uint32_t message_present_handler(uint32_t remote_hart_id, uint32_t * mess
     return 0u;
 }
 
-int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
+int sbi_ecall_ihc_handler(unsigned long funcid,
+    struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
     uint32_t my_hart_id;
     uint32_t remote_hart_id;

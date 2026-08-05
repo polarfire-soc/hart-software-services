@@ -31,7 +31,7 @@ struct sbi_dlist _lname = SBI_LIST_HEAD_INIT(_lname)
 #define SBI_INIT_LIST_HEAD(ptr)	\
 do { \
 	(ptr)->next = ptr; (ptr)->prev = ptr; \
-} while (0);
+} while (0)
 
 static inline void __sbi_list_add(struct sbi_dlist *new,
 				  struct sbi_dlist *prev,
@@ -47,7 +47,7 @@ static inline void __sbi_list_add(struct sbi_dlist *new,
  * Checks if the list is empty or not.
  * @param head List head
  *
- * Retruns TRUE if list is empty, FALSE otherwise.
+ * Returns true if list is empty, false otherwise.
  */
 static inline bool sbi_list_empty(struct sbi_dlist *head)
 {
@@ -159,5 +159,29 @@ static inline void sbi_list_del_init(struct sbi_dlist *entry)
 	for (pos = sbi_list_entry((head)->next, typeof(*pos), member);	\
 	     &pos->member != (head); 	\
 	     pos = sbi_list_entry(pos->member.next, typeof(*pos), member))
+
+/**
+ * Iterate over list of given type safe against removal of list entry
+ * @param pos the type * to use as a loop cursor.
+ * @param n another type * to use as temporary storage.
+ * @param head the head for your list.
+ * @param member the name of the list_struct within the struct.
+ */
+#define sbi_list_for_each_entry_safe(pos, n, head, member) \
+	for (pos = sbi_list_entry((head)->next, typeof(*pos), member),	\
+	     n = sbi_list_entry(pos->member.next, typeof(*pos), member);	\
+	     &pos->member != (head);	\
+	     pos = n, n = sbi_list_entry(pos->member.next, typeof(*pos), member))
+
+/**
+ * Iterate over list of given type in reverse order
+ * @param pos the type * to use as a loop cursor.
+ * @param head the head for your list.
+ * @param member the name of the list_struct within the struct.
+ */
+#define sbi_list_for_each_entry_reverse(pos, head, member) \
+	for (pos = sbi_list_entry((head)->prev, typeof(*pos), member); \
+	     &pos->member != (head); \
+	     pos = sbi_list_entry(pos->member.prev, typeof(*pos), member))
 
 #endif

@@ -19,6 +19,8 @@
 #include <sbi_utils/timer/aclint_mtimer.h>
 
 #define PLATFORM_PLIC_ADDR		0xc000000
+#define PLATFORM_PLIC_SIZE		(0x200000 + \
+					 (PLATFORM_HART_COUNT * 0x1000))
 #define PLATFORM_PLIC_NUM_SOURCES	128
 #define PLATFORM_HART_COUNT		4
 #define PLATFORM_CLINT_ADDR		0x2000000
@@ -33,7 +35,14 @@
 
 static struct plic_data plic = {
 	.addr = PLATFORM_PLIC_ADDR,
+	.size = PLATFORM_PLIC_SIZE,
 	.num_src = PLATFORM_PLIC_NUM_SOURCES,
+	.context_map = {
+		[0] = { 0, 1 },
+		[1] = { 2, 3 },
+		[2] = { 4, 5 },
+		[3] = { 6, 7 },
+	},
 };
 
 static struct aclint_mswi_data mswi = {
@@ -53,7 +62,7 @@ static struct aclint_mtimer_data mtimer = {
 	.mtimecmp_size = ACLINT_DEFAULT_MTIMECMP_SIZE,
 	.first_hartid = 0,
 	.hart_count = PLATFORM_HART_COUNT,
-	.has_64bit_mmio = TRUE,
+	.has_64bit_mmio = true,
 };
 
 /*
@@ -61,7 +70,18 @@ static struct aclint_mtimer_data mtimer = {
  */
 static int platform_early_init(bool cold_boot)
 {
-	return 0;
+	int rc;
+
+	if (!cold_boot)
+		return 0;
+
+	/* Example if the generic UART8250 driver is used */
+	rc = uart8250_init(PLATFORM_UART_ADDR, PLATFORM_UART_INPUT_FREQ,
+			   PLATFORM_UART_BAUDRATE, 0, 1, 0, 0);
+	if (rc)
+		return rc;
+
+	return aclint_mswi_cold_init(&mswi);
 }
 
 /*
@@ -73,65 +93,21 @@ static int platform_final_init(bool cold_boot)
 }
 
 /*
- * Initialize the platform console.
+ * Initialize the platform interrupt controller during cold boot.
  */
-static int platform_console_init(void)
+static int platform_irqchip_init(void)
 {
-	/* Example if the generic UART8250 driver is used */
-	return uart8250_init(PLATFORM_UART_ADDR, PLATFORM_UART_INPUT_FREQ,
-			     PLATFORM_UART_BAUDRATE, 0, 1, 0);
-}
-
-/*
- * Initialize the platform interrupt controller for current HART.
- */
-static int platform_irqchip_init(bool cold_boot)
-{
-	u32 hartid = current_hartid();
-	int ret;
-
 	/* Example if the generic PLIC driver is used */
-	if (cold_boot) {
-		ret = plic_cold_irqchip_init(&plic);
-		if (ret)
-			return ret;
-	}
-
-	return plic_warm_irqchip_init(&plic, 2 * hartid, 2 * hartid + 1);
+	return plic_cold_irqchip_init(&plic);
 }
 
 /*
- * Initialize IPI for current HART.
+ * Initialize platform timer during cold boot.
  */
-static int platform_ipi_init(bool cold_boot)
+static int platform_timer_init(void)
 {
-	int ret;
-
 	/* Example if the generic ACLINT driver is used */
-	if (cold_boot) {
-		ret = aclint_mswi_cold_init(&mswi);
-		if (ret)
-			return ret;
-	}
-
-	return aclint_mswi_warm_init();
-}
-
-/*
- * Initialize platform timer for current HART.
- */
-static int platform_timer_init(bool cold_boot)
-{
-	int ret;
-
-	/* Example if the generic ACLINT driver is used */
-	if (cold_boot) {
-		ret = aclint_mtimer_cold_init(&mtimer, NULL);
-		if (ret)
-			return ret;
-	}
-
-	return aclint_mtimer_warm_init();
+	return aclint_mtimer_cold_init(&mtimer, NULL);
 }
 
 /*
@@ -140,9 +116,7 @@ static int platform_timer_init(bool cold_boot)
 const struct sbi_platform_operations platform_ops = {
 	.early_init		= platform_early_init,
 	.final_init		= platform_final_init,
-	.console_init		= platform_console_init,
 	.irqchip_init		= platform_irqchip_init,
-	.ipi_init		= platform_ipi_init,
 	.timer_init		= platform_timer_init
 };
 const struct sbi_platform platform = {
@@ -152,5 +126,6 @@ const struct sbi_platform platform = {
 	.features		= SBI_PLATFORM_DEFAULT_FEATURES,
 	.hart_count		= 1,
 	.hart_stack_size	= SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
+	.heap_size		= SBI_PLATFORM_DEFAULT_HEAP_SIZE(1),
 	.platform_ops_addr	= (unsigned long)&platform_ops
 };

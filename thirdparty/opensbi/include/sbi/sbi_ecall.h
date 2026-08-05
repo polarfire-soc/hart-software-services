@@ -13,27 +13,68 @@
 #include <sbi/sbi_types.h>
 #include <sbi/sbi_list.h>
 
-/* We're fooling the world into thinking we are SBI v2.0 as we have
- * added the SUSP 0x53555350 ecall and Linux checks SBI version before
- * probing.  Other SBI v2.0 features are optional and probed.
- *    #define SBI_ECALL_VERSION_MAJOR		1
- */
-#define SBI_ECALL_VERSION_MAJOR		2
+#define SBI_ECALL_VERSION_MAJOR		3
 #define SBI_ECALL_VERSION_MINOR		0
 #define SBI_OPENSBI_IMPID		1
 
 struct sbi_trap_regs;
-struct sbi_trap_info;
+struct sbi_trap_context;
+
+struct sbi_ecall_return {
+	/* Return flag to skip register update */
+	bool skip_regs_update;
+	/* Return value */
+	unsigned long value;
+};
 
 struct sbi_ecall_extension {
+	/* head is used by the extension list */
 	struct sbi_dlist head;
+	/* short name of the extension */
+	char name[8];
+	/*
+	 * extid_start and extid_end specify the range for this extension. As
+	 * the initial range may be wider than the valid runtime range, the
+	 * register_extensions callback is responsible for narrowing the range
+	 * before other callbacks may be invoked.
+	 */
 	unsigned long extid_start;
 	unsigned long extid_end;
+	/* flag showing whether given extension is experimental or not */
+	bool experimental;
+	/*
+	 * register_extensions
+	 *
+	 * Calls sbi_ecall_register_extension() one or more times to register
+	 * extension ID range(s) which should be handled by this extension.
+	 * More than one sbi_ecall_extension struct and
+	 * sbi_ecall_register_extension() call is necessary when the supported
+	 * extension ID ranges have gaps. Additionally, extension availability
+	 * must be checked before registering, which means, when this callback
+	 * returns, only valid extension IDs from the initial range, which are
+	 * also available, have been registered.
+	 */
+	int (* register_extensions)(void);
+	/*
+	 * probe
+	 *
+	 * Implements the Base extension's probe function for the extension. As
+	 * the register_extensions callback ensures that no other extension
+	 * callbacks will be invoked when the extension is not available, then
+	 * probe can never fail. However, an extension may choose to set
+	 * out_val to a nonzero value other than one. In those cases, it should
+	 * implement this callback.
+	 */
 	int (* probe)(unsigned long extid, unsigned long *out_val);
+	/*
+	 * handle
+	 *
+	 * This is the extension handler. register_extensions ensures it is
+	 * never invoked with an invalid or unavailable extension ID.
+	 */
 	int (* handle)(unsigned long extid, unsigned long funcid,
-		       const struct sbi_trap_regs *regs,
-		       unsigned long *out_val,
-		       struct sbi_trap_info *out_trap);
+		       struct sbi_trap_regs *regs,
+		       struct sbi_ecall_return *out);
 };
 
 u16 sbi_ecall_version_major(void);
@@ -46,11 +87,13 @@ void sbi_ecall_set_impid(unsigned long impid);
 
 struct sbi_ecall_extension *sbi_ecall_find_extension(unsigned long extid);
 
+void sbi_ecall_get_extensions_str(char *exts_str, int exts_str_size, bool experimental);
+
 int sbi_ecall_register_extension(struct sbi_ecall_extension *ext);
 
 void sbi_ecall_unregister_extension(struct sbi_ecall_extension *ext);
 
-int sbi_ecall_handler(struct sbi_trap_regs *regs);
+int sbi_ecall_handler(struct sbi_trap_context *tcntx);
 
 int sbi_ecall_init(void);
 

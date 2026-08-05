@@ -13,19 +13,17 @@
 #include <sbi/sbi_bitops.h>
 #include <sbi/sbi_emulate_csr.h>
 #include <sbi/sbi_error.h>
+#include <sbi/sbi_illegal_atomic.h>
 #include <sbi/sbi_illegal_insn.h>
 #include <sbi/sbi_pmu.h>
 #include <sbi/sbi_trap.h>
 #include <sbi/sbi_unpriv.h>
 #include <sbi/sbi_console.h>
 
-typedef int (*illegal_insn_func)(ulong insn, struct sbi_trap_regs *regs);
-
-static int truly_illegal_insn(ulong insn, struct sbi_trap_regs *regs)
+int truly_illegal_insn(ulong insn, struct sbi_trap_regs *regs)
 {
 	struct sbi_trap_info trap;
 
-	trap.epc = regs->mepc;
 	trap.cause = CAUSE_ILLEGAL_INSTRUCTION;
 	trap.tval = insn;
 	trap.tval2 = 0;
@@ -49,10 +47,11 @@ static int misc_mem_opcode_insn(ulong insn, struct sbi_trap_regs *regs)
 
 static int system_opcode_insn(ulong insn, struct sbi_trap_regs *regs)
 {
-	int do_write, rs1_num = (insn >> 15) & 0x1f;
-	ulong rs1_val = GET_RS1(insn, regs);
-	int csr_num   = (u32)insn >> 20;
-	ulong prev_mode = (regs->mstatus & MSTATUS_MPP) >> MSTATUS_MPP_SHIFT;
+	bool do_write	= false;
+	int rs1_num	= GET_RS1_NUM(insn);
+	ulong rs1_val	= GET_RS1(insn, regs);
+	int csr_num	= GET_CSR_NUM((u32)insn);
+	ulong prev_mode = sbi_mstatus_prev_mode(regs->mstatus);
 	ulong csr_val, new_csr_val;
 
 	if (prev_mode == PRV_M) {
@@ -61,36 +60,45 @@ static int system_opcode_insn(ulong insn, struct sbi_trap_regs *regs)
 		return SBI_EFAIL;
 	}
 
-	/* TODO: Ensure that we got CSR read/write instruction */
+	/* Ensure that we got CSR read/write instruction */
+	int funct3 = GET_RM(insn);
+	if (funct3 == 0 || funct3 == 4) {
+		sbi_printf("%s: Invalid opcode for CSR read/write instruction",
+			   __func__);
+		return truly_illegal_insn(insn, regs);
+	}
 
 	if (sbi_emulate_csr_read(csr_num, regs, &csr_val))
 		return truly_illegal_insn(insn, regs);
 
-	do_write = rs1_num;
-	switch (GET_RM(insn)) {
-	case 1:
+	switch (funct3) {
+	case CSRRW:
 		new_csr_val = rs1_val;
-		do_write    = 1;
+		do_write    = true;
 		break;
-	case 2:
+	case CSRRS:
 		new_csr_val = csr_val | rs1_val;
+		do_write    = (rs1_num != 0);
 		break;
-	case 3:
+	case CSRRC:
 		new_csr_val = csr_val & ~rs1_val;
+		do_write    = (rs1_num != 0);
 		break;
-	case 5:
+	case CSRRWI:
 		new_csr_val = rs1_num;
-		do_write    = 1;
+		do_write    = true;
 		break;
-	case 6:
+	case CSRRSI:
 		new_csr_val = csr_val | rs1_num;
+		do_write    = (rs1_num != 0);
 		break;
-	case 7:
+	case CSRRCI:
 		new_csr_val = csr_val & ~rs1_num;
+		do_write    = (rs1_num != 0);
 		break;
 	default:
 		return truly_illegal_insn(insn, regs);
-	};
+	}
 
 	if (do_write && sbi_emulate_csr_write(csr_num, regs, new_csr_val))
 		return truly_illegal_insn(insn, regs);
@@ -114,7 +122,7 @@ static const illegal_insn_func illegal_insn_table[32] = {
 	truly_illegal_insn, /* 8 */
 	truly_illegal_insn, /* 9 */
 	truly_illegal_insn, /* 10 */
-	truly_illegal_insn, /* 11 */
+	sbi_illegal_atomic, /* 11 */
 	truly_illegal_insn, /* 12 */
 	truly_illegal_insn, /* 13 */
 	truly_illegal_insn, /* 14 */
@@ -137,8 +145,10 @@ static const illegal_insn_func illegal_insn_table[32] = {
 	truly_illegal_insn  /* 31 */
 };
 
-int sbi_illegal_insn_handler(ulong insn, struct sbi_trap_regs *regs)
+int sbi_illegal_insn_handler(struct sbi_trap_context *tcntx)
 {
+	struct sbi_trap_regs *regs = &tcntx->regs;
+	ulong insn = tcntx->trap.tval;
 	struct sbi_trap_info uptrap;
 
 	/*
@@ -155,10 +165,8 @@ int sbi_illegal_insn_handler(ulong insn, struct sbi_trap_regs *regs)
 	sbi_pmu_ctr_incr_fw(SBI_PMU_FW_ILLEGAL_INSN);
 	if (unlikely((insn & 3) != 3)) {
 		insn = sbi_get_insn(regs->mepc, &uptrap);
-		if (uptrap.cause) {
-			uptrap.epc = regs->mepc;
+		if (uptrap.cause)
 			return sbi_trap_redirect(regs, &uptrap);
-		}
 		if ((insn & 3) != 3)
 			return truly_illegal_insn(insn, regs);
 	}

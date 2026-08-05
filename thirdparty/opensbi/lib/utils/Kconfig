@@ -2,9 +2,15 @@
 
 menu "Utils and Drivers Support"
 
+source "$(OPENSBI_SRC_DIR)/lib/utils/cache/Kconfig"
+
+source "$(OPENSBI_SRC_DIR)/lib/utils/cppc/Kconfig"
+
 source "$(OPENSBI_SRC_DIR)/lib/utils/fdt/Kconfig"
 
 source "$(OPENSBI_SRC_DIR)/lib/utils/gpio/Kconfig"
+
+source "$(OPENSBI_SRC_DIR)/lib/utils/hsm/Kconfig"
 
 source "$(OPENSBI_SRC_DIR)/lib/utils/i2c/Kconfig"
 
@@ -14,12 +20,20 @@ source "$(OPENSBI_SRC_DIR)/lib/utils/irqchip/Kconfig"
 
 source "$(OPENSBI_SRC_DIR)/lib/utils/libfdt/Kconfig"
 
+source "$(OPENSBI_SRC_DIR)/lib/utils/mailbox/Kconfig"
+
+source "$(OPENSBI_SRC_DIR)/lib/utils/regmap/Kconfig"
+
 source "$(OPENSBI_SRC_DIR)/lib/utils/reset/Kconfig"
 
 source "$(OPENSBI_SRC_DIR)/lib/utils/serial/Kconfig"
 
+source "$(OPENSBI_SRC_DIR)/lib/utils/suspend/Kconfig"
+
 source "$(OPENSBI_SRC_DIR)/lib/utils/sys/Kconfig"
 
 source "$(OPENSBI_SRC_DIR)/lib/utils/timer/Kconfig"
+
+source "$(OPENSBI_SRC_DIR)/lib/utils/mpxy/Kconfig"
 
 endmenu

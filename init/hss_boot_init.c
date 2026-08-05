@@ -74,6 +74,25 @@
 
 #include "sbi_bitops.h"
 
+/*
+ * Sanity check: if CONFIG_SKIP_DDR is set, the boot target address must not
+ * be in DDR (since DDR won't be trained).  Only L2-Scratchpad or LIM
+ * addresses are valid in that case.
+ */
+#if IS_ENABLED(CONFIG_SKIP_DDR) && IS_ENABLED(CONFIG_SERVICE_BOOT)
+_Static_assert(
+    !((CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR >= 0x80000000ULL
+       && CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR < 0x100000000ULL)
+      || (CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR >= 0x1000000000ULL
+          && CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR < 0x1040000000ULL)
+      || (CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR >= 0xC0000000ULL
+          && CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR < 0x100000000ULL)
+      || (CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR >= 0x1400000000ULL
+          && CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR < 0x1440000000ULL)),
+    "CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR points to DDR but CONFIG_SKIP_DDR is set"
+);
+#endif
+
 //
 // local module functions
 

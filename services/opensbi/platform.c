@@ -37,8 +37,6 @@
 #include <assert.h>
 
 #include <sbi/sbi_types.h>
-/* sbi_types.h already defines true/false as TRUE/FALSE aliases — no
- * redefinition needed here. */
 
 #include <libfdt.h>
 #include <sbi/riscv_atomic.h>
@@ -56,9 +54,11 @@
 #include <sbi/sbi_domain.h>
 #include <sbi/sbi_math.h>
 #include <sbi/sbi_system.h>
+#include <sbi/sbi_ecall_interface.h>
 #include <sbi/sbi_timer.h>
 #include <sbi_utils/fdt/fdt_fixup.h>
 #include <sbi_utils/ipi/aclint_mswi.h>
+#include <sbi/sbi_irqchip.h>
 #include <sbi_utils/irqchip/plic.h>
 #include <sbi_utils/timer/aclint_mtimer.h>
 
@@ -71,10 +71,11 @@
 #include "hss_boot_service.h"
 #include "clocks/hw_mss_clks.h"    // LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
 #include "memory_map/hw_apb_split.h"
+#include "hss_trigger.h"
+#include <u54_state.h>
 #include "hss_clock.h"
 #include "mss_sysreg.h"
 
-#define MPFS_HART_COUNT            5
 #define MPFS_HART_STACK_SIZE       8192
 
 #define MPFS_CLINT_ADDR            0x2000000
@@ -139,10 +140,37 @@
 #  define MPFS_ENABLED_HART_MASK    (1 << 1 | 1 << 2 | 1 << 3 | 1 << 4)
 #endif
 
-static struct plic_data plicInfo = {
-    .addr = MPFS_PLIC_ADDR,
-    .num_src = MPFS_PLIC_NUM_SOURCES
+/*
+ * Static PLIC data with context_map storage.
+ *
+ * In v1.8, plic_data uses a flexible array member context_map[][2] that must
+ * be sized for the number of harts.  We use a wrapper struct so the flexible
+ * array extends into _ctx[] which provides the actual storage.
+ *
+ * MPFS PLIC context layout (9 contexts total):
+ *   Hart 0 (E51):   M-context=0, no S-mode
+ *   Hart 1 (U54_1): M-context=1, S-context=2
+ *   Hart 2 (U54_2): M-context=3, S-context=4
+ *   Hart 3 (U54_3): M-context=5, S-context=6
+ *   Hart 4 (U54_4): M-context=7, S-context=8
+ */
+static struct {
+    struct plic_data plic;
+    s16 _ctx[MPFS_HART_COUNT][2];
+} _plicInfo = {
+    .plic.addr = MPFS_PLIC_ADDR,
+    .plic.size = 0x4000000,
+    .plic.num_src = MPFS_PLIC_NUM_SOURCES,
+    .plic.flags = PLIC_FLAG_NO_PRIORITY_INIT,
+    ._ctx = {
+        { 0, -1},   /* Hart 0 (E51): M=0, no S-mode */
+        { 1,  2},   /* Hart 1 (U54_1) */
+        { 3,  4},   /* Hart 2 (U54_2) */
+        { 5,  6},   /* Hart 3 (U54_3) */
+        { 7,  8},   /* Hart 4 (U54_4) */
+    },
 };
+#define plicInfo (_plicInfo.plic)
 
 static struct aclint_mswi_data mswi = {
     .addr = MPFS_CLINT_ADDR,
@@ -159,7 +187,7 @@ static struct aclint_mtimer_data mtimer = {
     .mtimecmp_size = ACLINT_DEFAULT_MTIMECMP_SIZE,
     .first_hartid = 0,
     .hart_count = MPFS_HART_COUNT,
-    .has_64bit_mmio = TRUE
+    .has_64bit_mmio = true
 };
 
 static struct {
@@ -287,15 +315,15 @@ static void mpfs_mmuart0_scale_baudrate(uint64_t old_pclk_hz,
     }
 }
 
-#if !IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
+#  if !IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
 static void mpfs_mmuart0_set_suspend_baudrate(void)
 {
     mpfs_mmuart0_scale_baudrate(LIBERO_SETTING_MSS_APB_AHB_CLK,
         LIBERO_SETTING_MSS_APB_AHB_CLK / MPFS_MMUART0_SUSPEND_CLOCK_DIVISOR);
 }
-#endif
+#  endif
 
-#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
+#  if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
 static uint32_t saved_mssclkmux;
 static uint32_t saved_mss_pll_ctrl;
 static bool scb_clock_state_saved = false;
@@ -379,14 +407,14 @@ static void mpfs_resume_scb_clock(void)
 
     scb_clock_state_saved = false;
 }
-#endif
+#  endif
 #endif
 
 static void mpfs_modify_dt(void *fdt)
 {
     fdt_cpu_fixup(fdt);
     fdt_fixups(fdt);
-    fdt_reserved_memory_nomap_fixup(fdt);
+    fdt_reserved_memory_fixup(fdt);
 }
 
 static void __attribute__((__noreturn__)) mpfs_system_reset(u32 reset_type, u32 reset_reason)
@@ -435,10 +463,16 @@ static struct sbi_system_reset_device mpfs_reset = {
     .system_reset = mpfs_system_reset,
 };
 
+static int mpfs_ipi_cold_init(void);
+static struct sbi_system_suspend_device mpfs_suspend;
+
 static int mpfs_early_init(bool cold_boot)
 {
     if (cold_boot) {
         sbi_system_reset_add_device(&mpfs_reset);
+        sbi_system_suspend_set_device(&mpfs_suspend);
+        mpfs_console_init();
+        mpfs_ipi_cold_init();
     }
 
     return 0;
@@ -494,7 +528,7 @@ static int mpfs_console_getc(void)
     bool uart_getchar(uint8_t *pbuf, int32_t timeout_sec, bool do_sec_tick);
 
     uint8_t rcvBuf;
-    if (uart_getchar(&rcvBuf, NO_BLOCK, FALSE)) {
+    if (uart_getchar(&rcvBuf, NO_BLOCK, false)) {
         result = rcvBuf;
     }
 
@@ -507,117 +541,116 @@ static struct sbi_console_device mpfs_console = {
     .console_getc = mpfs_console_getc,
 };
 
-static int mpfs_console_init(void)
+void mpfs_console_init(void)
 {
     console_initialized = true;
     sbi_console_set_device(&mpfs_console);
-    return 0;
 }
 
+/*
+ * Simple PLIC init for E51 — zeros all source priorities.
+ * No OpenSBI framework dependency (no scratch, heap, or domain needed).
+ */
 bool HSS_PLIC_Init(void);
 bool HSS_PLIC_Init(void)
 {
-    static bool plic_initialized = false;
+    volatile char *base = (volatile char *)plicInfo.addr;
 
-    if (!plic_initialized && (0 == plic_cold_irqchip_init(&plicInfo))) {
-        plic_initialized = true;
-    }
+    for (int src = 1; src <= plicInfo.num_src; src++)
+        writel(0, base + 4 * src);
 
-    return plic_initialized;
+    return true;
 }
 
 
-static int mpfs_irqchip_init(bool cold_boot)
+
+
+/* PLIC register layout constants */
+#define MPFS_PLIC_ENABLE_BASE     0x2000
+#define MPFS_PLIC_ENABLE_STRIDE   0x80
+#define MPFS_PLIC_CONTEXT_BASE    0x200000
+#define MPFS_PLIC_CONTEXT_STRIDE  0x1000
+
+/*
+ * Custom PLIC warm init for MPFS.
+ *
+ * Only touches S-mode context — leaves M-mode context alone to avoid
+ * interference with IHC which uses M-mode external interrupts.
+ */
+static int mpfs_plic_warm_init(struct sbi_irqchip_device *dev)
 {
-    int rc = 0;
-    u32 hartid = current_hartid();
+    (void)dev;
+    const struct plic_data *plic = &plicInfo;
+    u32 hartindex = current_hartindex();
+    s16 s_cntx_id = plic->context_map[hartindex][PLIC_S_CONTEXT];
 
-    // To ensure we don't have AMP interference, global PLIC setup is done once as part of HSS init,
-    // and not as part of the OpenSBI platform setup. So the following code does not run here...
-    //     if (cold_boot) {
-    //         rc = plic_cold_irqchip_init(&plicInfo);
-    //     }
+    if (s_cntx_id < 0)
+        return 0;
 
-    if (!rc) {
-        // instead of calling plic_warm_irqchip_init ...
-        //
-        //     rc = plic_warm_irqchip_init(&plicInfo,
-        //         (hartid) ? (2 * hartid - 1) : 0, (hartid) ? (2 * hartid) : -1);
-        //
-        // we'll do it ourselves to customize behavior..
-        //const int m_cntx_id =  (hartid) ? (2 * hartid - 1) : 0;
+    u32 ie_words = plic->num_src / 32 + 1;
+    volatile char *base = (volatile char *)plic->addr;
 
-        const int s_cntx_id =  (hartid) ? (2 * hartid) : -1;
-        struct plic_data * const plic = &plicInfo;
-        size_t i, ie_words;
-
-        if (!plic) {
-                return SBI_EINVAL;
-        } else {
-            ie_words = plic->num_src / 32 + 1;
-
-            // By default, disable all IRQs for M-mode of target HART
-            // need to reconsider this with IHC...
-            //
-            //if (m_cntx_id > -1) {
-            //    for (i = 0; i < ie_words; i++) {
-            //        plic_set_ie(plic, m_cntx_id, i, 0);
-            //    }
-            //}
-
-            /* By default, disable all IRQs for S-mode of target HART */
-            if (s_cntx_id > -1) {
-                for (i = 0; i < ie_words; i++) {
-                    plic_set_ie(plic, s_cntx_id, i, 0);
-                }
-            }
-
-            // By default, disable M-mode threshold
-            // need to reconsider these with IHC...
-            //
-            //if (m_cntx_id > -1) {
-            //    plic_set_thresh(plic, m_cntx_id, 0x7);
-            //}
-
-            /* By default, disable S-mode threshold */
-            if (s_cntx_id > -1) {
-                plic_set_thresh(plic, s_cntx_id, 0x7);
-            }
-        }
+    /* Disable all S-mode IRQ enables for this hart */
+    for (u32 i = 0; i < ie_words; i++) {
+        writel(0, base + MPFS_PLIC_ENABLE_BASE +
+               MPFS_PLIC_ENABLE_STRIDE * s_cntx_id + 4 * i);
     }
 
-    return rc;
+    /* Set S-mode priority threshold to max (effectively disables) */
+    writel(0x7, base + MPFS_PLIC_CONTEXT_BASE +
+           MPFS_PLIC_CONTEXT_STRIDE * s_cntx_id);
+
+    return 0;
 }
 
-static int mpfs_ipi_init(bool cold_boot)
+static int mpfs_irqchip_init(void)
 {
-    int result = 0;
+#if 0
+    /* Original v1.8 approach — calls plic_cold_irqchip_init which may
+     * clobber M-mode PLIC state that IHC depends on. Disabled to test
+     * whether reverting to old behaviour fixes the mcause=0 trap. */
+    int rc;
 
-    if (cold_boot) {
-        result = aclint_mswi_cold_init(&mswi);
-    }
+    rc = plic_cold_irqchip_init(&plicInfo);
+    if (rc)
+        return rc;
 
-    if (!result) {
-        result = aclint_mswi_warm_init();
-    }
+    /* Override with custom warm_init that only touches S-mode context,
+     * leaving M-mode alone for IHC.
+     */
+    plicInfo.irqchip.warm_init = mpfs_plic_warm_init;
+    return 0;
+#else
+    /*
+     * Old approach: global PLIC priority zeroing is done once from
+     * HSS_PLIC_Init() during E51 early init.  We do NOT call
+     * plic_cold_irqchip_init() here to avoid AMP interference.
+     * Only register a custom irqchip device whose warm_init touches
+     * S-mode context exclusively.
+     */
+    int rc;
 
-    return result;
+    rc = sbi_domain_root_add_memrange(plicInfo.addr, plicInfo.size, BIT(20),
+                    (SBI_DOMAIN_MEMREGION_MMIO |
+                     SBI_DOMAIN_MEMREGION_SHARED_SURW_MRW));
+    if (rc)
+        return rc;
+
+    plicInfo.irqchip.warm_init = mpfs_plic_warm_init;
+    sbi_irqchip_add_device(&plicInfo.irqchip);
+
+    return 0;
+#endif
 }
 
-static int mpfs_timer_init(bool cold_boot)
+static int mpfs_ipi_cold_init(void)
 {
-    int result = 0;
+    return aclint_mswi_cold_init(&mswi);
+}
 
-    if (cold_boot) {
-        result = aclint_mtimer_cold_init(&mtimer, NULL);
-    }
-
-    if (!result) {
-        aclint_mtimer_warm_init();
-    }
-
-    return result;
-
+static int mpfs_timer_init(void)
+{
+    return aclint_mtimer_cold_init(&mtimer, NULL);
 }
 
 static void mpfs_final_exit(void)
@@ -632,13 +665,6 @@ static void mpfs_final_exit(void)
 static u64 mpfs_get_tlbr_flush_limit(void)
 {
     return MPFS_TLB_RANGE_FLUSH_LIMIT;
-}
-
-// don't allow OpenSBI to play with PMPs
-int sbi_hart_pmp_configure(struct sbi_scratch *pScratch)
-{
-    (void)pScratch;
-    return 0;
 }
 
 static struct sbi_domain_memregion mpfs_memregion[3] = {
@@ -782,11 +808,13 @@ static int mpfs_domains_init(void)
 
                 pDom->regions = mpfs_domains_root_regions();
                 sbi_domain_memregion_init(pScratch->fw_start, pScratch->fw_size, 0u, &(pDom->regions[0]));
+                pDom->fw_region_inited = true;
 
                 pDom->next_arg1 = hart_ledger[boot_hartid].next_arg1;
                 pDom->next_addr = hart_ledger[boot_hartid].next_addr;
                 pDom->next_mode = hart_ledger[boot_hartid].next_mode;
-                pDom->system_reset_allowed = TRUE;
+                pDom->system_reset_allowed = true;
+                pDom->system_suspend_allowed = true;
                 pDom->possible_harts = pMask;
 
                 result = sbi_domain_register(pDom, pMask);
@@ -819,13 +847,17 @@ static int mpfs_hart_start(u32 hartid, ulong saddr)
         /*
          * Secondary hart took j _start on a previous HART_STOP and is now
          * sitting in HSS's IPI loop.  Ask E51 to send IPI_MSG_GOTO to it.
-         * We advance HSM state START_PENDING -> STARTED here because the hart
-         * will not go through OpenSBI init_warm_startup() path.
+         *
+         * sbi_hsm_hart_start() already moved state STOPPED -> START_PENDING
+         * before calling us.  Complete the transition (START_PENDING ->
+         * STARTED) and release the start ticket so future HART_START calls
+         * can acquire it.  The hart will not go through OpenSBI's warmboot
+         * path so sbi_hsm_hart_start_finish() is never called on the target.
          */
         __atomic_store_n(&hart_ledger[hartid].has_stopped, false,
             __ATOMIC_RELEASE);
         struct sbi_scratch *rscratch = sbi_hartid_to_scratch(hartid);
-        sbi_hsm_prepare_next_jump(rscratch, hartid);
+        sbi_hsm_hart_start_complete_for(rscratch);
 
         return HSS_Boot_SendResumeGOTO((enum HSSHartId)hartid,
             rscratch->next_addr, rscratch->next_arg1) ? SBI_OK : SBI_ERR_FAILED;
@@ -835,9 +867,9 @@ static int mpfs_hart_start(u32 hartid, ulong saddr)
      * Hart is in sbi_hsm_hart_wait() WFI loop (either the boot hart
      * parked by Linux, or a secondary hart on its first Linux start).
      * Wake it with a raw software IPI; OpenSBI init_warm_startup() will
-     * call sbi_hsm_prepare_next_jump() and jump to next_addr.
+     * call sbi_hsm_hart_start_finish() and jump to next_addr.
      */
-    return sbi_ipi_raw_send(hartid);
+    return sbi_ipi_raw_send(sbi_hartid_to_hartindex(hartid), true);
 }
 
 static int mpfs_hart_stop(void)
@@ -878,7 +910,7 @@ static int mpfs_hart_stop(void)
             if (IS_ENABLED(CONFIG_ALLOW_COLDREBOOT_ALWAYS) || hart_ledger[hartid].allow_cold_reboot) {
 #  if IS_ENABLED(CONFIG_SERVICE_REBOOT)
                 HSS_reboot_cold(HSS_HART_ALL);
-#endif
+#  endif
             } else {
                 mHSS_DEBUG_PRINTF(LOG_ERROR, "u54_%d not permitted to cold reboot\n", hartid);
             }
@@ -1055,13 +1087,13 @@ void mpfs_system_suspend(void)
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_CLOCK_SCALING)
     mpfs_mmuart0_wait_tx_empty();
     mpfs_mmuart0_save_baudrate();
-#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
+#  if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
     mpfs_suspend_scb_clock();
     mpfs_mmuart0_set_scb_baudrate();
-#else
+#  else
     mss_freq_scaling(MSS_CLK_SCALING_LOW);
     mpfs_mmuart0_set_suspend_baudrate();
-#endif
+#  endif
 #endif
 }
 
@@ -1086,14 +1118,91 @@ void mpfs_system_resume(void)
     }
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_CLOCK_SCALING)
     mpfs_mmuart0_wait_tx_empty();
-#if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
+#  if IS_ENABLED(CONFIG_SERVICE_OPENSBI_SUSPEND_SCB_CLOCK_SWITCH)
     mpfs_resume_scb_clock();
-#else
+#  else
     mss_freq_scaling(MSS_CLK_SCALING_NORMAL);
-#endif
+#  endif
     mpfs_mmuart0_restore_baudrate();
 #endif
 }
+
+/*****************************************************************************
+ * System Suspend Device (SUSP extension)
+ *
+ * Implements retentive suspend: DDR in self-refresh, boot hart WFIs
+ * until E51's TinyCLI RESUME command fires the trigger + MSIP.
+ */
+
+static int mpfs_system_suspend_check(u32 sleep_type)
+{
+    if (sleep_type == SBI_SUSP_SLEEP_TYPE_SUSPEND)
+        return SBI_OK;
+    return SBI_ERR_NOT_SUPPORTED;
+}
+
+static int mpfs_do_system_suspend(u32 sleep_type, unsigned long mmode_resume_addr)
+{
+    (void)sleep_type;
+    (void)mmode_resume_addr;
+
+    mpfs_set_suspended_hartid(current_hartid());
+
+    if (1 == mpfs_domains_get_count()) {
+        /* Wait for all secondary harts to reach Idle before DDR self-refresh */
+        const struct sbi_domain *dom = sbi_domain_thishart_ptr();
+        unsigned long i;
+        sbi_hartmask_for_each_hartindex(i, dom->possible_harts) {
+            unsigned int hid = sbi_hartindex_to_hartid(i);
+            if (hid == current_hartid())
+                continue;
+            while (HSS_U54_GetState_Ex((int)hid) != HSS_State_Idle) {
+                ;
+            }
+        }
+
+        mpfs_system_suspend();
+
+        mHSS_DEBUG_PRINTF_EX(
+            "__        __    _ _   _                 __\n"
+            "\\ \\      / /_ _(_) |_(_)_ __   __ _    / _| ___  _ __\n"
+            " \\ \\ /\\ / / _` | | __| | '_ \\ / _` |  | |_ / _ \\| '__|\n"
+            "  \\ V  V / (_| | | |_| | | | | (_| |  |  _| (_) | |\n"
+            "   \\_/\\_/ \\__,_|_|\\__|_|_| |_|\\__, |  |_|  \\___/|_|\n"
+            "                              |___/\n"
+            "                                           _                   _\n"
+            " _ __ ___  ___ _   _ _ __ ___   ___    ___(_) __ _ _ __   __ _| |\n"
+            "| '__/ _ \\/ __| | | | '_ ` _ \\ / _ \\  / __| |/ _` | '_ \\ / _` | |\n"
+            "| | |  __/\\__ \\ |_| | | | | | |  __/  \\__ \\ | (_| | | | | (_| | |\n"
+            "|_|  \\___||___/\\__,_|_| |_| |_|\\___|  |___/_|\\__, |_| |_|\\__,_|_|\n"
+            "                                            |___/\n"
+            "\n");
+
+        HSS_Trigger_Clear(EVENT_SYSTEM_SUSPEND_RESUME);
+        while (!HSS_Trigger_IsNotified(EVENT_SYSTEM_SUSPEND_RESUME)) {
+            wfi();
+        }
+
+        /* Clear our own MSIP so it doesn't fire as a spurious M-mode
+         * interrupt when sbi_hart_switch_mode() re-enables interrupts. */
+        volatile uint32_t * const msip =
+            (volatile uint32_t *)((uintptr_t)CLINT_BASE_ADDR + 4u * current_hartid());
+        *msip = (uint32_t)0u;
+
+        mpfs_system_resume();
+
+        HSS_Trigger_Clear(EVENT_SYSTEM_SUSPEND_RESUME);
+    }
+    /* else: AMP — can't put DDR in self-refresh; come straight back out */
+
+    return SBI_OK;
+}
+
+static struct sbi_system_suspend_device mpfs_suspend = {
+    .name = "mpfs_suspend",
+    .system_suspend_check = mpfs_system_suspend_check,
+    .system_suspend = mpfs_do_system_suspend,
+};
 
 const struct sbi_hsm_device mpfs_hsm = {
     .name = "mpfs_hsm",
@@ -1102,7 +1211,21 @@ const struct sbi_hsm_device mpfs_hsm = {
     .hart_suspend = NULL
 };
 
+static bool mpfs_cold_boot_allowed(u32 hartid)
+{
+    (void)hartid;
+    return mpfs_is_last_hart_ready();
+}
+
+static bool mpfs_single_fw_region(void)
+{
+    return true;
+}
+
 const struct sbi_platform_operations platform_ops = {
+    .cold_boot_allowed = mpfs_cold_boot_allowed,
+    .single_fw_region = mpfs_single_fw_region,
+
     .early_init = mpfs_early_init,
     .final_init = mpfs_final_init,
     .early_exit = NULL,
@@ -1111,31 +1234,27 @@ const struct sbi_platform_operations platform_ops = {
     .misa_check_extension = NULL,
     .misa_get_xlen = NULL,
 
-    .console_init = mpfs_console_init,
-
-    .ipi_init = mpfs_ipi_init,
     .irqchip_init = mpfs_irqchip_init,
-    .irqchip_exit = NULL,
 
     .get_tlbr_flush_limit = mpfs_get_tlbr_flush_limit,
 
     .timer_init = mpfs_timer_init,
-    .timer_exit = NULL,
 
     .domains_init = mpfs_domains_init,
 
-    .vendor_ext_check = HSS_SBI_Vendor_Ext_Check,
     .vendor_ext_provider = HSS_SBI_ECALL_Handler
 };
 
 const struct sbi_platform platform = {
     .opensbi_version = OPENSBI_VERSION,
-    .platform_version = SBI_PLATFORM_VERSION(0x0, 0x2),
+    .platform_version = SBI_PLATFORM_VERSION(0x0, 0x3),
     .name = "Microchip PolarFire(R) SoC",
-    .features = SBI_PLATFORM_DEFAULT_FEATURES, // already have PMPs setup
+    .features = SBI_PLATFORM_DEFAULT_FEATURES,
     .hart_count = MPFS_HART_COUNT,
-    .hart_index2id = mpfs_hart_index2id,
     .hart_stack_size = SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
+    .heap_size = SBI_PLATFORM_DEFAULT_HEAP_SIZE(MPFS_HART_COUNT),
     .platform_ops_addr = (unsigned long)&platform_ops,
-    .firmware_context = 0
+    .firmware_context = 0,
+    .hart_index2id = mpfs_hart_index2id,
+    .cbom_block_size = 0
 };

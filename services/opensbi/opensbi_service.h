@@ -69,8 +69,11 @@ bool mpfs_are_harts_in_same_domain(int hartid1, int hartid2);
 bool mpfs_is_cold_reboot_allowed(int hartid);
 bool mpfs_is_warm_reboot_allowed(int hartid);
 void mpfs_uart_surrender(void);
+void mpfs_console_init(void);
 
 extern struct StateMachine opensbi_service;
+
+#define MPFS_HART_COUNT 5
 
 #ifdef __cplusplus
 }

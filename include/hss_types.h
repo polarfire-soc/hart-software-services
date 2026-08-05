@@ -39,19 +39,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>     // ptrdiff_t
-/*
- * We'll use the same trick as used by Linux for its Kconfig options...
- *
- * With variable arguments to our macro, if our config option is defined, it will cause
- * the insertion of "0, " as a prefix the arguments to ___IS_ENABLED(CONFIG_), which will
- * then cause __IS_ENABLED(CONFIG_) itself to resolve to 1, otherwise 0
- *
- */
-#define _ARG_SHUFFLE_RIGHT_IF_1                 0,
-#define IS_ENABLED(cfg)                         _IS_ENABLED(cfg)
-#define _IS_ENABLED(val)                        __IS_ENABLED(_ARG_SHUFFLE_RIGHT_IF_##val)
-#define __IS_ENABLED(shuffle_or_blank)          ___IS_ENABLED(shuffle_or_blank 1, 0)
-#define ___IS_ENABLED(ignored, desiredVal, ...) desiredVal
+#include "kconfig_macros.h"
 
 #define ARRAY_SIZE(x)		(sizeof(x)/sizeof(x[0]))
 
@@ -83,8 +71,12 @@ extern "C" {
 #    undef __packed
 #  endif
 #  include "sbi/sbi_types.h"
-#  define true TRUE
-#  define false FALSE
+#  ifndef true
+#    define true 1
+#  endif
+#  ifndef false
+#    define false 0
+#  endif
 #endif
 
 /**

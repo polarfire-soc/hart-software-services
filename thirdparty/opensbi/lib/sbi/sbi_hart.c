@@ -13,31 +13,29 @@
 #include <sbi/riscv_fp.h>
 #include <sbi/sbi_bitops.h>
 #include <sbi/sbi_console.h>
-#include <sbi/sbi_domain.h>
 #include <sbi/sbi_csr_detect.h>
 #include <sbi/sbi_error.h>
 #include <sbi/sbi_hart.h>
-#include <sbi/sbi_math.h>
+#include <sbi/sbi_hart_pmp.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_pmu.h>
 #include <sbi/sbi_string.h>
 #include <sbi/sbi_trap.h>
-#include <sbi/sbi_hfence.h>
 
 extern void __sbi_expected_trap(void);
 extern void __sbi_expected_trap_hext(void);
 
 void (*sbi_hart_expected_trap)(void) = &__sbi_expected_trap;
 
-static unsigned long hart_features_offset;
+unsigned long hart_features_offset;
 
 static void mstatus_init(struct sbi_scratch *scratch)
 {
-	unsigned long menvcfg_val, mstatus_val = 0;
 	int cidx;
-	unsigned int num_mhpm = sbi_hart_mhpm_count(scratch);
+	unsigned long mstatus_val = 0;
+	unsigned int mhpm_mask = sbi_hart_mhpm_mask(scratch);
 	uint64_t mhpmevent_init_val = 0;
-	uint64_t mstateen_val;
+	uint64_t menvcfg_val, mstateen_val;
 
 	/* Enable FPU */
 	if (misa_extension('D') || misa_extension('F'))
@@ -49,10 +47,10 @@ static void mstatus_init(struct sbi_scratch *scratch)
 
 	csr_write(CSR_MSTATUS, mstatus_val);
 
-	/* Disable user mode usage of all perf counters except default ones (CY, TM, IR) */
+	/* Disable user mode usage of all perf counters except TM */
 	if (misa_extension('S') &&
 	    sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_10)
-		csr_write(CSR_SCOUNTEREN, 7);
+		csr_write(CSR_SCOUNTEREN, 0x02);
 
 	/**
 	 * OpenSBI doesn't use any PMU counters in M-mode.
@@ -69,13 +67,14 @@ static void mstatus_init(struct sbi_scratch *scratch)
 	/**
 	 * The mhpmeventn[h] CSR should be initialized with interrupt disabled
 	 * and inhibited running in M-mode during init.
-	 * To keep it simple, only contiguous mhpmcounters are supported as a
-	 * platform with discontiguous mhpmcounters may not make much sense.
 	 */
 	mhpmevent_init_val |= (MHPMEVENT_OF | MHPMEVENT_MINH);
-	for (cidx = 0; cidx < num_mhpm; cidx++) {
+	for (cidx = 0; cidx <= 28; cidx++) {
+		if (!(mhpm_mask & 1 << (cidx + 3)))
+			continue;
 #if __riscv_xlen == 32
-		csr_write_num(CSR_MHPMEVENT3 + cidx, mhpmevent_init_val & 0xFFFFFFFF);
+		csr_write_num(CSR_MHPMEVENT3 + cidx,
+			       mhpmevent_init_val & 0xFFFFFFFF);
 		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SSCOFPMF))
 			csr_write_num(CSR_MHPMEVENT3H + cidx,
 				      mhpmevent_init_val >> BITS_PER_LONG);
@@ -84,80 +83,101 @@ static void mstatus_init(struct sbi_scratch *scratch)
 #endif
 	}
 
+	if (misa_extension('H'))
+		csr_write(CSR_HSTATUS, 0);
+
 	if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SMSTATEEN)) {
-		mstateen_val = csr_read(CSR_MSTATEEN0);
-#if __riscv_xlen == 32
-		mstateen_val |= ((uint64_t)csr_read(CSR_MSTATEEN0H)) << 32;
-#endif
+		mstateen_val = 0;
 		mstateen_val |= SMSTATEEN_STATEN;
+		mstateen_val |= SMSTATEEN0_CONTEXT;
 		mstateen_val |= SMSTATEEN0_HSENVCFG;
 
 		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SMAIA))
-			mstateen_val |= (SMSTATEEN0_AIA | SMSTATEEN0_SVSLCT |
-					SMSTATEEN0_IMSIC);
+			mstateen_val |= (SMSTATEEN0_AIA | SMSTATEEN0_IMSIC);
 		else
-			mstateen_val &= ~(SMSTATEEN0_AIA | SMSTATEEN0_SVSLCT |
-					SMSTATEEN0_IMSIC);
-		csr_write(CSR_MSTATEEN0, mstateen_val);
-#if __riscv_xlen == 32
-		csr_write(CSR_MSTATEEN0H, mstateen_val >> 32);
-#endif
+			mstateen_val &= ~(SMSTATEEN0_AIA | SMSTATEEN0_IMSIC);
+
+		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SMAIA) ||
+		    sbi_hart_has_extension(scratch, SBI_HART_EXT_SMCSRIND))
+			mstateen_val |= (SMSTATEEN0_SVSLCT);
+		else
+			mstateen_val &= ~(SMSTATEEN0_SVSLCT);
+
+		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SSCTR))
+			mstateen_val |= SMSTATEEN0_CTR;
+		else
+			mstateen_val &= ~SMSTATEEN0_CTR;
+
+		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SSQOSID))
+			mstateen_val |= SMSTATEEN0_SRMCFG;
+		else
+			mstateen_val &= ~SMSTATEEN0_SRMCFG;
+
+		csr_write64(CSR_MSTATEEN0, mstateen_val);
+		csr_write64(CSR_MSTATEEN1, SMSTATEEN_STATEN);
+		csr_write64(CSR_MSTATEEN2, SMSTATEEN_STATEN);
+		csr_write64(CSR_MSTATEEN3, SMSTATEEN_STATEN);
+	}
+
+	if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SSSTATEEN)) {
+		if (misa_extension('S')) {
+			csr_write(CSR_SSTATEEN0, 0);
+			csr_write(CSR_SSTATEEN1, 0);
+			csr_write(CSR_SSTATEEN2, 0);
+			csr_write(CSR_SSTATEEN3, 0);
+		}
+		if (misa_extension('H')) {
+			csr_write64(CSR_HSTATEEN0, (uint64_t)0);
+			csr_write64(CSR_HSTATEEN1, (uint64_t)0);
+			csr_write64(CSR_HSTATEEN2, (uint64_t)0);
+			csr_write64(CSR_HSTATEEN3, (uint64_t)0);
+		}
 	}
 
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_12) {
-		menvcfg_val = csr_read(CSR_MENVCFG);
+		menvcfg_val = csr_read64(CSR_MENVCFG);
+
+		/* Disable double trap by default */
+		menvcfg_val &= ~ENVCFG_DTE;
+
+#define __set_menvcfg_ext(__ext, __bits)				\
+		if (sbi_hart_has_extension(scratch, __ext))		\
+			menvcfg_val |= __bits;
 
 		/*
-		 * Set menvcfg.CBZE == 1
-		 *
-		 * If Zicboz extension is not available then writes to
-		 * menvcfg.CBZE will be ignored because it is a WARL field.
+		 * Enable access to extensions if they are present in the
+		 * hardware or in the device tree.
 		 */
-		menvcfg_val |= ENVCFG_CBZE;
 
-		/*
-		 * Set menvcfg.CBCFE == 1
-		 *
-		 * If Zicbom extension is not available then writes to
-		 * menvcfg.CBCFE will be ignored because it is a WARL field.
-		 */
-		menvcfg_val |= ENVCFG_CBCFE;
-
-		/*
-		 * Set menvcfg.CBIE == 3
-		 *
-		 * If Zicbom extension is not available then writes to
-		 * menvcfg.CBIE will be ignored because it is a WARL field.
-		 */
-		menvcfg_val |= ENVCFG_CBIE_INV << ENVCFG_CBIE_SHIFT;
-
-		/*
-		 * Set menvcfg.PBMTE == 1 for RV64 or RV128
-		 *
-		 * If Svpbmt extension is not available then menvcfg.PBMTE
-		 * will be read-only zero.
-		 */
+		__set_menvcfg_ext(SBI_HART_EXT_ZICBOZ, ENVCFG_CBZE)
+		__set_menvcfg_ext(SBI_HART_EXT_ZICBOM, ENVCFG_CBCFE)
+		__set_menvcfg_ext(SBI_HART_EXT_ZICBOM,
+				  ENVCFG_CBIE_INV << ENVCFG_CBIE_SHIFT)
 #if __riscv_xlen > 32
-		menvcfg_val |= ENVCFG_PBMTE;
+		__set_menvcfg_ext(SBI_HART_EXT_SVPBMT, ENVCFG_PBMTE)
 #endif
+		__set_menvcfg_ext(SBI_HART_EXT_SSTC, ENVCFG_STCE)
+		__set_menvcfg_ext(SBI_HART_EXT_SMCDELEG, ENVCFG_CDE);
+		__set_menvcfg_ext(SBI_HART_EXT_SVADU, ENVCFG_ADUE);
+
+#undef __set_menvcfg_ext
 
 		/*
-		 * The spec doesn't explicitly describe the reset value of menvcfg.
-		 * Enable access to stimecmp if sstc extension is present in the
-		 * hardware.
+		 * When both Svade and Svadu are present in DT, the default scheme for managing
+		 * the PTE A/D bits should use Svade. Check Svadu before Svade extension to ensure
+		 * that the ADUE bit is cleared when the Svade support are specified.
 		 */
-		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SSTC)) {
-#if __riscv_xlen == 32
-			unsigned long menvcfgh_val;
-			menvcfgh_val = csr_read(CSR_MENVCFGH);
-			menvcfgh_val |= ENVCFGH_STCE;
-			csr_write(CSR_MENVCFGH, menvcfgh_val);
-#else
-			menvcfg_val |= ENVCFG_STCE;
-#endif
-		}
 
-		csr_write(CSR_MENVCFG, menvcfg_val);
+		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SVADE))
+			menvcfg_val &= ~ENVCFG_ADUE;
+
+		csr_write64(CSR_MENVCFG, menvcfg_val);
+
+		/* Enable S-mode access to seed CSR */
+		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_ZKR)) {
+			csr_set(CSR_MSECCFG, MSECCFG_SSEED);
+			csr_clear(CSR_MSECCFG, MSECCFG_USEED);
+		}
 	}
 
 	/* Disable all interrupts */
@@ -200,14 +220,15 @@ static int delegate_traps(struct sbi_scratch *scratch)
 
 	/* Send M-mode interrupts and most exceptions to S-mode */
 	interrupts = MIP_SSIP | MIP_STIP | MIP_SEIP;
-	interrupts |= sbi_pmu_irq_bit();
+	interrupts |= sbi_pmu_irq_mask();
 
 	exceptions = (1U << CAUSE_MISALIGNED_FETCH) | (1U << CAUSE_BREAKPOINT) |
 		     (1U << CAUSE_USER_ECALL);
 	if (sbi_platform_has_mfaults_delegation(plat))
 		exceptions |= (1U << CAUSE_FETCH_PAGE_FAULT) |
 			      (1U << CAUSE_LOAD_PAGE_FAULT) |
-			      (1U << CAUSE_STORE_PAGE_FAULT);
+			      (1U << CAUSE_STORE_PAGE_FAULT) |
+			      (1U << CAUSE_SW_CHECK_EXCP);
 
 	/*
 	 * If hypervisor extension available then we only handle hypervisor
@@ -243,36 +264,12 @@ void sbi_hart_delegation_dump(struct sbi_scratch *scratch,
 		   prefix, suffix, csr_read(CSR_MEDELEG));
 }
 
-unsigned int sbi_hart_mhpm_count(struct sbi_scratch *scratch)
+unsigned int sbi_hart_mhpm_mask(struct sbi_scratch *scratch)
 {
 	struct sbi_hart_features *hfeatures =
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 
-	return hfeatures->mhpm_count;
-}
-
-unsigned int sbi_hart_pmp_count(struct sbi_scratch *scratch)
-{
-	struct sbi_hart_features *hfeatures =
-			sbi_scratch_offset_ptr(scratch, hart_features_offset);
-
-	return hfeatures->pmp_count;
-}
-
-unsigned long sbi_hart_pmp_granularity(struct sbi_scratch *scratch)
-{
-	struct sbi_hart_features *hfeatures =
-			sbi_scratch_offset_ptr(scratch, hart_features_offset);
-
-	return hfeatures->pmp_gran;
-}
-
-unsigned int sbi_hart_pmp_addrbits(struct sbi_scratch *scratch)
-{
-	struct sbi_hart_features *hfeatures =
-			sbi_scratch_offset_ptr(scratch, hart_features_offset);
-
-	return hfeatures->pmp_addr_bits;
+	return hfeatures->mhpm_mask;
 }
 
 unsigned int sbi_hart_mhpm_bits(struct sbi_scratch *scratch)
@@ -281,69 +278,6 @@ unsigned int sbi_hart_mhpm_bits(struct sbi_scratch *scratch)
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 
 	return hfeatures->mhpm_bits;
-}
-
-__attribute__((weak)) int sbi_hart_pmp_configure(struct sbi_scratch *scratch)
-{
-	struct sbi_domain_memregion *reg;
-	struct sbi_domain *dom = sbi_domain_thishart_ptr();
-	unsigned int pmp_idx = 0, pmp_flags, pmp_bits, pmp_gran_log2;
-	unsigned int pmp_count = sbi_hart_pmp_count(scratch);
-	unsigned long pmp_addr = 0, pmp_addr_max = 0;
-
-	if (!pmp_count)
-		return 0;
-
-	pmp_gran_log2 = log2roundup(sbi_hart_pmp_granularity(scratch));
-	pmp_bits = sbi_hart_pmp_addrbits(scratch) - 1;
-	pmp_addr_max = (1UL << pmp_bits) | ((1UL << pmp_bits) - 1);
-
-	sbi_domain_for_each_memregion(dom, reg) {
-		if (pmp_count <= pmp_idx)
-			break;
-
-		pmp_flags = 0;
-		if (reg->flags & SBI_DOMAIN_MEMREGION_READABLE)
-			pmp_flags |= PMP_R;
-		if (reg->flags & SBI_DOMAIN_MEMREGION_WRITEABLE)
-			pmp_flags |= PMP_W;
-		if (reg->flags & SBI_DOMAIN_MEMREGION_EXECUTABLE)
-			pmp_flags |= PMP_X;
-		if (reg->flags & SBI_DOMAIN_MEMREGION_MMODE)
-			pmp_flags |= PMP_L;
-
-		pmp_addr =  reg->base >> PMP_SHIFT;
-		if (pmp_gran_log2 <= reg->order && pmp_addr < pmp_addr_max)
-			pmp_set(pmp_idx++, pmp_flags, reg->base, reg->order);
-		else {
-			sbi_printf("Can not configure pmp for domain %s", dom->name);
-			sbi_printf(" because memory region address %lx or size %lx is not in range\n",
-				    reg->base, reg->order);
-		}
-	}
-
-	/*
-	 * As per section 3.7.2 of privileged specification v1.12,
-	 * virtual address translations can be speculatively performed
-	 * (even before actual access). These, along with PMP traslations,
-	 * can be cached. This can pose a problem with CPU hotplug
-	 * and non-retentive suspend scenario because PMP states are
-	 * not preserved.
-	 * It is advisable to flush the caching structures under such
-	 * conditions.
-	 */
-	if (misa_extension('S')) {
-		__asm__ __volatile__("sfence.vma");
-
-		/*
-		 * If hypervisor mode is supported, flush caching
-		 * structures in guest mode too.
-		 */
-		if (misa_extension('H'))
-			__sbi_hfence_gvma_all();
-	}
-
-	return 0;
 }
 
 int sbi_hart_priv_version(struct sbi_scratch *scratch)
@@ -357,7 +291,7 @@ int sbi_hart_priv_version(struct sbi_scratch *scratch)
 void sbi_hart_get_priv_version_str(struct sbi_scratch *scratch,
 				   char *version_str, int nvstr)
 {
-	char const *temp;
+	const char *temp;
 	struct sbi_hart_features *hfeatures =
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 
@@ -385,9 +319,9 @@ static inline void __sbi_hart_update_extension(
 					bool enable)
 {
 	if (enable)
-		hfeatures->extensions |= BIT(ext);
+		__set_bit(ext, hfeatures->extensions);
 	else
-		hfeatures->extensions &= ~BIT(ext);
+		__clear_bit(ext, hfeatures->extensions);
 }
 
 /**
@@ -420,38 +354,52 @@ bool sbi_hart_has_extension(struct sbi_scratch *scratch,
 	struct sbi_hart_features *hfeatures =
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 
-	if (hfeatures->extensions & BIT(ext))
+	if (__test_bit(ext, hfeatures->extensions))
 		return true;
 	else
 		return false;
 }
 
-static inline char const *sbi_hart_extension_id2string(int ext)
-{
-	char const *estr = NULL;
-
-	switch (ext) {
-	case SBI_HART_EXT_SSCOFPMF:
-		estr = "sscofpmf";
-		break;
-	case SBI_HART_EXT_TIME:
-		estr = "time";
-		break;
-	case SBI_HART_EXT_SMAIA:
-		estr = "smaia";
-		break;
-	case SBI_HART_EXT_SSTC:
-		estr = "sstc";
-		break;
-	case SBI_HART_EXT_SMSTATEEN:
-		estr = "smstateen";
-		break;
-	default:
-		break;
-	}
-
-	return estr;
+#define __SBI_HART_EXT_DATA(_name, _id) {	\
+	.name = #_name,				\
+	.id = _id,				\
 }
+
+const struct sbi_hart_ext_data sbi_hart_ext[] = {
+	__SBI_HART_EXT_DATA(smaia, SBI_HART_EXT_SMAIA),
+	__SBI_HART_EXT_DATA(smepmp, SBI_HART_EXT_SMEPMP),
+	__SBI_HART_EXT_DATA(smstateen, SBI_HART_EXT_SMSTATEEN),
+	__SBI_HART_EXT_DATA(sscofpmf, SBI_HART_EXT_SSCOFPMF),
+	__SBI_HART_EXT_DATA(sstc, SBI_HART_EXT_SSTC),
+	__SBI_HART_EXT_DATA(zicntr, SBI_HART_EXT_ZICNTR),
+	__SBI_HART_EXT_DATA(zihpm, SBI_HART_EXT_ZIHPM),
+	__SBI_HART_EXT_DATA(zkr, SBI_HART_EXT_ZKR),
+	__SBI_HART_EXT_DATA(smcntrpmf, SBI_HART_EXT_SMCNTRPMF),
+	__SBI_HART_EXT_DATA(xandespmu, SBI_HART_EXT_XANDESPMU),
+	__SBI_HART_EXT_DATA(zicboz, SBI_HART_EXT_ZICBOZ),
+	__SBI_HART_EXT_DATA(zicbom, SBI_HART_EXT_ZICBOM),
+	__SBI_HART_EXT_DATA(svpbmt, SBI_HART_EXT_SVPBMT),
+	__SBI_HART_EXT_DATA(sdtrig, SBI_HART_EXT_SDTRIG),
+	__SBI_HART_EXT_DATA(smcsrind, SBI_HART_EXT_SMCSRIND),
+	__SBI_HART_EXT_DATA(smcdeleg, SBI_HART_EXT_SMCDELEG),
+	__SBI_HART_EXT_DATA(sscsrind, SBI_HART_EXT_SSCSRIND),
+	__SBI_HART_EXT_DATA(ssccfg, SBI_HART_EXT_SSCCFG),
+	__SBI_HART_EXT_DATA(svade, SBI_HART_EXT_SVADE),
+	__SBI_HART_EXT_DATA(svadu, SBI_HART_EXT_SVADU),
+	__SBI_HART_EXT_DATA(smnpm, SBI_HART_EXT_SMNPM),
+	__SBI_HART_EXT_DATA(zicfilp, SBI_HART_EXT_ZICFILP),
+	__SBI_HART_EXT_DATA(zicfiss, SBI_HART_EXT_ZICFISS),
+	__SBI_HART_EXT_DATA(ssdbltrp, SBI_HART_EXT_SSDBLTRP),
+	__SBI_HART_EXT_DATA(smctr, SBI_HART_EXT_SMCTR),
+	__SBI_HART_EXT_DATA(ssctr, SBI_HART_EXT_SSCTR),
+	__SBI_HART_EXT_DATA(ssqosid, SBI_HART_EXT_SSQOSID),
+	__SBI_HART_EXT_DATA(ssstateen, SBI_HART_EXT_SSSTATEEN),
+	__SBI_HART_EXT_DATA(xsfcflushdlone, SBI_HART_EXT_XSIFIVE_CFLUSH_D_L1),
+	__SBI_HART_EXT_DATA(xsfcease, SBI_HART_EXT_XSIFIVE_CEASE),
+};
+
+_Static_assert(SBI_HART_EXT_MAX == array_size(sbi_hart_ext),
+	       "sbi_hart_ext[]: wrong number of entries");
 
 /**
  * Get the hart extensions in string format
@@ -468,34 +416,40 @@ void sbi_hart_get_extensions_str(struct sbi_scratch *scratch,
 	struct sbi_hart_features *hfeatures =
 			sbi_scratch_offset_ptr(scratch, hart_features_offset);
 	int offset = 0, ext = 0;
-	char const *temp;
 
 	if (!extensions_str || nestr <= 0)
 		return;
 	sbi_memset(extensions_str, 0, nestr);
 
-	if (!hfeatures->extensions)
-		goto done;
-
-	do {
-		if (hfeatures->extensions & BIT(ext)) {
-			temp = sbi_hart_extension_id2string(ext);
-			if (temp) {
-				sbi_snprintf(extensions_str + offset,
-					     nestr - offset,
-					     "%s,", temp);
-				offset = offset + sbi_strlen(temp) + 1;
-			}
+	for_each_set_bit(ext, hfeatures->extensions, SBI_HART_EXT_MAX) {
+		if (offset + sbi_strlen(sbi_hart_ext[ext].name) + 1 > nestr) {
+			sbi_printf("%s:extension name is longer than buffer (error)\n", __func__);
+			break;
 		}
+		sbi_snprintf(extensions_str + offset,
+				 nestr - offset,
+				 "%s,", sbi_hart_ext[ext].name);
+		offset = offset + sbi_strlen(sbi_hart_ext[ext].name) + 1;
+	}
 
-		ext++;
-	} while (ext < SBI_HART_EXT_MAX);
-
-done:
 	if (offset)
 		extensions_str[offset - 1] = '\0';
 	else
 		sbi_strncpy(extensions_str, "none", nestr);
+}
+
+/**
+ * Check whether a particular CSR is present on the HART
+ *
+ * @param scratch pointer to the HART scratch space
+ * @param csr the CSR number to check
+ */
+bool sbi_hart_has_csr(struct sbi_scratch *scratch, enum sbi_hart_csrs csr)
+{
+	struct sbi_hart_features *hfeatures =
+			sbi_scratch_offset_ptr(scratch, hart_features_offset);
+
+	return __test_bit(csr, hfeatures->csrs);
 }
 
 static unsigned long hart_pmp_get_allowed_addr(void)
@@ -503,13 +457,13 @@ static unsigned long hart_pmp_get_allowed_addr(void)
 	unsigned long val = 0;
 	struct sbi_trap_info trap = {0};
 
-	csr_write_allowed(CSR_PMPCFG0, (ulong)&trap, 0);
+	csr_write_allowed(CSR_PMPCFG0, &trap, 0);
 	if (trap.cause)
 		return 0;
 
-	csr_write_allowed(CSR_PMPADDR0, (ulong)&trap, PMP_ADDR_MASK);
+	csr_write_allowed(CSR_PMPADDR0, &trap, PMP_ADDR_MASK);
 	if (!trap.cause) {
-		val = csr_read_allowed(CSR_PMPADDR0, (ulong)&trap);
+		val = csr_read_allowed(CSR_PMPADDR0, &trap);
 		if (trap.cause)
 			val = 0;
 	}
@@ -517,7 +471,7 @@ static unsigned long hart_pmp_get_allowed_addr(void)
 	return val;
 }
 
-static int hart_pmu_get_allowed_bits(void)
+static int hart_mhpm_get_allowed_bits(void)
 {
 	unsigned long val = ~(0UL);
 	struct sbi_trap_info trap = {0};
@@ -527,17 +481,17 @@ static int hart_pmu_get_allowed_bits(void)
 	 * It is assumed that platforms will implement same number of bits for
 	 * all the performance counters including mcycle/minstret.
 	 */
-	csr_write_allowed(CSR_MHPMCOUNTER3, (ulong)&trap, val);
+	csr_write_allowed(CSR_MHPMCOUNTER3, &trap, val);
 	if (!trap.cause) {
-		val = csr_read_allowed(CSR_MHPMCOUNTER3, (ulong)&trap);
+		val = csr_read_allowed(CSR_MHPMCOUNTER3, &trap);
 		if (trap.cause)
 			return 0;
 	}
 	num_bits = sbi_fls(val) + 1;
 #if __riscv_xlen == 32
-	csr_write_allowed(CSR_MHPMCOUNTER3H, (ulong)&trap, val);
+	csr_write_allowed(CSR_MHPMCOUNTER3H, &trap, val);
 	if (!trap.cause) {
-		val = csr_read_allowed(CSR_MHPMCOUNTER3H, (ulong)&trap);
+		val = csr_read_allowed(CSR_MHPMCOUNTER3H, &trap);
 		if (trap.cause)
 			return num_bits;
 	}
@@ -561,19 +515,43 @@ static int hart_detect_features(struct sbi_scratch *scratch)
 		return 0;
 
 	/* Clear hart features */
-	hfeatures->extensions = 0;
+	sbi_memset(hfeatures->extensions, 0, sizeof(hfeatures->extensions));
+	sbi_memset(hfeatures->csrs, 0, sizeof(hfeatures->csrs));
 	hfeatures->pmp_count = 0;
-	hfeatures->mhpm_count = 0;
+	hfeatures->mhpm_mask = 0;
+	hfeatures->priv_version = SBI_HART_PRIV_VER_UNKNOWN;
 
-#define __check_csr(__csr, __rdonly, __wrval, __field, __skip)	\
-	oldval = csr_read_allowed(__csr, (ulong)&trap);			\
+#define __check_hpm_csr(__csr, __mask) 					  \
+	oldval = csr_read_allowed(__csr, &trap);			  \
+	if (!trap.cause) {						  \
+		csr_write_allowed(__csr, &trap, 1UL);			  \
+		if (!trap.cause && csr_swap(__csr, oldval) == 1UL) {	  \
+			(hfeatures->__mask) |= 1 << (__csr - CSR_MCYCLE); \
+		}							  \
+	}
+
+#define __check_hpm_csr_2(__csr, __mask)	 		  \
+	__check_hpm_csr(__csr + 0, __mask)	 		  \
+	__check_hpm_csr(__csr + 1, __mask)
+#define __check_hpm_csr_4(__csr, __mask)	 		  \
+	__check_hpm_csr_2(__csr + 0, __mask) 			  \
+	__check_hpm_csr_2(__csr + 2, __mask)
+#define __check_hpm_csr_8(__csr, __mask)	 		  \
+	__check_hpm_csr_4(__csr + 0, __mask) 			  \
+	__check_hpm_csr_4(__csr + 4, __mask)
+#define __check_hpm_csr_16(__csr, __mask)	 		  \
+	__check_hpm_csr_8(__csr + 0, __mask) 			  \
+	__check_hpm_csr_8(__csr + 8, __mask)
+
+#define __check_csr(__csr, __rdonly, __wrval, __field, __skip)		\
+	oldval = csr_read_allowed(__csr, &trap);			\
 	if (!trap.cause) {						\
 		if (__rdonly) {						\
 			(hfeatures->__field)++;				\
 		} else {						\
-			csr_write_allowed(__csr, (ulong)&trap, __wrval);\
+			csr_write_allowed(__csr, &trap, __wrval);	\
 			if (!trap.cause) {				\
-				if (csr_swap(__csr, oldval) == __wrval)	\
+				if ((csr_swap(__csr, oldval) & __wrval) == __wrval)	\
 					(hfeatures->__field)++;		\
 				else					\
 					goto __skip;			\
@@ -609,28 +587,23 @@ static int hart_detect_features(struct sbi_scratch *scratch)
 	 */
 	val = hart_pmp_get_allowed_addr();
 	if (val) {
-		hfeatures->pmp_gran =  1 << (sbi_ffs(val) + 2);
+		hfeatures->pmp_log2gran = sbi_ffs(val) + 2;
 		hfeatures->pmp_addr_bits = sbi_fls(val) + 1;
 		/* Detect number of PMP regions. At least PMPADDR0 should be implemented*/
 		__check_csr_64(CSR_PMPADDR0, 0, val, pmp_count, __pmp_skip);
 	}
 __pmp_skip:
-
 	/* Detect number of MHPM counters */
-	__check_csr(CSR_MHPMCOUNTER3, 0, 1UL, mhpm_count, __mhpm_skip);
-	hfeatures->mhpm_bits = hart_pmu_get_allowed_bits();
-
-	__check_csr_4(CSR_MHPMCOUNTER4, 0, 1UL, mhpm_count, __mhpm_skip);
-	__check_csr_8(CSR_MHPMCOUNTER8, 0, 1UL, mhpm_count, __mhpm_skip);
-	__check_csr_16(CSR_MHPMCOUNTER16, 0, 1UL, mhpm_count, __mhpm_skip);
+	__check_hpm_csr(CSR_MHPMCOUNTER3, mhpm_mask);
+	hfeatures->mhpm_bits = hart_mhpm_get_allowed_bits();
+	__check_hpm_csr_4(CSR_MHPMCOUNTER4, mhpm_mask);
+	__check_hpm_csr_8(CSR_MHPMCOUNTER8, mhpm_mask);
+	__check_hpm_csr_16(CSR_MHPMCOUNTER16, mhpm_mask);
 
 	/**
 	 * No need to check for MHPMCOUNTERH for RV32 as they are expected to be
 	 * implemented if MHPMCOUNTER is implemented.
 	 */
-
-__mhpm_skip:
-
 #undef __check_csr_64
 #undef __check_csr_32
 #undef __check_csr_16
@@ -639,59 +612,68 @@ __mhpm_skip:
 #undef __check_csr_2
 #undef __check_csr
 
+
+#define __check_priv(__csr, __base_priv, __priv)			\
+	val = csr_read_allowed(__csr, &trap);				\
+	if (!trap.cause && (hfeatures->priv_version >= __base_priv)) {	\
+		hfeatures->priv_version = __priv;			\
+	}
+
 	/* Detect if hart supports Priv v1.10 */
-	val = csr_read_allowed(CSR_MCOUNTEREN, (unsigned long)&trap);
-	if (!trap.cause)
-		hfeatures->priv_version = SBI_HART_PRIV_VER_1_10;
-
+	__check_priv(CSR_MCOUNTEREN,
+		     SBI_HART_PRIV_VER_UNKNOWN, SBI_HART_PRIV_VER_1_10);
 	/* Detect if hart supports Priv v1.11 */
-	val = csr_read_allowed(CSR_MCOUNTINHIBIT, (unsigned long)&trap);
-	if (!trap.cause &&
-	    (hfeatures->priv_version >= SBI_HART_PRIV_VER_1_10))
-		hfeatures->priv_version = SBI_HART_PRIV_VER_1_11;
-
+	__check_priv(CSR_MCOUNTINHIBIT,
+		     SBI_HART_PRIV_VER_1_10, SBI_HART_PRIV_VER_1_11);
 	/* Detect if hart supports Priv v1.12 */
-	csr_read_allowed(CSR_MENVCFG, (unsigned long)&trap);
-	if (!trap.cause &&
-	    (hfeatures->priv_version >= SBI_HART_PRIV_VER_1_11))
-		hfeatures->priv_version = SBI_HART_PRIV_VER_1_12;
+	__check_priv(CSR_MENVCFG,
+		     SBI_HART_PRIV_VER_1_11, SBI_HART_PRIV_VER_1_12);
+
+#undef __check_priv_csr
+
+#define __check_ext_csr(__base_priv, __csr, __ext)			\
+	if (hfeatures->priv_version >= __base_priv) {			\
+		csr_read_allowed(__csr, &trap);				\
+		if (!trap.cause)					\
+			__sbi_hart_update_extension(hfeatures,		\
+						    __ext, true);	\
+	}
 
 	/* Counter overflow/filtering is not useful without mcounter/inhibit */
-	if (hfeatures->priv_version >= SBI_HART_PRIV_VER_1_12) {
-		/* Detect if hart supports sscofpmf */
-		csr_read_allowed(CSR_SCOUNTOVF, (unsigned long)&trap);
-		if (!trap.cause)
-			__sbi_hart_update_extension(hfeatures,
-					SBI_HART_EXT_SSCOFPMF, true);
-	}
-
-	/* Detect if hart supports time CSR */
-	csr_read_allowed(CSR_TIME, (unsigned long)&trap);
-	if (!trap.cause)
-		__sbi_hart_update_extension(hfeatures,
-					SBI_HART_EXT_TIME, true);
-
+	/* Detect if hart supports sscofpmf */
+	__check_ext_csr(SBI_HART_PRIV_VER_1_11,
+			CSR_SCOUNTOVF, SBI_HART_EXT_SSCOFPMF);
 	/* Detect if hart has AIA local interrupt CSRs */
-	csr_read_allowed(CSR_MTOPI, (unsigned long)&trap);
-	if (!trap.cause)
-		__sbi_hart_update_extension(hfeatures,
-					SBI_HART_EXT_SMAIA, true);
-
+	__check_ext_csr(SBI_HART_PRIV_VER_UNKNOWN,
+			CSR_MTOPI, SBI_HART_EXT_SMAIA);
 	/* Detect if hart supports stimecmp CSR(Sstc extension) */
-	if (hfeatures->priv_version >= SBI_HART_PRIV_VER_1_12) {
-		csr_read_allowed(CSR_STIMECMP, (unsigned long)&trap);
-		if (!trap.cause)
-			__sbi_hart_update_extension(hfeatures,
-					SBI_HART_EXT_SSTC, true);
-	}
-
+	__check_ext_csr(SBI_HART_PRIV_VER_1_12,
+			CSR_STIMECMP, SBI_HART_EXT_SSTC);
 	/* Detect if hart supports mstateen CSRs */
-	if (hfeatures->priv_version >= SBI_HART_PRIV_VER_1_12) {
-		val = csr_read_allowed(CSR_MSTATEEN0, (unsigned long)&trap);
-		if (!trap.cause)
-			__sbi_hart_update_extension(hfeatures,
-					SBI_HART_EXT_SMSTATEEN, true);
-	}
+	__check_ext_csr(SBI_HART_PRIV_VER_1_12,
+			CSR_MSTATEEN0, SBI_HART_EXT_SMSTATEEN);
+	/* Detect if hart supports sstateen CSRs */
+	__check_ext_csr(SBI_HART_PRIV_VER_1_12,
+			CSR_SSTATEEN0, SBI_HART_EXT_SSSTATEEN);
+	/* Detect if hart supports smcntrpmf */
+	__check_ext_csr(SBI_HART_PRIV_VER_1_12,
+			CSR_MCYCLECFG, SBI_HART_EXT_SMCNTRPMF);
+	/* Detect if hart support sdtrig (debug triggers) */
+	__check_ext_csr(SBI_HART_PRIV_VER_UNKNOWN,
+			CSR_TSELECT, SBI_HART_EXT_SDTRIG);
+
+#undef __check_ext_csr
+
+#define __check_csr_existence(__csr, __csr_id)				\
+	csr_read_allowed(__csr, &trap);					\
+	if (!trap.cause)						\
+		__set_bit(__csr_id, hfeatures->csrs);
+
+	__check_csr_existence(CSR_CYCLE, SBI_HART_CSR_CYCLE);
+	__check_csr_existence(CSR_TIME, SBI_HART_CSR_TIME);
+	__check_csr_existence(CSR_INSTRET, SBI_HART_CSR_INSTRET);
+
+#undef __check_csr_existence
 
 	/* Let platform populate extensions */
 	rc = sbi_platform_extensions_init(sbi_platform_thishart_ptr(),
@@ -699,8 +681,29 @@ __mhpm_skip:
 	if (rc)
 		return rc;
 
+	/* Zicntr should only be detected using traps */
+	__sbi_hart_update_extension(hfeatures, SBI_HART_EXT_ZICNTR,
+			    sbi_hart_has_csr(scratch, SBI_HART_CSR_CYCLE) &&
+			    sbi_hart_has_csr(scratch, SBI_HART_CSR_TIME)  &&
+			    sbi_hart_has_csr(scratch, SBI_HART_CSR_INSTRET));
+
+	/* Extensions implied by other extensions and features */
+	if (hfeatures->mhpm_mask)
+		__sbi_hart_update_extension(hfeatures,
+					SBI_HART_EXT_ZIHPM, true);
+
 	/* Mark hart feature detection done */
 	hfeatures->detected = true;
+
+	/*
+	 * On platforms with Smepmp, the previous booting stage must
+	 * enter OpenSBI with mseccfg.MML == 0. This allows OpenSBI
+	 * to configure it's own M-mode only regions without depending
+	 * on the previous booting stage.
+	 */
+	if (sbi_hart_has_extension(scratch, SBI_HART_EXT_SMEPMP) &&
+	    (csr_read(CSR_MSECCFG) & MSECCFG_MML))
+		return SBI_EILL;
 
 	return 0;
 }
@@ -715,17 +718,18 @@ int sbi_hart_reinit(struct sbi_scratch *scratch)
 	if (rc)
 		return rc;
 
-	rc = delegate_traps(scratch);
-	if (rc)
-		return rc;
-
 	return 0;
 }
 
-#include "u54_state.h"
 int sbi_hart_init(struct sbi_scratch *scratch, bool cold_boot)
 {
 	int rc;
+
+	/*
+	 * Clear mip CSR before proceeding with init to avoid any spurious
+	 * external interrupts in S-mode.
+	 */
+	csr_write(CSR_MIP, 0);
 
 	if (cold_boot) {
 		if (misa_extension('H'))
@@ -741,13 +745,21 @@ int sbi_hart_init(struct sbi_scratch *scratch, bool cold_boot)
 	if (rc)
 		return rc;
 
-	HSS_U54_SetState(HSS_State_SBIHartInit);
+	if (cold_boot) {
+		rc = sbi_hart_pmp_init(scratch);
+		if (rc)
+			return rc;
+	}
+
+	rc = delegate_traps(scratch);
+	if (rc)
+		return rc;
+
 	return sbi_hart_reinit(scratch);
 }
 
 void __attribute__((noreturn)) sbi_hart_hang(void)
 {
-	HSS_U54_SetState(HSS_State_Fatal);
 	while (1)
 		wfi();
 	__builtin_unreachable();
@@ -796,10 +808,17 @@ sbi_hart_switch_mode(unsigned long arg0, unsigned long arg1,
 	csr_write(CSR_MEPC, next_addr);
 
 	if (next_mode == PRV_S) {
-		csr_write(CSR_STVEC, next_addr);
-		csr_write(CSR_SSCRATCH, 0);
-		csr_write(CSR_SIE, 0);
-		csr_write(CSR_SATP, 0);
+		if (next_virt) {
+			csr_write(CSR_VSTVEC, next_addr);
+			csr_write(CSR_VSSCRATCH, 0);
+			csr_write(CSR_VSIE, 0);
+			csr_write(CSR_VSATP, 0);
+		} else {
+			csr_write(CSR_STVEC, next_addr);
+			csr_write(CSR_SSCRATCH, 0);
+			csr_write(CSR_SIE, 0);
+			csr_write(CSR_SATP, 0);
+		}
 	} else if (next_mode == PRV_U) {
 		if (misa_extension('N')) {
 			csr_write(CSR_UTVEC, next_addr);

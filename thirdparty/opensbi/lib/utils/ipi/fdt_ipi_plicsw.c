@@ -11,14 +11,14 @@
  */
 
 #include <sbi/riscv_io.h>
+#include <sbi_utils/fdt/fdt_driver.h>
 #include <sbi_utils/fdt/fdt_helper.h>
-#include <sbi_utils/ipi/fdt_ipi.h>
 #include <sbi_utils/ipi/andes_plicsw.h>
 
 extern struct plicsw_data plicsw;
 
-int fdt_plicsw_cold_ipi_init(void *fdt, int nodeoff,
-				const struct fdt_match *match)
+int fdt_plicsw_cold_ipi_init(const void *fdt, int nodeoff,
+			     const struct fdt_match *match)
 {
 	int rc;
 
@@ -39,9 +39,7 @@ static const struct fdt_match ipi_plicsw_match[] = {
 	{},
 };
 
-struct fdt_ipi fdt_ipi_plicsw = {
+const struct fdt_driver fdt_ipi_plicsw = {
 	.match_table = ipi_plicsw_match,
-	.cold_init   = fdt_plicsw_cold_ipi_init,
-	.warm_init   = plicsw_warm_ipi_init,
-	.exit	     = NULL,
+	.init = fdt_plicsw_cold_ipi_init,
 };

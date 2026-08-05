@@ -1,11 +1,15 @@
 RISC-V Open Source Supervisor Binary Interface (OpenSBI)
 ========================================================
 
+![RISC-V OpenSBI](docs/riscv_opensbi_logo_final_color.png)
+
 Copyright and License
 ---------------------
 
-The OpenSBI project is copyright (c) 2019 Western Digital Corporation
-or its affiliates and other contributors.
+The OpenSBI project is:
+
+* Copyright (c) 2019 Western Digital Corporation or its affiliates
+* Copyright (c) 2023 RISC-V International
 
 It is distributed under the terms of the BSD 2-clause license
 ("Simplified BSD License" or "FreeBSD License", SPDX: *BSD-2-Clause*).
@@ -95,7 +99,7 @@ capable enough to bring up all other non-booting harts using HSM extension.
 Required Toolchain and Packages
 -------------------------------
 
-OpenSBI can be compiled natively or cross-compiled on a x86 host. For
+OpenSBI can be compiled natively or cross-compiled on a host machine. For
 cross-compilation, you can build your own toolchain, download a prebuilt one
 from the [Bootlin toolchain repository] or install a distribution-provided
 toolchain; if you opt to use LLVM/Clang, most distribution toolchains will
@@ -104,16 +108,12 @@ LLVM/Clang toolchain due to LLVM's ability to support multiple backends in the
 same binary, so is often an easy way to obtain a working cross-compilation
 toolchain.
 
-Basically, we prefer toolchains with Position Independent Executable (PIE)
-support like *riscv64-linux-gnu-gcc*, *riscv64-unknown-freebsd-gcc*, or
-*Clang/LLVM* as they generate PIE firmware images that can run at arbitrary
-address with appropriate alignment. If a bare-metal GNU toolchain (e.g.
-*riscv64-unknown-elf-gcc*) is used, static linked firmware images are
-generated instead. *Clang/LLVM* can still generate PIE images if a bare-metal
-triple is used (e.g. *-target riscv64-unknown-elf*).
-
-Please note that only a 64-bit version of the toolchain is available in
-the Bootlin toolchain repository for now.
+Toolchains with Position Independent Executable (PIE) support like
+*riscv64-linux-gnu-gcc*, *riscv64-unknown-freebsd-gcc*, or *Clang/LLVM* are
+required in order to generate PIE firmware images that can run at arbitrary
+address with appropriate alignment. Bare-metal GNU toolchains (e.g.
+*riscv64-unknown-elf-gcc*) cannot be used. *Clang/LLVM* can still generate PIE
+images if a bare-metal triple is used (e.g. *-target riscv64-unknown-elf*).
 
 In addition to a toolchain, OpenSBI also requires the following packages on
 the host:
@@ -252,6 +252,18 @@ option with:
 make LLVM=1
 ```
 
+To build with a specific version of LLVM, a path to a directory containing the
+LLVM tools can be provided:
+```
+make LLVM=/path/to/llvm/
+```
+
+If you have versioned llvm tools you would like to use, such as `clang-17`, the LLVM variable can
+be set as:
+```
+make LLVM=-17
+```
+
 When using Clang, *CROSS_COMPILE* often does not need to be defined unless
 using GNU binutils with prefixed binary names. *PLATFORM_RISCV_XLEN* will be
 used to infer a default triple to pass to Clang, so if *PLATFORM_RISCV_XLEN*
@@ -272,8 +284,7 @@ document.
 
 NOTE: Using Clang with a `riscv*-linux-gnu` GNU binutils linker has been seen
 to produce broken binaries with missing relocations; it is therefore currently
-recommended that this combination be avoided or *FW_PIC=n* be used to disable
-building OpenSBI as a position-independent binary.
+recommended that this combination be avoided.
 
 Building with timestamp and compiler info
 -----------------------------------------
@@ -297,6 +308,19 @@ NOTE: Using `BUILD_INFO=y` without specifying SOURCE_DATE_EPOCH will violate
 [reproducible builds]. This definition is ONLY for development and debug
 purpose, and should NOT be used in a product which follows "reproducible
 builds".
+
+Building with optimization off for debugging
+--------------------------------------------
+
+When debugging OpenSBI, we may want to turn off the compiler optimization and
+make debugging produce the expected results for a better debugging experience.
+To build with optimization off we can just simply add `DEBUG=1`, like:
+```
+make DEBUG=1
+```
+
+This definition is ONLY for development and debug purpose, and should NOT be
+used in a product build.
 
 Contributing to OpenSBI
 -----------------------

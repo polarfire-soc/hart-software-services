@@ -10,11 +10,15 @@
 #ifndef __SBI_TYPES_H__
 #define __SBI_TYPES_H__
 
+/* HSS Kconfig integration */
+#include "config.h"
+#include "kconfig_macros.h"
+
 #ifndef OPENSBI_EXTERNAL_SBI_TYPES
 
 /* clang-format off */
 
-typedef char			s8;
+typedef signed char		s8;
 typedef unsigned char		u8;
 typedef unsigned char		uint8_t;
 
@@ -44,7 +48,12 @@ typedef unsigned long long	uint64_t;
 #error "Unexpected __riscv_xlen"
 #endif
 
-#define bool			_Bool /* bool is a reserved keyword as of C23, so don't typedef it */
+#if __STDC_VERSION__ < 202000L
+typedef _Bool			bool;
+#define true			1
+#define false			0
+#endif
+
 typedef unsigned long		ulong;
 typedef unsigned long		uintptr_t;
 typedef unsigned long		size_t;
@@ -54,16 +63,22 @@ typedef unsigned long		virtual_size_t;
 typedef unsigned long		physical_addr_t;
 typedef unsigned long		physical_size_t;
 
-#define TRUE			1
-#define FALSE			0
-#define true			TRUE
-#define false			FALSE
+typedef uint16_t		le16_t;
+typedef uint16_t		be16_t;
+typedef uint32_t		le32_t;
+typedef uint32_t		be32_t;
+typedef uint64_t		le64_t;
+typedef uint64_t		be64_t;
 
 #define NULL			((void *)0)
 
 #define __packed		__attribute__((packed))
 #define __noreturn		__attribute__((noreturn))
 #define __aligned(x)		__attribute__((aligned(x)))
+
+#ifndef __always_inline
+#define __always_inline	inline __attribute__((always_inline))
+#endif
 
 #define likely(x) __builtin_expect((x), 1)
 #define unlikely(x) __builtin_expect((x), 0)
@@ -84,6 +99,13 @@ typedef unsigned long		physical_size_t;
 #define container_of(ptr, type, member) ({			\
 	const typeof(((type *)0)->member) * __mptr = (ptr);	\
 	(type *)((char *)__mptr - offsetof(type, member)); })
+
+
+#define assert_member_offset(type, member, offset)			\
+	_Static_assert(							\
+		(offsetof(type, member)) == (offset ),			\
+		"The offset " #offset " of " #member " in " #type	\
+		"is not correct, please redefine it.")
 
 #define array_size(x) 	(sizeof(x) / sizeof((x)[0]))
 

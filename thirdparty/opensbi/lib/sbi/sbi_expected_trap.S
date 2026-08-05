@@ -23,8 +23,8 @@
 	.global __sbi_expected_trap
 __sbi_expected_trap:
 	/* Without H-extension so, MTVAL2 and MTINST CSRs and GVA not available */
-	csrr	a4, CSR_MEPC
-	REG_S	a4, SBI_TRAP_INFO_OFFSET(epc)(a3)
+	li	a4, MSTATUS_MPRV
+	csrc	CSR_MSTATUS, a4
 	csrr	a4, CSR_MCAUSE
 	REG_S	a4, SBI_TRAP_INFO_OFFSET(cause)(a3)
 	csrr	a4, CSR_MTVAL
@@ -41,8 +41,8 @@ __sbi_expected_trap:
 	.global __sbi_expected_trap_hext
 __sbi_expected_trap_hext:
 	/* With H-extension so, MTVAL2 and MTINST CSRs and GVA available */
-	csrr	a4, CSR_MEPC
-	REG_S	a4, SBI_TRAP_INFO_OFFSET(epc)(a3)
+	li	a4, MSTATUS_MPRV
+	csrc	CSR_MSTATUS, a4
 	csrr	a4, CSR_MCAUSE
 	REG_S	a4, SBI_TRAP_INFO_OFFSET(cause)(a3)
 	csrr	a4, CSR_MTVAL

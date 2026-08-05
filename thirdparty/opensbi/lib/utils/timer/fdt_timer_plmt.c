@@ -13,7 +13,7 @@
 
 extern struct plmt_data plmt;
 
-static int fdt_plmt_cold_timer_init(void *fdt, int nodeoff,
+static int fdt_plmt_cold_timer_init(const void *fdt, int nodeoff,
 				    const struct fdt_match *match)
 {
 	int rc;
@@ -43,9 +43,7 @@ static const struct fdt_match timer_plmt_match[] = {
 	{},
 };
 
-struct fdt_timer fdt_timer_plmt = {
+const struct fdt_driver fdt_timer_plmt = {
 	.match_table = timer_plmt_match,
-	.cold_init   = fdt_plmt_cold_timer_init,
-	.warm_init   = plmt_warm_timer_init,
-	.exit	     = NULL,
+	.init = fdt_plmt_cold_timer_init,
 };

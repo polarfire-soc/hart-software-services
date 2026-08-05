@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: BSD-2-Clause
+
+menu "Cache Support"
+
+config FDT_CACHE
+	bool "FDT based cache drivers"
+	depends on FDT
+	select CACHE
+	default n
+
+if FDT_CACHE
+
+config FDT_CACHE_SIFIVE_CCACHE
+	bool "SiFive CCACHE FDT cache driver"
+	default n
+
+config FDT_CACHE_SIFIVE_EC
+	bool "SiFive EC FDT cache driver"
+	default n
+
+config FDT_CACHE_SIFIVE_PL2
+	bool "SiFive PL2 FDT cache driver"
+	default n
+
+endif
+
+config CACHE
+	bool "Cache support"
+	default n
+
+endmenu

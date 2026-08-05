@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
-menu "SBI Extension Support"
+menu "Generic SBI Support"
+
+config CONSOLE_EARLY_BUFFER_SIZE
+	int "Early console buffer size (bytes)"
+	default 256
 
 config SBI_ECALL_TIME
 	bool "Timer extension"
@@ -22,8 +26,24 @@ config SBI_ECALL_SRST
 	bool "System Reset extension"
 	default y
 
+config SBI_ECALL_SUSP
+	bool "System Suspend extension"
+	default y
+
 config SBI_ECALL_PMU
 	bool "Performance Monitoring Unit extension"
+	default y
+
+config SBI_ECALL_DBCN
+	bool "Debug Console extension"
+	default y
+
+config SBI_ECALL_CPPC
+	bool "CPPC extension"
+	default y
+
+config SBI_ECALL_FWFT
+	bool "Firmware Feature extension"
 	default y
 
 config SBI_ECALL_LEGACY
@@ -34,4 +54,19 @@ config SBI_ECALL_VENDOR
 	bool "Platform-defined vendor extensions"
 	default y
 
+config SBI_ECALL_DBTR
+	bool "Debug Trigger Extension"
+	default y
+
+config SBIUNIT
+	bool "Enable SBIUNIT tests"
+	default n
+
+config SBI_ECALL_SSE
+	bool "SSE extension"
+	default y
+
+config SBI_ECALL_MPXY
+	bool "MPXY extension"
+	default y
 endmenu

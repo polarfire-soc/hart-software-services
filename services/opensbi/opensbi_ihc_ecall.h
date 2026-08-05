@@ -49,8 +49,8 @@ struct ihc_sbi_rx_msg {
     uint8_t irq_type;
 };
 
-int sbi_ecall_ihc_handler(unsigned long extid, unsigned long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
+int sbi_ecall_ihc_handler(unsigned long funcid,
+    struct sbi_trap_regs *regs, struct sbi_ecall_return *out);
 
 #ifdef __cplusplus
 }

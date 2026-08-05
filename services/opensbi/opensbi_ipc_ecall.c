@@ -92,8 +92,8 @@ static uint32_t ihc_mp_isr_callback(uint8_t channel,
     return 0u;
 }
 
-int sbi_ecall_ipc_handler(unsigned long extid, unsigned long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
+int sbi_ecall_ipc_handler(unsigned long funcid,
+    struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
     int result;
     uint32_t channel;
@@ -143,7 +143,7 @@ int sbi_ecall_ipc_handler(unsigned long extid, unsigned long funcid,
             if(result == 0)
                 result = SBI_OK;
             else {
-                *out_val = result;
+                out->value = result;
                 result = SBI_ERR_FAILED;
             }
             break;
@@ -158,7 +158,7 @@ int sbi_ecall_ipc_handler(unsigned long extid, unsigned long funcid,
             if(result == 0)
                 result = SBI_OK;
             else {
-                *out_val = result;
+                out->value = result;
                 result = SBI_ERR_FAILED;
             }
             break;

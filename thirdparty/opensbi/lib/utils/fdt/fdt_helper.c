@@ -12,6 +12,7 @@
 #include <sbi/sbi_hartmask.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_scratch.h>
+#include <sbi/sbi_hart.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/irqchip/aplic.h>
 #include <sbi_utils/irqchip/imsic.h>
@@ -32,49 +33,7 @@
 #define DEFAULT_SHAKTI_UART_FREQ		50000000
 #define DEFAULT_SHAKTI_UART_BAUD		115200
 
-const struct fdt_match *fdt_match_node(void *fdt, int nodeoff,
-				       const struct fdt_match *match_table)
-{
-	int ret;
-
-	if (!fdt || nodeoff < 0 || !match_table)
-		return NULL;
-
-	while (match_table->compatible) {
-		ret = fdt_node_check_compatible(fdt, nodeoff,
-						match_table->compatible);
-		if (!ret)
-			return match_table;
-		match_table++;
-	}
-
-	return NULL;
-}
-
-int fdt_find_match(void *fdt, int startoff,
-		   const struct fdt_match *match_table,
-		   const struct fdt_match **out_match)
-{
-	int nodeoff;
-
-	if (!fdt || !match_table)
-		return SBI_ENODEV;
-
-	while (match_table->compatible) {
-		nodeoff = fdt_node_offset_by_compatible(fdt, startoff,
-						match_table->compatible);
-		if (nodeoff >= 0) {
-			if (out_match)
-				*out_match = match_table;
-			return nodeoff;
-		}
-		match_table++;
-	}
-
-	return SBI_ENODEV;
-}
-
-int fdt_parse_phandle_with_args(void *fdt, int nodeoff,
+int fdt_parse_phandle_with_args(const void *fdt, int nodeoff,
 				const char *prop, const char *cells_prop,
 				int index, struct fdt_phandle_args *out_args)
 {
@@ -121,27 +80,31 @@ int fdt_parse_phandle_with_args(void *fdt, int nodeoff,
 	return SBI_ENOENT;
 }
 
-static int fdt_translate_address(void *fdt, uint64_t reg, int parent,
+static int fdt_translate_address(const void *fdt, uint64_t reg, int parent,
 				 uint64_t *addr)
 {
 	int i, rlen;
-	int cell_addr, cell_size;
+	int cell_parent_addr, cell_child_addr, cell_size;
 	const fdt32_t *ranges;
 	uint64_t offset, caddr = 0, paddr = 0, rsize = 0;
 
-	cell_addr = fdt_address_cells(fdt, parent);
-	if (cell_addr < 1)
-		return SBI_ENODEV;
-
-	cell_size = fdt_size_cells(fdt, parent);
-	if (cell_size < 0)
-		return SBI_ENODEV;
-
 	ranges = fdt_getprop(fdt, parent, "ranges", &rlen);
 	if (ranges && rlen > 0) {
-		for (i = 0; i < cell_addr; i++)
+		cell_child_addr = fdt_address_cells(fdt, parent);
+		if (cell_child_addr < 1)
+			return SBI_ENODEV;
+
+		cell_parent_addr = fdt_address_cells(fdt, fdt_parent_offset(fdt, parent));
+		if (cell_parent_addr < 1)
+			return SBI_ENODEV;
+
+		cell_size = fdt_size_cells(fdt, parent);
+		if (cell_size < 0)
+			return SBI_ENODEV;
+
+		for (i = 0; i < cell_child_addr; i++)
 			caddr = (caddr << 32) | fdt32_to_cpu(*ranges++);
-		for (i = 0; i < cell_addr; i++)
+		for (i = 0; i < cell_parent_addr; i++)
 			paddr = (paddr << 32) | fdt32_to_cpu(*ranges++);
 		for (i = 0; i < cell_size; i++)
 			rsize = (rsize << 32) | fdt32_to_cpu(*ranges++);
@@ -159,7 +122,7 @@ static int fdt_translate_address(void *fdt, uint64_t reg, int parent,
 	return 0;
 }
 
-int fdt_get_node_addr_size(void *fdt, int node, int index,
+int fdt_get_node_addr_size(const void *fdt, int node, int index,
 			   uint64_t *addr, uint64_t *size)
 {
 	int parent, len, i, rc;
@@ -215,7 +178,33 @@ int fdt_get_node_addr_size(void *fdt, int node, int index,
 	return 0;
 }
 
-bool fdt_node_is_enabled(void *fdt, int nodeoff)
+int fdt_get_node_addr_size_by_name(const void *fdt, int node, const char *name,
+				   uint64_t *addr, uint64_t *size)
+{
+	int i, j, count;
+	const char *val;
+	const char *regname;
+
+	if (!fdt || node < 0 || !name)
+		return SBI_EINVAL;
+
+	val = fdt_getprop(fdt, node, "reg-names", &count);
+	if (!val)
+		return SBI_ENODEV;
+
+	for (i = 0, j = 0; i < count; i++, j++) {
+		regname = val + i;
+
+		if (strcmp(name, regname) == 0)
+			return fdt_get_node_addr_size(fdt, node, j, addr, size);
+
+		i += strlen(regname);
+	}
+
+	return SBI_ENODEV;
+}
+
+bool fdt_node_is_enabled(const void *fdt, int nodeoff)
 {
 	int len;
 	const void *prop;
@@ -233,7 +222,7 @@ bool fdt_node_is_enabled(void *fdt, int nodeoff)
 	return false;
 }
 
-int fdt_parse_hart_id(void *fdt, int cpu_offset, u32 *hartid)
+int fdt_parse_hart_id(const void *fdt, int cpu_offset, u32 *hartid)
 {
 	int len;
 	const void *prop;
@@ -261,7 +250,31 @@ int fdt_parse_hart_id(void *fdt, int cpu_offset, u32 *hartid)
 	return 0;
 }
 
-int fdt_parse_max_enabled_hart_id(void *fdt, u32 *max_hartid)
+int fdt_parse_cbom_block_size(const void *fdt, int cpu_offset, unsigned long *cbom_block_size)
+{
+	int len;
+	const void *prop;
+	const fdt32_t *val;
+
+	if (!fdt || cpu_offset < 0)
+		return SBI_EINVAL;
+
+	prop = fdt_getprop(fdt, cpu_offset, "device_type", &len);
+	if (!prop || !len)
+		return SBI_EINVAL;
+	if (strncmp (prop, "cpu", strlen ("cpu")))
+		return SBI_EINVAL;
+
+	val = fdt_getprop(fdt, cpu_offset, "riscv,cbom-block-size", &len);
+	if (!val || len < sizeof(fdt32_t))
+		return SBI_EINVAL;
+
+	if (cbom_block_size)
+		*cbom_block_size = fdt32_to_cpu(*val);
+	return 0;
+}
+
+int fdt_parse_max_enabled_hart_id(const void *fdt, u32 *max_hartid)
 {
 	u32 hartid;
 	int err, cpu_offset, cpus_offset;
@@ -292,7 +305,7 @@ int fdt_parse_max_enabled_hart_id(void *fdt, u32 *max_hartid)
 	return 0;
 }
 
-int fdt_parse_timebase_frequency(void *fdt, unsigned long *freq)
+int fdt_parse_timebase_frequency(const void *fdt, unsigned long *freq)
 {
 	const fdt32_t *val;
 	int len, cpus_offset;
@@ -313,7 +326,169 @@ int fdt_parse_timebase_frequency(void *fdt, unsigned long *freq)
 	return 0;
 }
 
-static int fdt_parse_uart_node_common(void *fdt, int nodeoffset,
+#define RISCV_ISA_EXT_NAME_LEN_MAX	32
+
+static unsigned long fdt_isa_bitmap_offset;
+
+static int fdt_parse_isa_one_hart(const char *isa, unsigned long *extensions)
+{
+	size_t i, j, isa_len;
+	char mstr[RISCV_ISA_EXT_NAME_LEN_MAX];
+
+	i = 0;
+	isa_len = strlen(isa);
+
+	if (isa[i] == 'r' || isa[i] == 'R')
+		i++;
+	else
+		return SBI_EINVAL;
+
+	if (isa[i] == 'v' || isa[i] == 'V')
+		i++;
+	else
+		return SBI_EINVAL;
+
+	if (isa[i] == '3' || isa[i+1] == '2')
+		i += 2;
+	else if (isa[i] == '6' || isa[i+1] == '4')
+		i += 2;
+	else
+		return SBI_EINVAL;
+
+	/* Skip base ISA extensions */
+	for (; i < isa_len; i++) {
+		if (isa[i] == '_')
+			break;
+	}
+
+	while (i < isa_len) {
+		if (isa[i] != '_') {
+			i++;
+			continue;
+		}
+
+		/* Skip the '_' character */
+		i++;
+
+		/* Extract the multi-letter extension name */
+		j = 0;
+		while ((i < isa_len) && (isa[i] != '_') &&
+		       (j < (sizeof(mstr) - 1)))
+			mstr[j++] = isa[i++];
+		mstr[j] = '\0';
+
+		/* Skip empty multi-letter extension name */
+		if (!j)
+			continue;
+
+#define set_multi_letter_ext(name, bit)				\
+			if (!strcmp(mstr, name)) {		\
+				__set_bit(bit, extensions);	\
+				continue;			\
+			}
+
+		for (j = 0; j < SBI_HART_EXT_MAX; j++) {
+			set_multi_letter_ext(sbi_hart_ext[j].name,
+					     sbi_hart_ext[j].id);
+		}
+#undef set_multi_letter_ext
+	}
+
+	return 0;
+}
+
+static void fdt_parse_isa_extensions_one_hart(const char *isa,
+					      unsigned long *extensions,
+					      int len)
+{
+	size_t i;
+
+	for (i = 0; i < SBI_HART_EXT_MAX; i++) {
+		if (fdt_stringlist_contains(isa, len, sbi_hart_ext[i].name))
+			__set_bit(sbi_hart_ext[i].id, extensions);
+	}
+}
+
+static int fdt_parse_isa_all_harts(const void *fdt)
+{
+	u32 hartid;
+	const fdt32_t *val;
+	unsigned long *hart_exts;
+	struct sbi_scratch *scratch;
+	int err, cpu_offset, cpus_offset, len;
+
+	if (!fdt || !fdt_isa_bitmap_offset)
+		return SBI_EINVAL;
+
+	cpus_offset = fdt_path_offset(fdt, "/cpus");
+	if (cpus_offset < 0)
+		return cpus_offset;
+
+	fdt_for_each_subnode(cpu_offset, fdt, cpus_offset) {
+		err = fdt_parse_hart_id(fdt, cpu_offset, &hartid);
+		if (err)
+			continue;
+
+		if (!fdt_node_is_enabled(fdt, cpu_offset))
+			continue;
+
+		scratch = sbi_hartid_to_scratch(hartid);
+		if (!scratch)
+			return SBI_ENOENT;
+
+		hart_exts = sbi_scratch_offset_ptr(scratch,
+						   fdt_isa_bitmap_offset);
+
+		val = fdt_getprop(fdt, cpu_offset, "riscv,isa-extensions", &len);
+		if (val && len > 0) {
+			fdt_parse_isa_extensions_one_hart((const char *)val,
+							  hart_exts, len);
+			continue;
+		}
+
+		val = fdt_getprop(fdt, cpu_offset, "riscv,isa", &len);
+		if (!val || len <= 0)
+			return SBI_ENOENT;
+
+		err = fdt_parse_isa_one_hart((const char *)val, hart_exts);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
+int fdt_parse_isa_extensions(const void *fdt, unsigned int hartid,
+			unsigned long *extensions)
+{
+	int rc, i;
+	unsigned long *hart_exts;
+	struct sbi_scratch *scratch;
+
+	if (!fdt_isa_bitmap_offset) {
+		fdt_isa_bitmap_offset = sbi_scratch_alloc_offset(
+					sizeof(*hart_exts) *
+					BITS_TO_LONGS(SBI_HART_EXT_MAX));
+		if (!fdt_isa_bitmap_offset)
+			return SBI_ENOMEM;
+
+		rc = fdt_parse_isa_all_harts(fdt);
+		if (rc)
+			return rc;
+	}
+
+	scratch = sbi_hartid_to_scratch(hartid);
+	if (!scratch)
+		return SBI_ENOENT;
+
+	hart_exts = sbi_scratch_offset_ptr(scratch, fdt_isa_bitmap_offset);
+
+	for (i = 0; i < BITS_TO_LONGS(SBI_HART_EXT_MAX); i++)
+		extensions[i] |= hart_exts[i];
+	return 0;
+}
+
+static int fdt_parse_uart_node_common(const void *fdt, int nodeoffset,
 				      struct platform_uart_data *uart,
 				      unsigned long default_freq,
 				      unsigned long default_baud)
@@ -350,7 +525,7 @@ static int fdt_parse_uart_node_common(void *fdt, int nodeoffset,
 	return 0;
 }
 
-int fdt_parse_gaisler_uart_node(void *fdt, int nodeoffset,
+int fdt_parse_gaisler_uart_node(const void *fdt, int nodeoffset,
 				struct platform_uart_data *uart)
 {
 	return fdt_parse_uart_node_common(fdt, nodeoffset, uart,
@@ -358,7 +533,7 @@ int fdt_parse_gaisler_uart_node(void *fdt, int nodeoffset,
 					DEFAULT_UART_BAUD);
 }
 
-int fdt_parse_renesas_scif_node(void *fdt, int nodeoffset,
+int fdt_parse_renesas_scif_node(const void *fdt, int nodeoffset,
 				struct platform_uart_data *uart)
 {
 	return fdt_parse_uart_node_common(fdt, nodeoffset, uart,
@@ -366,7 +541,7 @@ int fdt_parse_renesas_scif_node(void *fdt, int nodeoffset,
 					  DEFAULT_RENESAS_SCIF_BAUD);
 }
 
-int fdt_parse_shakti_uart_node(void *fdt, int nodeoffset,
+int fdt_parse_shakti_uart_node(const void *fdt, int nodeoffset,
 			       struct platform_uart_data *uart)
 {
 	return fdt_parse_uart_node_common(fdt, nodeoffset, uart,
@@ -374,7 +549,7 @@ int fdt_parse_shakti_uart_node(void *fdt, int nodeoffset,
 					DEFAULT_SHAKTI_UART_BAUD);
 }
 
-int fdt_parse_sifive_uart_node(void *fdt, int nodeoffset,
+int fdt_parse_sifive_uart_node(const void *fdt, int nodeoffset,
 			       struct platform_uart_data *uart)
 {
 	return fdt_parse_uart_node_common(fdt, nodeoffset, uart,
@@ -382,7 +557,7 @@ int fdt_parse_sifive_uart_node(void *fdt, int nodeoffset,
 					DEFAULT_SIFIVE_UART_BAUD);
 }
 
-int fdt_parse_uart_node(void *fdt, int nodeoffset,
+int fdt_parse_uart_node(const void *fdt, int nodeoffset,
 			struct platform_uart_data *uart)
 {
 	int len, rc;
@@ -415,7 +590,7 @@ int fdt_parse_uart_node(void *fdt, int nodeoffset,
 	return 0;
 }
 
-int fdt_parse_uart8250(void *fdt, struct platform_uart_data *uart,
+int fdt_parse_uart8250(const void *fdt, struct platform_uart_data *uart,
 		   const char *compatible)
 {
 	int nodeoffset;
@@ -430,25 +605,70 @@ int fdt_parse_uart8250(void *fdt, struct platform_uart_data *uart,
 	return fdt_parse_uart_node(fdt, nodeoffset, uart);
 }
 
-int fdt_parse_xlnx_uartlite_node(void *fdt, int nodeoffset,
+int fdt_parse_xlnx_uartlite_node(const void *fdt, int nodeoffset,
 			       struct platform_uart_data *uart)
 {
 	return fdt_parse_uart_node_common(fdt, nodeoffset, uart, 0, 0);
 }
 
-int fdt_parse_aplic_node(void *fdt, int nodeoff, struct aplic_data *aplic)
+static int fdt_aplic_find_imsic_node(const void *fdt, int nodeoff,
+				     struct imsic_data *imsic, bool mmode)
+{
+	const fdt32_t *val;
+	int i, len, noff, rc;
+
+	val = fdt_getprop(fdt, nodeoff, "msi-parent", &len);
+	if (val && len >= sizeof(fdt32_t)) {
+		noff = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(*val));
+		if (noff < 0)
+			return noff;
+
+		rc = fdt_parse_imsic_node(fdt, noff, imsic);
+		if (rc)
+			return rc;
+
+		rc = imsic_data_check(imsic);
+		if (rc)
+			return rc;
+
+		if (imsic->targets_mmode == mmode) {
+			return 0;
+		}
+	} else {
+		return SBI_ENODEV;
+	}
+
+	val = fdt_getprop(fdt, nodeoff, "riscv,children", &len);
+	if (!val || len < sizeof(fdt32_t))
+		return SBI_ENODEV;
+
+	len /= sizeof(fdt32_t);
+
+	for (i = 0; i < len; i++) {
+		noff = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(val[i]));
+		if (noff < 0)
+			return noff;
+
+		rc = fdt_aplic_find_imsic_node(fdt, noff, imsic, mmode);
+		if (!rc)
+			break;
+	}
+
+	return rc;
+}
+
+int fdt_parse_aplic_node(const void *fdt, int nodeoff, struct aplic_data *aplic)
 {
 	bool child_found;
 	const fdt32_t *val;
 	const fdt32_t *del;
-	struct imsic_data imsic;
-	int i, j, d, dcnt, len, noff, rc;
+	struct imsic_data imsic = { 0 };
+	int i, j, d, dcnt, len, rc;
 	uint64_t reg_addr, reg_size;
 	struct aplic_delegate_data *deleg;
 
 	if (nodeoff < 0 || !aplic || !fdt)
 		return SBI_ENODEV;
-	memset(aplic, 0, sizeof(*aplic));
 
 	rc = fdt_get_node_addr_size(fdt, nodeoff, 0, &reg_addr, &reg_size);
 	if (rc < 0 || !reg_addr || !reg_size)
@@ -470,78 +690,34 @@ int fdt_parse_aplic_node(void *fdt, int nodeoff, struct aplic_data *aplic)
 			}
 		}
 		aplic->num_idc = len / 2;
-		goto aplic_msi_parent_done;
 	}
 
-	val = fdt_getprop(fdt, nodeoff, "msi-parent", &len);
-	if (val && len >= sizeof(fdt32_t)) {
-		noff = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(*val));
-		if (noff < 0)
-			return noff;
-
-		rc = fdt_parse_imsic_node(fdt, noff, &imsic);
-		if (rc)
-			return rc;
-
-		rc = imsic_data_check(&imsic);
-		if (rc)
-			return rc;
-
-		aplic->targets_mmode = imsic.targets_mmode;
-
-		if (imsic.targets_mmode) {
-			aplic->has_msicfg_mmode = true;
-			aplic->msicfg_mmode.lhxs = imsic.guest_index_bits;
-			aplic->msicfg_mmode.lhxw = imsic.hart_index_bits;
-			aplic->msicfg_mmode.hhxw = imsic.group_index_bits;
-			aplic->msicfg_mmode.hhxs = imsic.group_index_shift;
-			if (aplic->msicfg_mmode.hhxs <
-					(2 * IMSIC_MMIO_PAGE_SHIFT))
-				return SBI_EINVAL;
-			aplic->msicfg_mmode.hhxs -= 24;
-			aplic->msicfg_mmode.base_addr = imsic.regs[0].addr;
-		} else {
-			goto aplic_msi_parent_done;
-		}
-
-		val = fdt_getprop(fdt, nodeoff, "riscv,children", &len);
-		if (!val || len < sizeof(fdt32_t))
-			goto aplic_msi_parent_done;
-
-		noff = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(*val));
-		if (noff < 0)
-			return noff;
-
-		val = fdt_getprop(fdt, noff, "msi-parent", &len);
-		if (!val || len < sizeof(fdt32_t))
-			goto aplic_msi_parent_done;
-
-		noff = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(*val));
-		if (noff < 0)
-			return noff;
-
-		rc = fdt_parse_imsic_node(fdt, noff, &imsic);
-		if (rc)
-			return rc;
-
-		rc = imsic_data_check(&imsic);
-		if (rc)
-			return rc;
-
-		if (!imsic.targets_mmode) {
-			aplic->has_msicfg_smode = true;
-			aplic->msicfg_smode.lhxs = imsic.guest_index_bits;
-			aplic->msicfg_smode.lhxw = imsic.hart_index_bits;
-			aplic->msicfg_smode.hhxw = imsic.group_index_bits;
-			aplic->msicfg_smode.hhxs = imsic.group_index_shift;
-			if (aplic->msicfg_smode.hhxs <
-					(2 * IMSIC_MMIO_PAGE_SHIFT))
-				return SBI_EINVAL;
-			aplic->msicfg_smode.hhxs -= 24;
-			aplic->msicfg_smode.base_addr = imsic.regs[0].addr;
-		}
+	rc = fdt_aplic_find_imsic_node(fdt, nodeoff, &imsic, true);
+	if (!rc) {
+		aplic->targets_mmode = true;
+		aplic->has_msicfg_mmode = true;
+		aplic->msicfg_mmode.lhxs = imsic.guest_index_bits;
+		aplic->msicfg_mmode.lhxw = imsic.hart_index_bits;
+		aplic->msicfg_mmode.hhxw = imsic.group_index_bits;
+		aplic->msicfg_mmode.hhxs = imsic.group_index_shift;
+		if (aplic->msicfg_mmode.hhxs < (2 * IMSIC_MMIO_PAGE_SHIFT))
+			return SBI_EINVAL;
+		aplic->msicfg_mmode.hhxs -= 24;
+		aplic->msicfg_mmode.base_addr = imsic.regs[0].addr;
 	}
-aplic_msi_parent_done:
+
+	rc = fdt_aplic_find_imsic_node(fdt, nodeoff, &imsic, false);
+	if (!rc) {
+		aplic->has_msicfg_smode = true;
+		aplic->msicfg_smode.lhxs = imsic.guest_index_bits;
+		aplic->msicfg_smode.lhxw = imsic.hart_index_bits;
+		aplic->msicfg_smode.hhxw = imsic.group_index_bits;
+		aplic->msicfg_smode.hhxs = imsic.group_index_shift;
+		if (aplic->msicfg_smode.hhxs < (2 * IMSIC_MMIO_PAGE_SHIFT))
+			return SBI_EINVAL;
+		aplic->msicfg_smode.hhxs -= 24;
+		aplic->msicfg_smode.base_addr = imsic.regs[0].addr;
+	}
 
 	for (d = 0; d < APLIC_MAX_DELEGATE; d++) {
 		deleg = &aplic->delegate[d];
@@ -550,7 +726,9 @@ aplic_msi_parent_done:
 		deleg->child_index = 0;
 	}
 
-	del = fdt_getprop(fdt, nodeoff, "riscv,delegate", &len);
+	del = fdt_getprop(fdt, nodeoff, "riscv,delegation", &len);
+	if (!del)
+		del = fdt_getprop(fdt, nodeoff, "riscv,delegate", &len);
 	if (!del || len < (3 * sizeof(fdt32_t)))
 		goto skip_delegate_parse;
 	d = 0;
@@ -594,7 +772,7 @@ skip_delegate_parse:
 	return 0;
 }
 
-bool fdt_check_imsic_mlevel(void *fdt)
+bool fdt_check_imsic_mlevel(const void *fdt)
 {
 	const fdt32_t *val;
 	int i, len, noff = 0;
@@ -617,7 +795,7 @@ bool fdt_check_imsic_mlevel(void *fdt)
 	return false;
 }
 
-int fdt_parse_imsic_node(void *fdt, int nodeoff, struct imsic_data *imsic)
+int fdt_parse_imsic_node(const void *fdt, int nodeoff, struct imsic_data *imsic)
 {
 	const fdt32_t *val;
 	struct imsic_regs *regs;
@@ -689,14 +867,14 @@ int fdt_parse_imsic_node(void *fdt, int nodeoff, struct imsic_data *imsic)
 			break;
 		regs->addr = reg_addr;
 		regs->size = reg_size;
-	};
+	}
 	if (!imsic->regs[0].size)
 		return SBI_EINVAL;
 
 	return 0;
 }
 
-int fdt_parse_plic_node(void *fdt, int nodeoffset, struct plic_data *plic)
+int fdt_parse_plic_node(const void *fdt, int nodeoffset, struct plic_data *plic)
 {
 	int len, rc;
 	const fdt32_t *val;
@@ -710,6 +888,7 @@ int fdt_parse_plic_node(void *fdt, int nodeoffset, struct plic_data *plic)
 	if (rc < 0 || !reg_addr || !reg_size)
 		return SBI_ENODEV;
 	plic->addr = reg_addr;
+	plic->size = reg_size;
 
 	val = fdt_getprop(fdt, nodeoffset, "riscv,ndev", &len);
 	if (len > 0)
@@ -718,7 +897,7 @@ int fdt_parse_plic_node(void *fdt, int nodeoffset, struct plic_data *plic)
 	return 0;
 }
 
-int fdt_parse_plic(void *fdt, struct plic_data *plic, const char *compat)
+int fdt_parse_plic(const void *fdt, struct plic_data *plic, const char *compat)
 {
 	int nodeoffset;
 
@@ -732,21 +911,40 @@ int fdt_parse_plic(void *fdt, struct plic_data *plic, const char *compat)
 	return fdt_parse_plic_node(fdt, nodeoffset, plic);
 }
 
-int fdt_parse_aclint_node(void *fdt, int nodeoffset, bool for_timer,
-			  unsigned long *out_addr1, unsigned long *out_size1,
-			  unsigned long *out_addr2, unsigned long *out_size2,
-			  u32 *out_first_hartid, u32 *out_hart_count)
+static int fdt_get_aclint_addr_size_by_name(const void *fdt, int nodeoffset,
+					    unsigned long *out_addr1,
+					    unsigned long *out_size1,
+					    unsigned long *out_addr2,
+					    unsigned long *out_size2)
 {
-	const fdt32_t *val;
+	int rc;
 	uint64_t reg_addr, reg_size;
-	int i, rc, count, cpu_offset, cpu_intc_offset;
-	u32 phandle, hwirq, hartid, first_hartid, last_hartid, hart_count;
-	u32 match_hwirq = (for_timer) ? IRQ_M_TIMER : IRQ_M_SOFT;
 
-	if (nodeoffset < 0 || !fdt ||
-	    !out_addr1 || !out_size1 ||
-	    !out_first_hartid || !out_hart_count)
-		return SBI_EINVAL;
+	rc = fdt_get_node_addr_size_by_name(fdt, nodeoffset, "mtime",
+					    &reg_addr, &reg_size);
+	if (rc < 0 || !reg_size)
+		reg_addr = reg_size = 0;
+	*out_addr1 = reg_addr;
+	*out_size1 = reg_size;
+
+	rc = fdt_get_node_addr_size_by_name(fdt, nodeoffset, "mtimecmp",
+					    &reg_addr, &reg_size);
+	if (rc < 0 || !reg_size)
+		return SBI_ENODEV;
+	*out_addr2 = reg_addr;
+	*out_size2 = reg_size;
+
+	return 0;
+}
+
+static int fdt_get_aclint_addr_size(const void *fdt, int nodeoffset,
+				    unsigned long *out_addr1,
+				    unsigned long *out_size1,
+				    unsigned long *out_addr2,
+				    unsigned long *out_size2)
+{
+	int rc;
+	uint64_t reg_addr, reg_size;
 
 	rc = fdt_get_node_addr_size(fdt, nodeoffset, 0,
 				    &reg_addr, &reg_size);
@@ -764,6 +962,37 @@ int fdt_parse_aclint_node(void *fdt, int nodeoffset, bool for_timer,
 	if (out_size2)
 		*out_size2 = reg_size;
 
+	return 0;
+}
+
+int fdt_parse_aclint_node(const void *fdt, int nodeoffset,
+			  bool for_timer, bool allow_regname,
+			  unsigned long *out_addr1, unsigned long *out_size1,
+			  unsigned long *out_addr2, unsigned long *out_size2,
+			  u32 *out_first_hartid, u32 *out_hart_count)
+{
+	const fdt32_t *val;
+	int i, rc, count, cpu_offset, cpu_intc_offset;
+	u32 phandle, hwirq, hartid, first_hartid, last_hartid;
+	u32 match_hwirq = (for_timer) ? IRQ_M_TIMER : IRQ_M_SOFT;
+
+	if (nodeoffset < 0 || !fdt ||
+	    !out_addr1 || !out_size1 ||
+	    !out_first_hartid || !out_hart_count)
+		return SBI_EINVAL;
+
+	if (for_timer && allow_regname && out_addr2 && out_size2 &&
+	    fdt_getprop(fdt, nodeoffset, "reg-names", NULL))
+		rc = fdt_get_aclint_addr_size_by_name(fdt, nodeoffset,
+						      out_addr1, out_size1,
+						      out_addr2, out_size2);
+	else
+		rc = fdt_get_aclint_addr_size(fdt, nodeoffset,
+					      out_addr1, out_size1,
+					      out_addr2, out_size2);
+	if (rc)
+		return rc;
+
 	*out_first_hartid = 0;
 	*out_hart_count = 0;
 
@@ -773,7 +1002,7 @@ int fdt_parse_aclint_node(void *fdt, int nodeoffset, bool for_timer,
 	count = count / sizeof(fdt32_t);
 
 	first_hartid = -1U;
-	hart_count = last_hartid = 0;
+	last_hartid = 0;
 	for (i = 0; i < (count / 2); i++) {
 		phandle = fdt32_to_cpu(val[2 * i]);
 		hwirq = fdt32_to_cpu(val[(2 * i) + 1]);
@@ -790,28 +1019,22 @@ int fdt_parse_aclint_node(void *fdt, int nodeoffset, bool for_timer,
 		if (rc)
 			continue;
 
-		if (SBI_HARTMASK_MAX_BITS <= hartid)
-			continue;
-
 		if (match_hwirq == hwirq) {
 			if (hartid < first_hartid)
 				first_hartid = hartid;
 			if (hartid > last_hartid)
 				last_hartid = hartid;
-			hart_count++;
 		}
 	}
 
 	if ((last_hartid >= first_hartid) && first_hartid != -1U) {
 		*out_first_hartid = first_hartid;
-		count = last_hartid - first_hartid + 1;
-		*out_hart_count = (hart_count < count) ? hart_count : count;
+		*out_hart_count = last_hartid - first_hartid + 1;
 	}
-
 	return 0;
 }
 
-int fdt_parse_plmt_node(void *fdt, int nodeoffset, unsigned long *plmt_base,
+int fdt_parse_plmt_node(const void *fdt, int nodeoffset, unsigned long *plmt_base,
 			  unsigned long *plmt_size, u32 *hart_count)
 {
 	const fdt32_t *val;
@@ -855,7 +1078,7 @@ int fdt_parse_plmt_node(void *fdt, int nodeoffset, unsigned long *plmt_base,
 		if (rc)
 			continue;
 
-		if (SBI_HARTMASK_MAX_BITS <= hartid)
+		if (SBI_HARTMASK_MAX_BITS <= sbi_hartid_to_hartindex(hartid))
 			continue;
 
 		if (hwirq == IRQ_M_TIMER)
@@ -867,7 +1090,7 @@ int fdt_parse_plmt_node(void *fdt, int nodeoffset, unsigned long *plmt_base,
 	return 0;
 }
 
-int fdt_parse_plicsw_node(void *fdt, int nodeoffset, unsigned long *plicsw_base,
+int fdt_parse_plicsw_node(const void *fdt, int nodeoffset, unsigned long *plicsw_base,
 			  unsigned long *size, u32 *hart_count)
 {
 	const fdt32_t *val;
@@ -911,7 +1134,7 @@ int fdt_parse_plicsw_node(void *fdt, int nodeoffset, unsigned long *plicsw_base,
 		if (rc)
 			continue;
 
-		if (SBI_HARTMASK_MAX_BITS <= hartid)
+		if (SBI_HARTMASK_MAX_BITS <= sbi_hartid_to_hartindex(hartid))
 			continue;
 
 		if (hwirq == IRQ_M_SOFT)
@@ -923,7 +1146,7 @@ int fdt_parse_plicsw_node(void *fdt, int nodeoffset, unsigned long *plicsw_base,
 	return 0;
 }
 
-int fdt_parse_compat_addr(void *fdt, uint64_t *addr,
+int fdt_parse_compat_addr(const void *fdt, uint64_t *addr,
 			  const char *compatible)
 {
 	int nodeoffset, rc;

@@ -11,19 +11,15 @@
 #define __FDT_SERIAL_H__
 
 #include <sbi/sbi_types.h>
+#include <sbi_utils/fdt/fdt_driver.h>
 
 #ifdef CONFIG_FDT_SERIAL
 
-struct fdt_serial {
-	const struct fdt_match *match_table;
-	int (*init)(void *fdt, int nodeoff, const struct fdt_match *match);
-};
-
-int fdt_serial_init(void);
+int fdt_serial_init(const void *fdt);
 
 #else
 
-static inline int fdt_serial_init(void) { return 0; }
+static inline int fdt_serial_init(const void *fdt) { return 0; }
 
 #endif
 

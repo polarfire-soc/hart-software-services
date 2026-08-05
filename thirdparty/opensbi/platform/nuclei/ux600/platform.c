@@ -11,7 +11,6 @@
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_io.h>
 #include <sbi/riscv_encoding.h>
-#include <sbi/sbi_console.h>
 #include <sbi/sbi_const.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_system.h>
@@ -39,6 +38,8 @@
 					 CLINT_MTIMER_OFFSET)
 
 #define UX600_PLIC_ADDR			0x8000000
+#define UX600_PLIC_SIZE			(0x200000 + \
+					 (UX600_HART_COUNT * 0x1000))
 #define UX600_PLIC_NUM_SOURCES		0x35
 #define UX600_PLIC_NUM_PRIORITIES	7
 
@@ -63,7 +64,11 @@ static u32 ux600_clk_freq = 8000000;
 
 static struct plic_data plic = {
 	.addr = UX600_PLIC_ADDR,
+	.size = UX600_PLIC_SIZE,
 	.num_src = UX600_PLIC_NUM_SOURCES,
+	.context_map = {
+		[0] = { 0, -1 },
+	},
 };
 
 static struct aclint_mswi_data mswi = {
@@ -83,7 +88,7 @@ static struct aclint_mtimer_data mtimer = {
 	.mtimecmp_size = ACLINT_DEFAULT_MTIMECMP_SIZE,
 	.first_hartid = 0,
 	.hart_count = UX600_HART_COUNT,
-	.has_64bit_mmio = TRUE,
+	.has_64bit_mmio = true,
 };
 
 static u32 measure_cpu_freq(u32 n)
@@ -146,9 +151,12 @@ static struct sbi_system_reset_device ux600_reset = {
 static int ux600_early_init(bool cold_boot)
 {
 	u32 regval;
+	int rc;
 
-	if (cold_boot)
-		sbi_system_reset_add_device(&ux600_reset);
+	if (!cold_boot)
+		return 0;
+
+	sbi_system_reset_add_device(&ux600_reset);
 
 	/* Measure CPU Frequency using Timer */
 	ux600_clk_freq = ux600_get_clk_freq();
@@ -160,7 +168,13 @@ static int ux600_early_init(bool cold_boot)
 	regval = readl((void *)(UX600_GPIO_ADDR + UX600_GPIO_IOF_EN_OFS)) |
 		UX600_GPIO_IOF_UART0_MASK;
 	writel(regval, (void *)(UX600_GPIO_ADDR + UX600_GPIO_IOF_EN_OFS));
-	return 0;
+
+	rc = sifive_uart_init(UX600_DEBUG_UART, ux600_clk_freq,
+			      UX600_UART_BAUDRATE);
+	if (rc)
+		return rc;
+
+	return aclint_mswi_cold_init(&mswi);
 }
 
 static void ux600_modify_dt(void *fdt)
@@ -175,65 +189,26 @@ static int ux600_final_init(bool cold_boot)
 	if (!cold_boot)
 		return 0;
 
-	fdt = fdt_get_address();
+	fdt = fdt_get_address_rw();
 	ux600_modify_dt(fdt);
 
 	return 0;
 }
 
-static int ux600_console_init(void)
+static int ux600_irqchip_init(void)
 {
-	return sifive_uart_init(UX600_DEBUG_UART, ux600_clk_freq,
-				UX600_UART_BAUDRATE);
+	return plic_cold_irqchip_init(&plic);
 }
 
-static int ux600_irqchip_init(bool cold_boot)
+static int ux600_timer_init(void)
 {
-	int rc;
-	u32 hartid = current_hartid();
-
-	if (cold_boot) {
-		rc = plic_cold_irqchip_init(&plic);
-		if (rc)
-			return rc;
-	}
-
-	return plic_warm_irqchip_init(&plic, (hartid) ? (2 * hartid - 1) : 0,
-				      (hartid) ? (2 * hartid) : -1);
-}
-
-static int ux600_ipi_init(bool cold_boot)
-{
-	int rc;
-
-	if (cold_boot) {
-		rc = aclint_mswi_cold_init(&mswi);
-		if (rc)
-			return rc;
-	}
-
-	return aclint_mswi_warm_init();
-}
-
-static int ux600_timer_init(bool cold_boot)
-{
-	int rc;
-
-	if (cold_boot) {
-		rc = aclint_mtimer_cold_init(&mtimer, NULL);
-		if (rc)
-			return rc;
-	}
-
-	return aclint_mtimer_warm_init();
+	return aclint_mtimer_cold_init(&mtimer, NULL);
 }
 
 const struct sbi_platform_operations platform_ops = {
 	.early_init		= ux600_early_init,
 	.final_init		= ux600_final_init,
-	.console_init		= ux600_console_init,
 	.irqchip_init		= ux600_irqchip_init,
-	.ipi_init		= ux600_ipi_init,
 	.timer_init		= ux600_timer_init,
 };
 
@@ -244,5 +219,7 @@ const struct sbi_platform platform = {
 	.features		= SBI_PLATFORM_DEFAULT_FEATURES,
 	.hart_count		= UX600_HART_COUNT,
 	.hart_stack_size	= SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
+	.heap_size		=
+			SBI_PLATFORM_DEFAULT_HEAP_SIZE(UX600_HART_COUNT),
 	.platform_ops_addr	= (unsigned long)&platform_ops
 };

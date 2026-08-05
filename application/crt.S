@@ -180,8 +180,8 @@ _trap_handler_s_mode:
 	// Set T0 to original SP
 	add	t0, sp, zero
 
-	// Setup exception stack
-	add	sp, tp, -(SBI_TRAP_REGS_SIZE)
+	// Setup exception stack (full trap context size for v1.8)
+	add	sp, tp, -(SBI_TRAP_CONTEXT_SIZE)
 
 	// Jump to code common for all modes
 	j	_trap_handler_all_mode
@@ -192,7 +192,7 @@ _trap_handler_m_mode:
 	add	t0, sp, zero
 
 	// Re-use current SP as exception stack
-	add	sp, sp, -(SBI_TRAP_REGS_SIZE)
+	add	sp, sp, -(SBI_TRAP_CONTEXT_SIZE)
 
 _trap_handler_all_mode:
 	// Save original SP (from T0) on stack
@@ -246,6 +246,15 @@ _trap_handler_all_mode:
 	REG_S	t5, SBI_TRAP_REGS_OFFSET(t5)(sp)
 	REG_S	t6, SBI_TRAP_REGS_OFFSET(t6)(sp)
 
+	// Save trap info (mcause, mtval) for sbi_trap_handler v1.8
+	csrr	t0, CSR_MCAUSE
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(cause))(sp)
+	csrr	t0, CSR_MTVAL
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tval))(sp)
+	REG_S	zero, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tval2))(sp)
+	REG_S	zero, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tinst))(sp)
+	REG_S	zero, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(gva))(sp)
+
 	LOAD_GP
 
 	// Call C routine
@@ -259,11 +268,10 @@ _trap_handler_all_mode:
 
 .checkIfOpenSBITrap:
 	add	a0, sp, zero
-	csrr	a1, CSR_MSCRATCH
 	call	sbi_trap_handler
 
 .skipOpenSbi:
-	// Restore all general regisers except SP and T0
+	// Restore all general regisers except A0, SP, and T0
 	REG_L	ra, SBI_TRAP_REGS_OFFSET(ra)(sp)
 	REG_L	gp, SBI_TRAP_REGS_OFFSET(gp)(sp)
 	REG_L	tp, SBI_TRAP_REGS_OFFSET(tp)(sp)

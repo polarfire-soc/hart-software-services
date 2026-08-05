@@ -45,12 +45,10 @@
 #  include "opensbi_crypto_ecall.h"
 #endif
 
-#include "opensbi_suspend_ecall.h"
-
 #include "hss_boot_service.h"
 
-int HSS_SBI_ECALL_Handler(long extid, long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
+int HSS_SBI_ECALL_Handler(long funcid,
+    struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
     int result = SBI_ERR_FAILED;
 
@@ -63,7 +61,7 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
             __attribute__((fallthrough)); // deliberate fallthrough
         case SBI_EXT_IHC_RECEIVE:
 #if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IHC)
-            result = sbi_ecall_ihc_handler(extid, funcid, regs, out_val, out_trap);
+            result = sbi_ecall_ihc_handler(funcid, regs, out);
 #endif
             break;
 
@@ -79,7 +77,7 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
             __attribute__((fallthrough)); // deliberate fallthrough
         case SBI_EXT_IPC_STATUS:
 #if IS_ENABLED(CONFIG_USE_IHC_V2) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_IPC)
-            result = sbi_ecall_ipc_handler(extid, funcid, regs, out_val, out_trap);
+            result = sbi_ecall_ipc_handler(funcid, regs, out);
 #endif
             break;   
 
@@ -91,10 +89,10 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
             __attribute__((fallthrough)); // deliberate fallthrough
         case SBI_EXT_RPROC_STOP:
 #if IS_ENABLED(CONFIG_USE_IHC) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC)
-            result = sbi_ecall_rproc_handler(extid, funcid, regs, out_val, out_trap);
+            result = sbi_ecall_rproc_handler(funcid, regs, out);
 #endif
 #if IS_ENABLED(CONFIG_USE_IHC_V2) && IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
-            result = sbi_ecall_rproc_ipc_handler(extid, funcid, regs, out_val, out_trap);
+            result = sbi_ecall_rproc_ipc_handler(funcid, regs, out);
 #endif
             break;
 
@@ -106,7 +104,7 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
         case SBI_EXT_CRYPTO_SERVICES_PROBE:
             __attribute__((fallthrough)); // deliberate fallthrough
         case SBI_EXT_CRYPTO_SERVICES:
-            result = sbi_ecall_crypto_handler(extid, funcid, regs, out_val, out_trap);
+            result = sbi_ecall_crypto_handler(funcid, regs, out);
             break;
 #endif
 
@@ -122,9 +120,4 @@ int HSS_SBI_ECALL_Handler(long extid, long funcid,
     };
 
     return result;
-}
-
-int HSS_SBI_Vendor_Ext_Check(long extid)
-{
-    return (SBI_EXT_MICROCHIP_TECHNOLOGY == extid);
 }

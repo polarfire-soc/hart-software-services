@@ -36,8 +36,8 @@
 
 static struct RemoteProcMsg rproc_data;
 
-int sbi_ecall_rproc_handler(unsigned long extid, unsigned long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap)
+int sbi_ecall_rproc_handler(unsigned long funcid,
+    struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
     int result = SBI_ERR_FAILED;
     uint32_t index, remote_hart_id;
@@ -55,9 +55,9 @@ int sbi_ecall_rproc_handler(unsigned long extid, unsigned long funcid,
 #if IS_ENABLED(CONFIG_SERVICE_BOOT)
         case SBI_EXT_RPROC_STATE:
             if (!HSS_SkipBoot_IsSet(remote_hart_id))
-                *out_val = CONTEXT_RUNNING;
+                out->value = CONTEXT_RUNNING;
             else
-                *out_val = CONTEXT_OFFLINE;
+                out->value = CONTEXT_OFFLINE;
             result = SBI_OK;
             break;
 #endif

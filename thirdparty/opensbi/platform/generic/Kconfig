@@ -23,17 +23,48 @@ config PLATFORM_GENERIC_MINOR_VER
 	range 0 65535
 	default 1
 
+config PLATFORM_GENERIC_FDT_EMPTY_SPACE
+	int "Platform FDT empty space (KB)"
+	range 0 1024
+	default 4
+
 config PLATFORM_ALLWINNER_D1
 	bool "Allwinner D1 support"
 	depends on FDT_IRQCHIP_PLIC
+	select THEAD_C9XX_PMU
 	default n
 
 config PLATFORM_ANDES_AE350
 	bool "Andes AE350 support"
+	select SYS_ATCSMU
+	select ANDES_PMU
+	select ANDES_PMA
+	default n
+
+config PLATFORM_ANDES_QILAI
+	bool "Andes QiLai support"
+	select ANDES_PMU
+	select ANDES_PMA
+	select ANDES_SBI
+	default n
+
+config PLATFORM_ESWIN_EIC770X
+	bool "ESWIN EIC770X support"
+	default n
+
+config PLATFORM_OPENHWGROUP_OPENPITON
+	bool "OpenHWGroup Openpiton support"
+	default n
+
+config PLATFORM_OPENHWGROUP_ARIANE
+	bool "OpenHWGroup Ariane support"
 	default n
 
 config PLATFORM_RENESAS_RZFIVE
 	bool "Renesas RZ/Five support"
+	select ANDES_PMA
+	select ANDES_SBI
+	select ANDES_PMU
 	default n
 
 config PLATFORM_SIFIVE_FU540
@@ -44,5 +75,34 @@ config PLATFORM_SIFIVE_FU740
 	bool "SiFive FU740 support"
 	depends on FDT_RESET && FDT_I2C
 	default n
+
+config PLATFORM_SOPHGO_SG2042
+	bool "Sophgo sg2042 support"
+	select THEAD_C9XX_ERRATA
+	select THEAD_C9XX_PMU
+	default n
+
+config PLATFORM_STARFIVE_JH7110
+	bool "StarFive JH7110 support"
+	default n
+
+config PLATFORM_THEAD
+	bool "THEAD C9xx support"
+	select THEAD_C9XX_ERRATA
+	select THEAD_C9XX_PMU
+	default n
+
+config PLATFORM_MIPS_P8700
+	bool "MIPS P8700 support"
+	default n
+
+config PLATFORM_SPACEMIT_K1
+	bool "Spacemit K1 support"
+	select FDT_HSM_SPACEMIT
+	default n
+
+source "$(OPENSBI_SRC_DIR)/platform/generic/andes/Kconfig"
+source "$(OPENSBI_SRC_DIR)/platform/generic/eswin/Kconfig"
+source "$(OPENSBI_SRC_DIR)/platform/generic/thead/Kconfig"
 
 endif

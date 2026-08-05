@@ -32,6 +32,9 @@
 
 #include "opensbi_service.h"
 #include <sbi/sbi_ecall.h>
+#include <sbi/sbi_platform.h>
+#include <sbi/sbi_init.h>
+#include <sbi/sbi_scratch.h>
 #include "opensbi_ecall.h"
 #include "riscv_encoding.h"
 
@@ -48,7 +51,8 @@
 
 extern const struct sbi_platform platform;
 extern const struct sbi_hsm_device mpfs_hsm;
-static unsigned long l_hartid_to_scratch(int hartid);
+static struct sbi_scratch *l_hartid_to_scratch(unsigned long hartid,
+                                               unsigned long hartindex);
 
 //
 // OpenSBI needs a scratch structure per hart, plus some ancilliary data space
@@ -72,6 +76,17 @@ asm("	.globl	scratch_addr\n"
 extern const size_t scratch_addr;
 union t_HSS_scratchBuffer *pScratches = 0;
 
+/*
+ * Warm boot trampoline — used as warmboot_addr for system suspend resume.
+ * After retentive suspend, mscratch still holds the per-hart scratch pointer.
+ * This function re-enters the OpenSBI init flow (warm path).
+ */
+static void __noreturn warmboot_trampoline(void)
+{
+    struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
+    sbi_init(scratch);
+}
+
 static void opensbi_scratch_setup(enum HSSHartId hartid)
 {
     assert(hartid < MAX_NUM_HARTS);
@@ -82,22 +97,52 @@ static void opensbi_scratch_setup(enum HSSHartId hartid)
     pScratches[hartid].scratch.platform_addr = (unsigned long)&platform;
 
     extern unsigned long _hss_start, _hss_end;
+    extern unsigned long __opensbi_heap_start, __opensbi_heap_end;
     pScratches[hartid].scratch.fw_start = (unsigned long)&_hss_start;
     pScratches[hartid].scratch.fw_size = (unsigned long)&_hss_end - (unsigned long)&_hss_start;
+
+    /*
+     * fw_rw_offset must be a power of 2 and fw_start must be aligned to it.
+     * Since single_fw_region() returns true, the split is not enforced for
+     * domain regions, but the heap validation still requires
+     * fw_heap_offset >= fw_rw_offset.  Use a minimal value (4KB).
+     */
+    pScratches[hartid].scratch.fw_rw_offset = 0x1000;
+
+    /*
+     * Heap is placed in a dedicated linker section (.opensbi_heap) that
+     * does not overlap with code or data.
+     */
+    pScratches[hartid].scratch.fw_heap_offset =
+        (unsigned long)&__opensbi_heap_start - (unsigned long)&_hss_start;
+    pScratches[hartid].scratch.fw_heap_size =
+        (unsigned long)&__opensbi_heap_end - (unsigned long)&__opensbi_heap_start;
+
+    /*
+     * hartindex is normally written by fw_base.S which we bypass.
+     * With hart_index2id = {-1, 1, 2, 3, 4}, hartindex == hartid
+     * for U54s because index 0 (E51) is disabled (-1).
+     */
+    pScratches[hartid].scratch.hartindex = hartid;
+
+    pScratches[hartid].scratch.warmboot_addr = (unsigned long)warmboot_trampoline;
 
     sbi_hsm_set_device(&mpfs_hsm);
 }
 
-static unsigned long l_hartid_to_scratch(int hartid)
+static struct sbi_scratch *l_hartid_to_scratch(unsigned long hartid,
+                                               unsigned long hartindex)
 {
-    unsigned long result = 0u;
-    assert(hartid < MAX_NUM_HARTS);
+    (void)hartindex;
 
-    if (hartid != 0) {
-        result = (unsigned long)(&(pScratches[hartid].scratch));
-    }
+    if (hartid >= MAX_NUM_HARTS)
+        return NULL;
 
-    return result;
+    /* E51 (hart 0) does not use OpenSBI scratch */
+    if (hartid == 0)
+        return NULL;
+
+    return &(pScratches[hartid].scratch);
 }
 
 static void opensbi_init_handler(struct StateMachine * const pMyMachine);
@@ -176,10 +221,7 @@ void HSS_OpenSBI_Setup(void)
 
         opensbi_scratch_setup(hartid);
 
-        int sbi_console_init(struct sbi_scratch *scratch);
-	int rc = sbi_console_init(&(pScratches[hartid].scratch));
-	if (rc)
-		sbi_hart_hang();
+	mpfs_console_init();
 
 	extern bool HSS_PLIC_Init(void);
 	HSS_PLIC_Init();

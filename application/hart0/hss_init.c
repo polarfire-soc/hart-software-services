@@ -207,7 +207,8 @@ bool HSS_E51_Banner(void)
         "\n"
         "(c) Copyright 2017-2025 Microchip FPGA Embedded Systems Solutions.\n\n"
         "incorporating OpenSBI - version %d.%d\n"
-        "(c) Copyright 2019-2022 Western Digital Corporation.\n\n",
+        "(c) Copyright 2019-2022 Western Digital Corporation or its affiliates.\n"
+        "(c) Copyright 2023-2026 RISC-V International.\n\n",
         HSS_VERSION_MAJOR, HSS_VERSION_MINOR, HSS_VERSION_PATCH,
         MPFS_HAL_VERSION_MAJOR, MPFS_HAL_VERSION_MINOR, MPFS_HAL_VERSION_PATCH
 #if !IS_ENABLED(CONFIG_SKIP_DDR)

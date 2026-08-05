@@ -67,12 +67,23 @@ static void plmt_timer_event_start(u64 next_event)
 #endif
 }
 
+static int plmt_warm_timer_init(void)
+{
+	if (!plmt.time_val)
+		return SBI_ENODEV;
+
+	plmt_timer_event_stop();
+
+	return 0;
+}
+
 static struct sbi_timer_device plmt_timer = {
 	.name		   = "andes_plmt",
 	.timer_freq	   = DEFAULT_AE350_PLMT_FREQ,
 	.timer_value	   = plmt_timer_value,
 	.timer_event_start = plmt_timer_event_start,
-	.timer_event_stop  = plmt_timer_event_stop
+	.timer_event_stop  = plmt_timer_event_stop,
+	.warm_init	   = plmt_warm_timer_init,
 };
 
 int plmt_cold_timer_init(struct plmt_data *plmt)
@@ -81,24 +92,17 @@ int plmt_cold_timer_init(struct plmt_data *plmt)
 
 	/* Add PLMT region to the root domain */
 	rc = sbi_domain_root_add_memrange(
-		(unsigned long)plmt->time_val, plmt->size, PLMT_REGION_ALIGN,
-		SBI_DOMAIN_MEMREGION_MMIO | SBI_DOMAIN_MEMREGION_READABLE);
+		(unsigned long)plmt->time_val, plmt->size,
+		PLMT_REGION_ALIGN,
+		SBI_DOMAIN_MEMREGION_MMIO |
+		SBI_DOMAIN_MEMREGION_M_READABLE |
+		SBI_DOMAIN_MEMREGION_M_WRITABLE);
 	if (rc)
 		return rc;
 
 	plmt_timer.timer_freq = plmt->timer_freq;
 
 	sbi_timer_set_device(&plmt_timer);
-
-	return 0;
-}
-
-int plmt_warm_timer_init(void)
-{
-	if (!plmt.time_val)
-		return SBI_ENODEV;
-
-	plmt_timer_event_stop();
 
 	return 0;
 }

@@ -74,9 +74,8 @@ extern "C" {
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_trap.h>
 
-int HSS_SBI_ECALL_Handler(long extid, long funcid,
-    const struct sbi_trap_regs *regs, unsigned long *out_val, struct sbi_trap_info *out_trap);
-int HSS_SBI_Vendor_Ext_Check(long extid);
+int HSS_SBI_ECALL_Handler(long funcid,
+    struct sbi_trap_regs *regs, struct sbi_ecall_return *out);
 
 #ifdef __cplusplus
 }

@@ -1,13 +1,38 @@
 // SPDX-License-Identifier: BSD-2-Clause
 /*
  * fdt_fixup.h - Flat Device Tree manipulation helper routines
- * Implement platform specific DT fixups on top of libfdt.
+ * Implement platform specific DT fixups on top of libfdt. 
  *
  * Copyright (C) 2020 Bin Meng <bmeng.cn@gmail.com>
  */
 
 #ifndef __FDT_FIXUP_H__
 #define __FDT_FIXUP_H__
+
+#include <sbi/sbi_list.h>
+
+struct sbi_cpu_idle_state {
+	const char *name;
+	uint32_t suspend_param;
+	bool local_timer_stop;
+	uint32_t entry_latency_us;
+	uint32_t exit_latency_us;
+	uint32_t min_residency_us;
+	uint32_t wakeup_latency_us;
+};
+
+/**
+ * Add CPU idle states to cpu nodes in the DT
+ *
+ * Add information about CPU idle states to the devicetree. This function
+ * assumes that CPU idle states are not already present in the devicetree, and
+ * that all CPU states are equally applicable to all CPUs.
+ *
+ * @param fdt: device tree blob
+ * @param states: array of idle state descriptions, ending with empty element
+ * @return zero on success and -ve on failure
+ */
+int fdt_add_cpu_idle_states(void *fdt, const struct sbi_cpu_idle_state *state);
 
 /**
  * Fix up the CPU node in the device tree
@@ -70,19 +95,18 @@ void fdt_plic_fixup(void *fdt);
  */
 int fdt_reserved_memory_fixup(void *fdt);
 
-/**
- * Fix up the reserved memory subnodes in the device tree
- *
- * This routine adds the no-map property to the reserved memory subnodes so
- * that the OS does not map those PMP protected memory regions.
- *
- * Platform codes must call this helper in their final_init() after fdt_fixups()
- * if the OS should not map the PMP protected reserved regions.
- *
- * @param fdt: device tree blob
- * @return zero on success and -ve on failure
- */
-int fdt_reserved_memory_nomap_fixup(void *fdt);
+/** Representation of a general fixup */
+struct fdt_general_fixup {
+	struct sbi_dlist head;
+	const char *name;
+	void (*do_fixup)(struct fdt_general_fixup *f, void *fdt);
+};
+
+/** Register a general fixup */
+int fdt_register_general_fixup(struct fdt_general_fixup *fixup);
+
+/** UnRegister a general fixup */
+void fdt_unregister_general_fixup(struct fdt_general_fixup *fixup);
 
 /**
  * General device tree fix-up

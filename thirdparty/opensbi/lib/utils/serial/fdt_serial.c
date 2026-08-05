@@ -9,28 +9,16 @@
 
 #include <libfdt.h>
 #include <sbi/sbi_error.h>
-#include <sbi/sbi_scratch.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/serial/fdt_serial.h>
 
 /* List of FDT serial drivers generated at compile time */
-extern struct fdt_serial *fdt_serial_drivers[];
-extern unsigned long fdt_serial_drivers_size;
+extern const struct fdt_driver *const fdt_serial_drivers[];
 
-static struct fdt_serial dummy = {
-	.match_table = NULL,
-	.init = NULL,
-};
-
-static struct fdt_serial *current_driver = &dummy;
-
-int fdt_serial_init(void)
+int fdt_serial_init(const void *fdt)
 {
 	const void *prop;
-	struct fdt_serial *drv;
-	const struct fdt_match *match;
-	int pos, noff = -1, len, coff, rc;
-	void *fdt = fdt_get_address();
+	int noff = -1, len, coff, rc;
 
 	/* Find offset of node pointed to by stdout-path */
 	coff = fdt_path_offset(fdt, "/chosen");
@@ -50,47 +38,12 @@ int fdt_serial_init(void)
 	}
 
 	/* First check DT node pointed by stdout-path */
-	for (pos = 0; pos < fdt_serial_drivers_size && -1 < noff; pos++) {
-		drv = fdt_serial_drivers[pos];
-
-		match = fdt_match_node(fdt, noff, drv->match_table);
-		if (!match)
-			continue;
-
-		if (drv->init) {
-			rc = drv->init(fdt, noff, match);
-			if (rc == SBI_ENODEV)
-				continue;
-			if (rc)
-				return rc;
-		}
-		current_driver = drv;
-		break;
+	if (-1 < noff) {
+		rc = fdt_driver_init_by_offset(fdt, noff, fdt_serial_drivers);
+		if (rc != SBI_ENODEV)
+			return rc;
 	}
-
-	/* Check if we found desired driver */
-	if (current_driver != &dummy)
-		goto done;
 
 	/* Lastly check all DT nodes */
-	for (pos = 0; pos < fdt_serial_drivers_size; pos++) {
-		drv = fdt_serial_drivers[pos];
-
-		noff = fdt_find_match(fdt, -1, drv->match_table, &match);
-		if (noff < 0)
-			continue;
-
-		if (drv->init) {
-			rc = drv->init(fdt, noff, match);
-			if (rc == SBI_ENODEV)
-				continue;
-			if (rc)
-				return rc;
-		}
-		current_driver = drv;
-		break;
-	}
-
-done:
-	return 0;
+	return fdt_driver_init_one(fdt, fdt_serial_drivers);
 }

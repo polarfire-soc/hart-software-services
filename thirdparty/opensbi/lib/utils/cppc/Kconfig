@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: BSD-2-Clause
+
+menu "CPPC Device Support"
+
+config FDT_CPPC
+	bool "FDT based CPPC drivers"
+	depends on FDT
+	default n
+
+if FDT_CPPC
+
+config FDT_CPPC_RPMI
+	bool "FDT RPMI CPPC driver"
+	depends on FDT_MAILBOX && RPMI_MAILBOX
+	default n
+
+endif
+
+endmenu

@@ -21,19 +21,11 @@ OpenSBI currently supports the following virtual and hardware platforms:
 * **Kendryte K210 SoC**: Platform support for the Kendryte K210 SoC used on
   boards such as the Kendryte KD233 or the Sipeed MAIX Dock.
 
-* **Ariane FPGA SoC**: Platform support for the Ariane FPGA SoC used on
-  Genesys 2 board. More details on this platform can be found in the file
-  *[fpga-ariane.md]*.
-
 * **Andes AE350 SoC**: Platform support for the Andes's SoC (AE350). More
   details on this platform can be found in the file *[andes-ae350.md]*.
 
 * **Spike**: Platform support for the Spike emulator. More
   details on this platform can be found in the file *[spike.md]*.
-
-* **OpenPiton FPGA SoC**: Platform support OpenPiton research platform based
-  on ariane core. More details on this platform can be found in the file
-  *[fpga-openpiton.md]*.
 
 * **Shakti C-class SoC Platform**: Platform support for Shakti C-class
   processor based SOCs. More details on this platform can be found in the
@@ -52,10 +44,8 @@ comments to facilitate the implementation.
 [generic.md]: generic.md
 [qemu_virt.md]: qemu_virt.md
 [sifive_fu540.md]: sifive_fu540.md
-[fpga-ariane.md]: fpga-ariane.md
 [andes-ae350.md]: andes-ae350.md
 [thead-c910.md]: thead-c910.md
 [spike.md]: spike.md
-[fpga-openpiton.md]: fpga-openpiton.md
 [shakti_cclass.md]: shakti_cclass.md
 [renesas-rzfive.md]: renesas-rzfive.md

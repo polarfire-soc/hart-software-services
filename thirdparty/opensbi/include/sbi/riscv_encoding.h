@@ -32,6 +32,8 @@
 #define MSTATUS_TVM			_UL(0x00100000)
 #define MSTATUS_TW			_UL(0x00200000)
 #define MSTATUS_TSR			_UL(0x00400000)
+#define MSTATUS_SPELP			_UL(0x00800000)
+#define MSTATUS_SDT			_UL(0x01000000)
 #define MSTATUS32_SD			_UL(0x80000000)
 #if __riscv_xlen == 64
 #define MSTATUS_UXL			_ULL(0x0000000300000000)
@@ -41,12 +43,16 @@
 #define MSTATUS_GVA			_ULL(0x0000004000000000)
 #define MSTATUS_GVA_SHIFT		38
 #define MSTATUS_MPV			_ULL(0x0000008000000000)
+#define MSTATUS_MPELP			_ULL(0x0000020000000000)
+#define MSTATUS_MDT			_ULL(0x0000040000000000)
 #else
 #define MSTATUSH_SBE			_UL(0x00000010)
 #define MSTATUSH_MBE			_UL(0x00000020)
 #define MSTATUSH_GVA			_UL(0x00000040)
 #define MSTATUSH_GVA_SHIFT		6
 #define MSTATUSH_MPV			_UL(0x00000080)
+#define MSTATUSH_MPELP			_UL(0x00000200)
+#define MSTATUSH_MDT			_UL(0x00000400)
 #endif
 #define MSTATUS32_SD			_UL(0x80000000)
 #define MSTATUS64_SD			_ULL(0x8000000000000000)
@@ -79,6 +85,10 @@
 #define HSTATUS_SPV			_UL(0x00000080)
 #define HSTATUS_GVA			_UL(0x00000040)
 #define HSTATUS_VSBE			_UL(0x00000020)
+
+#define MTVEC_MODE			_UL(0x00000003)
+
+#define MCAUSE_IRQ_MASK			(_UL(1) << (__riscv_xlen - 1))
 
 #define IRQ_S_SOFT			1
 #define IRQ_VS_SOFT			2
@@ -179,7 +189,7 @@
 
 #define TOPI_IID_SHIFT			16
 #define TOPI_IID_MASK			0xfff
-#define TOPI_IPRIO_MASK		0xff
+#define TOPI_IPRIO_MASK			0xff
 
 #if __riscv_xlen == 64
 #define MHPMEVENT_OF			(_UL(1) << 63)
@@ -205,15 +215,19 @@
 
 #endif
 
-#define MHPMEVENT_SSCOF_MASK		_ULL(0xFFFF000000000000)
+#define MHPMEVENT_SSCOF_MASK		_ULL(0xFF00000000000000)
 
-#if __riscv_xlen > 32
 #define ENVCFG_STCE			(_ULL(1) << 63)
 #define ENVCFG_PBMTE			(_ULL(1) << 62)
-#else
-#define ENVCFGH_STCE			(_UL(1) << 31)
-#define ENVCFGH_PBMTE			(_UL(1) << 30)
-#endif
+#define ENVCFG_ADUE_SHIFT		61
+#define ENVCFG_ADUE			(_ULL(1) << ENVCFG_ADUE_SHIFT)
+#define ENVCFG_CDE			(_ULL(1) << 60)
+#define ENVCFG_DTE_SHIFT		59
+#define ENVCFG_DTE			(_ULL(1) << ENVCFG_DTE_SHIFT)
+#define ENVCFG_PMM			(_ULL(0x3) << 32)
+#define ENVCFG_PMM_PMLEN_0		(_ULL(0x0) << 32)
+#define ENVCFG_PMM_PMLEN_7		(_ULL(0x2) << 32)
+#define ENVCFG_PMM_PMLEN_16		(_ULL(0x3) << 32)
 #define ENVCFG_CBZE			(_UL(1) << 7)
 #define ENVCFG_CBCFE			(_UL(1) << 6)
 #define ENVCFG_CBIE_SHIFT		4
@@ -221,6 +235,10 @@
 #define ENVCFG_CBIE_ILL			_UL(0x0)
 #define ENVCFG_CBIE_FLUSH		_UL(0x1)
 #define ENVCFG_CBIE_INV			_UL(0x3)
+#define ENVCFG_SSE_SHIFT		3
+#define ENVCFG_SSE			(_UL(1) << ENVCFG_SSE_SHIFT)
+#define ENVCFG_LPE_SHIFT		2
+#define ENVCFG_LPE			(_UL(1) << ENVCFG_LPE_SHIFT)
 #define ENVCFG_FIOM			_UL(0x1)
 
 /* ===== User-level CSRs ===== */
@@ -229,6 +247,7 @@
 #define CSR_USTATUS			0x000
 #define CSR_UIE				0x004
 #define CSR_UTVEC			0x005
+#define CSR_SSP				0x011
 
 /* User Trap Handling (N-extension) */
 #define CSR_USCRATCH			0x040
@@ -319,6 +338,9 @@
 /* Supervisor Configuration */
 #define CSR_SENVCFG			0x10a
 
+/* Supervisor Conter Inhibit */
+#define CSR_SCOUNTINHIBIT		0x120
+
 /* Supervisor Trap Handling */
 #define CSR_SSCRATCH			0x140
 #define CSR_SEPC			0x141
@@ -333,9 +355,14 @@
 /* Supervisor Protection and Translation */
 #define CSR_SATP			0x180
 
-/* Supervisor-Level Window to Indirectly Accessed Registers (AIA) */
+/* Supervisor Indirect Register Alias */
 #define CSR_SISELECT			0x150
 #define CSR_SIREG			0x151
+#define CSR_SIREG2          		0x152
+#define CSR_SIREG3          		0x153
+#define CSR_SIREG4          		0x155
+#define CSR_SIREG5          		0x156
+#define CSR_SIREG6          		0x157
 
 /* Supervisor-Level Interrupts (AIA) */
 #define CSR_STOPEI			0x15c
@@ -350,6 +377,20 @@
 #define CSR_SSTATEEN1			0x10D
 #define CSR_SSTATEEN2			0x10E
 #define CSR_SSTATEEN3			0x10F
+
+/* Supervisor Resource Management Configuration CSRs */
+#define CSR_SRMCFG			0x181
+
+/* Machine-Level Control transfer records CSRs */
+#define CSR_MCTRCTL                     0x34e
+
+/* Supervisor-Level Control transfer records CSRs */
+#define CSR_SCTRCTL                     0x14e
+#define CSR_SCTRSTATUS                  0x14f
+#define CSR_SCTRDEPTH                   0x15f
+
+/* VS-Level Control transfer records CSRs */
+#define CSR_VSCTRCTL                    0x24e
 
 /* ===== Hypervisor-level CSRs ===== */
 
@@ -396,9 +437,14 @@
 #define CSR_HVIPRIO1			0x646
 #define CSR_HVIPRIO2			0x647
 
-/* VS-Level Window to Indirectly Accessed Registers (H-extension with AIA) */
+/* Virtual Supervisor Indirect Alias */
 #define CSR_VSISELECT			0x250
 #define CSR_VSIREG			0x251
+#define CSR_VSIREG2         		0x252
+#define CSR_VSIREG3         		0x253
+#define CSR_VSIREG4         		0x255
+#define CSR_VSIREG5         		0x256
+#define CSR_VSIREG6         		0x257
 
 /* VS-Level Interrupts (H-extension with AIA) */
 #define CSR_VSTOPEI			0x25c
@@ -430,6 +476,7 @@
 #define CSR_MARCHID			0xf12
 #define CSR_MIMPID			0xf13
 #define CSR_MHARTID			0xf14
+#define CSR_MCONFIGPTR			0xf15
 
 /* Machine Trap Setup */
 #define CSR_MSTATUS			0x300
@@ -602,6 +649,8 @@
 
 /* Machine Counter Setup */
 #define CSR_MCOUNTINHIBIT		0x320
+#define CSR_MCYCLECFG			0x321
+#define CSR_MINSTRETCFG			0x322
 #define CSR_MHPMEVENT3			0x323
 #define CSR_MHPMEVENT4			0x324
 #define CSR_MHPMEVENT5			0x325
@@ -633,6 +682,8 @@
 #define CSR_MHPMEVENT31			0x33f
 
 /* For RV32 */
+#define CSR_MCYCLECFGH			0x721
+#define CSR_MINSTRETCFGH		0x722
 #define CSR_MHPMEVENT3H			0x723
 #define CSR_MHPMEVENT4H			0x724
 #define CSR_MHPMEVENT5H			0x725
@@ -663,6 +714,21 @@
 #define CSR_MHPMEVENT30H		0x73e
 #define CSR_MHPMEVENT31H		0x73f
 
+/* Machine Security Configuration CSR (mseccfg) */
+#define CSR_MSECCFG			0x747
+#define CSR_MSECCFGH			0x757
+
+#define MSECCFG_MML_SHIFT		(0)
+#define MSECCFG_MML			(_UL(1) << MSECCFG_MML_SHIFT)
+#define MSECCFG_MMWP_SHIFT		(1)
+#define MSECCFG_MMWP			(_UL(1) << MSECCFG_MMWP_SHIFT)
+#define MSECCFG_RLB_SHIFT		(2)
+#define MSECCFG_RLB			(_UL(1) << MSECCFG_RLB_SHIFT)
+#define MSECCFG_USEED_SHIFT		(8)
+#define MSECCFG_USEED			(_UL(1) << MSECCFG_USEED_SHIFT)
+#define MSECCFG_SSEED_SHIFT		(9)
+#define MSECCFG_SSEED			(_UL(1) << MSECCFG_SSEED_SHIFT)
+
 /* Counter Overflow CSR */
 #define CSR_SCOUNTOVF			0xda0
 
@@ -671,6 +737,7 @@
 #define CSR_TDATA1			0x7a1
 #define CSR_TDATA2			0x7a2
 #define CSR_TDATA3			0x7a3
+#define CSR_TINFO			0x7a4
 
 /* Debug Mode Registers */
 #define CSR_DCSR			0x7b0
@@ -678,9 +745,14 @@
 #define CSR_DSCRATCH0			0x7b2
 #define CSR_DSCRATCH1			0x7b3
 
-/* Machine-Level Window to Indirectly Accessed Registers (AIA) */
+/* Machine Indirect Register Alias */
 #define CSR_MISELECT			0x350
 #define CSR_MIREG			0x351
+#define CSR_MIREG2          		0x352
+#define CSR_MIREG3          		0x353
+#define CSR_MIREG4          		0x355
+#define CSR_MIREG5          		0x356
+#define CSR_MIREG6          		0x357
 
 /* Machine-Level Interrupts (AIA) */
 #define CSR_MTOPEI			0x35c
@@ -708,6 +780,46 @@
 #define CSR_MVIPH			0x319
 #define CSR_MIPH			0x354
 
+/* Vector extension registers */
+#define CSR_VSTART			0x8
+#define CSR_VL				0xc20
+#define CSR_VTYPE			0xc21
+#define CSR_VLENB			0xc22
+
+/* Custom CSR ranges */
+#define CSR_CUSTOM0_U_RW_BASE		0x800
+#define CSR_CUSTOM0_U_RW_COUNT		0x100
+
+#define CSR_CUSTOM1_U_RO_BASE		0xCC0
+#define CSR_CUSTOM1_U_RO_COUNT		0x040
+
+#define CSR_CUSTOM2_S_RW_BASE		0x5C0
+#define CSR_CUSTOM2_S_RW_COUNT		0x040
+
+#define CSR_CUSTOM3_S_RW_BASE		0x9C0
+#define CSR_CUSTOM3_S_RW_COUNT		0x040
+
+#define CSR_CUSTOM4_S_RO_BASE		0xDC0
+#define CSR_CUSTOM4_S_RO_COUNT		0x040
+
+#define CSR_CUSTOM5_HS_RW_BASE		0x6C0
+#define CSR_CUSTOM5_HS_RW_COUNT		0x040
+
+#define CSR_CUSTOM6_HS_RW_BASE		0xAC0
+#define CSR_CUSTOM6_HS_RW_COUNT		0x040
+
+#define CSR_CUSTOM7_HS_RO_BASE		0xEC0
+#define CSR_CUSTOM7_HS_RO_COUNT		0x040
+
+#define CSR_CUSTOM8_M_RW_BASE		0x7C0
+#define CSR_CUSTOM8_M_RW_COUNT		0x040
+
+#define CSR_CUSTOM9_M_RW_BASE		0xBC0
+#define CSR_CUSTOM9_M_RW_COUNT		0x040
+
+#define CSR_CUSTOM10_M_RO_BASE		0xFC0
+#define CSR_CUSTOM10_M_RO_COUNT		0x040
+
 /* ===== Trap/Exception Causes ===== */
 
 #define CAUSE_MISALIGNED_FETCH		0x0
@@ -725,6 +837,8 @@
 #define CAUSE_FETCH_PAGE_FAULT		0xc
 #define CAUSE_LOAD_PAGE_FAULT		0xd
 #define CAUSE_STORE_PAGE_FAULT		0xf
+#define CAUSE_DOUBLE_TRAP		0x10
+#define CAUSE_SW_CHECK_EXCP		0x12
 #define CAUSE_FETCH_GUEST_PAGE_FAULT	0x14
 #define CAUSE_LOAD_GUEST_PAGE_FAULT	0x15
 #define CAUSE_VIRTUAL_INST_FAULT	0x16
@@ -736,6 +850,12 @@
 #define SMSTATEEN0_CS			(_ULL(1) << SMSTATEEN0_CS_SHIFT)
 #define SMSTATEEN0_FCSR_SHIFT		1
 #define SMSTATEEN0_FCSR			(_ULL(1) << SMSTATEEN0_FCSR_SHIFT)
+#define SMSTATEEN0_CTR_SHIFT		54
+#define SMSTATEEN0_CTR			(_ULL(1) << SMSTATEEN0_CTR_SHIFT)
+#define SMSTATEEN0_SRMCFG_SHIFT		55
+#define SMSTATEEN0_SRMCFG		(_ULL(1) << SMSTATEEN0_SRMCFG_SHIFT)
+#define SMSTATEEN0_CONTEXT_SHIFT	57
+#define SMSTATEEN0_CONTEXT		(_ULL(1) << SMSTATEEN0_CONTEXT_SHIFT)
 #define SMSTATEEN0_IMSIC_SHIFT		58
 #define SMSTATEEN0_IMSIC		(_ULL(1) << SMSTATEEN0_IMSIC_SHIFT)
 #define SMSTATEEN0_AIA_SHIFT		59
@@ -819,19 +939,380 @@
 #define INSN_MATCH_C_FSWSP		0xe002
 #define INSN_MASK_C_FSWSP		0xe003
 
+#define INSN_MATCH_C_LHU		0x8400
+#define INSN_MASK_C_LHU			0xfc43
+#define INSN_MATCH_C_LH			0x8440
+#define INSN_MASK_C_LH			0xfc43
+#define INSN_MATCH_C_SH			0x8c00
+#define INSN_MASK_C_SH			0xfc43
+
 #define INSN_MASK_WFI			0xffffff00
 #define INSN_MATCH_WFI			0x10500000
 
-#define INSN_MASK_FENCE_TSO		0xffffffff
+#define INSN_MASK_FENCE_TSO		0xfff0707f
 #define INSN_MATCH_FENCE_TSO		0x8330000f
+
+#define INSN_MASK_VECTOR_UNIT_STRIDE		0xfdf0707f
+#define INSN_MASK_VECTOR_FAULT_ONLY_FIRST	0xfdf0707f
+#define INSN_MASK_VECTOR_STRIDE			0xfc00707f
+#define INSN_MASK_VECTOR_WHOLE_REG		0xfff0707f
+#define INSN_MASK_VECTOR_INDEXED		0xfc00707f
+
+#define INSN_MATCH_VLUXSEG(n, bits) ((((n) - 1) << 29) | 0x04000007 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VSUXSEG(n, bits) ((((n) - 1) << 29) | 0x04000027 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VLOXSEG(n, bits) ((((n) - 1) << 29) | 0x0c000007 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VSOXSEG(n, bits) ((((n) - 1) << 29) | 0x0c000027 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VLSSEG(n, bits)  ((((n) - 1) << 29) | 0x08000007 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VSSSEG(n, bits)  ((((n) - 1) << 29) | 0x08000027 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VSSEG(n, bits)   ((((n) - 1) << 29) | 0x00004027 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VLSEG(n, bits)   ((((n) - 1) << 29) | 0x00004007 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+#define INSN_MATCH_VLSEGFF(n, bits) ((((n) - 1) << 29) | 0x1000007 | \
+		((bits) == 16 ? 5 : (bits) == 32 ? 6 : 7) << 12)
+
+#define INSN_MATCH_VLE16V		0x00005007
+#define INSN_MATCH_VLE32V		0x00006007
+#define INSN_MATCH_VLE64V		0x00007007
+#define INSN_MATCH_VSE16V		0x00005027
+#define INSN_MATCH_VSE32V		0x00006027
+#define INSN_MATCH_VSE64V		0x00007027
+#define INSN_MATCH_VLSE16V		0x08005007
+#define INSN_MATCH_VLSE32V		0x08006007
+#define INSN_MATCH_VLSE64V		0x08007007
+#define INSN_MATCH_VSSE16V		0x08005027
+#define INSN_MATCH_VSSE32V		0x08006027
+#define INSN_MATCH_VSSE64V		0x08007027
+#define INSN_MATCH_VLOXEI16V		0x0c005007
+#define INSN_MATCH_VLOXEI32V		0x0c006007
+#define INSN_MATCH_VLOXEI64V		0x0c007007
+#define INSN_MATCH_VSOXEI16V		0x0c005027
+#define INSN_MATCH_VSOXEI32V		0x0c006027
+#define INSN_MATCH_VSOXEI64V		0x0c007027
+#define INSN_MATCH_VLUXEI16V		0x04005007
+#define INSN_MATCH_VLUXEI32V		0x04006007
+#define INSN_MATCH_VLUXEI64V		0x04007007
+#define INSN_MATCH_VSUXEI16V		0x04005027
+#define INSN_MATCH_VSUXEI32V		0x04006027
+#define INSN_MATCH_VSUXEI64V		0x04007027
+#define INSN_MATCH_VLE16FFV		0x01005007
+#define INSN_MATCH_VLE32FFV		0x01006007
+#define INSN_MATCH_VLE64FFV		0x01007007
+#define INSN_MATCH_VL1RE8V		0x02800007
+#define INSN_MATCH_VL1RE16V		0x02805007
+#define INSN_MATCH_VL1RE32V		0x02806007
+#define INSN_MATCH_VL1RE64V		0x02807007
+#define INSN_MATCH_VL2RE8V		0x22800007
+#define INSN_MATCH_VL2RE16V		0x22805007
+#define INSN_MATCH_VL2RE32V		0x22806007
+#define INSN_MATCH_VL2RE64V		0x22807007
+#define INSN_MATCH_VL4RE8V		0x62800007
+#define INSN_MATCH_VL4RE16V		0x62805007
+#define INSN_MATCH_VL4RE32V		0x62806007
+#define INSN_MATCH_VL4RE64V		0x62807007
+#define INSN_MATCH_VL8RE8V		0xe2800007
+#define INSN_MATCH_VL8RE16V		0xe2805007
+#define INSN_MATCH_VL8RE32V		0xe2806007
+#define INSN_MATCH_VL8RE64V		0xe2807007
+#define INSN_MATCH_VS1RV		0x02800027
+#define INSN_MATCH_VS2RV		0x22800027
+#define INSN_MATCH_VS4RV		0x62800027
+#define INSN_MATCH_VS8RV		0xe2800027
+
+#define INSN_OPCODE_MASK		0x7f
+#define INSN_OPCODE_VECTOR_LOAD		0x07
+#define INSN_OPCODE_VECTOR_STORE	0x27
+#define INSN_OPCODE_AMO			0x2f
+
+#define IS_VECTOR_LOAD_STORE(insn) \
+	((((insn) & INSN_OPCODE_MASK) == INSN_OPCODE_VECTOR_LOAD) || \
+	(((insn) & INSN_OPCODE_MASK) == INSN_OPCODE_VECTOR_STORE))
+
+#define IS_VECTOR_INSN_MATCH(insn, match, mask) \
+	(((insn) & (mask)) == ((match) & (mask)))
+
+#define IS_UNIT_STRIDE_MATCH(insn, match) \
+	IS_VECTOR_INSN_MATCH(insn, match, INSN_MASK_VECTOR_UNIT_STRIDE)
+
+#define IS_STRIDE_MATCH(insn, match) \
+	IS_VECTOR_INSN_MATCH(insn, match, INSN_MASK_VECTOR_STRIDE)
+
+#define IS_INDEXED_MATCH(insn, match) \
+	IS_VECTOR_INSN_MATCH(insn, match, INSN_MASK_VECTOR_INDEXED)
+
+#define IS_FAULT_ONLY_FIRST_MATCH(insn, match) \
+	IS_VECTOR_INSN_MATCH(insn, match, INSN_MASK_VECTOR_FAULT_ONLY_FIRST)
+
+#define IS_WHOLE_REG_MATCH(insn, match) \
+	IS_VECTOR_INSN_MATCH(insn, match, INSN_MASK_VECTOR_WHOLE_REG)
+
+#define IS_UNIT_STRIDE_LOAD(insn) ( \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLE16V) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLE32V) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLE64V) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(2, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(3, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(4, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(5, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(6, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(7, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(8, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(2, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(3, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(4, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(5, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(6, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(7, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(8, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(2, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(3, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(4, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(5, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(6, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(7, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VLSEG(8, 64)))
+
+#define IS_UNIT_STRIDE_STORE(insn) ( \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSE16V) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSE32V) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSE64V) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(2, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(3, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(4, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(5, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(6, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(7, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(8, 16)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(2, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(3, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(4, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(5, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(6, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(7, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(8, 32)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(2, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(3, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(4, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(5, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(6, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(7, 64)) || \
+	IS_UNIT_STRIDE_MATCH(insn, INSN_MATCH_VSSEG(8, 64)))
+
+#define IS_STRIDE_LOAD(insn) ( \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSE16V) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSE32V) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSE64V) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(2, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(3, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(4, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(5, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(6, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(7, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(8, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(2, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(3, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(4, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(5, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(6, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(7, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(8, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(2, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(3, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(4, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(5, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(6, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(7, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VLSSEG(8, 64)))
+
+#define IS_STRIDE_STORE(insn) ( \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSE16V) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSE32V) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSE64V) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(2, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(3, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(4, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(5, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(6, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(7, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(8, 16)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(2, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(3, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(4, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(5, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(6, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(7, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(8, 32)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(2, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(3, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(4, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(5, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(6, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(7, 64)) || \
+	IS_STRIDE_MATCH(insn, INSN_MATCH_VSSSEG(8, 64)))
+
+#define IS_INDEXED_LOAD(insn) ( \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXEI16V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXEI32V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXEI64V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXEI16V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXEI32V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXEI64V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(2, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(3, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(4, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(5, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(6, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(7, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(8, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(2, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(3, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(4, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(5, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(6, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(7, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(8, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(2, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(3, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(4, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(5, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(6, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(7, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLUXSEG(8, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(2, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(3, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(4, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(5, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(6, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(7, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(8, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(2, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(3, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(4, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(5, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(6, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(7, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(8, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(2, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(3, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(4, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(5, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(6, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(7, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VLOXSEG(8, 64)))
+
+#define IS_INDEXED_STORE(insn) ( \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXEI16V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXEI32V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXEI64V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXEI16V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXEI32V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXEI64V) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(2, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(3, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(4, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(5, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(6, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(7, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(8, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(2, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(3, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(4, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(5, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(6, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(7, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(8, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(2, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(3, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(4, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(5, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(6, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(7, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSUXSEG(8, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(2, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(3, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(4, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(5, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(6, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(7, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(8, 16)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(2, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(3, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(4, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(5, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(6, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(7, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(8, 32)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(2, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(3, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(4, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(5, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(6, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(7, 64)) || \
+	IS_INDEXED_MATCH(insn, INSN_MATCH_VSOXSEG(8, 64)))
+
+#define IS_FAULT_ONLY_FIRST_LOAD(insn) ( \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLE16FFV) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLE32FFV) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLE64FFV) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(2, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(3, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(4, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(5, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(6, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(7, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(8, 16)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(2, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(3, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(4, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(5, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(6, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(7, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(8, 32)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(2, 64)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(3, 64)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(4, 64)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(5, 64)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(6, 64)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(7, 64)) || \
+	IS_FAULT_ONLY_FIRST_MATCH(insn, INSN_MATCH_VLSEGFF(8, 64)))
+
+	#define IS_WHOLE_REG_LOAD(insn) ( \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL1RE8V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL1RE16V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL1RE32V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL1RE64V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL2RE8V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL2RE16V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL2RE32V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL2RE64V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL4RE8V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL4RE16V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL4RE32V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL4RE64V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL8RE8V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL8RE16V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL8RE32V) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VL8RE64V))
+
+#define IS_WHOLE_REG_STORE(insn) ( \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VS1RV) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VS2RV) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VS4RV) || \
+	IS_WHOLE_REG_MATCH(insn, INSN_MATCH_VS8RV))
+
 
 #if __riscv_xlen == 64
 
 /* 64-bit read for VS-stage address translation (RV64) */
 #define INSN_PSEUDO_VS_LOAD		0x00003000
-
 /* 64-bit write for VS-stage address translation (RV64) */
-#define INSN_PSEUDO_VS_STORE	0x00003020
+#define INSN_PSEUDO_VS_STORE		0x00003020
 
 #elif __riscv_xlen == 32
 
@@ -839,12 +1320,31 @@
 #define INSN_PSEUDO_VS_LOAD		0x00002000
 
 /* 32-bit write for VS-stage address translation (RV32) */
-#define INSN_PSEUDO_VS_STORE	0x00002020
+#define INSN_PSEUDO_VS_STORE		0x00002020
 
 #else
 #error "Unexpected __riscv_xlen"
 #endif
 
+#define MASK_FUNCT3			0x7000
+#define SHIFT_FUNCT3			12
+
+#define MASK_RS1			0xf8000
+#define MASK_RS2			0x1f00000
+#define MASK_RD				0xf80
+
+#define MASK_CSR			0xfff00000
+#define SHIFT_CSR			20
+
+#define MASK_AQRL			0x06000000
+#define SHIFT_AQRL			25
+
+#define VM_MASK				0x1
+#define VIEW_MASK			0x3
+#define VSEW_MASK			0x3
+#define VLMUL_MASK			0x7
+#define VD_MASK				0x1f
+#define VS2_MASK			0x1f
 #define INSN_16BIT_MASK			0x3
 #define INSN_32BIT_MASK			0x1c
 
@@ -856,13 +1356,12 @@
 
 #define INSN_LEN(insn)			(INSN_IS_16BIT(insn) ? 2 : 4)
 
-#if __riscv_xlen == 64
-#define LOG_REGBYTES			3
-#else
-#define LOG_REGBYTES			2
-#endif
-#define REGBYTES			(1 << LOG_REGBYTES)
-
+#define SH_VSEW				3
+#define SH_VIEW				12
+#define SH_VD				7
+#define SH_VS2				20
+#define SH_VM				25
+#define SH_MEW				28
 #define SH_RD				7
 #define SH_RS1				15
 #define SH_RS2				20
@@ -891,28 +1390,39 @@
 #define SHIFT_RIGHT(x, y)		\
 	((y) < 0 ? ((x) << -(y)) : ((x) >> (y)))
 
-#define REG_MASK			\
-	((1 << (5 + LOG_REGBYTES)) - (1 << LOG_REGBYTES))
+#define GET_FUNC3(insn)			((insn & MASK_FUNCT3) >> SHIFT_FUNCT3)
+#define GET_RM(insn)			GET_FUNC3(insn)
+#define GET_RS1_NUM(insn)		((insn & MASK_RS1) >> SH_RS1)
+#define GET_RS2_NUM(insn)		((insn & MASK_RS2) >> SH_RS2)
+#define GET_RS1S_NUM(insn)		RVC_RS1S(insn)
+#define GET_RS2S_NUM(insn)		RVC_RS2S(insn)
+#define GET_RS2C_NUM(insn)		RVC_RS2(insn)
+#define GET_RD_NUM(insn)		((insn & MASK_RD) >> SH_RD)
+#define GET_CSR_NUM(insn)		((insn & MASK_CSR) >> SHIFT_CSR)
+#define GET_AQRL(insn)			((insn & MASK_AQRL) >> SHIFT_AQRL)
 
-#define REG_OFFSET(insn, pos)		\
-	(SHIFT_RIGHT((insn), (pos) - LOG_REGBYTES) & REG_MASK)
-
-#define REG_PTR(insn, pos, regs)	\
-	(ulong *)((ulong)(regs) + REG_OFFSET(insn, pos))
-
-#define GET_RM(insn)			(((insn) >> 12) & 7)
-
-#define GET_RS1(insn, regs)		(*REG_PTR(insn, SH_RS1, regs))
-#define GET_RS2(insn, regs)		(*REG_PTR(insn, SH_RS2, regs))
-#define GET_RS1S(insn, regs)		(*REG_PTR(RVC_RS1S(insn), 0, regs))
-#define GET_RS2S(insn, regs)		(*REG_PTR(RVC_RS2S(insn), 0, regs))
-#define GET_RS2C(insn, regs)		(*REG_PTR(insn, SH_RS2C, regs))
-#define GET_SP(regs)			(*REG_PTR(2, 0, regs))
-#define SET_RD(insn, regs, val)		(*REG_PTR(insn, SH_RD, regs) = (val))
 #define IMM_I(insn)			((s32)(insn) >> 20)
 #define IMM_S(insn)			(((s32)(insn) >> 25 << 5) | \
 					 (s32)(((insn) >> 7) & 0x1f))
-#define MASK_FUNCT3			0x7000
+
+#define IS_MASKED(insn)			(((insn >> SH_VM) & VM_MASK) == 0)
+#define GET_VD(insn)			((insn >> SH_VD) & VD_MASK)
+#define GET_VS2(insn)			((insn >> SH_VS2) & VS2_MASK)
+#define GET_VIEW(insn)			(((insn) >> SH_VIEW) & VIEW_MASK)
+#define GET_MEW(insn)			(((insn) >> SH_MEW) & 1)
+#define GET_VSEW(vtype)			(((vtype) >> SH_VSEW) & VSEW_MASK)
+#define GET_VLMUL(vtype)		((vtype) & VLMUL_MASK)
+#define GET_LEN(view)			(1UL << (view))
+#define GET_NF(insn)			(1 + ((insn >> 29) & 7))
+#define GET_VEMUL(vlmul, view, vsew)	((vlmul + view - vsew) & 7)
+#define GET_EMUL(vemul)			(1UL << ((vemul) >= 4 ? 0 : (vemul)))
+
+#define CSRRW 1
+#define CSRRS 2
+#define CSRRC 3
+#define CSRRWI 5
+#define CSRRSI 6
+#define CSRRCI 7
 
 /* clang-format on */
 

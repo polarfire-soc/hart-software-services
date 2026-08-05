@@ -14,8 +14,8 @@
 #include <sbi/sbi_scratch.h>
 #include <sbi/sbi_trap.h>
 
-#define BOOT_STATUS_RELOCATE_DONE	1
-#define BOOT_STATUS_BOOT_HART_DONE	2
+#define BOOT_LOTTERY_ACQUIRED		1
+#define BOOT_STATUS_BOOT_HART_DONE	1
 
 .macro	MOV_3R __d0, __s0, __d1, __s1, __d2, __s2
 	add	\__d0, \__s0, zero
@@ -31,15 +31,14 @@
 	add	\__d4, \__s4, zero
 .endm
 
-/*
- * If __start_reg <= __check_reg and __check_reg < __end_reg then
- *   jump to __pass
- */
-.macro BRANGE __start_reg, __end_reg, __check_reg, __jump_lable
-	blt	\__check_reg, \__start_reg, 999f
-	bge	\__check_reg, \__end_reg, 999f
-	j	\__jump_lable
-999:
+.macro CLEAR_MDT tmp
+#if __riscv_xlen == 32
+	li 	\tmp, MSTATUSH_MDT
+	csrc	CSR_MSTATUSH, \tmp
+#else
+	li 	\tmp, MSTATUS_MDT
+	csrc	CSR_MSTATUS, \tmp
+#endif
 .endm
 
 	.section .entry, "ax", %progbits
@@ -55,164 +54,48 @@ _start:
 	li	a7, -1
 	beq	a6, a7, _try_lottery
 	/* Jump to relocation wait loop if we are not boot hart */
-	bne	a0, a6, _wait_relocate_copy_done
+	bne	a0, a6, _wait_for_boot_hart
 _try_lottery:
 	/* Jump to relocation wait loop if we don't get relocation lottery */
-	lla	a6, _relocate_lottery
-	li	a7, 1
-	amoadd.w a6, a7, (a6)
-	bnez	a6, _wait_relocate_copy_done
+	lla	a6, _boot_lottery
+	li	a7, BOOT_LOTTERY_ACQUIRED
+#if defined(__riscv_atomic) || defined(__riscv_zaamo)
+	amoswap.w a6, a7, (a6)
+	bnez	a6, _wait_for_boot_hart
+#elif defined(__riscv_zalrsc)
+_sc_fail:
+	lr.w	t0, (a6)
+	sc.w	t1, a7, (a6)
+	bnez	t1, _sc_fail
+	bnez	t0, _wait_for_boot_hart
+#else
+#error "need a or zalrsc"
+#endif
 
-	/* Save load address */
-	lla	t0, _load_start
-	lla	t1, _fw_start
-	REG_S	t1, 0(t0)
-
-#ifdef FW_PIC
 	/* relocate the global table content */
-	lla	t0, _link_start
-	REG_L	t0, 0(t0)
-	/* t1 shall has the address of _fw_start */
-	sub	t2, t1, t0
-	lla	t3, _runtime_offset
-	REG_S	t2, (t3)
-	lla	t0, __rel_dyn_start
-	lla	t1, __rel_dyn_end
+	li	t0, FW_TEXT_START	/* link start */
+	lla	t1, _fw_start		/* load start */
+	sub	t2, t1, t0		/* load offset */
+	lla	t0, __rela_dyn_start
+	lla	t1, __rela_dyn_end
 	beq	t0, t1, _relocate_done
-	j	5f
 2:
-	REG_L	t5, -(REGBYTES*2)(t0)	/* t5 <-- relocation info:type */
+	REG_L	t5, __SIZEOF_LONG__(t0)	/* t5 <-- relocation info:type */
 	li	t3, R_RISCV_RELATIVE	/* reloc type R_RISCV_RELATIVE */
 	bne	t5, t3, 3f
-	REG_L	t3, -(REGBYTES*3)(t0)
-	REG_L	t5, -(REGBYTES)(t0)	/* t5 <-- addend */
+	REG_L	t3, 0(t0)
+	REG_L	t5, (__SIZEOF_LONG__ * 2)(t0)	/* t5 <-- addend */
 	add	t5, t5, t2
 	add	t3, t3, t2
 	REG_S	t5, 0(t3)		/* store runtime address to the GOT entry */
-	j	5f
 
 3:
-	lla	t4, __dyn_sym_start
-
-4:
-	REG_L	t5, -(REGBYTES*2)(t0)	/* t5 <-- relocation info:type */
-	srli	t6, t5, SYM_INDEX	/* t6 <--- sym table index */
-	andi	t5, t5, 0xFF		/* t5 <--- relocation type */
-	li	t3, RELOC_TYPE
-	bne	t5, t3, 5f
-
-	/* address R_RISCV_64 or R_RISCV_32 cases*/
-	REG_L	t3, -(REGBYTES*3)(t0)
-	li	t5, SYM_SIZE
-	mul	t6, t6, t5
-	add	s5, t4, t6
-	REG_L	t6, -(REGBYTES)(t0)	/* t0 <-- addend */
-	REG_L	t5, REGBYTES(s5)
-	add	t5, t5, t6
-	add	t5, t5, t2		/* t5 <-- location to fix up in RAM */
-	add	t3, t3, t2		/* t3 <-- location to fix up in RAM */
-	REG_S	t5, 0(t3)		/* store runtime address to the variable */
-
-5:
-	addi	t0, t0, (REGBYTES*3)
-	ble	t0, t1, 2b
-	j	_relocate_done
-_wait_relocate_copy_done:
-	j	_wait_for_boot_hart
-#else
-	/* Relocate if load address != link address */
-_relocate:
-	lla	t0, _link_start
-	REG_L	t0, 0(t0)
-	lla	t1, _link_end
-	REG_L	t1, 0(t1)
-	lla	t2, _load_start
-	REG_L	t2, 0(t2)
-	beq	t0, t2, _relocate_done
-	sub	t3, t1, t0
-	add	t3, t3, t2
-	lla	t4, _relocate_done
-	sub	t4, t4, t2
-	add	t4, t4, t0
-	blt	t2, t0, _relocate_copy_to_upper
-_relocate_copy_to_lower:
-	ble	t1, t2, _relocate_copy_to_lower_loop
-	lla	t3, _relocate_lottery
-	BRANGE	t2, t1, t3, _start_hang
-	lla	t3, _boot_status
-	BRANGE	t2, t1, t3, _start_hang
-	lla	t3, _relocate
-	lla	t5, _relocate_done
-	BRANGE	t2, t1, t3, _start_hang
-	BRANGE	t2, t1, t5, _start_hang
-	BRANGE  t3, t5, t2, _start_hang
-_relocate_copy_to_lower_loop:
-	REG_L	t3, 0(t2)
-	REG_S	t3, 0(t0)
-	add	t0, t0, __SIZEOF_POINTER__
-	add	t2, t2, __SIZEOF_POINTER__
-	blt	t0, t1, _relocate_copy_to_lower_loop
-	jr	t4
-_relocate_copy_to_upper:
-	ble	t3, t0, _relocate_copy_to_upper_loop
-	lla	t2, _relocate_lottery
-	BRANGE	t0, t3, t2, _start_hang
-	lla	t2, _boot_status
-	BRANGE	t0, t3, t2, _start_hang
-	lla	t2, _relocate
-	lla	t5, _relocate_done
-	BRANGE	t0, t3, t2, _start_hang
-	BRANGE	t0, t3, t5, _start_hang
-	BRANGE	t2, t5, t0, _start_hang
-_relocate_copy_to_upper_loop:
-	add	t3, t3, -__SIZEOF_POINTER__
-	add	t1, t1, -__SIZEOF_POINTER__
-	REG_L	t2, 0(t3)
-	REG_S	t2, 0(t1)
-	blt	t0, t1, _relocate_copy_to_upper_loop
-	jr	t4
-_wait_relocate_copy_done:
-	lla	t0, _fw_start
-	lla	t1, _link_start
-	REG_L	t1, 0(t1)
-	beq	t0, t1, _wait_for_boot_hart
-	lla	t2, _boot_status
-	lla	t3, _wait_for_boot_hart
-	sub	t3, t3, t0
-	add	t3, t3, t1
-1:
-	/* waitting for relocate copy done (_boot_status == 1) */
-	li	t4, BOOT_STATUS_RELOCATE_DONE
-	REG_L	t5, 0(t2)
-	/* Reduce the bus traffic so that boot hart may proceed faster */
-	nop
-	nop
-	nop
-	bgt     t4, t5, 1b
-	jr	t3
-#endif
+	addi	t0, t0, (__SIZEOF_LONG__ * 3)
+	blt	t0, t1, 2b
 _relocate_done:
-
-	/*
-	 * Mark relocate copy done
-	 * Use _boot_status copy relative to the load address
-	 */
-	lla	t0, _boot_status
-#ifndef FW_PIC
-	lla	t1, _link_start
-	REG_L	t1, 0(t1)
-	lla	t2, _load_start
-	REG_L	t2, 0(t2)
-	sub	t0, t0, t1
-	add	t0, t0, t2
-#endif
-	li	t1, BOOT_STATUS_RELOCATE_DONE
-	REG_S	t1, 0(t0)
-	fence	rw, rw
-
 	/* At this point we are running from link address */
 
-	/* Reset all registers for boot HART */
+	/* Reset all registers except ra, a0, a1, a2, a3 and a4 for boot HART */
 	li	ra, 0
 	call	_reset_regs
 
@@ -227,6 +110,14 @@ _bss_zero:
 	/* Setup temporary trap handler */
 	lla	s4, _start_hang
 	csrw	CSR_MTVEC, s4
+
+	/*
+	 * While at this point, trap handling is rudimentary, if a trap happens,
+	 * it will end up in _start_hang which is enough to hook up a GDB. Clear
+	 * MDT to avoid generating a double trap and thus entering a
+	 * critical-error state.
+	 */
+	CLEAR_MDT t0
 
 	/* Setup temporary stack */
 	lla	s4, _fw_end
@@ -257,20 +148,28 @@ _bss_zero:
 	/* Preload HART details
 	 * s7 -> HART Count
 	 * s8 -> HART Stack Size
+	 * s9 -> Heap Size
+	 * s10 -> Heap Offset
 	 */
 	lla	a4, platform
 #if __riscv_xlen > 32
 	lwu	s7, SBI_PLATFORM_HART_COUNT_OFFSET(a4)
 	lwu	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
+	lwu	s9, SBI_PLATFORM_HEAP_SIZE_OFFSET(a4)
 #else
 	lw	s7, SBI_PLATFORM_HART_COUNT_OFFSET(a4)
 	lw	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
+	lw	s9, SBI_PLATFORM_HEAP_SIZE_OFFSET(a4)
 #endif
 
 	/* Setup scratch space for all the HARTs*/
 	lla	tp, _fw_end
 	mul	a5, s7, s8
 	add	tp, tp, a5
+	/* Setup heap base address */
+	lla	s10, _fw_start
+	sub	s10, tp, s10
+	add	tp, tp, s9
 	/* Keep a copy of tp */
 	add	t3, tp, zero
 	/* Counter */
@@ -285,8 +184,11 @@ _scratch_init:
 	 * t3 -> the firmware end address
 	 * s7 -> HART count
 	 * s8 -> HART stack size
+	 * s9 -> Heap Size
+	 * s10 -> Heap Offset
 	 */
 	add	tp, t3, zero
+	sub	tp, tp, s9
 	mul	a5, s8, t1
 	sub	tp, tp, a5
 	li	a5, SBI_SCRATCH_SIZE
@@ -298,6 +200,16 @@ _scratch_init:
 	sub	a5, t3, a4
 	REG_S	a4, SBI_SCRATCH_FW_START_OFFSET(tp)
 	REG_S	a5, SBI_SCRATCH_FW_SIZE_OFFSET(tp)
+
+	/* Store R/W section's offset in scratch space */
+	lla	a5, _fw_rw_start
+	sub	a5, a5, a4
+	REG_S	a5, SBI_SCRATCH_FW_RW_OFFSET(tp)
+
+	/* Store fw_heap_offset and fw_heap_size in scratch space */
+	REG_S	s10, SBI_SCRATCH_FW_HEAP_OFFSET(tp)
+	REG_S	s9, SBI_SCRATCH_FW_HEAP_SIZE_OFFSET(tp)
+
 	/* Store next arg1 in scratch space */
 	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_arg1
@@ -322,10 +234,8 @@ _scratch_init:
 	/* Store hartid-to-scratch function address in scratch space */
 	lla	a4, _hartid_to_scratch
 	REG_S	a4, SBI_SCRATCH_HARTID_TO_SCRATCH_OFFSET(tp)
-	/* Store trap-exit function address in scratch space */
-	lla	a4, _trap_exit
-	REG_S	a4, SBI_SCRATCH_TRAP_EXIT_OFFSET(tp)
-	/* Clear tmp0 in scratch space */
+	/* Clear trap_context and tmp0 in scratch space */
+	REG_S	zero, SBI_SCRATCH_TRAP_CONTEXT_OFFSET(tp)
 	REG_S	zero, SBI_SCRATCH_TMP0_OFFSET(tp)
 	/* Store firmware options in scratch space */
 	MOV_3R	s0, a0, s1, a1, s2, a2
@@ -336,6 +246,8 @@ _scratch_init:
 #endif
 	REG_S	a0, SBI_SCRATCH_OPTIONS_OFFSET(tp)
 	MOV_3R	a0, s0, a1, s1, a2, s2
+	/* Store hart index in scratch space */
+	REG_S	t1, SBI_SCRATCH_HARTINDEX_OFFSET(tp)
 	/* Move to next scratch space */
 	add	t1, t1, t2
 	blt	t1, s7, _scratch_init
@@ -360,30 +272,14 @@ _scratch_init:
 	beq	t1, a1, _fdt_reloc_done
 	/* t0 = source FDT start address */
 	add	t0, a1, zero
-	/* t2 = source FDT size in big-endian */
-#if __riscv_xlen == 64
-	lwu	t2, 4(t0)
-#else
-	lw	t2, 4(t0)
-#endif
-	/* t3 = bit[15:8] of FDT size */
-	add	t3, t2, zero
-	srli	t3, t3, 16
-	and	t3, t3, a4
+	/* t2 = source FDT size (convert from big-endian) */
+	lbu	t2, 7(t0)
+	lbu	t3, 6(t0)
+	lbu	t4, 5(t0)
+	lbu	t5, 4(t0)
 	slli	t3, t3, 8
-	/* t4 = bit[23:16] of FDT size */
-	add	t4, t2, zero
-	srli	t4, t4, 8
-	and	t4, t4, a4
 	slli	t4, t4, 16
-	/* t5 = bit[31:24] of FDT size */
-	add	t5, t2, zero
-	and	t5, t5, a4
 	slli	t5, t5, 24
-	/* t2 = bit[7:0] of FDT size */
-	srli	t2, t2, 24
-	and	t2, t2, a4
-	/* t2 = FDT size in little-endian */
 	or	t2, t2, t3
 	or	t2, t2, t4
 	or	t2, t2, t5
@@ -402,33 +298,32 @@ _fdt_reloc_done:
 	/* mark boot hart done */
 	li	t0, BOOT_STATUS_BOOT_HART_DONE
 	lla	t1, _boot_status
-	REG_S	t0, 0(t1)
 	fence	rw, rw
+	REG_S	t0, 0(t1)
 	j	_start_warm
 
-	/* waiting for boot hart to be done (_boot_status == 2) */
+	/* waiting for boot hart to be done (_boot_status == BOOT_STATUS_BOOT_HART_DONE) */
 _wait_for_boot_hart:
 	li	t0, BOOT_STATUS_BOOT_HART_DONE
 	lla	t1, _boot_status
 	REG_L	t1, 0(t1)
 	/* Reduce the bus traffic so that boot hart may proceed faster */
-	nop
-	nop
-	nop
+	div	t2, t2, zero
+	div	t2, t2, zero
+	div	t2, t2, zero
 	bne	t0, t1, _wait_for_boot_hart
 
 _start_warm:
-	/* Reset all registers for non-boot HARTs */
+	/* Reset all registers except ra, a0, a1, a2, a3 and a4 for non-boot HART */
 	li	ra, 0
 	call	_reset_regs
 
-	/* Disable and clear all interrupts */
+	/* Disable all interrupts */
 	csrw	CSR_MIE, zero
-	csrw	CSR_MIP, zero
 
 	/* Find HART count and HART stack size */
 	lla	a4, platform
-#if __riscv_xlen == 64
+#if __riscv_xlen > 32
 	lwu	s7, SBI_PLATFORM_HART_COUNT_OFFSET(a4)
 	lwu	s8, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(a4)
 #else
@@ -444,7 +339,7 @@ _start_warm:
 	beqz	s9, 3f
 	li	a4, 0
 1:
-#if __riscv_xlen == 64
+#if __riscv_xlen > 32
 	lwu	a5, (s9)
 #else
 	lw	a5, (s9)
@@ -453,7 +348,6 @@ _start_warm:
 	add	s9, s9, 4
 	add	a4, a4, 1
 	blt	a4, s7, 1b
-	li	a4, -1
 2:	add	s6, a4, zero
 3:	bge	s6, s7, _start_hang
 
@@ -474,27 +368,16 @@ _start_warm:
 
 	/* Setup trap handler */
 	lla	a4, _trap_handler
-#if __riscv_xlen == 32
 	csrr	a5, CSR_MISA
 	srli	a5, a5, ('H' - 'A')
 	andi	a5, a5, 0x1
-	beq	a5, zero, _skip_trap_handler_rv32_hyp
-	lla	a4, _trap_handler_rv32_hyp
-_skip_trap_handler_rv32_hyp:
-#endif
+	beq	a5, zero, _skip_trap_handler_hyp
+	lla	a4, _trap_handler_hyp
+_skip_trap_handler_hyp:
 	csrw	CSR_MTVEC, a4
 
-#if __riscv_xlen == 32
-	/* Override trap exit for H-extension */
-	csrr	a5, CSR_MISA
-	srli	a5, a5, ('H' - 'A')
-	andi	a5, a5, 0x1
-	beq	a5, zero, _skip_trap_exit_rv32_hyp
-	lla	a4, _trap_exit_rv32_hyp
-	csrr	a5, CSR_MSCRATCH
-	REG_S	a4, SBI_SCRATCH_TRAP_EXIT_OFFSET(a5)
-_skip_trap_exit_rv32_hyp:
-#endif
+	/* Clear MDT here again for all harts */
+	CLEAR_MDT t0
 
 	/* Initialize SBI runtime */
 	csrr	a0, CSR_MSCRATCH
@@ -505,20 +388,10 @@ _skip_trap_exit_rv32_hyp:
 
 	.data
 	.align 3
-#ifdef FW_PIC
-_runtime_offset:
-	RISCV_PTR	0
-#endif
-_relocate_lottery:
+_boot_lottery:
 	RISCV_PTR	0
 _boot_status:
 	RISCV_PTR	0
-_load_start:
-	RISCV_PTR	_fw_start
-_link_start:
-	RISCV_PTR	FW_TEXT_START
-_link_end:
-	RISCV_PTR	_fw_reloc_end
 
 	.section .entry, "ax", %progbits
 	.align 3
@@ -532,7 +405,7 @@ _hartid_to_scratch:
 	 * t2 -> Temporary
 	 */
 	lla	t2, platform
-#if __riscv_xlen == 64
+#if __riscv_xlen > 32
 	lwu	t0, SBI_PLATFORM_HART_STACK_SIZE_OFFSET(t2)
 	lwu	t2, SBI_PLATFORM_HART_COUNT_OFFSET(t2)
 #else
@@ -616,10 +489,10 @@ memcmp:
 	xor	t0, tp, t0
 
 	/* Save original SP on exception stack */
-	REG_S	sp, (SBI_TRAP_REGS_OFFSET(sp) - SBI_TRAP_REGS_SIZE)(t0)
+	REG_S	sp, (SBI_TRAP_REGS_OFFSET(sp) - SBI_TRAP_CONTEXT_SIZE)(t0)
 
-	/* Set SP to exception stack and make room for trap registers */
-	add	sp, t0, -(SBI_TRAP_REGS_SIZE)
+	/* Set SP to exception stack and make room for trap context */
+	add	sp, t0, -(SBI_TRAP_CONTEXT_SIZE)
 
 	/* Restore T0 from scratch space */
 	REG_L	t0, SBI_SCRATCH_TMP0_OFFSET(tp)
@@ -679,6 +552,35 @@ memcmp:
 	REG_S	t6, SBI_TRAP_REGS_OFFSET(t6)(sp)
 .endm
 
+.macro	TRAP_SAVE_INFO have_mstatush have_h_extension
+	csrr	t0, CSR_MCAUSE
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(cause))(sp)
+	csrr	t0, CSR_MTVAL
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tval))(sp)
+.if \have_h_extension
+	csrr	t0, CSR_MTVAL2
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tval2))(sp)
+	csrr	t0, CSR_MTINST
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tinst))(sp)
+	.if \have_mstatush
+	csrr	t0, CSR_MSTATUSH
+	srli	t0, t0, MSTATUSH_GVA_SHIFT
+	.else
+	csrr	t0, CSR_MSTATUS
+	srli	t0, t0, MSTATUS_GVA_SHIFT
+	.endif
+	and	t0, t0, 0x1
+.else
+	REG_S	zero, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tval2))(sp)
+	REG_S	zero, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(tinst))(sp)
+	li	t0, 0
+.endif
+	REG_S	t0, (SBI_TRAP_REGS_SIZE + SBI_TRAP_INFO_OFFSET(gva))(sp)
+
+	/* We are ready to take another trap, clear MDT */
+	CLEAR_MDT t0
+.endm
+
 .macro	TRAP_CALL_C_ROUTINE
 	/* Call C routine */
 	add	a0, sp, zero
@@ -719,15 +621,18 @@ memcmp:
 .endm
 
 .macro	TRAP_RESTORE_MEPC_MSTATUS have_mstatush
-	/* Restore MEPC and MSTATUS CSRs */
-	REG_L	t0, SBI_TRAP_REGS_OFFSET(mepc)(a0)
-	csrw	CSR_MEPC, t0
-	REG_L	t0, SBI_TRAP_REGS_OFFSET(mstatus)(a0)
-	csrw	CSR_MSTATUS, t0
+	/*
+	 * Restore MSTATUS and MEPC CSRs starting with MSTATUS/H to set MDT
+	 * flags since we can not take a trap now or MEPC would be cloberred
+	 */
 	.if \have_mstatush
 	REG_L	t0, SBI_TRAP_REGS_OFFSET(mstatusH)(a0)
 	csrw	CSR_MSTATUSH, t0
 	.endif
+	REG_L	t0, SBI_TRAP_REGS_OFFSET(mstatus)(a0)
+	csrw	CSR_MSTATUS, t0
+	REG_L	t0, SBI_TRAP_REGS_OFFSET(mepc)(a0)
+	csrw	CSR_MEPC, t0
 .endm
 
 .macro TRAP_RESTORE_A0_T0
@@ -741,7 +646,6 @@ memcmp:
 	.section .entry, "ax", %progbits
 	.align 3
 	.globl _trap_handler
-	.globl _trap_exit
 _trap_handler:
 	TRAP_SAVE_AND_SETUP_SP_T0
 
@@ -749,9 +653,10 @@ _trap_handler:
 
 	TRAP_SAVE_GENERAL_REGS_EXCEPT_SP_T0
 
+	TRAP_SAVE_INFO 0 0
+
 	TRAP_CALL_C_ROUTINE
 
-_trap_exit:
 	TRAP_RESTORE_GENERAL_REGS_EXCEPT_A0_T0
 
 	TRAP_RESTORE_MEPC_MSTATUS 0
@@ -760,29 +665,39 @@ _trap_exit:
 
 	mret
 
-#if __riscv_xlen == 32
 	.section .entry, "ax", %progbits
 	.align 3
-	.globl _trap_handler_rv32_hyp
-	.globl _trap_exit_rv32_hyp
-_trap_handler_rv32_hyp:
+	.globl _trap_handler_hyp
+_trap_handler_hyp:
 	TRAP_SAVE_AND_SETUP_SP_T0
 
+#if __riscv_xlen == 32
 	TRAP_SAVE_MEPC_MSTATUS 1
+#else
+	TRAP_SAVE_MEPC_MSTATUS 0
+#endif
 
 	TRAP_SAVE_GENERAL_REGS_EXCEPT_SP_T0
 
+#if __riscv_xlen == 32
+	TRAP_SAVE_INFO 1 1
+#else
+	TRAP_SAVE_INFO 0 1
+#endif
+
 	TRAP_CALL_C_ROUTINE
 
-_trap_exit_rv32_hyp:
 	TRAP_RESTORE_GENERAL_REGS_EXCEPT_A0_T0
 
+#if __riscv_xlen == 32
 	TRAP_RESTORE_MEPC_MSTATUS 1
+#else
+	TRAP_RESTORE_MEPC_MSTATUS 0
+#endif
 
 	TRAP_RESTORE_A0_T0
 
 	mret
-#endif
 
 	.section .entry, "ax", %progbits
 	.align 3
@@ -791,7 +706,7 @@ _reset_regs:
 
 	/* flush the instruction cache */
 	fence.i
-	/* Reset all registers except ra, a0, a1 and a2 */
+	/* Reset all registers except ra, a0, a1, a2, a3 and a4 */
 	li sp, 0
 	li gp, 0
 	li tp, 0
@@ -800,8 +715,6 @@ _reset_regs:
 	li t2, 0
 	li s0, 0
 	li s1, 0
-	li a3, 0
-	li a4, 0
 	li a5, 0
 	li a6, 0
 	li a7, 0
@@ -822,6 +735,27 @@ _reset_regs:
 	csrw CSR_MSCRATCH, 0
 
 	ret
+
+	.section .rodata
+.Lstack_corrupt_msg:
+	.string "stack smashing detected\n"
+
+	/* This will be called when the stack corruption is detected */
+	.section .text
+	.align 3
+	.globl __stack_chk_fail
+	.type __stack_chk_fail, %function
+__stack_chk_fail:
+	la	a0, .Lstack_corrupt_msg
+	call	sbi_panic
+
+	/* Initial value of the stack guard variable */
+	.section .data
+	.align 3
+	.globl __stack_chk_guard
+	.type __stack_chk_guard, %object
+__stack_chk_guard:
+	RISCV_PTR	0x95B5FF5A
 
 #ifdef FW_FDT_PATH
 	.section .rodata

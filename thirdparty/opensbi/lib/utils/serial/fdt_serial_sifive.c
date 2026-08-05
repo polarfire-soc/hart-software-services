@@ -11,8 +11,8 @@
 #include <sbi_utils/serial/fdt_serial.h>
 #include <sbi_utils/serial/sifive-uart.h>
 
-static int serial_sifive_init(void *fdt, int nodeoff,
-				const struct fdt_match *match)
+static int serial_sifive_init(const void *fdt, int nodeoff,
+			      const struct fdt_match *match)
 {
 	int rc;
 	struct platform_uart_data uart = { 0 };
@@ -30,7 +30,7 @@ static const struct fdt_match serial_sifive_match[] = {
 	{ },
 };
 
-struct fdt_serial fdt_serial_sifive = {
+const struct fdt_driver fdt_serial_sifive = {
 	.match_table = serial_sifive_match,
 	.init = serial_sifive_init
 };

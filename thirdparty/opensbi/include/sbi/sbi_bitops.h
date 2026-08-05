@@ -12,13 +12,9 @@
 
 #include <sbi/sbi_types.h>
 
-#if __SIZEOF_POINTER__ == 8
-#define BITS_PER_LONG		64
-#elif __SIZEOF_POINTER__ == 4
-#define BITS_PER_LONG		32
-#else
-#error "Unexpected __SIZEOF_POINTER__"
-#endif
+#define BITS_PER_LONG		(8 * __SIZEOF_LONG__)
+
+#define BITS_PER_LONG_LONG	64
 
 #define EXTRACT_FIELD(val, which) \
 	(((val) & (which)) / ((which) & ~((which)-1)))
@@ -32,10 +28,15 @@
 #define BIT_MASK(nr)		(1UL << ((nr) % BITS_PER_LONG))
 #define BIT_WORD(bit)		((bit) / BITS_PER_LONG)
 #define BIT_WORD_OFFSET(bit)	((bit) & (BITS_PER_LONG - 1))
+#define BIT_ALIGN(bit, align)	(((bit) + ((align) - 1)) & ~((align) - 1))
+
+#define BIT_ULL(nr)		(1ULL << (nr))
 
 #define GENMASK(h, l) \
 	(((~0UL) - (1UL << (l)) + 1) & (~0UL >> (BITS_PER_LONG - 1 - (h))))
 
+#define GENMASK_ULL(h, l) \
+	(((~0ULL) - (1ULL << (l)) + 1) & (~0ULL >> (BITS_PER_LONG_LONG - 1 - (h))))
 /**
  * sbi_ffs - find first (less-significant) set bit in a long word.
  * @word: The word to search
@@ -116,6 +117,30 @@ static inline unsigned long sbi_fls(unsigned long word)
 	if (!(word & (~0ul << (BITS_PER_LONG-1))))
 		num -= 1;
 	return num;
+}
+
+/**
+ * sbi_popcount - find the number of set bit in a long word
+ * @word: the word to search
+ */
+static inline unsigned long sbi_popcount(unsigned long word)
+{
+	unsigned long count;
+
+#if BITS_PER_LONG == 64
+	count = word - ((word >> 1) & 0x5555555555555555ul);
+	count = (count & 0x3333333333333333ul) + ((count >> 2) & 0x3333333333333333ul);
+	count = (count + (count >> 4)) & 0x0F0F0F0F0F0F0F0Ful;
+	count = count + (count >> 8);
+	count = count + (count >> 16);
+	return (count + (count >> 32)) & 0x00000000000000FFul;
+#else
+	count = word - ((word >> 1) & 0x55555555);
+	count = (count & 0x33333333) + ((count >> 2) & 0x33333333);
+	count = (count + (count >> 4)) & 0x0F0F0F0F;
+	count = count + (count >> 8);
+	return (count + (count >> 16)) & 0x000000FF;
+#endif
 }
 
 #define for_each_set_bit(bit, addr, size) \

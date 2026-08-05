@@ -10,20 +10,22 @@
 #ifndef __SBI_IRQCHIP_H__
 #define __SBI_IRQCHIP_H__
 
+#include <sbi/sbi_list.h>
 #include <sbi/sbi_types.h>
 
 struct sbi_scratch;
-struct sbi_trap_regs;
 
-/**
- * Set external interrupt handling function
- *
- * This function is called by OpenSBI platform code to set a handler for
- * external interrupts
- *
- * @param fn function pointer for handling external irqs
- */
-void sbi_irqchip_set_irqfn(int (*fn)(struct sbi_trap_regs *regs));
+/** irqchip hardware device */
+struct sbi_irqchip_device {
+	/** Node in the list of irqchip devices */
+	struct sbi_dlist node;
+
+	/** Initialize per-hart state for the current hart */
+	int (*warm_init)(struct sbi_irqchip_device *dev);
+
+	/** Handle an IRQ from this irqchip */
+	int (*irq_handle)(void);
+};
 
 /**
  * Process external interrupts
@@ -33,7 +35,10 @@ void sbi_irqchip_set_irqfn(int (*fn)(struct sbi_trap_regs *regs));
  *
  * @param regs pointer for trap registers
  */
-int sbi_irqchip_process(struct sbi_trap_regs *regs);
+int sbi_irqchip_process(void);
+
+/** Register an irqchip device to receive callbacks */
+void sbi_irqchip_add_device(struct sbi_irqchip_device *dev);
 
 /** Initialize interrupt controllers */
 int sbi_irqchip_init(struct sbi_scratch *scratch, bool cold_boot);

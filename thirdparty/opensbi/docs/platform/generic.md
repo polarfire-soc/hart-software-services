@@ -9,10 +9,9 @@ boards.
 
 By default, the generic FDT platform makes following assumptions:
 
-1. platform FW_TEXT_START is 0x80000000
-2. platform features are default
-3. platform stack size is default
-4. platform has no quirks or work-arounds
+1. platform features are default
+2. platform stack size is default
+3. platform has no quirks or work-arounds
 
 The above assumptions (except 1) can be overridden by adding special platform
 callbacks which will be called based on FDT root node compatible string.
@@ -33,10 +32,6 @@ Users of the generic FDT platform will have to ensure that:
 To build the platform-specific library and firmware images, provide the
 *PLATFORM=generic* parameter to the top level `make` command.
 
-For custom FW_TEXT_START, we can build the platform-specific library and
-firmware images by passing *PLATFORM=generic FW_TEXT_START=<custom_text_start>*
-parameter to the top level `make` command.
-
 Platform Options
 ----------------
 
@@ -52,11 +47,15 @@ RISC-V Platforms Using Generic Platform
 * **SiFive HiFive Unleashed** (*[sifive_fu540.md]*)
 * **Spike** (*[spike.md]*)
 * **T-HEAD C9xx series Processors** (*[thead-c9xx.md]*)
+* **OpenPiton FPGA SoC** (*[fpga-openpiton.md]*)
+* **Ariane FPGA SoC** (*[fpga-ariane.md]*)
 
-[andes-ae350.md]: andse-ae350.md
+[andes-ae350.md]: andes-ae350.md
 [qemu_virt.md]: qemu_virt.md
 [renesas-rzfive.md]: renesas-rzfive.md
 [shakti_cclass.md]: shakti_cclass.md
 [sifive_fu540.md]: sifive_fu540.md
 [spike.md]: spike.md
 [thead-c9xx.md]: thead-c9xx.md
+[fpga-openpiton.md]: fpga-openpiton.md
+[fpga-ariane.md]: fpga-ariane.md

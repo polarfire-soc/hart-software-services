@@ -89,7 +89,6 @@ SECTIONS
         PROVIDE(gnu_build_id = .);
         *(.note.gnu.build-id)
     } >l2zerodevice
-    PROVIDE(_hss_end = .);
     .ram_code : ALIGN(0x10)
     {
         __sc_load = LOADADDR (.ram_code);
@@ -137,6 +136,13 @@ SECTIONS
         . = ALIGN(0x10);
         __bss_end = .;
     } >l2zerodevice
+    .opensbi_heap : ALIGN(0x400)
+    {
+        __opensbi_heap_start = .;
+        . += 0x10000;
+        __opensbi_heap_end = .;
+    } >l2zerodevice
+    PROVIDE(_hss_end = .);
     .stack : ALIGN(0x40)
     {
         __stack_bottom = .;

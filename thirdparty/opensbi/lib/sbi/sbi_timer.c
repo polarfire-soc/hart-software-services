@@ -114,20 +114,21 @@ u64 sbi_timer_get_delta(void)
 
 void sbi_timer_set_delta(ulong delta)
 {
-	u64 *time_delta = sbi_scratch_offset_ptr(sbi_scratch_thishart_ptr(),
-						 time_delta_off);
+	ulong *time_delta = sbi_scratch_offset_ptr(sbi_scratch_thishart_ptr(),
+						   time_delta_off);
 
-	*time_delta = (u64)delta;
+	*time_delta = delta;
 }
 
+#if __riscv_xlen == 32
 void sbi_timer_set_delta_upper(ulong delta_upper)
 {
-	u64 *time_delta = sbi_scratch_offset_ptr(sbi_scratch_thishart_ptr(),
-						 time_delta_off);
+	ulong *time_delta = sbi_scratch_offset_ptr(sbi_scratch_thishart_ptr(),
+						   time_delta_off);
 
-	*time_delta &= 0xffffffffULL;
-	*time_delta |= ((u64)delta_upper << 32);
+	*(time_delta + 1) = delta_upper;
 }
+#endif
 
 void sbi_timer_event_start(u64 next_event)
 {
@@ -138,12 +139,7 @@ void sbi_timer_event_start(u64 next_event)
 	 * the older software to leverage sstc extension on newer hardware.
 	 */
 	if (sbi_hart_has_extension(sbi_scratch_thishart_ptr(), SBI_HART_EXT_SSTC)) {
-#if __riscv_xlen == 32
-		csr_write(CSR_STIMECMP, next_event & 0xFFFFFFFF);
-		csr_write(CSR_STIMECMPH, next_event >> 32);
-#else
-		csr_write(CSR_STIMECMP, next_event);
-#endif
+		csr_write64(CSR_STIMECMP, next_event);
 	} else if (timer_dev && timer_dev->timer_event_start) {
 		timer_dev->timer_event_start(next_event);
 		csr_clear(CSR_MIP, MIP_STIP);
@@ -182,14 +178,19 @@ int sbi_timer_init(struct sbi_scratch *scratch, bool cold_boot)
 {
 	u64 *time_delta;
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
+	int ret;
 
 	if (cold_boot) {
 		time_delta_off = sbi_scratch_alloc_offset(sizeof(*time_delta));
 		if (!time_delta_off)
 			return SBI_ENOMEM;
 
-		if (sbi_hart_has_extension(scratch, SBI_HART_EXT_TIME))
+		if (sbi_hart_has_csr(scratch, SBI_HART_CSR_TIME))
 			get_time_val = get_ticks;
+
+		ret = sbi_platform_timer_init(plat);
+		if (ret)
+			return ret;
 	} else {
 		if (!time_delta_off)
 			return SBI_ENOMEM;
@@ -198,7 +199,13 @@ int sbi_timer_init(struct sbi_scratch *scratch, bool cold_boot)
 	time_delta = sbi_scratch_offset_ptr(scratch, time_delta_off);
 	*time_delta = 0;
 
-	return sbi_platform_timer_init(plat, cold_boot);
+	if (timer_dev && timer_dev->warm_init) {
+		ret = timer_dev->warm_init();
+		if (ret)
+			return ret;
+	}
+
+	return 0;
 }
 
 void sbi_timer_exit(struct sbi_scratch *scratch)
@@ -208,6 +215,4 @@ void sbi_timer_exit(struct sbi_scratch *scratch)
 
 	csr_clear(CSR_MIP, MIP_STIP);
 	csr_clear(CSR_MIE, MIP_MTIP);
-
-	sbi_platform_timer_exit(sbi_platform_ptr(scratch));
 }

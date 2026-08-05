@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: BSD-2-Clause
+
+config ANDES_PMA
+	bool "Andes PMA support"
+	default n
+	help
+	  Programmable PMA(PPMA) is a feature for Andes. PPMA allows
+	  dynamic adjustment of memory attributes in the runtime.
+	  It contains a configurable amount of PMA entries implemented
+	  as CSRs to control the attributes of memory locations in interest.
+
+config ANDES_SBI
+	bool "Andes SBI support"
+	default n
+
+config ANDES_PMU
+	bool "Andes PMU extension (XAndesPMU) support"
+	default n
+	help
+	  Andes PMU extension supports the event counter overflow
+	  interrupt and mode filtering, similar to the standard
+	  Sscofpmf and Smcntrpmf.

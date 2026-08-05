@@ -79,6 +79,7 @@ export PYTHONDONTWRITEBYTECODE=1
 export KCONFIG_DIR=$(platform_build_dir)/kconfig
 export KCONFIG_AUTOLIST=$(KCONFIG_DIR)/auto.list
 export KCONFIG_AUTOHEADER=$(KCONFIG_DIR)/autoconf.h
+export KCONFIG_AUTOCONFIG=$(KCONFIG_DIR)/auto.conf
 export KCONFIG_AUTOCMD=$(KCONFIG_DIR)/auto.conf.cmd
 export KCONFIG_CONFIG=$(KCONFIG_DIR)/.config
 # Additional exports for include paths in Kconfig files
@@ -90,14 +91,29 @@ endif
 # Find library version
 OPENSBI_VERSION_MAJOR=`grep "define OPENSBI_VERSION_MAJOR" $(include_dir)/sbi/sbi_version.h | sed 's/.*MAJOR.*\([0-9][0-9]*\)/\1/'`
 OPENSBI_VERSION_MINOR=`grep "define OPENSBI_VERSION_MINOR" $(include_dir)/sbi/sbi_version.h | sed 's/.*MINOR.*\([0-9][0-9]*\)/\1/'`
-OPENSBI_VERSION_GIT=$(shell if [ -d $(src_dir)/.git ]; then git describe 2> /dev/null; fi)
+OPENSBI_VERSION_GIT=
+
+# Detect 'git' presence before issuing 'git' commands
+GIT_AVAIL := $(shell command -v git 2> /dev/null)
+ifneq ($(GIT_AVAIL),)
+GIT_DIR := $(shell git rev-parse --git-dir 2> /dev/null)
+ifneq ($(GIT_DIR),)
+OPENSBI_VERSION_GIT := $(shell if [ -d $(GIT_DIR) ]; then git describe 2> /dev/null; fi)
+endif
+endif
 
 # Setup compilation commands
 ifneq ($(LLVM),)
-CC		=	clang
-AR		=	llvm-ar
-LD		=	ld.lld
-OBJCOPY		=	llvm-objcopy
+ifneq ($(filter %/,$(LLVM)),)
+LLVM_PREFIX := $(LLVM)
+else ifneq ($(filter -%,$(LLVM)),)
+LLVM_SUFFIX := $(LLVM)
+endif
+
+CC		=	$(LLVM_PREFIX)clang$(LLVM_SUFFIX)
+AR		=	$(LLVM_PREFIX)llvm-ar$(LLVM_SUFFIX)
+LD		=	$(LLVM_PREFIX)ld.lld$(LLVM_SUFFIX)
+OBJCOPY		=	$(LLVM_PREFIX)llvm-objcopy$(LLVM_SUFFIX)
 else
 ifdef CROSS_COMPILE
 CC		=	$(CROSS_COMPILE)gcc
@@ -135,6 +151,12 @@ endif
 
 # Guess the compiler's XLEN
 OPENSBI_CC_XLEN := $(shell TMP=`$(CC) $(CLANG_TARGET) -dumpmachine | sed 's/riscv\([0-9][0-9]\).*/\1/'`; echo $${TMP})
+# If guessing XLEN fails, default to 64
+ifneq ($(OPENSBI_CC_XLEN),32)
+  ifneq ($(OPENSBI_CC_XLEN),64)
+    OPENSBI_CC_XLEN = 64
+  endif
+endif
 
 # Guess the compiler's ABI and ISA
 ifneq ($(CC_IS_CLANG),y)
@@ -164,14 +186,32 @@ else
 USE_LD_FLAG	=	-fuse-ld=bfd
 endif
 
+REPRODUCIBLE ?= n
+ifeq ($(REPRODUCIBLE),y)
+REPRODUCIBLE_FLAGS		+=	-ffile-prefix-map=$(src_dir)=
+endif
+
 # Check whether the linker supports creating PIEs
 OPENSBI_LD_PIE := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) $(USE_LD_FLAG) -fPIE -nostdlib -Wl,-pie -x c /dev/null -o /dev/null >/dev/null 2>&1 && echo y || echo n)
 
+# Check whether the linker supports --exclude-libs
+OPENSBI_LD_EXCLUDE_LIBS := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) $(USE_LD_FLAG) "-Wl,--exclude-libs,ALL" -x c /dev/null -o /dev/null >/dev/null 2>&1 && echo y || echo n)
+
 # Check whether the compiler supports -m(no-)save-restore
-CC_SUPPORT_SAVE_RESTORE := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -mno-save-restore -x c /dev/null -o /dev/null 2>&1 | grep "\-save\-restore" >/dev/null && echo n || echo y)
+CC_SUPPORT_SAVE_RESTORE := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -mno-save-restore -x c /dev/null -o /dev/null 2>&1 | grep -e "-save-restore" >/dev/null && echo n || echo y)
+
+# Check whether the compiler supports -m(no-)strict-align
+CC_SUPPORT_STRICT_ALIGN := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -mstrict-align -x c /dev/null -o /dev/null 2>&1 | grep -e "-mstrict-align" -e "-mno-unaligned-access" >/dev/null && echo n || echo y)
 
 # Check whether the assembler and the compiler support the Zicsr and Zifencei extensions
-CC_SUPPORT_ZICSR_ZIFENCEI := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -march=rv$(OPENSBI_CC_XLEN)imafd_zicsr_zifencei -x c /dev/null -o /dev/null 2>&1 | grep "zicsr\|zifencei" > /dev/null && echo n || echo y)
+CC_SUPPORT_ZICSR_ZIFENCEI := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -march=rv$(OPENSBI_CC_XLEN)imafd_zicsr_zifencei -x c /dev/null -o /dev/null 2>&1 | grep -e "zicsr" -e "zifencei" > /dev/null && echo n || echo y)
+
+# Check whether the assembler and the compiler support the Vector extension
+CC_SUPPORT_VECTOR := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdlib -march=rv$(OPENSBI_CC_XLEN)gv -dM -E -x c /dev/null 2>&1 | grep -q riscv.*vector && echo y || echo n)
+
+ifneq ($(OPENSBI_LD_PIE),y)
+$(error Your linker does not support creating PIEs, opensbi requires this.)
+endif
 
 # Build Info:
 # OPENSBI_BUILD_TIME_STAMP -- the compilation time stamp
@@ -179,16 +219,18 @@ CC_SUPPORT_ZICSR_ZIFENCEI := $(shell $(CC) $(CLANG_TARGET) $(RELAX_FLAG) -nostdl
 BUILD_INFO ?= n
 ifeq ($(BUILD_INFO),y)
 OPENSBI_BUILD_DATE_FMT = +%Y-%m-%d %H:%M:%S %z
+ifndef OPENSBI_BUILD_TIME_STAMP
 ifdef SOURCE_DATE_EPOCH
-	OPENSBI_BUILD_TIME_STAMP ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" \
+	OPENSBI_BUILD_TIME_STAMP := $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" \
 		"$(OPENSBI_BUILD_DATE_FMT)" 2>/dev/null || \
 		date -u -r "$(SOURCE_DATE_EPOCH)" \
 		"$(OPENSBI_BUILD_DATE_FMT)" 2>/dev/null || \
 		date -u "$(OPENSBI_BUILD_DATE_FMT)")
 else
-	OPENSBI_BUILD_TIME_STAMP ?= $(shell date "$(OPENSBI_BUILD_DATE_FMT)")
+	OPENSBI_BUILD_TIME_STAMP := $(shell date "$(OPENSBI_BUILD_DATE_FMT)")
 endif
-OPENSBI_BUILD_COMPILER_VERSION=$(shell $(CC) -v 2>&1 | grep ' version ' | \
+endif
+OPENSBI_BUILD_COMPILER_VERSION := $(shell $(CC) -v 2>&1 | grep ' version ' | \
 	sed 's/[[:space:]]*$$//')
 endif
 
@@ -210,24 +252,28 @@ ifdef PLATFORM
 menuconfig: $(platform_src_dir)/Kconfig $(src_dir)/Kconfig
 	$(CMD_PREFIX)mkdir -p $(KCONFIG_DIR)
 	$(CMD_PREFIX)$(src_dir)/scripts/Kconfiglib/menuconfig.py $(src_dir)/Kconfig
-	$(CMD_PREFIX)$(src_dir)/scripts/Kconfiglib/genconfig.py --header-path $(KCONFIG_AUTOHEADER) --sync-deps $(KCONFIG_DIR) --file-list $(KCONFIG_AUTOLIST) $(src_dir)/Kconfig
 
 .PHONY: savedefconfig
 savedefconfig: $(platform_src_dir)/Kconfig $(src_dir)/Kconfig
 	$(CMD_PREFIX)mkdir -p $(KCONFIG_DIR)
 	$(CMD_PREFIX)$(src_dir)/scripts/Kconfiglib/savedefconfig.py --kconfig $(src_dir)/Kconfig --out $(KCONFIG_DIR)/defconfig
 
-$(KCONFIG_CONFIG): $(platform_src_dir)/configs/$(PLATFORM_DEFCONFIG) $(platform_src_dir)/Kconfig $(src_dir)/Kconfig
+$(KCONFIG_CONFIG): $(platform_src_dir)/configs/$(PLATFORM_DEFCONFIG)
 	$(CMD_PREFIX)mkdir -p $(KCONFIG_DIR)
 	$(CMD_PREFIX)$(src_dir)/scripts/Kconfiglib/defconfig.py --kconfig $(src_dir)/Kconfig $(platform_src_dir)/configs/$(PLATFORM_DEFCONFIG)
+
+$(KCONFIG_AUTOCONFIG): $(KCONFIG_CONFIG)
 	$(CMD_PREFIX)$(src_dir)/scripts/Kconfiglib/genconfig.py --header-path $(KCONFIG_AUTOHEADER) --sync-deps $(KCONFIG_DIR) --file-list $(KCONFIG_AUTOLIST) $(src_dir)/Kconfig
 
-$(KCONFIG_AUTOCMD): $(KCONFIG_CONFIG)
-	$(CMD_PREFIX)mkdir -p $(KCONFIG_DIR)
+$(KCONFIG_AUTOHEADER): $(KCONFIG_AUTOCONFIG);
+
+$(KCONFIG_AUTOLIST): $(KCONFIG_AUTOCONFIG);
+
+$(KCONFIG_AUTOCMD): $(KCONFIG_AUTOLIST)
 	$(CMD_PREFIX)printf "%s: " $(KCONFIG_CONFIG) > $(KCONFIG_AUTOCMD)
 	$(CMD_PREFIX)cat $(KCONFIG_AUTOLIST) | tr '\n' ' ' >> $(KCONFIG_AUTOCMD)
 
-include $(KCONFIG_CONFIG)
+include $(KCONFIG_AUTOCONFIG)
 include $(KCONFIG_AUTOCMD)
 endif
 
@@ -254,6 +300,7 @@ deps-y=$(platform-objs-path-y:.o=.dep)
 deps-y+=$(libsbi-objs-path-y:.o=.dep)
 deps-y+=$(libsbiutils-objs-path-y:.o=.dep)
 deps-y+=$(firmware-objs-path-y:.o=.dep)
+deps-y+=$(firmware-elfs-path-y:=.dep)
 
 # Setup platform ABI, ISA and Code Model
 ifndef PLATFORM_RISCV_ABI
@@ -269,10 +316,9 @@ ifndef PLATFORM_RISCV_ABI
 endif
 ifndef PLATFORM_RISCV_ISA
   ifneq ($(PLATFORM_RISCV_TOOLCHAIN_DEFAULT), 1)
+    PLATFORM_RISCV_ISA := rv$(PLATFORM_RISCV_XLEN)imafdc
     ifeq ($(CC_SUPPORT_ZICSR_ZIFENCEI), y)
-      PLATFORM_RISCV_ISA = rv$(PLATFORM_RISCV_XLEN)imafdc_zicsr_zifencei
-    else
-      PLATFORM_RISCV_ISA = rv$(PLATFORM_RISCV_XLEN)imafdc
+      PLATFORM_RISCV_ISA := $(PLATFORM_RISCV_ISA)_zicsr_zifencei
     endif
   else
     PLATFORM_RISCV_ISA = $(OPENSBI_CC_ISA)
@@ -323,6 +369,7 @@ ifeq ($(BUILD_INFO),y)
 GENFLAGS	+=	-DOPENSBI_BUILD_TIME_STAMP="\"$(OPENSBI_BUILD_TIME_STAMP)\""
 GENFLAGS	+=	-DOPENSBI_BUILD_COMPILER_VERSION="\"$(OPENSBI_BUILD_COMPILER_VERSION)\""
 endif
+GENFLAGS	+=	-include $(include_dir)/sbi/sbi_visibility.h
 ifdef PLATFORM
 GENFLAGS	+=	-include $(KCONFIG_AUTOHEADER)
 endif
@@ -330,18 +377,27 @@ GENFLAGS	+=	$(libsbiutils-genflags-y)
 GENFLAGS	+=	$(platform-genflags-y)
 GENFLAGS	+=	$(firmware-genflags-y)
 
-CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-stack-protector -fno-strict-aliasing -O2
-CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls -mstrict-align
-# enable -m(no-)save-restore option by CC_SUPPORT_SAVE_RESTORE
+CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-stack-protector -fno-strict-aliasing -ffunction-sections -fdata-sections
+CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
+CFLAGS		+=	-fno-asynchronous-unwind-tables -fno-unwind-tables
+CFLAGS		+=	-std=gnu11
+CFLAGS		+=	$(REPRODUCIBLE_FLAGS)
+# Optionally supported flags
+ifeq ($(CC_SUPPORT_VECTOR),y)
+CFLAGS		+=	-DOPENSBI_CC_SUPPORT_VECTOR
+endif
 ifeq ($(CC_SUPPORT_SAVE_RESTORE),y)
 CFLAGS		+=	-mno-save-restore
+endif
+ifeq ($(CC_SUPPORT_STRICT_ALIGN),y)
+CFLAGS		+=	-mstrict-align
 endif
 CFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 CFLAGS		+=	-mcmodel=$(PLATFORM_RISCV_CODE_MODEL)
 CFLAGS		+=	$(RELAX_FLAG)
 CFLAGS		+=	$(GENFLAGS)
 CFLAGS		+=	$(platform-cflags-y)
-CFLAGS		+=	-fno-pie -no-pie
+CFLAGS		+=	-fPIE -pie
 CFLAGS		+=	$(firmware-cflags-y)
 
 CPPFLAGS	+=	$(GENFLAGS)
@@ -349,10 +405,15 @@ CPPFLAGS	+=	$(platform-cppflags-y)
 CPPFLAGS	+=	$(firmware-cppflags-y)
 
 ASFLAGS		=	-g -Wall -nostdlib
-ASFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls -mstrict-align
-# enable -m(no-)save-restore option by CC_SUPPORT_SAVE_RESTORE
+ASFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
+ASFLAGS		+=	-fPIE
+ASFLAGS		+=	$(REPRODUCIBLE_FLAGS)
+# Optionally supported flags
 ifeq ($(CC_SUPPORT_SAVE_RESTORE),y)
 ASFLAGS		+=	-mno-save-restore
+endif
+ifeq ($(CC_SUPPORT_STRICT_ALIGN),y)
+ASFLAGS		+=	-mstrict-align
 endif
 ASFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
 ASFLAGS		+=	-mcmodel=$(PLATFORM_RISCV_CODE_MODEL)
@@ -369,7 +430,12 @@ ASFLAGS		+=	$(firmware-asflags-y)
 ARFLAGS		=	rcs
 
 ELFFLAGS	+=	$(USE_LD_FLAG)
-ELFFLAGS	+=	-Wl,--build-id=none -Wl,-N
+ELFFLAGS	+=	-Wl,--gc-sections
+ifeq ($(OPENSBI_LD_EXCLUDE_LIBS),y)
+ELFFLAGS	+=	-Wl,--exclude-libs,ALL
+endif
+ELFFLAGS	+=	-Wl,--build-id=none
+ELFFLAGS	+=	-Wl,--no-dynamic-linker -Wl,-pie
 ELFFLAGS	+=	$(platform-ldflags-y)
 ELFFLAGS	+=	$(firmware-ldflags-y)
 
@@ -383,6 +449,16 @@ MERGEFLAGS	+=	-m elf$(PLATFORM_RISCV_XLEN)lriscv
 
 DTSCPPFLAGS	=	$(CPPFLAGS) -nostdinc -nostdlib -fno-builtin -D__DTS__ -x assembler-with-cpp
 
+ifneq ($(DEBUG),)
+CFLAGS		+=	-O0
+else
+CFLAGS		+=	-O2
+endif
+
+ifeq ($(V), 1)
+ELFFLAGS	+=	-Wl,--print-gc-sections
+endif
+
 # Setup functions for compilation
 define dynamic_flags
 -I$(shell dirname $(2)) -D__OBJNAME__=$(subst -,_,$(shell basename $(1) .o))
@@ -395,10 +471,10 @@ merge_deps = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     cat $(2) > $(1)
 copy_file =  $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " COPY      $(subst $(build_dir)/,,$(1))"; \
-	     cp -f $(2) $(1)
+	     cp -L -f $(2) $(1)
 inst_file =  $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " INSTALL   $(subst $(install_root_dir)/,,$(1))"; \
-	     cp -f $(2) $(1)
+	     cp -L -f $(2) $(1)
 inst_file_list = $(CMD_PREFIX)if [ ! -z "$(4)" ]; then \
 	     mkdir -p $(1)/$(3); \
 	     for file in $(4) ; do \
@@ -407,12 +483,17 @@ inst_file_list = $(CMD_PREFIX)if [ ! -z "$(4)" ]; then \
 	     dest_dir=`dirname $$dest_file`; \
 	     echo " INSTALL   "$(3)"/"`echo $$rel_file`; \
 	     mkdir -p $$dest_dir; \
-	     cp -f $$file $$dest_file; \
+	     cp -L -f $$file $$dest_file; \
 	     done \
 	     fi
 inst_header_dir =  $(CMD_PREFIX)mkdir -p $(1); \
 	     echo " INSTALL   $(subst $(install_root_dir)/,,$(1))"; \
-	     cp -rf $(2) $(1)
+	     cp -L -rf $(2) $(1)
+compile_cpp_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
+	     echo " CPP-DEP   $(subst $(build_dir)/,,$(1))"; \
+	     printf %s `dirname $(1)`/  > $(1) && \
+	     $(CC) $(CPPFLAGS) -x c -MM $(3) \
+	       -MT `basename $(1:.dep=$(2))` >> $(1) || rm -f $(1)
 compile_cpp = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " CPP       $(subst $(build_dir)/,,$(1))"; \
 	     $(CPP) $(CPPFLAGS) -x c $(2) | grep -v "\#" > $(1)
@@ -452,8 +533,8 @@ compile_d2c = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     $(src_dir)/scripts/d2c.sh -i $(6) -a $(D2C_ALIGN_BYTES) -p $(D2C_NAME_PREFIX) -t $(D2C_PADDING_BYTES) > $(1)
 compile_carray = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " CARRAY    $(subst $(build_dir)/,,$(1))"; \
-	     $(eval CARRAY_VAR_LIST := $(carray-$(subst .c,,$(shell basename $(1)))-y)) \
-	     $(src_dir)/scripts/carray.sh -i $(2) -l "$(CARRAY_VAR_LIST)" > $(1)
+	     $(eval CARRAY_VAR_LIST := $(carray-$(subst .carray.c,,$(shell basename $(1)))-y)) \
+	     $(src_dir)/scripts/carray.sh -i $(2) -l "$(CARRAY_VAR_LIST)" > $(1) || rm $(1)
 compile_gen_dep = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " GEN-DEP   $(subst $(build_dir)/,,$(1))"; \
 	     echo "$(1:.dep=$(2)): $(3)" >> $(1)
@@ -478,14 +559,14 @@ $(build_dir)/lib/libsbi.a: $(libsbi-objs-path-y)
 $(platform_build_dir)/lib/libplatsbi.a: $(libsbi-objs-path-y) $(libsbiutils-objs-path-y) $(platform-objs-path-y)
 	$(call compile_ar,$@,$^)
 
-$(build_dir)/%.dep: $(src_dir)/%.carray $(KCONFIG_CONFIG)
-	$(call compile_gen_dep,$@,.c,$< $(KCONFIG_CONFIG))
+$(build_dir)/%.dep: $(src_dir)/%.carray $(KCONFIG_AUTOHEADER)
+	$(call compile_gen_dep,$@,.c,$< $(KCONFIG_AUTOHEADER))
 	$(call compile_gen_dep,$@,.o,$(@:.dep=.c))
 
-$(build_dir)/%.c: $(src_dir)/%.carray
+$(build_dir)/%.carray.c: $(src_dir)/%.carray $(src_dir)/scripts/carray.sh
 	$(call compile_carray,$@,$<)
 
-$(build_dir)/%.dep: $(src_dir)/%.c $(KCONFIG_CONFIG)
+$(build_dir)/%.dep: $(src_dir)/%.c $(KCONFIG_AUTOHEADER)
 	$(call compile_cc_dep,$@,$<)
 
 $(build_dir)/%.o: $(src_dir)/%.c
@@ -499,24 +580,24 @@ $(build_dir)/lib/sbi/sbi_init.o: $(libsbi_dir)/sbi_init.c FORCE
 	$(call compile_cc,$@,$<)
 endif
 
-$(build_dir)/%.dep: $(src_dir)/%.S $(KCONFIG_CONFIG)
+$(build_dir)/%.dep: $(src_dir)/%.S $(KCONFIG_AUTOHEADER)
 	$(call compile_as_dep,$@,$<)
 
 $(build_dir)/%.o: $(src_dir)/%.S
 	$(call compile_as,$@,$<)
 
 # Rules for platform sources
-$(platform_build_dir)/%.dep: $(platform_src_dir)/%.carray $(KCONFIG_CONFIG)
-	$(call compile_gen_dep,$@,.c,$< $(KCONFIG_CONFIG))
+$(platform_build_dir)/%.dep: $(platform_src_dir)/%.carray $(KCONFIG_AUTOHEADER)
+	$(call compile_gen_dep,$@,.c,$< $(KCONFIG_AUTOHEADER))
 	$(call compile_gen_dep,$@,.o,$(@:.dep=.c))
 
-$(platform_build_dir)/%.c: $(platform_src_dir)/%.carray
+$(platform_build_dir)/%.carray.c: $(platform_src_dir)/%.carray $(src_dir)/scripts/carray.sh
 	$(call compile_carray,$@,$<)
 
-$(platform_build_dir)/%.dep: $(platform_src_dir)/%.c $(KCONFIG_CONFIG)
+$(platform_build_dir)/%.dep: $(platform_src_dir)/%.c $(KCONFIG_AUTOHEADER)
 	$(call compile_cc_dep,$@,$<)
 
-$(platform_build_dir)/%.o: $(platform_src_dir)/%.c $(KCONFIG_CONFIG)
+$(platform_build_dir)/%.o: $(platform_src_dir)/%.c $(KCONFIG_AUTOHEADER)
 	$(call compile_cc,$@,$<)
 
 $(platform_build_dir)/%.dep: $(platform_src_dir)/%.S
@@ -525,8 +606,8 @@ $(platform_build_dir)/%.dep: $(platform_src_dir)/%.S
 $(platform_build_dir)/%.o: $(platform_src_dir)/%.S
 	$(call compile_as,$@,$<)
 
-$(platform_build_dir)/%.dep: $(platform_src_dir)/%.dts $(KCONFIG_CONFIG)
-	$(call compile_gen_dep,$@,.dtb,$< $(KCONFIG_CONFIG))
+$(platform_build_dir)/%.dep: $(platform_src_dir)/%.dts $(KCONFIG_AUTOHEADER)
+	$(call compile_gen_dep,$@,.dtb,$< $(KCONFIG_AUTOHEADER))
 	$(call compile_gen_dep,$@,.c,$(@:.dep=.dtb))
 	$(call compile_gen_dep,$@,.o,$(@:.dep=.c))
 
@@ -543,23 +624,26 @@ $(platform_build_dir)/%.bin: $(platform_build_dir)/%.elf
 $(platform_build_dir)/%.elf: $(platform_build_dir)/%.o $(platform_build_dir)/%.elf.ld $(platform_build_dir)/lib/libplatsbi.a
 	$(call compile_elf,$@,$@.ld,$< $(platform_build_dir)/lib/libplatsbi.a)
 
+$(platform_build_dir)/%.dep: $(src_dir)/%.ldS $(KCONFIG_AUTOHEADER)
+	$(call compile_cpp_dep,$@,.ld,$<)
+
 $(platform_build_dir)/%.ld: $(src_dir)/%.ldS
 	$(call compile_cpp,$@,$<)
 
-$(platform_build_dir)/%.dep: $(src_dir)/%.carray $(KCONFIG_CONFIG)
-	$(call compile_gen_dep,$@,.c,$< $(KCONFIG_CONFIG))
+$(platform_build_dir)/%.dep: $(src_dir)/%.carray $(KCONFIG_AUTOHEADER)
+	$(call compile_gen_dep,$@,.c,$< $(KCONFIG_AUTOHEADER))
 	$(call compile_gen_dep,$@,.o,$(@:.dep=.c))
 
-$(platform_build_dir)/%.c: $(src_dir)/%.carray
+$(platform_build_dir)/%.carray.c: $(src_dir)/%.carray $(src_dir)/scripts/carray.sh
 	$(call compile_carray,$@,$<)
 
-$(platform_build_dir)/%.dep: $(src_dir)/%.c $(KCONFIG_CONFIG)
+$(platform_build_dir)/%.dep: $(src_dir)/%.c $(KCONFIG_AUTOHEADER)
 	$(call compile_cc_dep,$@,$<)
 
 $(platform_build_dir)/%.o: $(src_dir)/%.c
 	$(call compile_cc,$@,$<)
 
-$(platform_build_dir)/%.dep: $(src_dir)/%.S $(KCONFIG_CONFIG)
+$(platform_build_dir)/%.dep: $(src_dir)/%.S $(KCONFIG_AUTOHEADER)
 	$(call compile_as_dep,$@,$<)
 
 $(platform_build_dir)/%.o: $(src_dir)/%.S
@@ -647,6 +731,8 @@ clean:
 	$(CMD_PREFIX)mkdir -p $(build_dir)
 	$(if $(V), @echo " RM        $(build_dir)/*.o")
 	$(CMD_PREFIX)find $(build_dir) -type f -name "*.o" -exec rm -rf {} +
+	$(if $(V), @echo " RM        $(build_dir)/*.carray.c")
+	$(CMD_PREFIX)find $(build_dir) -type f -name "*.carray.c" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.a")
 	$(CMD_PREFIX)find $(build_dir) -type f -name "*.a" -exec rm -rf {} +
 	$(if $(V), @echo " RM        $(build_dir)/*.elf")

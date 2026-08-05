@@ -96,11 +96,10 @@ static int crypto_aes_operation(const struct sbi_trap_regs *regs)
 	return SBI_OK;
 }
 
-int sbi_ecall_crypto_handler(unsigned long extid,
+int sbi_ecall_crypto_handler(
 			     unsigned long funcid,
-			     const struct sbi_trap_regs *regs,
-			     unsigned long *out_val,
-			     struct sbi_trap_info *out_trap)
+			     struct sbi_trap_regs *regs,
+			     struct sbi_ecall_return *out)
 {
 	int result = SBI_EFAIL;
 	uint32_t crypto_service;

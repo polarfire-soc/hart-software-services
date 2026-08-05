@@ -15,9 +15,9 @@
 #include <sbi/sbi_hart.h>
 #include <sbi/sbi_system.h>
 #include <sbi/sbi_timer.h>
+#include <sbi_utils/fdt/fdt_driver.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/gpio/fdt_gpio.h>
-#include <sbi_utils/reset/fdt_reset.h>
 
 struct gpio_reset {
 	struct gpio_pin pin;
@@ -77,7 +77,7 @@ static void gpio_reset_exec(struct gpio_reset *reset)
 
 static int gpio_system_poweroff_check(u32 type, u32 reason)
 {
-	if (gpio_reset_get(FALSE, type))
+	if (gpio_reset_get(false, type))
 		return 128;
 
 	return 0;
@@ -85,7 +85,7 @@ static int gpio_system_poweroff_check(u32 type, u32 reason)
 
 static void gpio_system_poweroff(u32 type, u32 reason)
 {
-	gpio_reset_exec(gpio_reset_get(FALSE, type));
+	gpio_reset_exec(gpio_reset_get(false, type));
 }
 
 static struct sbi_system_reset_device gpio_poweroff = {
@@ -96,7 +96,7 @@ static struct sbi_system_reset_device gpio_poweroff = {
 
 static int gpio_system_restart_check(u32 type, u32 reason)
 {
-	if (gpio_reset_get(TRUE, type))
+	if (gpio_reset_get(true, type))
 		return 128;
 
 	return 0;
@@ -104,7 +104,7 @@ static int gpio_system_restart_check(u32 type, u32 reason)
 
 static void gpio_system_restart(u32 type, u32 reason)
 {
-	gpio_reset_exec(gpio_reset_get(TRUE, type));
+	gpio_reset_exec(gpio_reset_get(true, type));
 }
 
 static struct sbi_system_reset_device gpio_restart = {
@@ -113,7 +113,7 @@ static struct sbi_system_reset_device gpio_restart = {
 	.system_reset = gpio_system_restart
 };
 
-static int gpio_reset_init(void *fdt, int nodeoff,
+static int gpio_reset_init(const void *fdt, int nodeoff,
 			   const struct fdt_match *match)
 {
 	int rc, len;
@@ -149,21 +149,21 @@ static int gpio_reset_init(void *fdt, int nodeoff,
 }
 
 static const struct fdt_match gpio_poweroff_match[] = {
-	{ .compatible = "gpio-poweroff", .data = (const void *)FALSE },
+	{ .compatible = "gpio-poweroff", .data = (const void *)false },
 	{ },
 };
 
-struct fdt_reset fdt_poweroff_gpio = {
+const struct fdt_driver fdt_poweroff_gpio = {
 	.match_table = gpio_poweroff_match,
 	.init = gpio_reset_init,
 };
 
 static const struct fdt_match gpio_reset_match[] = {
-	{ .compatible = "gpio-restart", .data = (const void *)TRUE },
+	{ .compatible = "gpio-restart", .data = (const void *)true },
 	{ },
 };
 
-struct fdt_reset fdt_reset_gpio = {
+const struct fdt_driver fdt_reset_gpio = {
 	.match_table = gpio_reset_match,
 	.init = gpio_reset_init,
 };

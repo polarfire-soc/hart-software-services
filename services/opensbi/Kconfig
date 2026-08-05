@@ -90,7 +90,6 @@ config SERVICE_OPENSBI_SUSPEND_DDR_POWER_SAVE
 config OPENSBI_SRC_DIR
 	string
 	option env="OPENSBI_SRC_DIR"
-source "$(OPENSBI_SRC_DIR)/lib/sbi/Kconfig"
 
 config FDT_IPI
 	def_bool y
@@ -122,26 +121,42 @@ config FDT_TIMER
 config FDT_TIMER_MTIMER
 	def_bool y
 
-config SBI_ECALL_TIME
-	def_bool y
+# Override upstream defaults for features not needed on MPFS
 
-config SBI_ECALL_RFENCE
-	def_bool y
-
-config SBI_ECALL_IPI
-	def_bool y
-
-config SBI_ECALL_HSM
-	def_bool y
-
-config SBI_ECALL_SRST
-	def_bool y
-
-config SBI_ECALL_PMU
+config SBI_ECALL_CPPC
 	def_bool n
 
-config SBI_ECALL_LEGACY
+config SBI_ECALL_MPXY
+	def_bool n
+
+config SBIUNIT
+	def_bool n
+
+config SBI_ECALL_DBCN
 	def_bool y
 
-config SBI_ECALL_VENDOR
+config SBI_ECALL_SUSP
 	def_bool y
+
+config SBI_ECALL_FWFT
+	def_bool y
+
+config SBI_ECALL_CPPC
+	def_bool n
+
+config SBI_ECALL_SSE
+	def_bool y
+
+config SBI_ECALL_MPXY
+	def_bool n
+
+config SBIUNIT
+	def_bool n
+
+config CONSOLE_EARLY_BUFFER_SIZE
+	def_int 256
+
+config SBI_ECALL_DBTR
+	def_bool y
+
+source "$(OPENSBI_SRC_DIR)/lib/sbi/Kconfig"

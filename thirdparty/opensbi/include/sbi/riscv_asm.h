@@ -83,7 +83,7 @@
 
 #define csr_swap(csr, val)                                              \
 	({                                                              \
-		unsigned long __v = (unsigned long)(val);               \
+		register unsigned long __v = (unsigned long)(val);      \
 		__asm__ __volatile__("csrrw %0, " __ASM_STR(csr) ", %1" \
 				     : "=r"(__v)                        \
 				     : "rK"(__v)                        \
@@ -101,9 +101,17 @@
 		__v;                                            \
 	})
 
+/* Variant of csr_read() that allows the compiler to cache the value. */
+#define csr_read_relaxed(csr)                                     \
+	({                                                        \
+		register unsigned long __v;                       \
+		__asm__ ("csrr %0, " __ASM_STR(csr) : "=r"(__v)); \
+		__v;                                              \
+	})
+
 #define csr_write(csr, val)                                        \
 	({                                                         \
-		unsigned long __v = (unsigned long)(val);          \
+		register unsigned long __v = (unsigned long)(val); \
 		__asm__ __volatile__("csrw " __ASM_STR(csr) ", %0" \
 				     :                             \
 				     : "rK"(__v)                   \
@@ -112,7 +120,7 @@
 
 #define csr_read_set(csr, val)                                          \
 	({                                                              \
-		unsigned long __v = (unsigned long)(val);               \
+		register unsigned long __v = (unsigned long)(val);      \
 		__asm__ __volatile__("csrrs %0, " __ASM_STR(csr) ", %1" \
 				     : "=r"(__v)                        \
 				     : "rK"(__v)                        \
@@ -122,7 +130,7 @@
 
 #define csr_set(csr, val)                                          \
 	({                                                         \
-		unsigned long __v = (unsigned long)(val);          \
+		register unsigned long __v = (unsigned long)(val); \
 		__asm__ __volatile__("csrs " __ASM_STR(csr) ", %0" \
 				     :                             \
 				     : "rK"(__v)                   \
@@ -131,7 +139,7 @@
 
 #define csr_read_clear(csr, val)                                        \
 	({                                                              \
-		unsigned long __v = (unsigned long)(val);               \
+		register unsigned long __v = (unsigned long)(val);      \
 		__asm__ __volatile__("csrrc %0, " __ASM_STR(csr) ", %1" \
 				     : "=r"(__v)                        \
 				     : "rK"(__v)                        \
@@ -141,12 +149,32 @@
 
 #define csr_clear(csr, val)                                        \
 	({                                                         \
-		unsigned long __v = (unsigned long)(val);          \
+		register unsigned long __v = (unsigned long)(val); \
 		__asm__ __volatile__("csrc " __ASM_STR(csr) ", %0" \
 				     :                             \
 				     : "rK"(__v)                   \
 				     : "memory");                  \
 	})
+
+#if __riscv_xlen == 64
+#define __csrrw64(op, csr, csrh, val) (true ? op(csr, val) : (uint64_t)csrh)
+#define __csrr64( op, csr, csrh)      (true ? op(csr)      : (uint64_t)csrh)
+#define __csrw64( op, csr, csrh, val) (true ? op(csr, val) : (uint64_t)csrh)
+#elif __riscv_xlen == 32
+#define __csrrw64(op, csr, csrh, val) (  op(csr, val) | (uint64_t)op(csrh, val >> 32) << 32)
+#define __csrr64( op, csr, csrh)      (  op(csr)      | (uint64_t)op(csrh)            << 32)
+#define __csrw64( op, csr, csrh, val) ({ op(csr, val);            op(csrh, val >> 32);    })
+#endif
+
+#define csr_swap64(        csr, val) __csrrw64(csr_swap,         csr, csr ## H, val)
+#define csr_read64(        csr)      __csrr64 (csr_read,         csr, csr ## H)
+#define csr_read_relaxed64(csr)      __csrr64 (csr_read_relaxed, csr, csr ## H)
+#define csr_write64(       csr, val) __csrw64 (csr_write,        csr, csr ## H, val)
+#define csr_read_set64(    csr, val) __csrrw64(csr_read_set,     csr, csr ## H, val)
+#define csr_set64(         csr, val) __csrw64 (csr_set,          csr, csr ## H, val)
+#define csr_clear64(       csr, val) __csrw64 (csr_clear,        csr, csr ## H, val)
+#define csr_read_clear64(  csr, val) __csrrw64(csr_read_clear,   csr, csr ## H, val)
+#define csr_clear64(       csr, val) __csrw64 (csr_clear,        csr, csr ## H, val)
 
 unsigned long csr_read_num(int csr_num);
 
@@ -163,7 +191,7 @@ void csr_write_num(int csr_num, unsigned long val);
 	} while (0)
 
 /* Get current HART id */
-#define current_hartid()	((unsigned int)csr_read(CSR_MHARTID))
+#define current_hartid()	((unsigned int)csr_read_relaxed(CSR_MHARTID))
 
 /* determine CPU extension, return non-zero support */
 int misa_extension_imp(char ext);
@@ -180,6 +208,12 @@ int misa_xlen(void);
 
 /* Get RISC-V ISA string representation */
 void misa_string(int xlen, char *out, unsigned int out_sz);
+
+/* Disable pmp entry at a given index */
+int pmp_disable(unsigned int n);
+
+/* Check if the matching field is set */
+int is_pmp_entry_mapped(unsigned long entry);
 
 int pmp_set(unsigned int n, unsigned long prot, unsigned long addr,
 	    unsigned long log2len);
