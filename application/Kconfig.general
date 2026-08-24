@@ -199,6 +199,28 @@ config PROVIDE_DTB
                 If this isn't needed, it is possible to save some space by removing it.
 
 		If you don't know what to do here, say Y.
+
+config PROVIDE_DTB_DDR_ADDR
+	hex "DDR address to copy built-in DTB into"
+	depends on PROVIDE_DTB
+	default 0x80100000
+	help
+		The built-in DTB is linked into the HSS firmware region (0x0a000000+),
+		which OpenSBI marks inaccessible to S-mode when PMPs are enabled.
+		U-Boot reads the DTB directly from the address passed in a1, and
+		therefore requires it to be in a memory region accessible from S-mode.
+
+		This option specifies the DDR address the DTB is copied to before
+		being passed to OpenSBI/U-Boot. The copy only takes place when PMPs
+		are enabled in the board configuration. When PMPs are not enabled,
+		the built-in DTB address is passed directly and this option has no
+		effect.
+
+		The address must be in DDR and fall within a PMP region accessible
+		to S-mode. It must not overlap the boot payload (e.g. U-Boot) or
+		other reserved regions.
+
+		If you don't know what to change this to, leave it at the default.
 endmenu
 
 menu "Memory Options"
