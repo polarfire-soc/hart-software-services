@@ -15,8 +15,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "ssmb_ipi.h"
-
 #include "hss_state_machine.h"
 #include "hss_debug.h"
 
@@ -63,14 +61,8 @@ static void crypto_init_handler(struct StateMachine * const pMyMachine)
 
 /////////////////
 
-static uint32_t i = HSS_HART_U54_1;
 static void crypto_state1_handler(struct StateMachine * const pMyMachine)
 {
-    // check each core to see if it wants to transmit
-    if (IPI_GetQueuePendingCount(i)) {
-        IPI_ConsumeIntent(i, IPI_MSG_POWERMODE);
-    }
-    i = (i + 1u) % HSS_HART_NUM_PEERS;
 }
 
 

@@ -50,7 +50,6 @@ Source code is found under the `hart-software-services` folder.
     │   ├── ipi_poll
     │   ├── mmc
     │   ├── opensbi
-    │   ├── powermode
     │   ├── qspi
     │   ├── scrub
     │   ├── sgdma
