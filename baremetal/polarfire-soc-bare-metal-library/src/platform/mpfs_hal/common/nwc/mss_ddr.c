@@ -5165,35 +5165,35 @@ static uint32_t zq_cal(void)
 }
 #endif
 
-uint32_t ddr_add_cmd_inc_feq[]={\
+uint32_t ddr_add_cmd_inc_feq[DDR_OFF_MODE + 1U]={\
         ADD_CMD_INC_FREQ_DDR3,\
         ADD_CMD_INC_FREQ_DDR3L,\
         ADD_CMD_INC_FREQ_DDR4,\
         ADD_CMD_INC_FREQ_LPDDR3,\
         ADD_CMD_INC_FREQ_LPDDR4 };
 
-uint32_t ddr_add_cmd_trans_a5_threshold[]={\
+uint32_t ddr_add_cmd_trans_a5_threshold[DDR_OFF_MODE + 1U]={\
         ADD_CMD_TRANS_A5_THRES_DDR3,\
         ADD_CMD_TRANS_A5_THRES_DDR3L,\
         ADD_CMD_TRANS_A5_THRES_DDR4,\
         ADD_CMD_TRANS_A5_THRES_LPDDR3,\
         ADD_CMD_TRANS_A5_THRES_LPDDR4 };
 
-uint32_t add_cmd_move_order_0_deg[]={\
+uint32_t add_cmd_move_order_0_deg[DDR_OFF_MODE + 1U]={\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_DDR3,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_DDR3L,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_DDR4,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_LPDDR3,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_0_DEG_LPDDR4 };
 
-uint32_t add_cmd_move_order_45_deg[]={\
+uint32_t add_cmd_move_order_45_deg[DDR_OFF_MODE + 1U]={\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_DDR3,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_DDR3L,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_DDR4,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_LPDDR3,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_45_DEG_LPDDR4 };
 
-uint32_t add_cmd_move_order_90_deg[]={\
+uint32_t add_cmd_move_order_90_deg[DDR_OFF_MODE + 1U]={\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_DDR3,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_DDR3L,\
         LIBERO_SETTING_ADD_CMD_CLK_MOVE_ORDER_90_DEG_DDR4,\
