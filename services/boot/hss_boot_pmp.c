@@ -24,6 +24,7 @@
 #include "hss_boot_pmp.h"
 #include "hss_debug.h"
 #include "hss_boot_pmp.h"
+#include "mpfs_hal/common/mss_pmp.h"
 
 #define XLEN 64u
 
@@ -270,3 +271,19 @@ static inline uint64_t pmp_getAddrVal(size_t index)
     return result;
 }
 
+void pmp_master_configs(uint8_t hart_id, uint64_t *pmp0cfg)
+{
+    /*
+     * The default weak pmp_master_configs() in mss_pmp.c unconditionally ORs
+     * 0x9F009F9F into pmpcfg0, overriding PMP0/1/3 lock bits on U54 harts
+     * regardless of what the Libero XML specifies. This override passes
+     * *pmp0cfg through unchanged, making the XML the single source of truth
+     * for all PMP configuration on all boards.
+     *
+     * pmp_configure() already writes PMPADDR0-15 from the XML-generated
+     * pmp_values[] table and sets *pmp0cfg = pmp_values[hart_id][0] before
+     * calling this function, so leaving *pmp0cfg untouched is sufficient.
+     */
+    (void)hart_id;
+    (void)pmp0cfg;
+}
