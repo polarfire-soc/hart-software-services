@@ -107,6 +107,28 @@ config TAMPER_BASE_ADDRESS
 
 endmenu
 
+menu "System Controller"
+
+config SYSCTRL_WAKE
+	bool "Wake System Controller via GPIO"
+	default n
+	help
+	  When SYSTEM_CONTROLLER_SUSPEND_MODE is enabled the System Controller
+	  suspends right after fabric programming.
+
+	  Enabling this option registers HSS_SysCtrl_Wake() in the board init
+	  sequence to assert a GPIO wake signal and poll the SUSPEND_EN status
+	  until the System Controller confirms it is active. Disable this option
+	  if the FPGA design does not use SYSTEM_CONTROLLER_SUSPEND_MODE.
+
+	  A default no-op implementation is provided as a weak stub. Boards that
+	  require this feature must supply a strong HSS_SysCtrl_Wake() definition
+	  in their board-specific code (e.g. boards/<board>/hss_board_init.c).
+
+	  If you do not know what to do here, say N.
+
+endmenu
+
 config ALLOW_COLDREBOOT
 	bool "Allow contexts to issue a cold reboot"
 	default y

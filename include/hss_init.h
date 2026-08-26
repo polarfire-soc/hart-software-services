@@ -83,6 +83,8 @@ bool HSS_PDMAInit(void);
 
 bool HSS_ResetReasonInit(void);
 
+bool HSS_SysCtrl_Wake(void);
+
 #ifdef __cplusplus
 }
 #endif
