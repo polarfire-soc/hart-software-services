@@ -17,6 +17,7 @@
 #include <assert.h>
 
 #include "hss_debug.h"
+#include "mss_gpio.h"
 
 #include "hss_init.h"
 #include "hss_state_machine.h"
@@ -38,6 +39,7 @@
 #include "hss_boot_pmp.h"
 #include "hss_sys_setup.h"
 #include "hss_board_init.h"
+#include "hss_clock.h"
 
 const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     // Name                     FunctionPointer         Halt   Restart
@@ -52,6 +54,9 @@ const struct InitFunction /*@null@*/ boardInitFunctions[] = {
     { "HSS_TamperInit",         HSS_TamperInit,         false, false },
 #endif
     { "HSS_USBInit",            HSS_USBInit,            false, false },
+#if IS_ENABLED(CONFIG_SYSCTRL_WAKE)
+    { "HSS_SysCtrl_Wake",       HSS_SysCtrl_Wake,       false, false },
+#endif
 };
 
 /******************************************************************************************************/
@@ -86,6 +91,34 @@ bool HSS_BoardLateInit(void)
 #endif
     return true;
 }
+
+#define HSS_SYSCTRL_WAKE_TIMEOUT_ITERATIONS 100000u
+
+bool HSS_SysCtrl_Wake(void)
+{
+    /* When SYSTEM_CONTROLLER_SUSPEND_MODE is enabled the System Controller
+     * suspends right after fabric programming.
+     * Assert GPIO_2_M2F_4 (routed through the OR2 gate in RISCV_SUBSYSTEM
+     * to PFSOC_SCSM:WAKE) and poll GPIO_2_F2M_1 (SUSPEND_EN status) until
+     * the System Controller confirms it is active*/
+
+    MSS_GPIO_config(GPIO2_LO, MSS_GPIO_1, MSS_GPIO_INPUT_MODE);
+    MSS_GPIO_config(GPIO2_LO, MSS_GPIO_4, MSS_GPIO_OUTPUT_MODE);
+    MSS_GPIO_set_output(GPIO2_LO, MSS_GPIO_4, 1u);
+
+    uint32_t timeout = HSS_SYSCTRL_WAKE_TIMEOUT_ITERATIONS;
+    while ((MSS_GPIO_get_inputs(GPIO2_LO) & MSS_GPIO_1_MASK) && --timeout) {
+        __asm__ volatile("nop");
+    }
+
+    if (timeout == 0u) {
+        mHSS_DEBUG_PRINTF(LOG_WARN, "System Controller did not wake within timeout\n");
+        return false;
+    }
+
+    return true;
+}
+
 
 /* Set IOMUX5 pad pull states for SD/eMMC MSSIO switching */
 uint8_t switch_demux_using_fabric_ip(MSS_IO_OPTIONS option)

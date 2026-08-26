@@ -164,6 +164,12 @@ CONFIG_UART_POST_BOOT=0
 # CONFIG_USE_TAMPER is not set
 # end of Tamper
 
+#
+# System Controller
+#
+CONFIG_SYSCTRL_WAKE=y
+# end of System Controller
+
 CONFIG_ALLOW_COLDREBOOT=y
 
 #
