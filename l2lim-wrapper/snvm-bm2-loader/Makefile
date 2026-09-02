@@ -125,7 +125,7 @@ $(BINDIR)/hss-envm-l2lim-wrapper.bin.fec: $(BIN_FILE-l2lim-wrapper) $(FEC_PY_TOO
 
 #
 # Link the BM2 loader ELF
-$(TARGET-snvm-bm2-loader): LIBS :=
+$(TARGET-snvm-bm2-loader): private LIBS :=
 $(TARGET-snvm-bm2-loader): $(OBJS-snvm-bm2-loader) $(LINKER_SCRIPT-snvm-bm2-loader) $(BM2_DIGEST_HDR)
 	$(call main-build-target,snvm-bm2-loader)
 	$(ECHO) " BIN       `basename $@ .elf`.bin"
@@ -152,7 +152,98 @@ snvm-bm2-loader_clean:
 		$(BINDIR)/$(TARGET-snvm-bm2-loader) \
 		$(BINDIR)/`basename $(TARGET-snvm-bm2-loader) .elf`.bin \
 		$(BINDIR)/`basename $(TARGET-snvm-bm2-loader) .elf`.sym \
+		$(BINDIR)/hss-snvm-bm2-loader-ubli.bin \
+		$(BINDIR)/hss-snvm-bm2-loader-ubli.hex \
 		$(BINDIR)/hss-envm-l2lim-wrapper.bin.fec \
+		$(BINDIR)/hss-envm-l2lim-wrapper.bin.fec.padded \
+		$(BINDIR)/hss-envm-l2lim-wrapper.bin.fec.hex \
 		$(BM2_DIGEST_HDR)
+
+# BM2 programming: dryrun / program / verify (single JTAG session, direct fpgenprog).
+
+FEC_FILE-l2lim-wrapper       = $(BINDIR)/hss-envm-l2lim-wrapper.bin.fec
+
+# Prepend a 256-byte zero header so the FEC payload lands at 0x20220100
+ENVM_HEADER_BYTES            := 256
+FEC_PADDED-l2lim-wrapper     = $(BINDIR)/hss-envm-l2lim-wrapper.bin.fec.padded
+$(FEC_PADDED-l2lim-wrapper): $(FEC_FILE-l2lim-wrapper)
+	$(ECHO) " PAD       `basename $@`"
+	{ head -c $(ENVM_HEADER_BYTES) /dev/zero; cat $<; } > $@
+
+# Convert to Intel HEX at the eNVM base LMA (0x20220000)
+ENVM_BASE_ADDR               := 20220000
+FEC_HEX_FILE-l2lim-wrapper   = $(BINDIR)/hss-envm-l2lim-wrapper.bin.fec.hex
+$(FEC_HEX_FILE-l2lim-wrapper): $(FEC_PADDED-l2lim-wrapper)
+	$(ECHO) " HEX       `basename $@`"
+	$(OBJCOPY) -I binary -O ihex --change-section-lma '*+0x$(ENVM_BASE_ADDR)' $< $@
+
+# sNVM boot client: a plain-text UBLI. gen-snvm-ubli.py wraps the flat binary in
+# the 60-byte UBLI header (reset vector = DTIM entry 0x01000000, payload SHA-256).
+BIN_FILE-snvm-bm2-loader       = $(BINDIR)/$(TARGET-snvm-bm2-loader:.elf=.bin)
+GEN_SNVM_UBLI                  := tools/snvm-bm2-loader/gen-snvm-ubli.py
+# Reset vector = loader ELF entry point (E51 DTIM, 0x01000000).
+UBLI_RESETVEC                  := 01000000
+SNVM_UBLI_BIN-snvm-bm2-loader  = $(BINDIR)/hss-snvm-bm2-loader-ubli.bin
+SNVM_HEX_FILE-snvm-bm2-loader  = $(BINDIR)/hss-snvm-bm2-loader-ubli.hex
+
+$(SNVM_UBLI_BIN-snvm-bm2-loader): $(BIN_FILE-snvm-bm2-loader) $(GEN_SNVM_UBLI)
+	$(ECHO) " UBLI      `basename $@`"
+	$(PYTHON) $(GEN_SNVM_UBLI) $(BIN_FILE-snvm-bm2-loader) $@ $(UBLI_RESETVEC)
+
+$(SNVM_HEX_FILE-snvm-bm2-loader): $(SNVM_UBLI_BIN-snvm-bm2-loader)
+	$(ECHO) " HEX       `basename $@`"
+	$(OBJCOPY) -I binary -O ihex $< $@
+
+# Prepare the fpgenprog project (no hardware access): new_project, snvm_client,
+# mss_boot_info, envm_client, generate_bitstream.
+define setup-fpgenprog-project-l2lim
+	-$(RM) -r $(BINDIR)/bootmode$(BOOTMODE)
+	mkdir -p $(BINDIR)/bootmode$(BOOTMODE)
+	$(FPGENPROG) new_project \
+		--location `pwd`/$(BINDIR)/bootmode$(BOOTMODE)/fpgenprogProject \
+		--target_die $(DIE) --target_package $(PACKAGE)
+	$(FPGENPROG) snvm_client \
+		--location `pwd`/$(BINDIR)/bootmode$(BOOTMODE)/fpgenprogProject \
+		--client_name snvm_bm2_loader \
+		--content_file_format intel-hex \
+		--content_file `pwd`/$(SNVM_HEX_FILE-snvm-bm2-loader) \
+		--mem_file_base_address $(UBLI_RESETVEC) \
+		--start_page $(BM2_SNVM_PAGE) \
+		--number_of_bytes $(shell wc -c < $(SNVM_UBLI_BIN-snvm-bm2-loader) | awk '{print $$1}') \
+		--fabric_access_read 1 --fabric_access_write 1 \
+		--mss_access_read  1  --mss_access_write  1
+	$(FPGENPROG) mss_boot_info \
+		--location `pwd`/$(BINDIR)/bootmode$(BOOTMODE)/fpgenprogProject \
+		--u_mss_bootmode $(BOOTMODE) \
+		--u_mss_bootcfg $(BM2_BOOTCFG)
+	$(FPGENPROG) envm_client \
+		--location `pwd`/$(BINDIR)/bootmode$(BOOTMODE)/fpgenprogProject \
+		--client_name envm_l2lim_wrapper \
+		--content_file_format intel-hex \
+		--content_file `pwd`/$(FEC_HEX_FILE-l2lim-wrapper) \
+		--mem_file_base_address $(ENVM_BASE_ADDR) \
+		--start_page 0 \
+		--number_of_bytes $(shell wc -c < $(FEC_PADDED-l2lim-wrapper) | awk '{print $$1}')
+	$(FPGENPROG) generate_bitstream \
+		--location `pwd`/$(BINDIR)/bootmode$(BOOTMODE)/fpgenprogProject
+endef
+
+# Programs or verifies sNVM and eNVM in a single JTAG session.
+# $(1) = fpgenprog action: PROGRAM or VERIFY
+define boot-mode-programmer-l2lim
+	$(call setup-fpgenprog-project-l2lim)
+	$(FPGENPROG) run_action \
+		--location `pwd`/$(BINDIR)/bootmode$(BOOTMODE)/fpgenprogProject \
+		--action $(1)
+endef
+
+dryrun: $(SNVM_HEX_FILE-snvm-bm2-loader) $(FEC_HEX_FILE-l2lim-wrapper)
+	$(call setup-fpgenprog-project-l2lim)
+
+program: $(SNVM_HEX_FILE-snvm-bm2-loader) $(FEC_HEX_FILE-l2lim-wrapper)
+	$(call boot-mode-programmer-l2lim,PROGRAM)
+
+verify: $(SNVM_HEX_FILE-snvm-bm2-loader) $(FEC_HEX_FILE-l2lim-wrapper)
+	$(call boot-mode-programmer-l2lim,VERIFY)
 
 endif  # TARGET-l2lim-wrapper

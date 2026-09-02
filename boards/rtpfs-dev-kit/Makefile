@@ -156,3 +156,15 @@ $(SOC_CONFIG_FILES) &: $(SOC_FPGA_DESIGN_XML_FILE)
 	$(PYTHON) tools/polarfire-soc-configuration-generator/mpfs_configuration_generator.py $< $(BINDIR)/$(BOARD_DIR)
 
 $(RISCV_TARGET): $(SOC_CONFIG_FILES)
+
+# Boot Mode 2 device programming variables (single-JTAG-session make program).
+PACKAGE=CG1509
+DIE=RTPFS460ZTS
+BOOTMODE:=2
+# FIXME: replace with a proper secret before production programming
+BM2_USK     ?= 00ffffffffffffffffffff00
+BM2_SNVM_PAGE ?= 85
+# bootcfg = 4 zero bytes || 12-byte USK || sNVM page as a 4-byte big-endian hex field.
+BM2_SNVM_PAGE_HEX := $(shell printf '%08x' $(BM2_SNVM_PAGE))
+BM2_BOOTCFG := 00000000$(BM2_USK)$(BM2_SNVM_PAGE_HEX)
+BOOTMODE_ARGS:=--usk $(BM2_USK)

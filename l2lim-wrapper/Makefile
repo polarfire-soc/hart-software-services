@@ -94,7 +94,7 @@ $(BINDIR)/l2lim-wrapper/l2lim-wrapper_crt.o: CFLAGS += -I$(BINDIR)/l2lim-wrapper
 $(BINDIR)/l2lim-wrapper/l2lim-wrapper_validate_crc.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/$(BOARD_DIR)/uart_device_list.o: CFLAGS=$(CFLAGS_GCCEXT)
 
-$(TARGET-l2lim-wrapper): LIBS:=
+$(TARGET-l2lim-wrapper): private LIBS:=
 $(TARGET-l2lim-wrapper): $(COMPRESSED_TARGET_L2LIM) $(OBJS-l2lim-wrapper)
 	$(call main-build-target,l2lim-wrapper)
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
