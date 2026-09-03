@@ -55,6 +55,8 @@ struct mchp_crypto_info {
 #define CRYPTO_ALG_AES_CFB		BIT(3)
 #define CRYPTO_ALG_AES_CTR		BIT(4)
 	uint32_t aead_algo;
+#define CRYPTO_ALG_AES_GCM		BIT(0)
+#define CRYPTO_ALG_AEAD_CCM		BIT(1)
 	uint32_t hash_algo;
 	uint64_t mac_algo;
 	uint64_t akcipher_algo;
@@ -67,6 +69,18 @@ struct mchp_crypto_aes_req {
 	uint64_t key;
 	uint64_t dst;
 	uint64_t size;
+};
+
+struct mchp_crypto_aes_gcm_req {
+	uint64_t src;
+	uint64_t iv;
+	uint64_t key;
+	uint64_t dst;
+	uint64_t size;
+	uint64_t aad;
+	uint64_t aad_size;
+	uint64_t tag;
+	uint64_t tag_size;
 };
 
 int sbi_ecall_crypto_handler(unsigned long funcid,

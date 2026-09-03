@@ -96,6 +96,50 @@ static int crypto_aes_operation(const struct sbi_trap_regs *regs)
 	return SBI_OK;
 }
 
+static int crypto_aes_gcm_operation(const struct sbi_trap_regs *regs)
+{
+	uint8_t aes_key_type;
+	uint8_t status;
+	uint32_t flags;
+	int err;
+	struct mchp_crypto_aes_gcm_req *gcm;
+
+	gcm = (struct mchp_crypto_aes_gcm_req *)regs->a1;
+	flags = (uint32_t)regs->a2;
+
+	/* AES Key Type - 128 or 192 or 256-bit */
+	aes_key_type = (flags >> 16) & MASK_8BIT;
+
+	if (flags & AES_DIR_ENCRYPT) {
+		status = CALSymEncAuthDMA(aes_key_type, (uint32_t *)gcm->key,
+					  SATSYMMODE_GCM, (void *)gcm->iv,
+					  (void *)gcm->src, (void *)gcm->dst,
+					  (uint32_t)gcm->size,
+					  (void *)gcm->aad, (uint32_t)gcm->aad_size,
+					  (void *)gcm->tag, (uint32_t)gcm->tag_size,
+					  X52CCR_DEFAULT);
+		err = SBI_EFAIL;
+	} else {
+		status = CALSymDecVerifyDMA(aes_key_type, (uint32_t *)gcm->key,
+					    SATSYMMODE_GCM, (void *)gcm->iv,
+					    (void *)gcm->src, (void *)gcm->dst,
+					    (uint32_t)gcm->size,
+					    (void *)gcm->aad, (uint32_t)gcm->aad_size,
+					    (void *)gcm->tag, (uint32_t)gcm->tag_size,
+					    X52CCR_DEFAULT);
+		err = SBI_EINVAL;
+	}
+
+	if (SATR_SUCCESS != status)
+		return err;
+
+	status = CALPKTrfRes(SAT_TRUE);
+	if (SATR_SUCCESS != status)
+		return err;
+
+	return SBI_OK;
+}
+
 int sbi_ecall_crypto_handler(
 			     unsigned long funcid,
 			     struct sbi_trap_regs *regs,
@@ -104,6 +148,7 @@ int sbi_ecall_crypto_handler(
 	int result = SBI_EFAIL;
 	uint32_t crypto_service;
 	uint8_t crypto_clk_enable;
+	uint8_t aes_algo_mode;
 	struct mchp_crypto_info *crypto;
 
 	switch (funcid) {
@@ -160,7 +205,7 @@ int sbi_ecall_crypto_handler(
 					      CRYPTO_ALG_AES_OFB |
 					      CRYPTO_ALG_AES_CFB |
 					      CRYPTO_ALG_AES_CTR;
-			crypto->aead_algo = 0;
+			crypto->aead_algo = CRYPTO_ALG_AES_GCM;
 			crypto->hash_algo = 0;
 			crypto->mac_algo = 0;
 			crypto->akcipher_algo = 0;
@@ -176,7 +221,11 @@ int sbi_ecall_crypto_handler(
 				crypto_service = (uint32_t)regs->a0;
 				switch (crypto_service) {
 				case CRYPTO_SERVICE_AES:
-					result = crypto_aes_operation(regs);
+					aes_algo_mode = ((uint32_t)regs->a2 >> 8) & MASK_8BIT;
+					if (aes_algo_mode == SATSYMMODE_GCM)
+						result = crypto_aes_gcm_operation(regs);
+					else
+						result = crypto_aes_operation(regs);
 					break;
 				default:
 					break;
