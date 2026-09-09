@@ -62,6 +62,7 @@
 #include "hss_memcpy_via_pdma.h"
 #include "system_startup.h"
 #include "fpga_design_config/fpga_design_config.h"
+#include "mpfs_hal/common/mss_pmp.h"
 
 #if IS_ENABLED(CONFIG_CRYPTO_SIGNING)
 #  include "hss_boot_secure.h"
@@ -411,6 +412,31 @@ static void register_harts(struct StateMachine * const pMyMachine)
             } else {
                 extern unsigned long _binary_build_services_opensbi_mpfs_dtb_start;
                 pArg1 = (void *)&_binary_build_services_opensbi_mpfs_dtb_start;
+#if ((LIBERO_SETTING_MEM_CONFIGS_ENABLED & PMP_ENABLED_MASK) == PMP_ENABLED_MASK)
+                extern unsigned long _binary_build_services_opensbi_mpfs_dtb_end;
+                /*
+                 * PMPs are enabled in the board configuration. The built-in
+                 * DTB lives inside the HSS firmware region (0x0a000000+),
+                 * which OpenSBI marks inaccessible to S-mode. Copy it to DDR
+                 * at CONFIG_PROVIDE_DTB_DDR_ADDR so that U-Boot
+                 * (CONFIG_OF_BOARD) can read it from a1.
+                 */
+                void *pDtbInDdr = (void *)CONFIG_PROVIDE_DTB_DDR_ADDR;
+                size_t dtbSize = (size_t)((uintptr_t)&_binary_build_services_opensbi_mpfs_dtb_end
+                                        - (uintptr_t)&_binary_build_services_opensbi_mpfs_dtb_start);
+
+                if (!HSS_DDR_IsAddrInDDR((uintptr_t)pDtbInDdr)
+                        || !HSS_DDR_IsAddrInDDR((uintptr_t)pDtbInDdr + dtbSize)) {
+                    mHSS_DEBUG_PRINTF(LOG_ERROR,
+                        "%s::CONFIG_PROVIDE_DTB_DDR_ADDR 0x%p is not in DDR, using firmware addr\n",
+                        pMyMachine->pMachineName, pDtbInDdr);
+                } else {
+                    memcpy(pDtbInDdr, (void *)&_binary_build_services_opensbi_mpfs_dtb_start, dtbSize);
+                    pArg1 = pDtbInDdr;
+                    mHSS_DEBUG_PRINTF(LOG_WARN, "%s::Copied built-in DTB (%u bytes) to DDR at 0x%p\n",
+                        pMyMachine->pMachineName, (unsigned int)dtbSize, pArg1);
+                }
+#endif
                 mHSS_DEBUG_PRINTF(LOG_WARN, "%s::Using built-in DTB at 0x%p\n",
                     pMyMachine->pMachineName, pArg1);
 #endif
