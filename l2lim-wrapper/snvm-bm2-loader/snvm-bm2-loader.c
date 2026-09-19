@@ -56,6 +56,10 @@
 #include "snvm-bm2-loader_sha256.h"
 #include "lim_sha256_digest.h"
 
+/* SYSREG->CLOCK_CONFIG_CR lets us read the live APB/AHB divider so we can
+ * compute the real boot-time PCLK feeding the UART before the PLL runs. */
+#include "mpfs_hal/common/mss_sysreg.h"
+
 /* Hardware base addresses */
 #define L2LIM_BASE   UINT32_C(0x08000000)
 #define ENVM_BASE    UINT32_C(0x20220100)
@@ -70,6 +74,36 @@ uint64_t __sc_end; // dummy
 #define MSS_UART_NO_PARITY	((uint8_t) 0x00)
 #define MSS_UART_ONE_STOP_BIT	((uint8_t) 0x00)
 
+/*
+ * Real APB/AHB (PCLK) frequency feeding the UART during this loader.
+ *
+ * The sNVM BM2 loader runs on the E51 immediately after the system controller
+ * releases it. At that point BOTH the MSS PLL and the master clock divider are
+ * still at their reset values:
+ *   - the MSS is fed from the ~80 MHz standby/SCB clock (see mss_pll.c
+ *     "On startup, MSS supplied with 80MHz SCB clock"), and
+ *   - SYSREG->CLOCK_CONFIG_CR is at its reset value 0x3F, i.e. the APB/AHB
+ *     divider field [5:4] = 0b11 => /8 (see mss_pll.c CLOCK_CONFIG_CR notes).
+ * The Libero divider value (0x24 => APB /4) and the 150 MHz PLL are only
+ * programmed later by mss_nwc_init()->mss_pll_config(), which runs in
+ * l2lim-wrapper after this loader hands over. HSS_Setup_Clocks() does NOT
+ * touch CLOCK_CONFIG_CR, so during this loader the real PCLK is ~80/8 = 10 MHz.
+ *
+ * We pass this real PCLK to MSS_UART_init_ex() so the MMUART driver programs
+ * the correct baud divisor and 115200 lands on the wire. We read the live APB
+ * divider from CLOCK_CONFIG_CR[5:4] rather than assuming a fixed value, so this
+ * stays correct regardless of the reset divider state.
+ */
+#define BM2_MSS_STANDBY_CLK	80000000u
+
+static uint32_t bm2_boot_pclk(void)
+{
+    /* APB/AHB divider code lives in CLOCK_CONFIG_CR[5:4]: 0=>/1 1=>/2 2=>/4 3=>/8 */
+    uint32_t div_code = (SYSREG->CLOCK_CONFIG_CR >> 4u) & 0x3u;
+
+    return BM2_MSS_STANDBY_CLK >> div_code;
+}
+
 
 uint8_t mss_config_clk_rst(int peripheral, uint8_t hart, int req_state); // local stub
 uint8_t mss_config_clk_rst(int peripheral, uint8_t hart, int req_state)
@@ -82,7 +116,8 @@ uint8_t mss_config_clk_rst(int peripheral, uint8_t hart, int req_state)
 
 extern bool HSS_Setup_Clocks(void);
 extern void *HSS_UART_GetInstance(int hartid);
-extern void MSS_UART_init(void* this_uart, uint32_t baud_rate, uint8_t line_config);
+extern void MSS_UART_init_ex(void* this_uart, uint32_t baud_rate,
+                             uint8_t line_config, uint64_t pclk_freq);
 extern void MSS_UART_polled_tx_string(void* ptr, const uint8_t *p_string);
 extern void config_l2_cache(void);
 extern void flush_early_caching(unsigned long num_ways);
@@ -101,7 +136,10 @@ __attribute__((noreturn)) void bm2_main(void)
     unsigned int   num_errors = 0u;
 
     (void)HSS_Setup_Clocks();
-    MSS_UART_init(HSS_UART_GetInstance(0), 115200, MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT);
+    /* Init the UART against the real (pre-PLL) boot PCLK so the MMUART driver
+     * programs the correct divisor and a true 115200 lands on the wire. See
+     * bm2_boot_pclk() above. */
+    MSS_UART_init_ex(HSS_UART_GetInstance(0), MSS_UART_115200_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT, bm2_boot_pclk());
 
     MSS_UART_polled_tx_string(HSS_UART_GetInstance(0), (const uint8_t *)"\033[2J\033[H"
 #if defined(CONFIG_COLOR_OUTPUT)
