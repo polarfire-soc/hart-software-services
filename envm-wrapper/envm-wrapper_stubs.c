@@ -89,6 +89,9 @@ uintptr_t malloc_end = (uintptr_t)&__l2lim_heap_end;
 void *malloc(size_t size);
 void *malloc(size_t size)
 {
+    // simple bump allocator
+    // round size up to 8-byte alignment
+    size = (size + 7u) & ~((size_t)7u);
     void *result = (void *)malloc_base;
     malloc_base += size;
     if (malloc_base > malloc_end) { result = NULL; }
@@ -98,7 +101,7 @@ void *malloc(size_t size)
 void free(void *ptr);
 void free(void *ptr)
 {
-    ;
+    (void)ptr;
 }
 
 #if IS_ENABLED(CONFIG_DEBUG_PROFILING_SUPPORT)

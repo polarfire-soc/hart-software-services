@@ -45,7 +45,7 @@ OBJS-envm-wrapper = \
 	$(BINDIR)/modules/misc/uart_helper.o \
         $(BINDIR)/$(BOARD_DIR)/uart_device_list.o \
 
-#ifndef CONFIG_CODE_SIGNING
+ifndef CONFIG_CODE_SIGNING
 OBJS-envm-wrapper += \
        $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_nwc_init.o \
        $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/common/nwc/mss_pll.o \
@@ -55,7 +55,7 @@ OBJS-envm-wrapper += \
        $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/mpfs_hal/startup_gcc/mss_utils.o \
        $(BINDIR)/baremetal/polarfire-soc-bare-metal-library/src/platform/drivers/mss/mss_mmuart/mss_uart.o \
 
-#endif
+endif
 
 
 EXTRA_OBJS-envm-wrapper =
@@ -119,8 +119,8 @@ BIN_FILE-envm-wrapper: $(TARGET-envm-wrapper)
 BOOTMODE?=1
 PACKAGE?=FCVG484
 DIE?=MPFS250T_ES
-FPGENPROG?=/opt/microsemi/Libero_SoC_v2021.2/Libero/bin64/fpgenprog
-FPGENPROG:=$(FPGENPROG:_bin=)
+
+
 
 program: $(BIN_FILE-envm-wrapper)
 	$(call common-boot-mode-programmer,,$(TARGET-envm-wrapper))
