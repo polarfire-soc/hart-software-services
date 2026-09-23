@@ -274,6 +274,160 @@ _start:
 
 /***********************************************************************************
  *
+ * The following config_l2_cache() symbol overrides the weak symbol in the HAL
+ * (mss_l2_cache.c) with a stack-free implementation.
+ *
+ * Why this must not use a stack
+ * -----------------------------
+ * The eNVM wrapper places .stack and .heap in L2 LIM (see envm-wrapper.ld). At
+ * power-on reset the L2 defaults to 15 ways of LIM (1920KB at 0x08000000) and 1
+ * way of cache, and _start sets each hart's sp into that LIM before any C code
+ * runs.
+ *
+ * Writing WAY_ENABLE collapses LIM to ((15 - WAY_ENABLE) * 128KB) in a single
+ * register write. For a large scratchpad configuration -- e.g. 14 scratchpad
+ * ways, as needed for a DDR-less direct-boot payload on L2 scratchpad -- that
+ * leaves a single 128KB LIM way, and WAY_ENABLE=15 removes LIM entirely. The C
+ * version of this function has already pushed a stack frame into LIM before
+ * making that write, so the SRAM backing its own return address disappears
+ * mid-function: the epilogue either faults or reloads a cache-fill from
+ * uninitialised DDR.
+ *
+ * This version keeps everything in caller-saved registers and makes no calls, so
+ * it is unaffected by LIM disappearing underneath it for any WAY_ENABLE value.
+ *
+ * It also avoids the C version's runtime ASSERT() comparing __l2lim_end against
+ * the configured LIM size: in the wrapper, __l2lim_end is
+ * ORIGIN(l2lim) + LENGTH(l2lim) (a fixed 512KB) rather than the end of the
+ * sections actually placed there, so that check fires spuriously for any large
+ * scratchpad configuration. The two static_assert()s the C version carried are
+ * preserved, at compile time, in envm-wrapper/asm_offsets.c.
+ *
+ * Not carried over: the C version's check_config_l2_scratchpad(), which ASSERT()s
+ * that LIBERO_SETTING_NUM_SCRATCH_PAD_WAYS covers the __l2_scratchpad_vma_start
+ * .. __l2_scratchpad_vma_end span. It is a debug-only check on linker symbols
+ * (not compile-time constants, so it cannot become a static_assert), and the
+ * main HSS still performs it via its own config_l2_cache() call in
+ * HSS_Setup_L2Cache().
+ *
+ * All register writes, their order, and the fences below mirror the C original.
+ * Register use (all caller-saved; s-registers, sp and tp are left untouched
+ * because _start still needs them):
+ *
+ *   t0 = CACHE_CTRL base (0x02010000)
+ *   t1 = CACHE_CTRL base biased to the way-mask block (+0x800), since those
+ *        offsets are beyond the reach of a 12-bit signed store immediate
+ *   t2 = p_scratchpad, walking up from ZERO_DEVICE_BOTTOM
+ *   t3 = current_way bitmask, shifted left once per outer iteration
+ *   t4 = outer loop counter (ways_inc)
+ *   t5 = INIT_MARKER
+ *   t6 = inner loop counter (inc)
+ *   a0, a1 = scratch for values and for the SYSREG address
+ */
+	.text
+	.globl	config_l2_cache
+	.type	config_l2_cache, @function
+config_l2_cache:
+	li	t0, CACHE_CTRL_ADDR
+	li	t1, CACHE_CTRL_ADDR + CACHE_CTRL_WAY_MASK_BLOCK_OFFSET
+
+	//
+	// Set the number of ways shared between cache and scratchpad.
+	//
+	// NOTE: from this instruction onwards, LIM may be smaller than it was at
+	// reset, or absent entirely. Nothing below may touch memory other than
+	// the cache-controller registers and the scratchpad being initialised.
+	//
+	li	a0, CFG_WAY_ENABLE
+	sb	a0, CACHE_CTRL_WAY_ENABLE_OFFSET(t0)	// WAY_ENABLE is uint8_t
+
+	//
+	// shutdown L2 as directed
+	//
+	li	a1, SYSREG_ADDR
+	li	a0, CFG_L2_SHUTDOWN_CR
+	sw	a0, SYSREG_L2_SHUTDOWN_CR_OFFSET(a1)	// L2_SHUTDOWN_CR is uint32_t
+
+	//
+	// Setup all masters, apart from E51 DCACHE, which is the one used below to
+	// populate the scratchpad
+	//
+	li	a0, CFG_WAY_MASK_DMA
+	sd	a0, WAY_MASK_DMA_REL(t1)
+	li	a0, CFG_WAY_MASK_AXI4_PORT_0
+	sd	a0, WAY_MASK_AXI4_PORT_0_REL(t1)
+	li	a0, CFG_WAY_MASK_AXI4_PORT_1
+	sd	a0, WAY_MASK_AXI4_PORT_1_REL(t1)
+	li	a0, CFG_WAY_MASK_AXI4_PORT_2
+	sd	a0, WAY_MASK_AXI4_PORT_2_REL(t1)
+	li	a0, CFG_WAY_MASK_AXI4_PORT_3
+	sd	a0, WAY_MASK_AXI4_PORT_3_REL(t1)
+	li	a0, CFG_WAY_MASK_E51_ICACHE
+	sd	a0, WAY_MASK_E51_ICACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_1_DCACHE
+	sd	a0, WAY_MASK_U54_1_DCACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_1_ICACHE
+	sd	a0, WAY_MASK_U54_1_ICACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_2_DCACHE
+	sd	a0, WAY_MASK_U54_2_DCACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_2_ICACHE
+	sd	a0, WAY_MASK_U54_2_ICACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_3_DCACHE
+	sd	a0, WAY_MASK_U54_3_DCACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_3_ICACHE
+	sd	a0, WAY_MASK_U54_3_ICACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_4_DCACHE
+	sd	a0, WAY_MASK_U54_4_DCACHE_REL(t1)
+	li	a0, CFG_WAY_MASK_U54_4_ICACHE
+	sd	a0, WAY_MASK_U54_4_ICACHE_REL(t1)
+
+#if CFG_NUM_SCRATCH_PAD_WAYS != 0
+	//
+	// Assign ways to the Zero Device, one way at a time, writing to the first
+	// 64-bit location of each cache block to establish the lines.
+	//
+	li	t2, L2_ZERO_DEVICE_BOTTOM		// p_scratchpad
+	li	t3, CFG_SCRATCHPAD_SEED_WAY		// current_way
+	li	t4, 0					// ways_inc
+
+	// INIT_MARKER is a 64-bit value that no single RISC-V immediate can hold,
+	// so reassemble it from the two halves emitted by asm_offsets.c
+	li	t5, L2_INIT_MARKER_HI
+	slli	t5, t5, 32
+	li	a0, L2_INIT_MARKER_LO
+	or	t5, t5, a0
+
+.config_l2_cache_way_loop:
+	// Populate the scratchpad memory one way at a time
+	sd	t3, WAY_MASK_E51_DCACHE_REL(t1)
+	fence	rw, rw					// mb()
+
+	li	t6, 0					// inc
+.config_l2_cache_block_loop:
+	sd	t5, 0(t2)
+	addi	t2, t2, L2_CACHE_BLOCK_BYTE_LENGTH
+	addi	t6, t6, 1
+	li	a0, L2_BLOCKS_PER_WAY
+	blt	t6, a0, .config_l2_cache_block_loop
+
+	slli	t3, t3, 1				// current_way <<= 1
+	fence	rw, rw					// mb()
+
+	addi	t4, t4, 1
+	li	a0, CFG_NUM_SCRATCH_PAD_WAYS
+	blt	t4, a0, .config_l2_cache_way_loop
+#endif /* CFG_NUM_SCRATCH_PAD_WAYS != 0 */
+
+	//
+	// Prevent E51 from evicting from scratchpad ways
+	//
+	li	a0, CFG_WAY_MASK_E51_DCACHE
+	sd	a0, WAY_MASK_E51_DCACHE_REL(t1)
+	fence	rw, rw					// mb()
+	ret
+
+/***********************************************************************************
+ *
  * The following init_memory() symbol overrides the weak symbol in the HAL and does
  * a safe copy of RW data and clears zero-init memory
  *

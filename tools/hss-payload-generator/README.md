@@ -32,6 +32,24 @@ To verify secure boot code signing, use the `-u` option to specify the location 
 
 NOTE: specifically when on Microsoft Windows, ensure that the `payload.bin` argument is at the end of the command line when creating a payload image. We recommend also making the `payload.bin` argument the last argument on Linux.
 
+## Direct (zero-copy) boot with `-b`
+
+Normally the HSS copies each chunk from the boot image to the chunk's execution address. For a DDR-less flow -- for example Zephyr running from L2 Scratchpad -- that intermediate copy can be avoided entirely, so that the payload executes straight out of the image as loaded.
+
+The `-b` option forces the first blob to a given absolute file offset, and packs subsequent blobs sequentially after it:
+
+    $ ./hss-payload-generator -b 0x1000 -c config.yaml payload.bin
+
+`-b` is only valid in conjunction with `-c`, and the offset must be a multiple of 8 (the blob padding granularity). The tool errors out if the header and chunk tables do not fit below the requested offset.
+
+For the copy to actually be skipped, a chunk's absolute position once the image is loaded must equal its execution address. That is:
+
+    CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR + chunk loadAddr == chunk execAddr
+
+So with `CONFIG_SKIP_DDR=y`, `CONFIG_SERVICE_BOOT_DDR_TARGET_ADDR=0x0A060000`, `-b 0x1000` and a payload linked at `0x0A061000`, the single blob lands exactly at its execution address and the HSS skips the copy.
+
+**This only works cleanly for a single-blob payload.** Blobs are packed on 8-byte boundaries, whereas execution addresses come from the payload's own layout, so for a second and subsequent blob the two generally drift apart. Where a chunk's source and destination then *partially* overlap, the HSS cannot copy it without corrupting it, and will report the overlap and fail the boot rather than start a hart on a damaged image. Use `-d` to check the `loadAddr`/`execAddr` of each chunk (at verbosity `-vvv` or higher) if a direct boot is rejected.
+
 ## Config File example
 
 First, we can optionally set a name for our image, otherwise one will be created dynamically:

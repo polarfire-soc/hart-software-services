@@ -86,6 +86,21 @@
 
 #define BOOT_SUB_CHUNK_SIZE 256u
 
+/*!
+ * \brief Placement of a chunk's source data relative to its execution address
+ *
+ * Normally a chunk is copied from the boot image to its execution address. For a
+ * direct-boot (zero-copy) payload -- one generated with hss-payload-generator's
+ * -b flag so that a blob lands at the file offset which, once the image is in
+ * place, *is* its execution address -- the copy is unnecessary and must be
+ * skipped.
+ */
+enum HSS_Boot_ChunkPlacement {
+    CHUNK_PLACEMENT_DISJOINT,  //!< source and destination do not overlap; copy normally
+    CHUNK_PLACEMENT_IN_PLACE,  //!< source and destination are identical; nothing to do
+    CHUNK_PLACEMENT_OVERLAP    //!< partial overlap; a copy would corrupt the payload
+};
+
 /*
  * Module Prototypes (states)
  */
@@ -110,9 +125,11 @@ static void boot_complete_handler(struct StateMachine * const pMyMachine);
 static void boot_idle_onEntry(struct StateMachine * const pMyMachine);
 static void boot_idle_handler(struct StateMachine * const pMyMachine);
 
-static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk,
+static bool boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk,
     ptrdiff_t subChunkOffset, size_t subChunkSize);
 static void boot_do_zero_init_chunk(struct HSS_BootZIChunkDesc const *pZiChunk);
+static enum HSS_Boot_ChunkPlacement boot_classify_chunk_placement(
+    struct HSS_BootChunkDesc const *pChunk);
 
 static bool validateCrc_(struct HSS_BootImage *pImage);
 
@@ -271,16 +288,98 @@ const struct {
  * This checks are done outside this function.
  *
  */
-static void boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk, ptrdiff_t subChunkOffset,
+/*!
+ * \brief Classify a chunk's source data relative to its execution address
+ *
+ * \warning This must be evaluated over the *whole* chunk, never over an
+ * individual sub-chunk. Chunks are copied in BOOT_SUB_CHUNK_SIZE pieces, and a
+ * given piece can be disjoint while the chunk as a whole overlaps -- copying it
+ * would then overwrite source data that a later piece still needs to read.
+ */
+static enum HSS_Boot_ChunkPlacement boot_classify_chunk_placement(
+    struct HSS_BootChunkDesc const *pChunk)
+{
+    assert(pChunk);
+
+    enum HSS_Boot_ChunkPlacement result;
+
+    const uintptr_t execAddr = (uintptr_t)pChunk->execAddr;
+    const uintptr_t loadAddr = (uintptr_t)pBootImage + (uintptr_t)pChunk->loadAddr;
+    const size_t size = pChunk->size;
+
+    if (execAddr == loadAddr) {
+        //
+        // direct boot: the blob was placed (via hss-payload-generator -b) such
+        // that its load address in the image *is* its execution address, so the
+        // data is already where it needs to be
+        result = CHUNK_PLACEMENT_IN_PLACE;
+    } else if ((execAddr < (loadAddr + size)) && (loadAddr < (execAddr + size))) {
+        //
+        // The two ranges overlap without being identical. This is not a valid
+        // direct-boot layout: it typically means -b was used but a chunk's
+        // execAddr is offset from its file position, e.g. because the ELF
+        // section alignment does not match the generator's 8-byte blob packing.
+        result = CHUNK_PLACEMENT_OVERLAP;
+    } else {
+        result = CHUNK_PLACEMENT_DISJOINT;
+    }
+
+    return result;
+}
+
+/*!
+ * \brief Download a (sub-)chunk to its execution address
+ *
+ * \return true if the chunk is in place (either copied, or already correct for a
+ * direct boot), false if the payload layout is invalid and the boot must fail
+ */
+static bool boot_do_download_chunk(struct HSS_BootChunkDesc const *pChunk, ptrdiff_t subChunkOffset,
     size_t subChunkSize)
 {
     assert(pChunk);
     assert(pChunk->size);
 
+    bool result = true;
+
     const uintptr_t execAddr = (uintptr_t)pChunk->execAddr + subChunkOffset;
     const uintptr_t loadAddr = (uintptr_t)pBootImage + (uintptr_t)pChunk->loadAddr + subChunkOffset;
     const size_t actualSize = MIN(subChunkSize, pChunk->size - subChunkOffset);
-    memcpy_via_pdma((void *)execAddr, (void*)loadAddr, actualSize);
+
+    switch (boot_classify_chunk_placement(pChunk)) {
+    case CHUNK_PLACEMENT_IN_PLACE:
+#if IS_ENABLED(CONFIG_DEBUG_CHUNK_DOWNLOADS)
+        if (!subChunkOffset) {
+            mHSS_DEBUG_PRINTF(LOG_NORMAL,
+                "direct boot: chunk already in place at 0x%x, %u bytes - skipping copy\n",
+                execAddr, pChunk->size);
+        }
+#endif
+        break;
+
+    case CHUNK_PLACEMENT_OVERLAP:
+        //
+        // Copying would read source bytes that an earlier sub-chunk has already
+        // overwritten, silently corrupting the payload. Fail the boot rather than
+        // hand a U54 a half-copied image. Report once per chunk, not per
+        // sub-chunk.
+        if (!subChunkOffset) {
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "chunk@0x%x->0x%x (%u bytes) source and destination overlap\n",
+                loadAddr, execAddr, pChunk->size);
+            mHSS_DEBUG_PRINTF(LOG_ERROR,
+                "  (invalid direct-boot layout - check hss-payload-generator -b offset "
+                "against payload execution addresses)\n");
+        }
+        result = false;
+        break;
+
+    case CHUNK_PLACEMENT_DISJOINT:
+    default:
+        memcpy_via_pdma((void *)execAddr, (void*)loadAddr, actualSize);
+        break;
+    }
+
+    return result;
 }
 
 static void boot_do_zero_init_chunk(struct HSS_BootZIChunkDesc const *pZiChunk)
@@ -612,13 +711,22 @@ static void boot_download_chunks_handler(struct StateMachine * const pMyMachine)
                 }
 #endif
                 // check each hart to see if it wants to transmit
-                boot_do_download_chunk(pChunk,
+                if (!boot_do_download_chunk(pChunk,
 #ifdef BOOT_SUB_CHUNK_SIZE
                     pInstanceData->subChunkOffset, BOOT_SUB_CHUNK_SIZE
 #else
                     0u, pChunk->size
 #endif
-                );
+                )) {
+                    //
+                    // invalid payload layout - the chunk cannot be placed without
+                    // corrupting it, so abandon the boot rather than release a U54
+                    // into a partially-copied image
+                    mHSS_DEBUG_PRINTF(LOG_ERROR, "%s::Aborting boot due to invalid chunk %p\n",
+                        pMyMachine->pMachineName, pChunk);
+                    pMyMachine->state = BOOT_ERROR;
+                    return;
+                }
 
                 if ((pChunk->owner & BOOT_FLAG_ANCILLIARY_DATA)
                     && (!pInstanceData->ancilliaryData)) {
@@ -1236,7 +1344,10 @@ bool HSS_Boot_Custom(void)
 #endif
             // check each hart to see if it wants to transmit
 #ifdef BOOT_SUB_CHUNK_SIZE
-            boot_do_download_chunk(pChunk, subChunkOffset, BOOT_SUB_CHUNK_SIZE);
+            if (!boot_do_download_chunk(pChunk, subChunkOffset, BOOT_SUB_CHUNK_SIZE)) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "Aborting boot due to invalid chunk %p\n", pChunk);
+                return false;
+            }
 
             subChunkOffset += BOOT_SUB_CHUNK_SIZE;
             if (subChunkOffset >= pChunk->size) {
@@ -1245,7 +1356,10 @@ bool HSS_Boot_Custom(void)
                 pChunk++;
             }
 #else
-            boot_do_download_chunk(pChunk, 0u, pChunk->size);
+            if (!boot_do_download_chunk(pChunk, 0u, pChunk->size)) {
+                mHSS_DEBUG_PRINTF(LOG_ERROR, "Aborting boot due to invalid chunk %p\n", pChunk);
+                return false;
+            }
             chunkNum++;
             pChunk++;
             (void)subChunkOffset;

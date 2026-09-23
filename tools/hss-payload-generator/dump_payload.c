@@ -44,6 +44,7 @@
 #include "dump_payload.h"
 #include "crc32.h"
 #include "verify_payload.h"
+#include "generate_payload.h" // for off_t redefinition
 
 #define PRV_U (0u)
 #define PRV_S (1u)
