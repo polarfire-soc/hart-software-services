@@ -12,7 +12,21 @@ On PolarFire SoC, this is comprised of two portions:
 
 The HSS performs boot and system monitoring functions for PolarFire SoC.
 
-The HSS is compressed (DEFLATE) and stored in eNVM.  On power-up, a small decompressor decompressor wrapper inflates the HSS from eNVM flash to L2-Scratchpad memory and starts the HSS.
+The HSS is compressed (DEFLATE) and stored in eNVM.  On power-up, a small decompressor wrapper inflates the HSS from eNVM flash to L2-Scratchpad memory and starts the HSS.
+
+Two wrapper variants are provided, selected by the board build target:
+
+- **envm-wrapper**: the standard boot path for non-radiation-tolerant designs.  The
+  wrapper executes directly from eNVM (0x20220100) and decompresses the HSS into
+  L2-Scratchpad.
+
+- **l2lim-wrapper**: a radiation-tolerant boot path for RT-PolarFire SoC designs where
+  eNVM can be susceptible to SEU-induced deconfiguration.  The wrapper binary is
+  SECDED 72/64 FEC-encoded before being stored in eNVM.  The sNVM boot code
+  FEC-decodes it into L2LIM (0x08000000), then all five harts jump to the L2LIM entry
+  point.  The wrapper then decompresses the embedded HSS into L2-Scratchpad and
+  transfers control, exactly as envm-wrapper does, but from the safety of ECC-protected
+  SRAM rather than flash.
 
 ## Contributions
 
@@ -30,8 +44,10 @@ Source code is found under the `hart-software-services` folder.
     ├── boards
     │   ├── mpfs-icicle-kit-es (Microchip Icicle Kit)
     │   ├── aries-m100pfsevp (Aries M100PFEVPS Kit)
+    │   ├── mpfs-rtpfs (RT-PolarFire SoC reference, uses l2lim-wrapper)
     │   └── custom-board-design (template for new boards)
-    ├── envm-wrapper (helper routines to inflate the HSS to L2-Scratchpad)
+    ├── envm-wrapper (standard boot: decompresses HSS from eNVM to L2-Scratchpad)
+    ├── l2lim-wrapper (radiation-tolerant boot: FEC-decoded to L2LIM, then decompresses HSS to L2-Scratchpad)
     ├── include
     ├── init (system initialization)
     ├── modules
