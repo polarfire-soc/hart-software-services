@@ -47,6 +47,7 @@ SRCS-$(CONFIG_SERVICE_OPENSBI) += \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall.c \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_emulate_csr.c \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_fifo.c \
+	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_fwft.c \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hart.c \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hart_pmp.c \
 	$(OPENSBI_SRC_DIR)/lib/sbi/sbi_hart_protection.c \
@@ -93,7 +94,6 @@ SRCS-$(CONFIG_SBI_ECALL_VENDOR) += services/opensbi/opensbi_vendor_ecall.c
 SRCS-$(CONFIG_SBI_ECALL_DBCN) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_dbcn.c
 SRCS-$(CONFIG_SBI_ECALL_SUSP) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_susp.c
 SRCS-$(CONFIG_SBI_ECALL_FWFT) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_fwft.c
-SRCS-$(CONFIG_SBI_ECALL_FWFT) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_fwft.c
 SRCS-$(CONFIG_SBI_ECALL_DBTR) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_dbtr.c
 SRCS-$(CONFIG_SBI_ECALL_SSE) += $(OPENSBI_SRC_DIR)/lib/sbi/sbi_ecall_sse.c
 
