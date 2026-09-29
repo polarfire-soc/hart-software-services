@@ -164,7 +164,7 @@ snvm-bm2-loader_clean:
 FEC_FILE-l2lim-wrapper       = $(BINDIR)/hss-envm-l2lim-wrapper.bin.fec
 
 # Prepend a 256-byte zero header so the FEC payload lands at 0x20220100
-ENVM_HEADER_BYTES            := 256
+ENVM_HEADER_BYTES            := $(L2LIM_WRAPPER_ENVM_HEADER_BYTES)
 FEC_PADDED-l2lim-wrapper     = $(BINDIR)/hss-envm-l2lim-wrapper.bin.fec.padded
 $(FEC_PADDED-l2lim-wrapper): $(FEC_FILE-l2lim-wrapper)
 	$(ECHO) " PAD       `basename $@`"
