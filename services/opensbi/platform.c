@@ -38,7 +38,6 @@
 
 #include <sbi/sbi_types.h>
 
-#include <libfdt.h>
 #include <sbi/riscv_atomic.h>
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_encoding.h>
@@ -56,7 +55,6 @@
 #include <sbi/sbi_system.h>
 #include <sbi/sbi_ecall_interface.h>
 #include <sbi/sbi_timer.h>
-#include <sbi_utils/fdt/fdt_fixup.h>
 #include <sbi_utils/ipi/aclint_mswi.h>
 #include <sbi/sbi_irqchip.h>
 #include <sbi_utils/irqchip/plic.h>
@@ -410,13 +408,6 @@ static void mpfs_resume_scb_clock(void)
 #  endif
 #endif
 
-static void mpfs_modify_dt(void *fdt)
-{
-    fdt_cpu_fixup(fdt);
-    fdt_fixups(fdt);
-    fdt_reserved_memory_fixup(fdt);
-}
-
 static void __attribute__((__noreturn__)) mpfs_system_reset(u32 reset_type, u32 reset_reason)
 {
     const u32 hartid = current_hartid();
@@ -473,20 +464,6 @@ static int mpfs_early_init(bool cold_boot)
         sbi_system_suspend_set_device(&mpfs_suspend);
         mpfs_console_init();
         mpfs_ipi_cold_init();
-    }
-
-    return 0;
-}
-
-static int mpfs_final_init(bool cold_boot)
-{
-    if (!cold_boot) {
-        return 0;
-    }
-
-    void *fdt = sbi_scratch_thishart_arg1_ptr();
-    if (fdt) {
-        mpfs_modify_dt(fdt);
     }
 
     return 0;
@@ -667,15 +644,41 @@ static u64 mpfs_get_tlbr_flush_limit(void)
     return MPFS_TLB_RANGE_FLUSH_LIMIT;
 }
 
-static struct sbi_domain_memregion mpfs_memregion[3] = {
-    { .order = 0, .base = 0u, .flags = 0u },
-    { .order = __riscv_xlen, .base = 0u, .flags =
-        (SBI_DOMAIN_MEMREGION_READABLE | SBI_DOMAIN_MEMREGION_WRITEABLE | SBI_DOMAIN_MEMREGION_EXECUTABLE) },
-    { .order = 0u, .base = 0u, .flags = 0u }
+enum {
+#if IS_ENABLED(CONFIG_PROVIDE_DTB)
+    MPFS_MEMREGION_DTB,
+#endif
+    MPFS_MEMREGION_FW,
+    MPFS_MEMREGION_ALL,
+    MPFS_MEMREGION_END,
+    MPFS_MEMREGION_COUNT
 };
 
-static struct sbi_domain_memregion * mpfs_domains_root_regions(void)
+static struct sbi_domain_memregion mpfs_memregion[MPFS_MEMREGION_COUNT] = {
+    [MPFS_MEMREGION_ALL] = { .order = __riscv_xlen, .base = 0u, .flags =
+        (SBI_DOMAIN_MEMREGION_READABLE | SBI_DOMAIN_MEMREGION_WRITEABLE | SBI_DOMAIN_MEMREGION_EXECUTABLE) },
+};
+
+/*
+ * Initialises the firmware and DTB memory regions and returns the region table.
+ */
+static struct sbi_domain_memregion * mpfs_domains_init_regions(void)
 {
+    struct sbi_scratch * const pScratch = sbi_scratch_thishart_ptr();
+
+#if IS_ENABLED(CONFIG_PROVIDE_DTB)
+    /*
+     * The board linker script sizes and aligns the window to a power of 2,
+     * so this is a single NAPOT region exactly covering it.
+     */
+    extern char mpfs_dtb_start[], mpfs_dtb_end[];
+    sbi_domain_memregion_init((unsigned long)mpfs_dtb_start,
+        (unsigned long)(mpfs_dtb_end - mpfs_dtb_start),
+        SBI_DOMAIN_MEMREGION_SHARED_SURW_MRW, &mpfs_memregion[MPFS_MEMREGION_DTB]);
+#endif
+    sbi_domain_memregion_init(pScratch->fw_start, pScratch->fw_size, 0u,
+        &mpfs_memregion[MPFS_MEMREGION_FW]);
+
     return mpfs_memregion;
 }
 
@@ -792,6 +795,8 @@ static int mpfs_domains_init(void)
 {
     // register all AMP domains
     int result = SBI_EINVAL;
+    struct sbi_domain_memregion * const pRegions = mpfs_domains_init_regions();
+
     for (int hartid = 1; hartid < ARRAY_SIZE(hart_ledger); hartid++) {
         const int boot_hartid = hart_ledger[hartid].owner_hartid;
 
@@ -804,10 +809,8 @@ static int mpfs_domains_init(void)
                 memcpy(pDom->name, hart_ledger[boot_hartid].name, ARRAY_SIZE(dom_table[0].name)-1);
 
                 struct sbi_hartmask * const pMask = &(hart_ledger[boot_hartid].hartMask);
-                struct sbi_scratch * const pScratch = sbi_scratch_thishart_ptr();
 
-                pDom->regions = mpfs_domains_root_regions();
-                sbi_domain_memregion_init(pScratch->fw_start, pScratch->fw_size, 0u, &(pDom->regions[0]));
+                pDom->regions = pRegions;
                 pDom->fw_region_inited = true;
 
                 pDom->next_arg1 = hart_ledger[boot_hartid].next_arg1;
@@ -1227,7 +1230,7 @@ const struct sbi_platform_operations platform_ops = {
     .single_fw_region = mpfs_single_fw_region,
 
     .early_init = mpfs_early_init,
-    .final_init = mpfs_final_init,
+    .final_init = NULL,
     .early_exit = NULL,
     .final_exit = mpfs_final_exit,
 

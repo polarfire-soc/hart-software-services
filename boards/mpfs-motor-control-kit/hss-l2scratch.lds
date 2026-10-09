@@ -264,7 +264,23 @@ SECTIONS
         __data_start = .;
         *(.got.plt) *(.got)
         *(.shdata)
+#ifdef CONFIG_PROVIDE_DTB
+        /*
+         * Built-in DTB, handed to the next stage in place. Place it in a
+         * window sized to the next power of 2 and aligned to that size, so
+         * that it satisfies libfdt's 8-byte alignment and can be described
+         * by a single NAPOT PMP entry (S-mode read-only, see platform.c).
+         */
+#define MPFS_DTB_WINDOW_SIZE (1 << LOG2CEIL(_binary_build_services_opensbi_mpfs_dtb_size))
+        *(EXCLUDE_FILE(*mpfs_dtb.o) .data .data.* .gnu.linkonce.d.*)
+        . = ALIGN(MPFS_DTB_WINDOW_SIZE);
+        mpfs_dtb_start = .;
+        KEEP(*mpfs_dtb.o(.data))
+        . = mpfs_dtb_start + MPFS_DTB_WINDOW_SIZE;
+        mpfs_dtb_end = .;
+#else
         *(.data .data.* .gnu.linkonce.d.*)
+#endif
         . = ALIGN(0x10);
         __data_end = .;
     } >l2zerodevice

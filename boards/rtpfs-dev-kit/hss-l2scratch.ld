@@ -115,7 +115,12 @@ SECTIONS
         __data_start = .;
         *(.got.plt) *(.got)
         *(.shdata)
-        *(.data .data.* .gnu.linkonce.d.*)
+        *(EXCLUDE_FILE(*mpfs_dtb.o) .data .data.* .gnu.linkonce.d.*)
+        . = ALIGN((1 << LOG2CEIL(_binary_build_services_opensbi_mpfs_dtb_size)));
+        mpfs_dtb_start = .;
+        KEEP(*mpfs_dtb.o(.data))
+        . = mpfs_dtb_start + (1 << LOG2CEIL(_binary_build_services_opensbi_mpfs_dtb_size));
+        mpfs_dtb_end = .;
         . = ALIGN(0x10);
         __data_end = .;
     } >l2zerodevice
