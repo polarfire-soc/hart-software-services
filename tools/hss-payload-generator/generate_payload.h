@@ -34,8 +34,27 @@
 
 #include "hss_types.h"
 
+#ifdef __MINGW32__
+	// x86_64-W64_MING32 has 4-byte long, whereas Linux x64/RV64 compilers have 8-byte long
+	// we'll fix up the type defs here to ensure that the structures (including padding)
+	// are the same sizes...
+	//
+#	define __ssize_t_defined
+	typedef long long	  HSS_ssize_t;
+	typedef unsigned long long HSS_size_t;
+	typedef unsigned long long HSS_uintptr_t;
+	typedef unsigned long long HSS_off_t;
+#	define size_t	HSS_size_t
+#	define ssize_t   HSS_ssize_t
+#	define uintptr_t HSS_uintptr_t
+#	define off_t	 HSS_off_t
+#endif
+
+
 void generate_payload(char const * const filename_output, char const * const private_key_filename, char const * const public_key_filename);
 void generate_init(void);
+
+void generate_set_blob_offset(off_t offset);
 
 size_t generate_add_chunk(struct HSS_BootChunkDesc chunk, void *buffer) __attribute__((nonnull));
 size_t generate_add_ziChunk(struct HSS_BootZIChunkDesc ziChunk);

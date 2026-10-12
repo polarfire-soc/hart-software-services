@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <errno.h>
 #include <getopt.h>
 
 #ifndef CONFIG_CRYPTO_SIGNING
@@ -62,9 +64,11 @@ static void intro_banner(void)
 
 static void print_usage(char **argv)
 {
-	printf("Usage: %s [-v] [-w] [-h] [[-c <configfile.yaml> <output.bin>] [-p <private-key.pem>] ] [-d <output.bin> [-u <public-key.pem>]\n\n", argv[0]);
+	printf("Usage: %s [-v] [-w] [-h] [[-c <configfile.yaml> <output.bin>] [-p <private-key.pem>] [-b <offset>]] [-d <output.bin> [-u <public-key.pem>]\n\n", argv[0]);
 	printf("\nMultiple '-v' arguments increases verbosity of output.\n\n");
 
+	printf(" -b		Blob offset: force first blob to this absolute file offset (e.g. 0x1000).\n");
+	printf("		Used for direct (zero-copy) boot; only valid with -c\n");
 	printf(" -c		Run generator and specify path to configuration YAML\n");
 	printf(" -d		Run analyzer and specify path to payload binary\n");
 	printf(" -h		print this help\n");
@@ -93,8 +97,37 @@ int main(int argc, char **argv)
 	char *dump_payload_filename = NULL;
 	char *private_key_filename = NULL;
 	char *public_key_filename = NULL;
-	while ((opt = getopt(argc, argv, (const char *)"c:d:hp:u:vw")) != -1) {
+	bool blob_offset_requested = false;
+	off_t blob_offset = 0u;
+	while ((opt = getopt(argc, argv, (const char *)"b:c:d:hp:u:vw")) != -1) {
 		switch (opt) {
+		case 'b':
+			{
+				// validate strictly: a silently-zero offset from a typo would
+				// quietly disable direct boot and yield a normal image
+				char *pEnd = NULL;
+				errno = 0;
+				unsigned long long value = strtoull(optarg, &pEnd, 0);
+
+				if ((errno) || (pEnd == optarg) || (*pEnd != '\0')) {
+					fprintf(stderr, "%s: -b requires a numeric offset, got >>%s<<\n\n",
+						argv[0], optarg);
+					exit(EXIT_FAILURE);
+				}
+
+				// off_t is signed on Linux, so reject anything that would not
+				// survive the conversion as a positive file offset
+				if (value > (unsigned long long)INT64_MAX) {
+					fprintf(stderr, "%s: -b offset >>%s<< is too large\n\n",
+						argv[0], optarg);
+					exit(EXIT_FAILURE);
+				}
+
+				blob_offset = (off_t)value;
+				blob_offset_requested = true;
+			}
+			break;
+
 		case 'c':
 			config_filename = optarg;
 			break;
@@ -138,6 +171,15 @@ int main(int argc, char **argv)
 	if ((config_filename) && (dump_payload_filename)) {
 		fprintf(stderr, "%s: Only one of -c or -d allowed\n\n", argv[0]);
 		exit(EXIT_FAILURE);
+	}
+
+	if ((blob_offset_requested) && (!config_filename)) {
+		fprintf(stderr, "%s: -b only allowed in conjunction with -c\n\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if (blob_offset_requested) {
+		generate_set_blob_offset(blob_offset);
 	}
 
 	//
