@@ -29,7 +29,6 @@
 #include "mss_gpio.h"
 #endif
 #include "mss_mmc.h"
-#include "hal/hw_macros.h"
 #ifndef __IO
 #  define __IO volatile
 #endif

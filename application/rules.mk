@@ -181,15 +181,15 @@ EXTRA_OBJS += $(addprefix $(BINDIR)/,$(ASM_SRCS-y:.S=.o))
 	$(ECHO) " CC -s     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -S -g  $<  -o $@
 
-%.S: %.c $($(CONFIG_H)
+%.S: %.c $(CONFIG_H)
 	$(ECHO) " CC -S     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -Wa,-adhln -g  $<  > $@
 
-%.e: %.c $($(CONFIG_H)
+%.e: %.c $(CONFIG_H)
 	$(ECHO) " CC -E     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
-%.e: %.s $($(CONFIG_H)
+%.e: %.s $(CONFIG_H)
 	$(ECHO) " CC -E     $@"
 	$(CC) $(CFLAGS_GCCEXT) $(OPT-y) $(INCLUDES) -c -E -o $@ $<
 
