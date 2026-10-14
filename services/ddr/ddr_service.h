@@ -49,6 +49,7 @@ size_t HSS_DDRHi_GetSize(void);
 uintptr_t HSS_DDRHi_GetStart(void);
 void HSS_DDR_Train(void);
 bool HSS_DDR_IsAddrInDDR(uintptr_t addr);
+bool HSS_DDR_IsRangeInDDR(uintptr_t addr, size_t size);
 
 enum IPIStatusCode HSS_DDR_Train_IPIHandler(TxId_t transaction_id, enum HSSHartId source,
     uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr);

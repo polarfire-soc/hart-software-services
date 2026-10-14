@@ -69,7 +69,12 @@ int sbi_ecall_ihc_handler(unsigned long funcid,
         goto exit;
     }
 
-    if (message_ptr == NULL || !HSS_DDR_IsAddrInDDR((uintptr_t)message_ptr)) {
+    // message_ptr is written with a whole ihc_sbi_rx_msg (RECEIVE) or read as
+    // IHC_MAX_MESSAGE_SIZE words (SEND), so check the larger of the two
+    if (message_ptr == NULL
+            || !HSS_DDR_IsRangeInDDR((uintptr_t)message_ptr,
+                (sizeof(struct ihc_sbi_rx_msg) > (IHC_MAX_MESSAGE_SIZE * sizeof(uint32_t)))
+                    ? sizeof(struct ihc_sbi_rx_msg) : (IHC_MAX_MESSAGE_SIZE * sizeof(uint32_t)))) {
         result = SBI_EINVAL;
         goto exit;
     }

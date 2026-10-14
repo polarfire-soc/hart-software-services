@@ -121,13 +121,32 @@ enum IPIStatusCode HSS_DDR_Train_IPIHandler(TxId_t transaction_id, enum HSSHartI
     return IPI_IDLE;
 }
 
-bool HSS_DDR_IsAddrInDDR(uintptr_t addr)
+//
+// [addr, addr+size) must lie wholly inside [regionStart, regionStart+regionSize)
+// Written in terms of offsets so that no sum can overflow
+static bool is_range_in_region_(uintptr_t addr, size_t size, uintptr_t regionStart, size_t regionSize)
 {
-    bool result = (addr >= HSS_DDR_GetStart())
-        && (addr <= (HSS_DDR_GetStart() + HSS_DDR_GetSize()));
+    bool result = false;
 
-    result |= (addr >= HSS_DDRHi_GetStart())
-        && (addr <= (HSS_DDRHi_GetStart() + HSS_DDRHi_GetSize()));
+    if (addr >= regionStart) {
+        const size_t offset = addr - regionStart;
+
+        result = (offset < regionSize) && (size <= (regionSize - offset));
+    }
 
     return result;
+}
+
+bool HSS_DDR_IsAddrInDDR(uintptr_t addr)
+{
+    return HSS_DDR_IsRangeInDDR(addr, 1u);
+}
+
+//
+// A range must sit entirely within one DDR region. One spanning the gap
+// between low and high DDR is rejected
+bool HSS_DDR_IsRangeInDDR(uintptr_t addr, size_t size)
+{
+    return is_range_in_region_(addr, size, HSS_DDR_GetStart(), HSS_DDR_GetSize())
+        || is_range_in_region_(addr, size, HSS_DDRHi_GetStart(), HSS_DDRHi_GetSize());
 }

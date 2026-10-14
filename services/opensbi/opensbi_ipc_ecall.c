@@ -35,8 +35,7 @@
 
 #define mIPC_PTR_VALID(ptr, type) \
     ((ptr) != NULL \
-     && HSS_DDR_IsAddrInDDR((uintptr_t)(ptr)) \
-     && HSS_DDR_IsAddrInDDR((uintptr_t)(ptr) + sizeof(type)))
+     && HSS_DDR_IsRangeInDDR((uintptr_t)(ptr), sizeof(type)))
 
 enum ipc_hw {
     MIV_IHC,
@@ -82,8 +81,8 @@ static uint32_t ihc_mp_isr_callback(uint8_t channel,
     // validate the destination before writing as sbi_msg->addr is U-mode-supplied
     // and could otherwise redirect this memcpy to arbitrary M-mode memory
     //
-    if (!mIPC_PTR_VALID((void *)sbi_msg->addr, uint8_t)
-            || !HSS_DDR_IsAddrInDDR(sbi_msg->addr + sbi_msg->size)) {
+    if (((void *)sbi_msg->addr == NULL)
+            || !HSS_DDR_IsRangeInDDR(sbi_msg->addr, sbi_msg->size)) {
         return 1u;
     }
 
@@ -134,8 +133,8 @@ int sbi_ecall_ipc_handler(unsigned long funcid,
                 result = SBI_EINVAL;
                 break;
             }
-            if (!mIPC_PTR_VALID((void *)sbi_msg->addr, uint8_t)
-                    || !HSS_DDR_IsAddrInDDR(sbi_msg->addr + sbi_msg->size)) {
+            if (((void *)sbi_msg->addr == NULL)
+                    || !HSS_DDR_IsRangeInDDR(sbi_msg->addr, sbi_msg->size)) {
                 result = SBI_EINVAL;
                 break;
             }

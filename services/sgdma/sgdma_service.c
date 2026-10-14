@@ -174,8 +174,7 @@ enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId so
 
     while (true) {
         // ensure the descriptor struct itself lies within DDR before reading any field
-        if (!HSS_DDR_IsAddrInDDR((uintptr_t)pDesc)
-                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc + sizeof(*pDesc))) {
+        if (!HSS_DDR_IsRangeInDDR((uintptr_t)pDesc, sizeof(*pDesc))) {
             mHSS_DEBUG_PRINTF(LOG_ERROR,
                 "SGDMA: descriptor %zu not in DDR (hart %d) - rejecting\n", descCount, source);
             break;
@@ -194,10 +193,8 @@ enum IPIStatusCode HSS_SGDMA_IPIHandler(TxId_t transaction_id, enum HSSHartId so
         }
 
         // validate that src and dest ranges lie within DDR
-        if (!HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->src_phys_addr)
-                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->src_phys_addr + pDesc->size)
-                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->dest_phys_addr)
-                || !HSS_DDR_IsAddrInDDR((uintptr_t)pDesc->dest_phys_addr + pDesc->size)) {
+        if (!HSS_DDR_IsRangeInDDR((uintptr_t)pDesc->src_phys_addr, pDesc->size)
+                || !HSS_DDR_IsRangeInDDR((uintptr_t)pDesc->dest_phys_addr, pDesc->size)) {
             mHSS_DEBUG_PRINTF(LOG_ERROR,
                 "SGDMA: descriptor %zu src/dest not in DDR (hart %d) - rejecting\n",
                 descCount, source);
