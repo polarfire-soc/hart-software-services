@@ -31,6 +31,14 @@
 #include "mss_peripherals.h"
 #include "opensbi_ecall.h"
 #include "opensbi_crypto_ecall.h"
+#include "ddr_service.h"
+
+#define mCRYPTO_PTR_VALID(ptr, type) \
+    ((ptr) != NULL \
+     && HSS_DDR_IsRangeInDDR((uintptr_t)(ptr), sizeof(type)))
+
+#define AES_MAX_KEY_SIZE	32
+#define AES_IV_SIZE		16
 
 #define AES_DIR_DECRYPT		0x00
 #define AES_DIR_ENCRYPT		0x01
@@ -66,6 +74,21 @@ static int crypto_aes_operation(const struct sbi_trap_regs *regs)
 
 	aes = (struct mchp_crypto_aes_req *)regs->a1;
 	flags = (uint32_t)regs->a2;
+
+	/*
+	 * All buffers come from S-mode and are handed to the crypto DMA
+	 * engine, so restrict them to DDR to stop M-mode memory being
+	 * read or overwritten on the caller's behalf.
+	 */
+	if (!mCRYPTO_PTR_VALID(aes, struct mchp_crypto_aes_req)) {
+		return SBI_EINVAL;
+	}
+	if (!mCRYPTO_PTR_VALID((void *)aes->key, uint8_t[AES_MAX_KEY_SIZE])
+	    || !mCRYPTO_PTR_VALID((void *)aes->iv, uint8_t[AES_IV_SIZE])
+	    || !HSS_DDR_IsRangeInDDR((uintptr_t)aes->src, aes->size)
+	    || !HSS_DDR_IsRangeInDDR((uintptr_t)aes->dst, aes->size)) {
+		return SBI_EINVAL;
+	}
 
 	/* AES Key Type - 128 or 192 or 256-bit */
 	aes_key_type = (flags >> 16) & MASK_8BIT;
@@ -198,6 +221,10 @@ int sbi_ecall_crypto_handler(
 	case SBI_EXT_CRYPTO_SERVICES_PROBE:
 		if (crypto_initialized) {
 			crypto = (struct mchp_crypto_info *)regs->a0;
+			if (!mCRYPTO_PTR_VALID(crypto, struct mchp_crypto_info)) {
+				result = SBI_EINVAL;
+				break;
+			}
 
 			crypto->services = CRYPTO_SERVICE_AES;
 			crypto->cipher_algo = CRYPTO_ALG_AES_ECB |
