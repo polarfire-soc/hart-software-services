@@ -50,7 +50,8 @@
 int HSS_SBI_ECALL_Handler(long funcid,
     struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
-    int result = SBI_ERR_FAILED;
+    // cases whose service is compiled out fall through with this value
+    int result = SBI_ENOTSUPP;
 
     switch (funcid) {
         //
