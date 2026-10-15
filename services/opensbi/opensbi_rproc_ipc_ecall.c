@@ -37,8 +37,6 @@
 #define RPROC_DETACHED    0x6
 #define RPROC_OFFLINE     0x0
 
-static struct RemoteProcMsg rproc_data;
-
 int sbi_ecall_rproc_ipc_handler(unsigned long funcid,
     struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
@@ -59,9 +57,9 @@ int sbi_ecall_rproc_ipc_handler(unsigned long funcid,
             break;
 #endif
         case SBI_EXT_RPROC_START:
-            rproc_data.target = target_hart;
             if (IPI_MessageAlloc(&index)) {
-                if(IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, RPROC_BOOT, &rproc_data, NULL))
+                if (IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST,
+                        RPROC_BOOT | target_hart, NULL, NULL))
                     result = SBI_OK;
                 else
                     IPI_MessageFree(index);

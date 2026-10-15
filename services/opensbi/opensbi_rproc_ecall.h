@@ -1,5 +1,5 @@
-#ifndef OPENSBI_RPROC_SERVICE_H
-#define OPENSBI_RPROC_SERVICE_H
+#ifndef OPENSBI_RPROC_ECALL_H
+#define OPENSBI_RPROC_ECALL_H
 
 /*******************************************************************************
  * Copyright 2019-2025 Microchip FPGA Embedded Systems Solutions.
@@ -37,6 +37,7 @@ extern "C" {
 
 # define RPROC_BOOT 0x80
 # define RPROC_SHUTDOWN_MSG 0xFFFFFF02
+# define RPROC_BOOT_HART_ID(arg) ((arg) & ~RPROC_BOOT)
 
 #define CONTEXT_OFFLINE 0
 #define CONTEXT_RUNNING 1

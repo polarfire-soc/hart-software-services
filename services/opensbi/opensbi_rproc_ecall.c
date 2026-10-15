@@ -34,8 +34,6 @@
 #include "opensbi_rproc_ecall.h"
 #include "hss_boot_service.h"
 
-static struct RemoteProcMsg rproc_data;
-
 int sbi_ecall_rproc_handler(unsigned long funcid,
     struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
@@ -62,9 +60,9 @@ int sbi_ecall_rproc_handler(unsigned long funcid,
             break;
 #endif
         case SBI_EXT_RPROC_START:
-            rproc_data.target = remote_hart_id;
             if (IPI_MessageAlloc(&index)) {
-                if(IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST, RPROC_BOOT, &rproc_data, NULL))
+                if (IPI_MessageDeliver(index, HSS_HART_E51, IPI_MSG_BOOT_REQUEST,
+                        RPROC_BOOT | remote_hart_id, NULL, NULL))
                     result = SBI_OK;
                 else
                     IPI_MessageFree(index);
