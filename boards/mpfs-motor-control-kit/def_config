@@ -7,6 +7,7 @@
 # mpfs-motor-control-kit Configuration Options
 #
 CONFIG_SOC_FPGA_DESIGN_XML="boards/mpfs-motor-control-kit/fpga_design/design_description/MSS_motor-control-kit_mss_cfg.xml"
+CONFIG_DEFAULT_DEVICE_TREE="boards/mpfs-motor-control-kit/mpfs_minimal_uboot.dtb"
 # end of mpfs-motor-control-kit Configuration Options
 # end of Board/Design Configuration Options
 
