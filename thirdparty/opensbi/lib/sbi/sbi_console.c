@@ -64,11 +64,24 @@ static unsigned long nputs(const char *str, unsigned long len)
 				console_dev->console_putc(str[i]);
 			}
 		}
-	} else {
+	} else if (csr_read(CSR_MHARTID) == 0) {
+		/*
+		 * Only buffer early output from the E51 (hart 0). The
+		 * early FIFO is shared and flushed to the E51 UART, so
+		 * concurrent pre-console prints from the U54s would
+		 * interleave there.
+		 */
 		for (i = 0; i < len; i++) {
 			ch = str[i];
 			sbi_fifo_enqueue(&console_early_fifo, &ch, true);
 		}
+	} else {
+		/*
+		 * Report U54 output as not yet written. nputs_all() retries
+		 * until the E51 registers the console, after which
+		 * mpfs_console_putc() sends it to the U54's own UART.
+		 */
+		return 0;
 	}
 	return len;
 }
