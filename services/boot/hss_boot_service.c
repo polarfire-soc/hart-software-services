@@ -1118,9 +1118,6 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
     uint32_t immediate_arg, void *p_extended_buffer_in_ddr, void *p_ancilliary_buffer_in_ddr)
 {
     (void)transaction_id;
-    (void)source;
-    (void)immediate_arg;
-    (void)p_extended_buffer_in_ddr;
     (void)p_ancilliary_buffer_in_ddr;
 
     // boot strap IPI received from one of the U54s...
@@ -1131,18 +1128,8 @@ enum IPIStatusCode HSS_Boot_IPIHandler(TxId_t transaction_id, enum HSSHartId sou
        no need to reload the payload on the HSS
     */
 #if IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC) || IS_ENABLED(CONFIG_SERVICE_OPENSBI_RPROC_IPC)
-    if (immediate_arg == RPROC_BOOT) {
-        if (p_extended_buffer_in_ddr == NULL
-                || !HSS_DDR_IsAddrInDDR((uintptr_t)p_extended_buffer_in_ddr)
-                || !HSS_DDR_IsAddrInDDR((uintptr_t)p_extended_buffer_in_ddr
-                                        + sizeof(struct RemoteProcMsg))) {
-            mHSS_DEBUG_PRINTF(LOG_ERROR, "HSS_Boot_IPIHandler: rproc buffer not in DDR\n");
-            return IPI_FAIL;
-        }
-
-        struct RemoteProcMsg const * const rproc_data =
-            (struct RemoteProcMsg const *)p_extended_buffer_in_ddr;
-        enum HSSHartId const target = rproc_data->target;
+    if (immediate_arg & RPROC_BOOT) {
+        enum HSSHartId const target = (enum HSSHartId)RPROC_BOOT_HART_ID(immediate_arg);
 
         if ((target < HSS_HART_U54_1) || (target > HSS_HART_U54_4)) {
             mHSS_DEBUG_PRINTF(LOG_ERROR,
