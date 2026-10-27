@@ -91,6 +91,19 @@ static uint32_t ihc_mp_isr_callback(uint8_t channel,
     return 0u;
 }
 
+static uint32_t ihc_mc_isr_callback(uint8_t channel,
+                                    const uint32_t *message,
+                                    uint32_t message_size,
+                                    uint32_t *ext_msg_ptr)
+{
+    (void)channel;
+    (void)message;
+    (void)message_size;
+    (void)ext_msg_ptr;
+
+    return 0u;
+}
+
 int sbi_ecall_ipc_handler(unsigned long funcid,
     struct sbi_trap_regs *regs, struct sbi_ecall_return *out)
 {
@@ -121,6 +134,7 @@ int sbi_ecall_ipc_handler(unsigned long funcid,
             }
             IHC_init(channel);
             IHC_config_mp_callback_handler(channel,ihc_mp_isr_callback);
+            IHC_config_mc_callback_handler(channel,ihc_mc_isr_callback);
             IHC_enable_mp_interrupt(channel);
             IHC_enable_mc_interrupt(channel);
             ipc_init_msg_ptr->max_msg_size = MAX_MSG_SIZE_IN_BYTES;
