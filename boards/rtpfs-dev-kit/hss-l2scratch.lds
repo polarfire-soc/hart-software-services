@@ -209,6 +209,8 @@ SECTIONS
         *(.note.gnu.build-id)
     } >l2zerodevice
 
+    PROVIDE(_hss_end = .);
+
     /*******************************************************************************
      *
      * The .ram_code section will contain the code That is run from RAM.
@@ -327,19 +329,6 @@ SECTIONS
         . = ALIGN(0x10);
         __bss_end = .;
     } >l2zerodevice
-
-    /*
-     * Dedicated heap for OpenSBI v1.8+ dynamic allocations (domains, devices,
-     * per-hart HSM state).  Must NOT overlap with code or data.
-     */
-    .opensbi_heap : ALIGN(0x400)
-    {
-        __opensbi_heap_start = .;
-        . += 0x10000; /* 64 KiB — v1.8 allocates per-hart state (PMU, SSE, FWFT, DBTR) */
-        __opensbi_heap_end = .;
-    } >l2zerodevice
-
-    PROVIDE(_hss_end = .);
 
     /*
      * Reserved space for Hart stacks

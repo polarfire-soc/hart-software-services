@@ -15,7 +15,7 @@
 #include "uart_helper.h"
 
 bool HSS_Trigger_IsNotified(enum HSS_Event event) {
-    return true;
+    return TRUE;
 }
 
 void HSS_Debug_Timestamp(void)
