@@ -72,13 +72,10 @@ LINKER_SCRIPT-l2lim-wrapper = l2lim-wrapper/l2lim-wrapper.ld
 # eNVM budget for the l2lim-wrapper binary.
 #
 # The l2lim-wrapper.bin is SECDED 72/64 FEC-encoded before being stored in eNVM:
-# every 8 data bytes are stored as 9 bytes. The encoded blob follows a 256-byte
-# zero header so that it lands at 0x20220100 (see snvm-bm2-loader/Makefile),
-# leaving 128 KiB - 256 bytes for the encoded image.
-# Maximum usable payload = floor((128 KiB - 256) / 9) × 8 = 116,280 bytes.
-L2LIM_WRAPPER_ENVM_SIZE_BYTES   := 131072
-L2LIM_WRAPPER_ENVM_HEADER_BYTES := 256
-L2LIM_WRAPPER_MAX_BIN_BYTES     := $(shell expr \( $(L2LIM_WRAPPER_ENVM_SIZE_BYTES) - $(L2LIM_WRAPPER_ENVM_HEADER_BYTES) \) / 9 \* 8)
+# for every 64 data bits, 8 check bits are appended (72 bits stored).
+# Maximum usable payload = floor(128 KiB × 64/72) = 116,508 bytes.
+L2LIM_WRAPPER_ENVM_SIZE_BYTES := 131072
+L2LIM_WRAPPER_MAX_BIN_BYTES   := $(shell expr $(L2LIM_WRAPPER_ENVM_SIZE_BYTES) \* 64 / 72)
 
 # The compressed HSS payload is shared with envm-wrapper; the build rule lives
 # in envm-wrapper/Makefile (included before this file). We declare it as a
@@ -104,10 +101,10 @@ $(TARGET-l2lim-wrapper): $(COMPRESSED_TARGET_L2LIM) $(OBJS-l2lim-wrapper)
 	$(OBJCOPY) -O binary $(BINDIR)/$@ $(BINDIR)/`basename $@ .elf`.bin
 	@BIN_SIZE=$$(wc -c < $(BINDIR)/`basename $@ .elf`.bin); \
 	if [ $$BIN_SIZE -gt $(L2LIM_WRAPPER_MAX_BIN_BYTES) ]; then \
-		echo "ERROR: `basename $@ .elf`.bin ($$BIN_SIZE bytes) exceeds SECDED 72/64 max payload for 128KiB eNVM less $(L2LIM_WRAPPER_ENVM_HEADER_BYTES)-byte header ($(L2LIM_WRAPPER_MAX_BIN_BYTES) bytes)"; \
+		echo "ERROR: `basename $@ .elf`.bin ($$BIN_SIZE bytes) exceeds SECDED 72/64 max payload for 128KiB eNVM ($(L2LIM_WRAPPER_MAX_BIN_BYTES) bytes)"; \
 		exit 1; \
 	else \
-		echo " SIZECHECK `basename $@ .elf`.bin: $$BIN_SIZE / $(L2LIM_WRAPPER_MAX_BIN_BYTES) bytes (SECDED 72/64, 128KiB eNVM less $(L2LIM_WRAPPER_ENVM_HEADER_BYTES)-byte header) => OK"; \
+		echo " SIZECHECK `basename $@ .elf`.bin: $$BIN_SIZE / $(L2LIM_WRAPPER_MAX_BIN_BYTES) bytes (SECDED 72/64, 128KiB eNVM) => OK"; \
 	fi
 	$(SIZE) $(BINDIR)/$(TARGET-l2lim-wrapper) 2>/dev/null
 
