@@ -95,8 +95,7 @@ static uint8_t g_uart_axi_pos = 0x0u;
 /*******************************************************************************
  * Local functions.
  */
-static void global_init(mss_uart_instance_t * this_uart, uint32_t pclk_freq,
-                                                         uint32_t baud_rate,
+static void global_init(mss_uart_instance_t * this_uart, uint32_t baud_rate,
                                                          uint8_t line_config);
 static void uart_isr(mss_uart_instance_t * this_uart);
 static void default_tx_handler(mss_uart_instance_t * this_uart);
@@ -105,7 +104,6 @@ static void disable_irq(const mss_uart_instance_t * this_uart);
 static void config_baud_divisors
 (
     mss_uart_instance_t * this_uart,
-    uint32_t pclk_freq,
     uint32_t baudrate
 );
 
@@ -123,30 +121,8 @@ MSS_UART_init
     uint8_t line_config
 )
 {
-    /*
-     * Standard init assumes the APB/AHB clock feeding the UART is the
-     * Libero-configured LIBERO_SETTING_MSS_APB_AHB_CLK. Callers running
-     * before the PLL/divider reach that value must use MSS_UART_init_ex()
-     * and pass the actual PCLK frequency instead.
-     */
-    MSS_UART_init_ex(this_uart, baud_rate, line_config,
-                     (uint64_t)LIBERO_SETTING_MSS_APB_AHB_CLK);
-}
-
-/***************************************************************************//**
- * See mss_uart.h for details of how to use this function.
- */
-void
-MSS_UART_init_ex
-(
-    mss_uart_instance_t* this_uart,
-    uint32_t baud_rate,
-    uint8_t line_config,
-    uint64_t pclk_freq_hz
-)
-{
     /* Perform generic initialization */
-    global_init(this_uart, (uint32_t)pclk_freq_hz, baud_rate, line_config);
+    global_init(this_uart, baud_rate, line_config);
 
     /* Disable LIN mode */
     this_uart->hw_reg->MM0 &= ~ELIN_MASK;
@@ -169,8 +145,7 @@ void MSS_UART_lin_init
 )
 {
     /* Perform generic initialization */
-    global_init(this_uart, (uint32_t)LIBERO_SETTING_MSS_APB_AHB_CLK,
-                baud_rate, line_config);
+    global_init(this_uart, baud_rate, line_config);
 
      /* Enable LIN mode */
     this_uart->hw_reg->MM0 |= ELIN_MASK;
@@ -197,8 +172,7 @@ MSS_UART_irda_init
 )
 {
     /* Perform generic initialization */
-    global_init(this_uart, (uint32_t)LIBERO_SETTING_MSS_APB_AHB_CLK,
-                baud_rate, line_config);
+    global_init(this_uart, baud_rate, line_config);
 
      /* Enable LIN mode */
     this_uart->hw_reg->MM0 &= ~ELIN_MASK;
@@ -230,8 +204,7 @@ MSS_UART_smartcard_init
 )
 {
     /* Perform generic initialization */
-    global_init(this_uart, (uint32_t)LIBERO_SETTING_MSS_APB_AHB_CLK,
-                baud_rate, line_config);
+    global_init(this_uart, baud_rate, line_config);
 
     /* Disable LIN mode */
     this_uart->hw_reg->MM0 &= ~ELIN_MASK;
@@ -1351,7 +1324,6 @@ MSS_UART_enable_local_irq
 static void global_init
 (
     mss_uart_instance_t * this_uart,
-    uint32_t pclk_freq,
     uint32_t baud_rate,
     uint8_t line_config
 )
@@ -1477,7 +1449,7 @@ static void global_init
      * Configure baud rate divisors. This uses the fractional baud rate divisor
      * where possible to provide the most accurate baud rat possible.
      */
-    config_baud_divisors(this_uart, pclk_freq, baud_rate);
+    config_baud_divisors(this_uart, baud_rate);
 
     /* set the line control register (bit length, stop bits, parity) */
     this_uart->hw_reg->LCR = line_config;
@@ -1511,7 +1483,6 @@ static void
 config_baud_divisors
 (
     mss_uart_instance_t * this_uart,
-    uint32_t pclk_freq_hz,
     uint32_t baudrate
 )
 {
@@ -1523,11 +1494,8 @@ config_baud_divisors
 
     this_uart->baudrate = baudrate;
 
-    /* APB/AHB clock frequency feeding this UART, supplied by the caller.
-     * MSS_UART_init() passes LIBERO_SETTING_MSS_APB_AHB_CLK; callers running
-     * before the PLL/divider reach that value pass the real PCLK via
-     * MSS_UART_init_ex(). */
-    pclk_freq = pclk_freq_hz;
+    /* Use the system clock value from hw_platform.h */
+    pclk_freq = LIBERO_SETTING_MSS_APB_AHB_CLK;
 
     /*
      * Compute baud value based on requested baud rate and PCLK frequency.

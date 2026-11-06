@@ -922,64 +922,6 @@ MSS_UART_init
 );
 
 /***************************************************************************//**
-  The MSS_UART_init_ex() function initializes and configures a PolarFire SoC
-  MSS UART exactly like MSS_UART_init(), except that the caller supplies the
-  APB/AHB (PCLK) frequency that is actually feeding the UART. The baud rate
-  divisor is derived from this frequency instead of the build-time constant
-  LIBERO_SETTING_MSS_APB_AHB_CLK.
-
-  Use this function when the UART is brought up before the MSS PLL and the
-  master clock divider have reached their Libero-configured values (for
-  example in an early boot loader running from the reset/standby clock),
-  where the real PCLK differs from LIBERO_SETTING_MSS_APB_AHB_CLK. Passing the
-  true PCLK lets the driver program the correct divisor so the requested
-  baud_rate appears on the wire and this_uart->baudrate is recorded correctly.
-
-  MSS_UART_init() is equivalent to calling MSS_UART_init_ex() with
-  pclk_freq_hz set to LIBERO_SETTING_MSS_APB_AHB_CLK.
-
-  @param this_uart
-    See MSS_UART_init() for a description of this parameter.
-
-  @param baud_rate
-    See MSS_UART_init() for a description of this parameter.
-
-  @param line_config
-    See MSS_UART_init() for a description of this parameter.
-
-  @param pclk_freq_hz
-    The pclk_freq_hz parameter is the frequency, in Hz, of the APB/AHB clock
-    currently feeding the UART. It is used to compute the baud rate divisor.
-
-  @return
-    This function does not return a value.
-
-  Example:
-  @code
-  #include "mss_uart.h"
-
-  int main(void)
-  {
-    // UART clocked by a 10 MHz PCLK before the PLL is programmed
-    MSS_UART_init_ex(&g_mss_uart0_lo,
-             MSS_UART_115200_BAUD,
-             MSS_UART_DATA_8_BITS | MSS_UART_NO_PARITY | MSS_UART_ONE_STOP_BIT,
-             10000000u);
-
-     return(0);
-  }
-  @endcode
- */
-void
-MSS_UART_init_ex
-(
-    mss_uart_instance_t* this_uart,
-    uint32_t baud_rate,
-    uint8_t line_config,
-    uint64_t pclk_freq_hz
-);
-
-/***************************************************************************//**
  The MSS_UART_lin_init() function is used to initialize the MSS UART for
  LIN mode of operation. The configuration parameters are the baud_rate which is
  used to generate the baud value and the line_config which is used to specify

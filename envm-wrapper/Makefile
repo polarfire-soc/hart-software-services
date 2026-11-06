@@ -94,7 +94,7 @@ ifneq ($(MPFS_BOOTMODE_PROGRAMMER_VERSION),$(EXPECTED_MPFS_BOOTMODE_PROGRAMMER_V
   endif
 endif
 
-$(TARGET-envm-wrapper): private LIBS:=
+$(TARGET-envm-wrapper): LIBS:=
 $(TARGET-envm-wrapper): $(COMPRESSED_TARGET) $(OBJS-envm-wrapper)
 	$(call main-build-target,envm-wrapper)
 	@$(ECHO) " BIN       `basename $@ .elf`.bin"
@@ -122,11 +122,8 @@ DIE?=MPFS250T_ES
 
 
 
-# l2lim-wrapper boards define their own program/verify targets.
-ifndef TARGET-l2lim-wrapper
 program: $(BIN_FILE-envm-wrapper)
 	$(call common-boot-mode-programmer,,$(TARGET-envm-wrapper))
 
 verify: $(BIN_FILE-envm-wrapper)
 	$(call common-boot-mode-programmer,--verify,$(TARGET-envm-wrapper))
-endif

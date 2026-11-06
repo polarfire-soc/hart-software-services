@@ -34,9 +34,6 @@ EXTRA_SRCS-y += \
 EXTRA_SRCS-y += \
 	init/hss_usb_init.c
 
-EXTRA_SRCS-y += \
-	init/hss_sysctrl_wake.c
-
 ifdef CONFIG_USE_IHC
 EXTRA_SRCS-$(CONFIG_USE_IHC) += \
 	init/hss_ihc_init.c
@@ -70,5 +67,4 @@ $(BINDIR)/init/hss_sys_setup.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/init/hss_pcie_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/init/hss_tamper_init.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/init/hss_usb_init.o: CFLAGS=$(CFLAGS_GCCEXT)
-$(BINDIR)/init/hss_sysctrl_wake.o: CFLAGS=$(CFLAGS_GCCEXT)
 $(BINDIR)/init/hss_ihc_init.o: CFLAGS=$(CFLAGS_GCCEXT)

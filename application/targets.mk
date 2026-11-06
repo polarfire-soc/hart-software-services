@@ -103,7 +103,7 @@ ifeq ($(OS), Windows_NT)
 # The make.exe bundled with SoftConsole has issues expanding a long list of
 # targets to clean...
 # working around this by forcibly clearing the entire $(BINDIR) here...
-clean: envm-wrapper_clean l2lim-wrapper_clean
+clean: envm-wrapper_clean
 	$(RM) -r $(BINDIR)/*
 	$(RM) -r docs/DoxygenOutput
 	$(RM) -r lcovOutput coverage.info
@@ -111,7 +111,7 @@ clean: envm-wrapper_clean l2lim-wrapper_clean
 	$(RM) *.lss *.hex *.sym
 	$(RM) x509-ec-secp384r1-public.h
 else
-clean: envm-wrapper_clean l2lim-wrapper_clean
+clean: envm-wrapper_clean
 	$(RM) $(TARGET) $(TEST_TARGET) cppcheck.log splint.log valgrind.log \
 		$(OBJS:.o=.gcda) $(OBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.c.gcov) $(OBJS:.o=.su) \
                 $(EXTRA_OBJS) $(EXTRA_OBJS:.o=.c.gcov) $(EXTRA_OBJS:.o=.su) \

@@ -101,8 +101,6 @@ DEPENDENCIES+=include/tool_versions.h
 endif
 
 include envm-wrapper/Makefile
-include l2lim-wrapper/Makefile
-include l2lim-wrapper/snvm-bm2-loader/Makefile
 
 ################################################################################################
 #
