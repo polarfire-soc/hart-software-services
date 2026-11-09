@@ -275,9 +275,18 @@ bool HSS_ResetReasonInit(void)
 
 /****************************************************************************/
 
+/*
+ * Set by the E51 once init_memory() has zeroed .sbss and .bss: the U54s wait
+ * for it before they touch anything there (HSS_U54_Banner()). In .data,
+ * which init_memory() does not zero and the eNVM wrapper decompresses
+ * afresh at every boot, so no earlier boot leaves it set.
+ */
+volatile bool hss_bss_ready __attribute__((section(".data"))) = false;
+
 void HSS_Init(void)
 {
     HSS_Init_RWDATA_BSS();
+    __atomic_store_n(&hss_bss_ready, true, __ATOMIC_RELEASE);
     HSS_UARTInit();
     HSS_OpenSBIInit();
 }
