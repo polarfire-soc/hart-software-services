@@ -524,6 +524,16 @@ void __noreturn sbi_init(struct sbi_scratch *scratch)
 		init_coldboot(scratch, hartid);
 	} else {
 		if (atomic_read(&coldboot_lottery)) {
+			// The lottery has a winner, but on a first boot the winner may
+			// still be creating the domains (sbi_domain_init() and
+			// sbi_domain_finalize() in init_coldboot()). Looking up this
+			// hart's domain before then finds none, and the asserts below
+			// fire. Wait until the winner has finished its cold boot: on a
+			// first boot that takes a few milliseconds, on a later boot
+			// (restart) coldboot_done is already set.
+			while (!__smp_load_acquire(&coldboot_done))
+				;
+
 			// we've booted before if I'm the boot hart but I'm doing a warm boot ...
 			// so we need to potentially clean-up the state of the boot hart to ensure that
 			// we don't end up deadlocked on restart with all harts waiting for someone to
