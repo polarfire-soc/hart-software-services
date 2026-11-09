@@ -261,6 +261,11 @@ execute_ddr_pattern
 uint64_t start_addr
 );
 
+#ifdef DEBUG_DDR_INIT
+void hex_num_to_decimal_string(uint32_t value, uint8_t *string);
+void debug_read_ddrcfg(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
