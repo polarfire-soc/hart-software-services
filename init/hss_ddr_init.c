@@ -172,6 +172,19 @@ bool HSS_DDRPrintL2CacheWayMasks(void)
 static size_t ddr_training_progress = 0;
 #define TYPICAL_DDR_TRAINING_ITERATIONS 5u
 
+#define CURSOR_UP "\033[A"
+#if defined(DEBUG_DDR_INIT)
+// The HAL writes its training log (DEBUG_DDR_INIT) on the console while it
+// trains: a progress bar would be drawn into the middle of its lines, and
+// moving the cursor up over it would overwrite the log's last line. No bar,
+// and the result on its own line after the log.
+#  define DDR_PROGRESS_BAR 0
+#  define DDR_RESULT_PREFIX ""
+#else
+#  define DDR_PROGRESS_BAR 1
+#  define DDR_RESULT_PREFIX CURSOR_UP
+#endif
+
 bool HSS_DDRInit(void)
 {
     bool result = true;
@@ -183,17 +196,20 @@ bool HSS_DDRInit(void)
         int perf_ctr_index = PERF_CTR_UNINITIALIZED;
         HSS_PerfCtr_Allocate(&perf_ctr_index, "DDR Init");
 
-#    define CURSOR_UP "\033[A"
-        HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, TYPICAL_DDR_TRAINING_ITERATIONS);
+        if (DDR_PROGRESS_BAR) {
+            HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, TYPICAL_DDR_TRAINING_ITERATIONS);
+        }
         uint8_t retval = mss_nwc_init_ddr();
-        HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, 0u);
+        if (DDR_PROGRESS_BAR) {
+            HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS, 0u);
+        }
 
         if (retval != 0) {
-            mHSS_DEBUG_PRINTF_EX(CURSOR_UP "%s Failed\n", ddr_training_prefix);
+            mHSS_DEBUG_PRINTF_EX(DDR_RESULT_PREFIX "%s Failed\n", ddr_training_prefix);
             result = false;
         } else {
             HSS_PerfCtr_Lap(perf_ctr_index);
-            mHSS_DEBUG_PRINTF_EX(CURSOR_UP "%s Passed", ddr_training_prefix);
+            mHSS_DEBUG_PRINTF_EX(DDR_RESULT_PREFIX "%s Passed", ddr_training_prefix);
 
 #if IS_ENABLED(CONFIG_DEBUG_PERF_CTRS)
             size_t ticks = HSS_PerfCtr_GetTime(perf_ctr_index);
@@ -212,6 +228,10 @@ bool HSS_DDRInit(void)
 
 void ddr_report_progress(void) // override weak symbol to report training progress...
 {
+    if (!DDR_PROGRESS_BAR) {
+        return;
+    }
+
     HSS_ShowProgress(TYPICAL_DDR_TRAINING_ITERATIONS,
         (ddr_training_progress < TYPICAL_DDR_TRAINING_ITERATIONS) ?
             TYPICAL_DDR_TRAINING_ITERATIONS - ddr_training_progress : 1);
