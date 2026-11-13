@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2026.10
+
+### Added
+
+ * HSS: feat(board): add support to wake system controller via GPIO
+
+ * HSS: feat: add support for booting payloads without an intermediate DDR copy
+
+ * HSS: feat(crypto): add support for AES-GCM
+
+ * HSS: board(mpfs-motor-control-kit): add initial board support
+
+### Changed
+
+ * HSS: upgrade(opensbi): upgrade vendored OpenSBI from v1.2 to v1.8
+
+ * HSS: feat(suspend): scale MSS clocks, switch MSS to SCB clock and add DDR self-refresh power saving during suspend
+
+### Fixed
+
+ * HSS: fix(mmuart): derive baud divisor from caller-supplied PCLK for pre-PLL boot
+
+ * HSS: fix(boot): copy built-in DTB to DDR before passing to OpenSBI
+
+ * HSS: fix(opensbi): pass built-in DTB in place from an aligned PMP window
+
+ * HSS: fix(ddr): validate whole buffer ranges against DDR
+
+ * HSS: fix(ddr): ensure build with CONFIG_SKIP_DDR enabled
+
+ * HSS: fix(ymodem): route to HSS UART instead of UART0
+
+ * HSS: fix(services): fix mmc sdcard default mode
+
+ * HSS: fix(qspi): enable winbond_w25n01gv hw bad blocks, fix PBA/ECC bugs
+
+ * HSS: fix: address miscellaneous tech-debt items
+
 ## 2026.04
 
 ### Added
