@@ -220,8 +220,10 @@ void display_ddr_driver_info(mss_uart_instance_t *debug_uart)
                                     {{"invalid","120","60","40","30","invalid"},
                                      {"invalid","120","60","40","30","invalid"},
                                      {"inv","inv","120","80","60","inv","40","inv","30"},
-                                     {"invalid","120","80","60","40","30"},
-                                     {"invalid","120","80","60","40","30"}};
+                                     /* LPDDR3: RPC_ODT 1 240, 2 120, 3 80, 4 60, 6 40, 8 30 */
+                                     {"inv","240","120","80","60","inv","40","inv","30"},
+                                     /* LPDDR4: RPC_ODT 2 120, 3 80, 4 60, 5 48, 6 40 */
+                                     {"inv","inv","120","80","60","48","40","inv","inv"}};
 #if(DDR_MODE == 2U) /* DDR4*/
     const char *ddr_mem_drive_str[5U][6U] =     {{"RZQ/6","RZQ/7"},
                                                 {"RZQ/6","RZQ/7"},
