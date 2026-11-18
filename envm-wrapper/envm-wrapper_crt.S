@@ -23,6 +23,10 @@
 
 #define OFFSET_OF(TYPE, FIELD) TYPE##_##FIELD##_##OFFSET
 
+	// CLINT (PolarFire SoC MSS TRM): msip of hart n at +4n, mtime
+	.equ	CLINT_MSIP_BASE, 0x02000000
+	.equ	CLINT_MTIME, 0x0200BFF8
+
 /*
  */
 	.section .entry, "ax", @progbits
@@ -70,15 +74,19 @@ _start:
 	csrw	CSR_MSCRATCH, 0
 
 .configure:
-	csrr	a0, CSR_MHARTID
-	bnez	a0, .common_configure
-
+	// Every hart clears decompress_done_flag before it reads it. The flag
+	// is in the E51 DTIM, which may still hold the previous boot's value
+	// after an MSS reset and is not initialised at power-on: a U54 must
+	// not trust a value it has not written in this boot. A late U54
+	// cannot clear the flag after the E51 has set it: the E51 sets it
+	// only once every U54 has said, through its msip, that it has
+	// cleared it (.wait_for_decompress_done).
 	fence	rw, rw
 	li	a2, 0
 	la	a1, decompress_done_flag
 	REG_S	a2, 0(a1)
 
-.common_configure:
+	csrr	a0, CSR_MHARTID
 	la	s8, STACK_SIZE_PER_HART
 
         la	tp, __stack_bottom
@@ -100,9 +108,20 @@ _start:
 	beqz	a0, .e51_decompress
 
 .wait_for_decompress_done:
+	// This U54 has cleared decompress_done_flag (.configure): tell the E51
+	// through its own msip (cleared at reset; mie is 0, so it raises no
+	// interrupt). The E51 sets the flag only once every U54 has done so,
+	// so that no U54 clears it after the E51 has set it.
+	fence	w, o
+	slli	a2, a0, 2
+	li	a1, CLINT_MSIP_BASE
+	add	a1, a1, a2
+	li	a2, 1
+	sw	a2, 0(a1)
+1:
 	la	a1, decompress_done_flag
 	REG_L	a0, 0(a1)
-	beqz	a0, .wait_for_decompress_done
+	beqz	a0, 1b
 	fence	r, rw
         j	.decompress_done
 
@@ -241,6 +260,26 @@ _start:
 	andi	a0, a0, 64
 	beq	a0, zero, 1b // loop until transmitter empty (TEMT)
 #endif
+	// Wait until every U54 has cleared decompress_done_flag and set its
+	// msip, at most 1 s (mtime runs at 1 MHz since mss_nwc_init()) for a
+	// hart that never starts; clear their msip, so that they enter the HSS
+	// with no software interrupt pending; then set the flag.
+	li	t0, CLINT_MTIME
+	REG_L	t1, 0(t0)
+	li	t2, 1000000
+	add	t1, t1, t2
+	li	t3, CLINT_MSIP_BASE + 4		// u54_1
+	li	t4, CLINT_MSIP_BASE + 20	// past u54_4
+2:
+	lw	a0, 0(t3)
+	bnez	a0, 3f
+	REG_L	a0, 0(t0)
+	bltu	a0, t1, 2b
+3:
+	sw	zero, 0(t3)
+	addi	t3, t3, 4
+	bltu	t3, t4, 2b
+	fence	o, w
 
 
 	fence	rw, rw
