@@ -34,6 +34,7 @@ extern "C" {
 #endif
 
 void HSS_Init(void);
+extern volatile bool hss_bss_ready;
 
 bool HSS_ZeroTIMs(void);
 bool HSS_ZeroDDR(void);
